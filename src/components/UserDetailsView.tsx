@@ -266,6 +266,96 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
   const ideBarChartData = createIDEBarChartData();
 
+  // Prepare bar chart data for language activity by day
+  const createLanguageBarChartData = () => {
+    // Get all unique languages across all days
+    const allLanguages = Array.from(
+      new Set(
+        userMetrics.flatMap(metric => 
+          metric.totals_by_language_feature.map(item => item.language)
+        )
+      )
+    ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
+
+    // Get all days and sort them
+    const allDays = userMetrics.map(metric => metric.day).sort();
+
+    // Define colors for each language
+    const languageColors: Record<string, string> = {
+      'javascript': '#F7DF1E',
+      'typescript': '#3178C6',
+      'python': '#3776AB',
+      'java': '#ED8B00',
+      'csharp': '#239120',
+      'cpp': '#00599C',
+      'c': '#A8B9CC',
+      'go': '#00ADD8',
+      'rust': '#000000',
+      'php': '#777BB4',
+      'ruby': '#CC342D',
+      'swift': '#FA7343',
+      'kotlin': '#7F52FF',
+      'scala': '#DC322F',
+      'dart': '#0175C2',
+      'html': '#E34F26',
+      'css': '#1572B6',
+      'scss': '#CF649A',
+      'less': '#1D365D',
+      'json': '#000000',
+      'xml': '#0060AC',
+      'yaml': '#CB171E',
+      'markdown': '#083FA1',
+      'shell': '#89E051',
+      'bash': '#4EAA25',
+      'powershell': '#5391FE',
+      'sql': '#E38C00',
+      'r': '#276DC3',
+      'matlab': '#E16737',
+      'perl': '#39457E',
+      'lua': '#2C2D72',
+      'haskell': '#5E5086',
+      'elixir': '#6E4A7E',
+      'erlang': '#B83998',
+      'clojure': '#5881D8',
+      'fsharp': '#378BBA',
+      'ocaml': '#EC6813',
+      'elm': '#60B5CC',
+      'solidity': '#363636',
+      'assembly': '#6E4C13',
+    };
+
+    // Create datasets for each language
+    const datasets = allLanguages.map((language, index) => {
+      const data = allDays.map(day => {
+        const dayMetric = userMetrics.find(m => m.day === day);
+        const languageData = dayMetric?.totals_by_language_feature
+          .filter(item => item.language === language)
+          .reduce((sum, item) => sum + item.code_generation_activity_count, 0) || 0;
+        return languageData;
+      });
+
+      const fallbackColors = [
+        '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', 
+        '#10B981', '#F97316', '#EF4444', '#3B82F6', '#14B8A6'
+      ];
+
+      return {
+        label: language.charAt(0).toUpperCase() + language.slice(1),
+        data: data,
+        backgroundColor: languageColors[language.toLowerCase()] || fallbackColors[index % fallbackColors.length],
+        borderColor: languageColors[language.toLowerCase()] || fallbackColors[index % fallbackColors.length],
+        borderWidth: 1,
+      };
+    }).filter(dataset => dataset.data.some(value => value > 0)); // Only include languages with data
+
+    return {
+      labels: allDays.map(day => new Date(day).toLocaleDateString()),
+      datasets: datasets,
+    };
+  };
+
+  const languageBarChartData = createLanguageBarChartData();
+
   const barChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -300,6 +390,46 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
           text: 'Interactions'
         },
         beginAtZero: true
+      }
+    }
+  };
+
+  const languageBarChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y || 0;
+            return `${label}: ${value.toLocaleString()} generations`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Date'
+        },
+        stacked: true,
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Generations'
+        },
+        beginAtZero: true,
+        stacked: true,
       }
     }
   };
@@ -514,6 +644,19 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       {/* Totals by Language and Feature - Grouped by Language */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language and Feature</h3>
+        
+        {/* Bar Chart */}
+        {languageBarChartData.datasets.length > 0 && (
+          <div className="mb-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-800 mb-4 text-center">Daily Language Generations</h4>
+              <div className="h-64">
+                <Bar data={languageBarChartData} options={languageBarChartOptions} />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           {(() => {
             // Group language feature data by language
