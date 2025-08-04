@@ -1,9 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub Copilot Usage Metrics Viewer
 
-## Getting Started
+A modern web application for visualizing GitHub Copilot usage metrics data. Upload your GitHub Copilot metrics JSON files to view comprehensive analytics about user engagement, feature usage, and adoption patterns across your organization.
 
-First, run the development server:
+![GitHub Copilot Metrics Viewer](https://img.shields.io/badge/Next.js-15.4.5-black?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-blue?logo=tailwindcss&logoColor=white)
 
+## ✨ Features
+
+- **📊 Interactive Dashboard**: Upload GitHub Copilot metrics JSON files and view real-time analytics
+- **👥 User Analytics**: Track unique users, chat users, agent users, and completion-only users
+- **📈 Detailed Visualizations**: Interactive charts powered by Chart.js showing usage patterns
+- **🔍 Individual User Details**: Drill down into specific user metrics and activity patterns
+- **🏢 IDE & Feature Breakdown**: View usage statistics by IDE, programming language, and Copilot features
+- **📱 Responsive Design**: Modern, mobile-friendly interface built with Tailwind CSS
+- **⚡ Fast Performance**: Built with Next.js 15 with Turbopack for optimal performance
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/asizikov-demos/copilot-user-level-statistics-viewer.git
+cd user-level-metrics-viewer
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+3. Run the development server:
 ```bash
 npm run dev
 # or
@@ -14,21 +53,105 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Usage
 
-## Learn More
+1. **Upload Metrics File**: Click the upload area or drag and drop your GitHub Copilot metrics JSON file
+2. **View Overview**: See high-level statistics about user engagement and usage patterns
+3. **Explore Users**: Click on "Unique Users" to see detailed user breakdowns
+4. **User Details**: Click on individual users to view their specific metrics and activity
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: [Next.js 15.4.5](https://nextjs.org) with App Router
+- **Language**: [TypeScript 5](https://www.typescriptlang.org)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
+- **Charts**: [Chart.js](https://www.chartjs.org) with [react-chartjs-2](https://react-chartjs-2.js.org)
+- **Linting**: [ESLint](https://eslint.org) with Next.js configuration
+- **Package Manager**: npm
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📝 Development Commands
 
-## Deploy on Vercel
+```bash
+npm run dev    # Start development server with Turbopack
+npm run build  # Build for production
+npm run start  # Start production server
+npm run lint   # Run ESLint
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 Data Format
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application expects GitHub Copilot metrics JSON files with the following structure:
+
+```typescript
+interface CopilotMetrics {
+  user_login: string;
+  user_id: number;
+  user_initiated_interaction_count: number;
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+  generated_loc_sum: number;
+  accepted_loc_sum: number;
+  used_agent: boolean;
+  used_chat: boolean;
+  totals_by_ide: Array<{...}>;
+  totals_by_feature: Array<{...}>;
+  // ... additional metrics
+}
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how you can help:
+
+### Reporting Issues
+
+If you find a bug or have a feature request:
+
+1. Check if the issue already exists in our [Issues](https://github.com/asizikov-demos/copilot-user-level-statistics-viewer/issues)
+2. If not, create a new issue with:
+   - Clear description of the problem or feature request
+   - Steps to reproduce (for bugs)
+   - Expected vs actual behavior
+   - Screenshots if applicable
+
+### Contributing Code
+
+1. **Fork the repository** to your GitHub account
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/copilot-user-level-statistics-viewer.git
+   ```
+3. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Make your changes** following our code quality guidelines:
+   - No unused variables (`@typescript-eslint/no-unused-vars`)
+   - No explicit `any` types (`@typescript-eslint/no-explicit-any`)
+   - Use proper TypeScript types
+   - Run `npm run build` before committing
+5. **Commit your changes**:
+   ```bash
+   git commit -m "feat: add your feature description"
+   ```
+6. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+7. **Create a Pull Request** from your fork to the main repository
+
+### Code Quality
+
+- Follow the existing code style and patterns
+- Add TypeScript types for all new code
+- Test your changes locally with `npm run build`
+- Update documentation if needed
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org)
+- UI components styled with [Tailwind CSS](https://tailwindcss.com)
+- Charts powered by [Chart.js](https://www.chartjs.org)
+- Icons from [Heroicons](https://heroicons.com)
