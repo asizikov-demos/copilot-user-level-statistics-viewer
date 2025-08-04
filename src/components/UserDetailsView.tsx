@@ -1,4 +1,5 @@
 import { CopilotMetrics } from '../types/metrics';
+import { translateFeature } from '../utils/featureTranslations';
 
 interface UserDetailsViewProps {
   userMetrics: CopilotMetrics[];
@@ -231,7 +232,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
             <tbody className="bg-white divide-y divide-gray-200">
               {featureAggregates.map((feature) => (
                 <tr key={feature.feature}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{feature.feature}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{translateFeature(feature.feature)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{feature.user_initiated_interaction_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{feature.code_generation_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{feature.code_acceptance_activity_count.toLocaleString()}</td>
@@ -263,7 +264,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
               {languageFeatureAggregates.map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.language}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.feature}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{translateFeature(item.feature)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.code_generation_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.code_acceptance_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.generated_loc_sum.toLocaleString()}</td>
@@ -295,7 +296,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
               {modelFeatureAggregates.map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.model}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.feature}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{translateFeature(item.feature)}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.user_initiated_interaction_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.code_generation_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.code_acceptance_activity_count.toLocaleString()}</td>
