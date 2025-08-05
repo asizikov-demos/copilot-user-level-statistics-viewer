@@ -7,10 +7,11 @@ import { filterMetricsByDateRange, getFilteredDateRange } from '../utils/dateFil
 import UniqueUsersView from '../components/UniqueUsersView';
 import UserDetailsView from '../components/UserDetailsView';
 import LanguagesView from '../components/LanguagesView';
+import IDEView from '../components/IDEView';
 import EngagementChart from '../components/EngagementChart';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages';
+type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides';
 
 export default function Home() {
   const [rawMetrics, setRawMetrics] = useState<CopilotMetrics[]>([]);
@@ -186,6 +187,14 @@ export default function Home() {
           />
         )}
 
+        {/* Show IDE View */}
+        {stats && currentView === 'ides' && (
+          <IDEView 
+            metrics={metrics} 
+            onBack={() => setCurrentView('overview')} 
+          />
+        )}
+
         {/* Show Unique Users View */}
         {stats && currentView === 'users' && (
           <UniqueUsersView 
@@ -329,20 +338,30 @@ export default function Home() {
                 </div>
               </button>
 
-              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                <div className="flex items-center">
+              <button
+                onClick={() => setCurrentView('ides')}
+                className="bg-orange-50 rounded-lg p-4 border border-orange-200 hover:bg-orange-100 transition-colors text-left group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Top IDE</p>
+                      <p className="text-lg font-bold text-orange-900">{stats.topIde?.name || 'N/A'}</p>
+                      <p className="text-xs text-orange-700">{stats.topIde?.entries?.toLocaleString() || '0'} users</p>
+                    </div>
+                  </div>
                   <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <svg className="w-6 h-6 text-orange-500 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-orange-600">Top IDE</p>
-                    <p className="text-lg font-bold text-orange-900">{stats.topIde?.name || 'N/A'}</p>
-                    <p className="text-xs text-orange-700">{stats.topIde?.entries?.toLocaleString() || '0'} users</p>
-                  </div>
                 </div>
-              </div>
+              </button>
 
               <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
                 <div className="flex items-center">
