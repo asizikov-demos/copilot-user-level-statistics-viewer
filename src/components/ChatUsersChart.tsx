@@ -122,10 +122,8 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       tooltip: {
         callbacks: {
           label: function(context: TooltipItem<'line'>) {
-            const dataIndex = context.dataIndex;
-            const dayData = data[dataIndex];
-            const datasetLabel = context.dataset.label;
             const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
             
             return `${datasetLabel}: ${value} users`;
           },
