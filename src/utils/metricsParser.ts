@@ -102,3 +102,48 @@ export function calculateUserSummaries(metrics: CopilotMetrics[]): UserSummary[]
     b.total_user_initiated_interactions - a.total_user_initiated_interactions
   );
 }
+
+export interface DailyEngagementData {
+  date: string;
+  activeUsers: number;
+  totalUsers: number;
+  engagementPercentage: number;
+}
+
+export function calculateDailyEngagement(metrics: CopilotMetrics[]): DailyEngagementData[] {
+  if (metrics.length === 0) return [];
+
+  // Get all unique users
+  const allUsers = new Set(metrics.map(m => m.user_id));
+  const totalUsers = allUsers.size;
+
+  // Group metrics by day - if there's an entry for a user, they're engaged
+  const dailyMetrics = new Map<string, Set<number>>();
+  
+  for (const metric of metrics) {
+    const date = metric.day;
+    if (!dailyMetrics.has(date)) {
+      dailyMetrics.set(date, new Set());
+    }
+    
+    // If there's a metrics entry for this user on this day, they're engaged
+    dailyMetrics.get(date)!.add(metric.user_id);
+  }
+
+  // Convert to array and calculate engagement percentages
+  const engagementData: DailyEngagementData[] = Array.from(dailyMetrics.entries())
+    .map(([date, activeUsersSet]) => {
+      const activeUsers = activeUsersSet.size;
+      const engagementPercentage = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0;
+      
+      return {
+        date,
+        activeUsers,
+        totalUsers,
+        engagementPercentage: Math.round(engagementPercentage * 100) / 100 // Round to 2 decimal places
+      };
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  return engagementData;
+}

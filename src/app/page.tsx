@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
-import { parseMetricsFile, calculateStats, calculateUserSummaries } from '../utils/metricsParser';
+import { parseMetricsFile, calculateStats, calculateUserSummaries, calculateDailyEngagement, DailyEngagementData } from '../utils/metricsParser';
 import UniqueUsersView from '../components/UniqueUsersView';
 import UserDetailsView from '../components/UserDetailsView';
+import EngagementChart from '../components/EngagementChart';
 
 type ViewMode = 'overview' | 'users' | 'userDetails';
 
@@ -12,6 +13,7 @@ export default function Home() {
   const [metrics, setMetrics] = useState<CopilotMetrics[]>([]);
   const [stats, setStats] = useState<MetricsStats | null>(null);
   const [userSummaries, setUserSummaries] = useState<UserSummary[]>([]);
+  const [engagementData, setEngagementData] = useState<DailyEngagementData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<ViewMode>('overview');
@@ -33,10 +35,12 @@ export default function Home() {
       const parsedMetrics = parseMetricsFile(fileContent);
       const calculatedStats = calculateStats(parsedMetrics);
       const userSummaries = calculateUserSummaries(parsedMetrics);
+      const dailyEngagement = calculateDailyEngagement(parsedMetrics);
       
       setMetrics(parsedMetrics);
       setStats(calculatedStats);
       setUserSummaries(userSummaries);
+      setEngagementData(dailyEngagement);
     } catch (err) {
       setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
@@ -48,6 +52,7 @@ export default function Home() {
     setStats(null);
     setMetrics([]);
     setUserSummaries([]);
+    setEngagementData([]);
     setError(null);
     setCurrentView('overview');
     setSelectedUser(null);
@@ -271,6 +276,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Daily Engagement Chart */}
+            <div className="mt-8">
+              <EngagementChart data={engagementData} />
             </div>
 
             <div className="mt-8 p-4 bg-gray-50 rounded-lg">
