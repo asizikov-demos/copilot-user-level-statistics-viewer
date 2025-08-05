@@ -275,6 +275,7 @@ export default function Home() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-emerald-600">Chat Users</p>
                     <p className="text-2xl font-bold text-emerald-900">{stats.chatUsers.toLocaleString()}</p>
+                    <p className="text-xs text-emerald-700">Out of {stats.uniqueUsers.toLocaleString()} unique users</p>
                   </div>
                 </div>
               </div>
@@ -304,6 +305,7 @@ export default function Home() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-amber-600">Completion Only Users</p>
                     <p className="text-2xl font-bold text-amber-900">{stats.completionOnlyUsers.toLocaleString()}</p>
+                    <p className="text-xs text-amber-700">Out of {stats.uniqueUsers.toLocaleString()} unique users</p>
                   </div>
                 </div>
               </div>
