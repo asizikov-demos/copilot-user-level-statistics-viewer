@@ -14,6 +14,9 @@ type SortDirection = 'asc' | 'desc';
 export default function LanguagesView({ languages, onBack }: LanguagesViewProps) {
   const [sortField, setSortField] = useState<SortField>('totalEngagements');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [expandedGenerations, setExpandedGenerations] = useState(false);
+  const [expandedUsers, setExpandedUsers] = useState(false);
+  const [expandedFull, setExpandedFull] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -72,6 +75,12 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
   // Create sorted lists for the two tables
   const languagesByGenerations = [...languages].sort((a, b) => b.totalGenerations - a.totalGenerations);
   const languagesByUsers = [...languages].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
+
+  // Determine how many items to show
+  const maxItemsToShow = 10;
+  const generationsToShow = expandedGenerations ? languagesByGenerations : languagesByGenerations.slice(0, maxItemsToShow);
+  const usersToShow = expandedUsers ? languagesByUsers : languagesByUsers.slice(0, maxItemsToShow);
+  const fullTableToShow = expandedFull ? sortedLanguages : sortedLanguages.slice(0, maxItemsToShow);
 
   return (
     <div className="space-y-6">
@@ -144,7 +153,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {languagesByGenerations.map((lang, index) => {
+                {generationsToShow.map((lang, index) => {
                   const acceptanceRate = lang.totalGenerations > 0 
                     ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
                     : '0.0';
@@ -175,6 +184,16 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
               </tbody>
             </table>
           </div>
+          {languagesByGenerations.length > maxItemsToShow && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setExpandedGenerations(!expandedGenerations)}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+              >
+                {expandedGenerations ? 'Show Less' : `Show All ${languagesByGenerations.length} Languages`}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Languages by Number of Users */}
@@ -196,7 +215,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {languagesByUsers.map((lang, index) => {
+                {usersToShow.map((lang, index) => {
                   const avgEngagements = lang.uniqueUsers > 0 
                     ? (lang.totalEngagements / lang.uniqueUsers).toFixed(1)
                     : '0.0';
@@ -227,6 +246,16 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
               </tbody>
             </table>
           </div>
+          {languagesByUsers.length > maxItemsToShow && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setExpandedUsers(!expandedUsers)}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+              >
+                {expandedUsers ? 'Show Less' : `Show All ${languagesByUsers.length} Languages`}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -306,7 +335,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedLanguages.map((lang) => {
+              {fullTableToShow.map((lang) => {
                 const acceptanceRate = lang.totalGenerations > 0 
                   ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
                   : '0.0';
@@ -343,6 +372,17 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
             </tbody>
           </table>
         </div>
+
+        {sortedLanguages.length > maxItemsToShow && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setExpandedFull(!expandedFull)}
+              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+            >
+              {expandedFull ? 'Show Less' : `Show All ${sortedLanguages.length} Languages`}
+            </button>
+          </div>
+        )}
 
         {languages.length === 0 && (
           <div className="text-center py-8">
