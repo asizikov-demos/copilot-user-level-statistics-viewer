@@ -20,6 +20,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   // State for collapsible sections
   const [isLanguageTableExpanded, setIsLanguageTableExpanded] = useState(false);
   const [isModelTableExpanded, setIsModelTableExpanded] = useState(false);
+  const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
 
   // Calculate aggregated stats for this user
   const totalInteractions = userMetrics.reduce((sum, metric) => sum + metric.user_initiated_interaction_count, 0);
@@ -31,11 +32,28 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   const usedAgent = userMetrics.some(metric => metric.used_agent);
   const usedChat = userMetrics.some(metric => metric.used_chat);
 
-  // Get latest plugin version info
-  const latestPluginInfo = userMetrics
+  // Get unique plugin versions ordered by date descending
+  const uniquePluginVersions = userMetrics
     .flatMap(metric => metric.totals_by_ide)
     .filter(ide => ide.last_known_plugin_version)
-    .sort((a, b) => new Date(b.last_known_plugin_version!.sampled_at).getTime() - new Date(a.last_known_plugin_version!.sampled_at).getTime())[0];
+    .map(ide => ide.last_known_plugin_version!)
+    .reduce((acc, plugin) => {
+      const key = `${plugin.plugin}-${plugin.plugin_version}`;
+      const existing = acc.find(p => `${p.plugin}-${p.plugin_version}` === key);
+      
+      if (!existing) {
+        acc.push(plugin);
+      } else {
+        // Keep the one with the latest date
+        if (new Date(plugin.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
+          const index = acc.indexOf(existing);
+          acc[index] = plugin;
+        }
+      }
+      
+      return acc;
+    }, [] as NonNullable<typeof userMetrics[0]['totals_by_ide'][0]['last_known_plugin_version']>[])
+    .sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
 
   // Aggregate totals by feature
   const featureAggregates = userMetrics
@@ -651,24 +669,40 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         </div>
       </div>
 
-      {/* Latest Plugin Version */}
-      {latestPluginInfo?.last_known_plugin_version && (
+      {/* Plugin Versions */}
+      {uniquePluginVersions.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Latest Plugin Version</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">Plugin</div>
-              <div className="font-medium">{latestPluginInfo.last_known_plugin_version.plugin}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Version</div>
-              <div className="font-medium">{latestPluginInfo.last_known_plugin_version.plugin_version}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Last Seen</div>
-              <div className="font-medium">{new Date(latestPluginInfo.last_known_plugin_version.sampled_at).toLocaleDateString()}</div>
-            </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Plugin Versions</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {(isPluginTableExpanded ? uniquePluginVersions : uniquePluginVersions.slice(0, 1)).map((plugin, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{plugin.plugin}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{plugin.plugin_version}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(plugin.sampled_at).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          {uniquePluginVersions.length > 1 && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setIsPluginTableExpanded(!isPluginTableExpanded)}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+              >
+                {isPluginTableExpanded ? 'Show Less' : `Show All ${uniquePluginVersions.length} Plugin Versions`}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
