@@ -460,7 +460,7 @@ export interface DailyModelUsageData {
   standardModels: number;
   unknownModels: number;
   totalPRUs: number;
-  estimatedCost: number; // At $0.04 per PRU
+  serviceValue: number; // Value of premium services consumed (PRUs × $0.04)
 }
 
 export function calculateDailyModelUsage(metrics: CopilotMetrics[]): DailyModelUsageData[] {
@@ -509,7 +509,7 @@ export function calculateDailyModelUsage(metrics: CopilotMetrics[]): DailyModelU
       standardModels: data.standardModels,
       unknownModels: data.unknownModels,
       totalPRUs: Math.round(data.totalPRUs * 100) / 100,
-      estimatedCost: Math.round(data.totalPRUs * 0.04 * 100) / 100
+      serviceValue: Math.round(data.totalPRUs * 0.04 * 100) / 100
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
@@ -586,7 +586,7 @@ export interface DailyPRUAnalysisData {
   standardRequests: number;
   pruPercentage: number;
   totalPRUs: number;
-  estimatedCost: number;
+  serviceValue: number; // Value of premium services consumed
   topModel: string;
   topModelPRUs: number;
 }
@@ -644,7 +644,7 @@ export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAn
         standardRequests: data.standardRequests,
         pruPercentage: total > 0 ? Math.round((data.pruRequests / total) * 100 * 100) / 100 : 0,
         totalPRUs: Math.round(data.totalPRUs * 100) / 100,
-        estimatedCost: Math.round(data.totalPRUs * 0.04 * 100) / 100,
+        serviceValue: Math.round(data.totalPRUs * 0.04 * 100) / 100,
         topModel: topModelEntry ? topModelEntry[0] : 'unknown',
         topModelPRUs: topModelEntry ? Math.round(topModelEntry[1] * 100) / 100 : 0
       };
@@ -657,7 +657,7 @@ export interface AgentModeHeatmapData {
   agentModeRequests: number;
   uniqueUsers: number;
   intensity: number; // 0-5 scale for heatmap coloring
-  pruCost: number;
+  serviceValue: number; // Value of premium agent mode services
 }
 
 export function calculateAgentModeHeatmap(metrics: CopilotMetrics[]): AgentModeHeatmapData[] {
@@ -702,7 +702,7 @@ export function calculateAgentModeHeatmap(metrics: CopilotMetrics[]): AgentModeH
       agentModeRequests: data.requests,
       uniqueUsers: data.users.size,
       intensity: Math.ceil((data.requests / maxRequests) * 5),
-      pruCost: Math.round(data.totalPRUs * 0.04 * 100) / 100
+      serviceValue: Math.round(data.totalPRUs * 0.04 * 100) / 100
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
@@ -723,7 +723,7 @@ export interface ModelFeatureDistributionData {
   };
   totalInteractions: number;
   totalPRUs: number;
-  estimatedCost: number;
+  serviceValue: number; // Value of premium services consumed
 }
 
 export function calculateModelFeatureDistribution(metrics: CopilotMetrics[]): ModelFeatureDistributionData[] {
@@ -782,7 +782,7 @@ export function calculateModelFeatureDistribution(metrics: CopilotMetrics[]): Mo
         features,
         totalInteractions: data.totalInteractions,
         totalPRUs: Math.round(totalPRUs * 100) / 100,
-        estimatedCost: Math.round(totalPRUs * 0.04 * 100) / 100
+        serviceValue: Math.round(totalPRUs * 0.04 * 100) / 100
       };
     })
     .filter(item => item.totalInteractions > 0)

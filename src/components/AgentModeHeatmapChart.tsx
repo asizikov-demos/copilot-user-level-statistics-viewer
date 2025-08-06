@@ -47,7 +47,7 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
 
   // Calculate summary statistics
   const totalRequests = data.reduce((sum, d) => sum + d.agentModeRequests, 0);
-  const totalCost = data.reduce((sum, d) => sum + d.pruCost, 0);
+  const totalCost = data.reduce((sum, d) => sum + d.serviceValue, 0);
   const peakDay = data.reduce((max, d) => d.agentModeRequests > max.agentModeRequests ? d : max, data[0]);
   const avgRequestsPerDay = data.length > 0 ? Math.round((totalRequests / data.length) * 100) / 100 : 0;
 
@@ -168,7 +168,7 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
               '',
               `Unique Users: ${dayData.uniqueUsers}`,
               `Intensity Level: ${dayData.intensity}/5`,
-              `PRU Cost: $${dayData.pruCost}`
+              `Service Value: $${dayData.serviceValue}`
             ];
           }
         }

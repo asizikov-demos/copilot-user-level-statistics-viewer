@@ -152,7 +152,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
               '',
               `Total Interactions: ${modelData.totalInteractions}`,
               `Total PRUs: ${modelData.totalPRUs}`,
-              `Estimated Cost: $${modelData.estimatedCost}`,
+              `Service Value: $${modelData.serviceValue}`,
               `Multiplier: ${modelData.multiplier}x`
             ];
           }
@@ -182,8 +182,8 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
   // Calculate summary statistics
   const totalInteractions = filteredData.reduce((sum, d) => sum + d.totalInteractions, 0);
   const totalPRUs = filteredData.reduce((sum, d) => sum + d.totalPRUs, 0);
-  const totalCost = filteredData.reduce((sum, d) => sum + d.estimatedCost, 0);
-  const highestCostModel = filteredData.reduce((max, d) => d.estimatedCost > max.estimatedCost ? d : max, filteredData[0]);
+  const totalCost = filteredData.reduce((sum, d) => sum + d.serviceValue, 0);
+  const highestCostModel = filteredData.reduce((max, d) => d.serviceValue > max.serviceValue ? d : max, filteredData[0]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -306,7 +306,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
                     <td className="px-4 py-2">{model.multiplier}x</td>
                     <td className="px-4 py-2">{model.totalInteractions}</td>
                     <td className="px-4 py-2">{model.totalPRUs}</td>
-                    <td className="px-4 py-2">${model.estimatedCost}</td>
+                    <td className="px-4 py-2">${model.serviceValue}</td>
                     <td className="px-4 py-2">
                       {topFeature.value > 0 ? featureLabels[topFeature.key as keyof typeof featureLabels] : 'None'}
                     </td>

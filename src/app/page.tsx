@@ -469,7 +469,7 @@ export default function Home() {
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Premium Request Units (PRU) Analysis</h3>
                 <p className="text-gray-600 text-sm">
-                  Analyze premium model usage, costs, and feature adoption patterns. Premium models like Claude and Gemini consume PRUs.
+                  Analyze premium model usage, service value, and feature adoption patterns. Premium models like Claude and Gemini consume PRUs, representing the value of enhanced AI services provided.
                 </p>
                 {/* Debug info */}
                 <div className="text-xs text-gray-500 mt-2">
@@ -499,7 +499,7 @@ export default function Home() {
                 }} />
               </div>
 
-              {/* PRU Cost Analysis Chart */}
+              {/* PRU Service Value Analysis Chart */}
               <div className="mb-8">
                 <PRUCostAnalysisChart data={pruAnalysisData || []} />
               </div>

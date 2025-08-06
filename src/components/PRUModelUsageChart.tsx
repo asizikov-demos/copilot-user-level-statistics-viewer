@@ -52,7 +52,7 @@ export default function PRUModelUsageChart({ data }: PRUModelUsageChartProps) {
   const totalStandardRequests = data.reduce((sum, d) => sum + d.standardModels, 0);
   const totalUnknownRequests = data.reduce((sum, d) => sum + d.unknownModels, 0);
   const totalPRUs = data.reduce((sum, d) => sum + d.totalPRUs, 0);
-  const totalCost = data.reduce((sum, d) => sum + d.estimatedCost, 0);
+  const totalCost = data.reduce((sum, d) => sum + d.serviceValue, 0);
   const grandTotal = totalPRURequests + totalStandardRequests + totalUnknownRequests;
 
   const chartData = {
@@ -128,7 +128,7 @@ export default function PRUModelUsageChart({ data }: PRUModelUsageChartProps) {
             return [
               '',
               `Total PRUs: ${dayData.totalPRUs}`,
-              `Estimated Cost: $${dayData.estimatedCost}`
+              `Service Value: $${dayData.serviceValue}`
             ];
           }
         }

@@ -37,9 +37,9 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
   if (!data || data.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">PRU Cost Analysis</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">PRU Service Value Analysis</h3>
         <div className="text-center text-gray-500 py-8">
-          No PRU cost analysis data available
+          No PRU service value data available
         </div>
       </div>
     );
@@ -47,14 +47,14 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
 
   // Calculate summary statistics
   const totalPRUs = data.reduce((sum, d) => sum + d.totalPRUs, 0);
-  const totalCost = data.reduce((sum, d) => sum + d.estimatedCost, 0);
+  const totalCost = data.reduce((sum, d) => sum + d.serviceValue, 0);
   const totalPRURequests = data.reduce((sum, d) => sum + d.pruRequests, 0);
   const totalStandardRequests = data.reduce((sum, d) => sum + d.standardRequests, 0);
   const totalRequests = totalPRURequests + totalStandardRequests;
   const avgPRUPercentage = data.length > 0 ? data.reduce((sum, d) => sum + d.pruPercentage, 0) / data.length : 0;
 
   // Find most expensive day and top model
-  const maxCostDay = data.reduce((max, d) => d.estimatedCost > max.estimatedCost ? d : max, data[0]);
+  const maxCostDay = data.reduce((max, d) => d.serviceValue > max.serviceValue ? d : max, data[0]);
   const topModels = [...new Set(data.map(d => d.topModel))].filter(m => m !== 'unknown');
 
   const getChartData = () => {
@@ -75,7 +75,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
             {
               type: 'line' as const,
               label: 'Estimated Cost ($)',
-              data: data.map(d => d.estimatedCost),
+              data: data.map(d => d.serviceValue),
               backgroundColor: 'rgba(147, 51, 234, 0.2)',
               borderColor: 'rgb(147, 51, 234)',
               borderWidth: 3,
@@ -213,7 +213,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
               `Standard Requests: ${dayData.standardRequests}`,
               `PRU Percentage: ${dayData.pruPercentage}%`,
               `Total PRUs: ${dayData.totalPRUs}`,
-              `Estimated Cost: $${dayData.estimatedCost}`,
+              `Service Value: $${dayData.serviceValue}`,
               `Top Model: ${dayData.topModel}`,
               `Top Model PRUs: ${dayData.topModelPRUs}`
             ];
@@ -226,7 +226,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">PRU Cost Analysis</h3>
+        <h3 className="text-lg font-semibold text-gray-800">PRU Service Value Analysis</h3>
         <div className="flex gap-2">
           <button
             onClick={() => setViewType('cost')}
@@ -236,7 +236,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Cost
+            Service Value
           </button>
           <button
             onClick={() => setViewType('percentage')}
@@ -270,7 +270,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-green-600">${Math.round(totalCost * 100) / 100}</div>
-          <div className="text-sm text-gray-600">Total Cost</div>
+          <div className="text-sm text-gray-600">Service Value</div>
           <div className="text-xs text-gray-500">${data.length > 0 ? Math.round((totalCost / data.length) * 100) / 100 : 0}/day avg</div>
         </div>
         <div className="text-center">
@@ -279,7 +279,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
           <div className="text-xs text-gray-500">{totalPRURequests}/{totalRequests} requests</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">${Math.round(maxCostDay.estimatedCost * 100) / 100}</div>
+          <div className="text-2xl font-bold text-orange-600">${Math.round(maxCostDay.serviceValue * 100) / 100}</div>
           <div className="text-sm text-gray-600">Peak Cost Day</div>
           <div className="text-xs text-gray-500">{new Date(maxCostDay.date).toLocaleDateString()}</div>
         </div>
