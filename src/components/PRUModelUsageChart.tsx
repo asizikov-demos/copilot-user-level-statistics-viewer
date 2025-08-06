@@ -90,50 +90,40 @@ export default function PRUModelUsageChart({ data }: PRUModelUsageChartProps) {
 
   const options = {
     responsive: true,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    scales: {
-      x: {
-        display: true,
-        title: {
-          display: true,
-          text: 'Date'
-        }
-      },
-      y: {
-        display: true,
-        title: {
-          display: true,
-          text: 'Number of Requests'
-        },
-        stacked: chartType === 'area',
-        beginAtZero: true
-      }
-    },
+    maintainAspectRatio: false,
     plugins: {
-      title: {
-        display: true,
-        text: 'Daily Model Usage: Premium vs Standard Models'
-      },
       legend: {
         position: 'top' as const,
       },
+      title: {
+        display: false,
+      },
       tooltip: {
         callbacks: {
-          afterBody: function(context: TooltipItem<'line' | 'bar'>[]) {
-            const dataIndex = context[0].dataIndex;
-            const dayData = data[dataIndex];
-            return [
-              '',
-              `Total PRUs: ${dayData.totalPRUs}`,
-              `Service Value: $${dayData.serviceValue}`
-            ];
+          label: function(context: TooltipItem<'line' | 'bar'>) {
+            const value = context.parsed.y;
+            const datasetLabel = context.dataset.label;
+            
+            return `${datasetLabel}: ${value} requests`;
           }
         }
       }
-    }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Date',
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Number of Requests',
+        },
+        beginAtZero: true,
+      },
+    },
   };
 
   return (

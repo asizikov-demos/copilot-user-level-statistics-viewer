@@ -99,6 +99,7 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: 'index' as const,
       intersect: false,

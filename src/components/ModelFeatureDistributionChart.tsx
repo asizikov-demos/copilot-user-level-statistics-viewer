@@ -127,6 +127,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       title: {
         display: true,

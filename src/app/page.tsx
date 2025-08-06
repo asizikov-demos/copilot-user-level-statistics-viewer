@@ -284,7 +284,7 @@ export default function Home() {
 
         {/* Statistics Section */}
         {stats && currentView === 'overview' && (
-          <div className="flex gap-8">
+          <div className="flex gap-6">
             {/* Main Content */}
             <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex justify-between items-center mb-6">
@@ -450,17 +450,17 @@ export default function Home() {
             </div>
 
             {/* Daily Engagement Chart */}
-            <div className="mt-8">
+            <div className="mt-8 w-full">
               <EngagementChart data={engagementData} />
             </div>
 
             {/* Daily Chat Users Trends Chart */}
-            <div className="mt-8">
+            <div className="mt-8 w-full">
               <ChatUsersChart data={chatUsersData} />
             </div>
 
             {/* Daily Chat Requests Chart */}
-            <div className="mt-8">
+            <div className="mt-8 w-full">
               <ChatRequestsChart data={chatRequestsData} />
             </div>
 
@@ -480,12 +480,12 @@ export default function Home() {
               </div>
               
               {/* PRU Model Usage Chart */}
-              <div className="mb-8">
+              <div className="mb-8 w-full">
                 <PRUModelUsageChart data={modelUsageData || []} />
               </div>
 
               {/* Feature Adoption Chart */}
-              <div className="mb-8">
+              <div className="mb-8 w-full">
                 <FeatureAdoptionChart data={featureAdoptionData || {
                   totalUsers: 0,
                   completionUsers: 0,
@@ -500,17 +500,17 @@ export default function Home() {
               </div>
 
               {/* PRU Service Value Analysis Chart */}
-              <div className="mb-8">
+              <div className="mb-8 w-full">
                 <PRUCostAnalysisChart data={pruAnalysisData || []} />
               </div>
 
               {/* Agent Mode Heatmap Chart */}
-              <div className="mb-8">
+              <div className="mb-8 w-full">
                 <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
               </div>
 
               {/* Model Feature Distribution Chart */}
-              <div className="mb-8">
+              <div className="mb-8 w-full">
                 <ModelFeatureDistributionChart data={modelFeatureDistributionData || []} />
               </div>
             </div>
@@ -525,7 +525,7 @@ export default function Home() {
             </div>
 
             {/* Side Panel */}
-            <div className="w-72 flex-shrink-0">
+            <div className="w-64 flex-shrink-0">
               <FilterPanel
                 onDateRangeChange={handleDateRangeChange}
                 currentFilter={dateRangeFilter}

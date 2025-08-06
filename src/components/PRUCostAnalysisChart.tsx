@@ -155,6 +155,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     interaction: {
       mode: 'index' as const,
       intersect: false,

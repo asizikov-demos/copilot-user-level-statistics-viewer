@@ -68,6 +68,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     indexAxis: 'y' as const,
     plugins: {
       title: {
