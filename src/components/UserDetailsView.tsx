@@ -229,13 +229,17 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   // Calculate agent mode heatmap data for single user
   const calculateUserAgentModeHeatmap = () => {
     const data = userMetrics.map(metric => {
-      let requests = 0;
+      let agentModeRequests = 0;
+      let unknownModeRequests = 0;
       let totalPRUs = 0;
 
-      // Check for agent mode usage in features
+      // Check for agent mode and unknown mode usage in features
       for (const feature of metric.totals_by_feature) {
         if (feature.feature === 'chat_panel_agent_mode' && feature.user_initiated_interaction_count > 0) {
-          requests += feature.user_initiated_interaction_count;
+          agentModeRequests += feature.user_initiated_interaction_count;
+        }
+        if (feature.feature === 'chat_panel_unknown_mode' && feature.user_initiated_interaction_count > 0) {
+          unknownModeRequests += feature.user_initiated_interaction_count;
         }
       }
 
@@ -249,20 +253,22 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
       return {
         date: metric.day,
-        requests,
+        agentModeRequests,
+        unknownModeRequests,
         totalPRUs,
         serviceValue: Math.round(totalPRUs * 0.04 * 100) / 100
       };
     });
 
-    const allRequests = data.map(d => d.requests);
+    const allRequests = data.map(d => d.agentModeRequests + d.unknownModeRequests);
     const maxRequests = Math.max(...allRequests, 1);
 
     return data.map(d => ({
       date: d.date,
-      agentModeRequests: d.requests,
-      uniqueUsers: d.requests > 0 ? 1 : 0, // For single user, it's either 0 or 1
-      intensity: Math.ceil((d.requests / maxRequests) * 5),
+      agentModeRequests: d.agentModeRequests,
+      unknownModeRequests: d.unknownModeRequests,
+      uniqueUsers: (d.agentModeRequests + d.unknownModeRequests) > 0 ? 1 : 0, // For single user, it's either 0 or 1
+      intensity: Math.ceil(((d.agentModeRequests + d.unknownModeRequests) / maxRequests) * 5),
       serviceValue: d.serviceValue
     })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
@@ -962,13 +968,22 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
   const agentHeatmapChartData = agentHeatmapChartType === 'heatmap' ? {
     labels: userAgentHeatmapData.map(d => new Date(d.date).toLocaleDateString()),
-    datasets: [{
-      label: 'Agent Mode Requests',
-      data: userAgentHeatmapData.map(d => d.agentModeRequests),
-      backgroundColor: userAgentHeatmapData.map(d => getIntensityColor(d.intensity)),
-      borderColor: 'rgb(239, 68, 68)',
-      borderWidth: 1
-    }]
+    datasets: [
+      {
+        label: 'Agent Mode Requests',
+        data: userAgentHeatmapData.map(d => d.agentModeRequests),
+        backgroundColor: userAgentHeatmapData.map(d => getIntensityColor(d.intensity)),
+        borderColor: 'rgb(239, 68, 68)',
+        borderWidth: 1
+      },
+      {
+        label: 'Unknown Mode Requests',
+        data: userAgentHeatmapData.map(d => d.unknownModeRequests),
+        backgroundColor: 'rgba(156, 163, 175, 0.8)',
+        borderColor: 'rgb(107, 114, 128)',
+        borderWidth: 1
+      }
+    ]
   } : {
     labels: userAgentHeatmapData.map(d => new Date(d.date).toLocaleDateString()),
     datasets: [
@@ -977,6 +992,15 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         data: userAgentHeatmapData.map(d => d.agentModeRequests),
         backgroundColor: 'rgba(239, 68, 68, 0.6)',
         borderColor: 'rgb(239, 68, 68)',
+        borderWidth: 2,
+        tension: 0.4,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Unknown Mode Requests',
+        data: userAgentHeatmapData.map(d => d.unknownModeRequests),
+        backgroundColor: 'rgba(156, 163, 175, 0.6)',
+        borderColor: 'rgb(107, 114, 128)',
         borderWidth: 2,
         tension: 0.4,
         yAxisID: 'y'
@@ -1003,7 +1027,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         display: true,
         title: {
           display: true,
-          text: 'Agent Mode Requests'
+          text: 'Number of Requests'
         },
         beginAtZero: true
       }
@@ -1021,7 +1045,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         position: 'left' as const,
         title: {
           display: true,
-          text: 'Agent Mode Requests'
+          text: 'Number of Requests'
         },
         beginAtZero: true
       }
@@ -1029,7 +1053,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     plugins: {
       title: {
         display: true,
-        text: 'Agent Mode Usage Intensity'
+        text: 'Chat Panel Usage: Agent Mode vs Unknown Mode'
       },
       legend: {
         position: 'top' as const,
@@ -1041,6 +1065,8 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
             const dayData = userAgentHeatmapData[dataIndex];
             return [
               '',
+              `Agent Mode Requests: ${dayData.agentModeRequests}`,
+              `Unknown Mode Requests: ${dayData.unknownModeRequests}`,
               `Intensity Level: ${dayData.intensity}/5`,
               `Service Value: $${dayData.serviceValue}`
             ];
@@ -1596,11 +1622,11 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         </div>
       )}
 
-      {/* Agent Mode Usage Heatmap */}
-      {userAgentHeatmapData.some(d => d.agentModeRequests > 0) && (
+      {/* Chat Panel Usage: Agent Mode vs Unknown Mode */}
+      {userAgentHeatmapData.some(d => d.agentModeRequests > 0 || d.unknownModeRequests > 0) && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Agent Mode Usage Heatmap</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Chat Panel Usage: Agent Mode vs Unknown Mode</h3>
             <div className="flex gap-2">
               <button
                 onClick={() => setAgentHeatmapChartType('heatmap')}
