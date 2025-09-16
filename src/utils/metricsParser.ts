@@ -841,20 +841,43 @@ export interface AgentImpactData {
   locDeleted: number;
   netChange: number;
   userCount: number;
+  totalUniqueUsers?: number; 
 }
 
 export function calculateAgentImpactData(metrics: CopilotMetrics[]): AgentImpactData[] {
-  // Group by date and aggregate agent_edit data
+  // Group by date and aggregate agent-related features data
   const dailyData = new Map<string, {
     locAdded: number;
     locDeleted: number;
     userCount: Set<number>;
   }>();
+  
+  // Track all unique users across all dates
+  const allUniqueUsers = new Set<number>();
 
   metrics.forEach(metric => {
+    // Look for both agent_edit and chat_panel_agent_mode features
     const agentEditFeature = metric.totals_by_feature.find(f => f.feature === 'agent_edit');
+    const agentModeFeature = metric.totals_by_feature.find(f => f.feature === 'chat_panel_agent_mode');
+    
+    // Calculate total LOC changes from both features
+    let totalLocAdded = 0;
+    let totalLocDeleted = 0;
+    let hasAgentActivity = false;
     
     if (agentEditFeature && (agentEditFeature.loc_added_sum > 0 || agentEditFeature.loc_deleted_sum > 0)) {
+      totalLocAdded += agentEditFeature.loc_added_sum;
+      totalLocDeleted += agentEditFeature.loc_deleted_sum;
+      hasAgentActivity = true;
+    }
+    
+    if (agentModeFeature && (agentModeFeature.loc_added_sum > 0 || agentModeFeature.loc_deleted_sum > 0)) {
+      totalLocAdded += agentModeFeature.loc_added_sum;
+      totalLocDeleted += agentModeFeature.loc_deleted_sum;
+      hasAgentActivity = true;
+    }
+    
+    if (hasAgentActivity) {
       const date = metric.day;
       
       if (!dailyData.has(date)) {
@@ -866,20 +889,24 @@ export function calculateAgentImpactData(metrics: CopilotMetrics[]): AgentImpact
       }
       
       const dayData = dailyData.get(date)!;
-      dayData.locAdded += agentEditFeature.loc_added_sum;
-      dayData.locDeleted += agentEditFeature.loc_deleted_sum;
+      dayData.locAdded += totalLocAdded;
+      dayData.locDeleted += totalLocDeleted;
       dayData.userCount.add(metric.user_id);
+      allUniqueUsers.add(metric.user_id);
     }
   });
 
   // Convert to array and sort by date
-  return Array.from(dailyData.entries())
+  const result = Array.from(dailyData.entries())
     .map(([date, data]) => ({
       date,
       locAdded: data.locAdded,
       locDeleted: data.locDeleted,
       netChange: data.locAdded - data.locDeleted,
-      userCount: data.userCount.size
+      userCount: data.userCount.size,
+      totalUniqueUsers: allUniqueUsers.size
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+  return result;
 }

@@ -140,16 +140,18 @@ export default function CodingAgentImpactChart({ data }: CodingAgentImpactChartP
   const totalAdded = data.reduce((sum, d) => sum + d.locAdded, 0);
   const totalDeleted = data.reduce((sum, d) => sum + d.locDeleted, 0);
   const netTotalChange = totalAdded - totalDeleted;
-  const totalUsers = new Set(data.flatMap(() => data.map(d => d.userCount))).size;
+  const uniqueUsers = data.length > 0 ? data[0].totalUniqueUsers || 0 : 0;
   const avgDailyUsers = data.length > 0 ? Math.round(data.reduce((sum, d) => sum + d.userCount, 0) / data.length) : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Coding Agent Impact</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Coding Agent Impact ({uniqueUsers} Unique Users)
+          </h3>
           <p className="text-sm text-gray-600">
-            Daily lines of code added and deleted through agent edit feature
+            Daily lines of code added and deleted through coding agent features
           </p>
         </div>
         <div className="text-right space-y-1">
