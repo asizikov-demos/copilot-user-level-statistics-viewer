@@ -569,7 +569,6 @@ export interface FeatureAdoptionData {
   editModeUsers: number;
   inlineModeUsers: number;
   codeReviewUsers: number;
-  workspaceUsers: number;
 }
 
 export function calculateFeatureAdoption(metrics: CopilotMetrics[]): FeatureAdoptionData {
@@ -597,7 +596,6 @@ export function calculateFeatureAdoption(metrics: CopilotMetrics[]): FeatureAdop
   let editModeUsers = 0;
   let inlineModeUsers = 0;
   let codeReviewUsers = 0;
-  let workspaceUsers = 0;
   
   for (const features of userFeatures.values()) {
     if (features.has('code_completion')) completionUsers++;
@@ -610,7 +608,6 @@ export function calculateFeatureAdoption(metrics: CopilotMetrics[]): FeatureAdop
     if (features.has('chat_panel_edit_mode')) editModeUsers++;
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('code_review')) codeReviewUsers++;
-    if (features.has('chat_panel_workspace_mode')) workspaceUsers++;
   }
   
   return {
@@ -621,8 +618,7 @@ export function calculateFeatureAdoption(metrics: CopilotMetrics[]): FeatureAdop
     askModeUsers,
     editModeUsers,
     inlineModeUsers,
-    codeReviewUsers,
-    workspaceUsers
+    codeReviewUsers
   };
 }
 
@@ -764,7 +760,6 @@ export interface ModelFeatureDistributionData {
     inlineMode: number;
     codeCompletion: number;
     codeReview: number;
-    workspace: number;
     other: number;
   };
   totalInteractions: number;
@@ -808,8 +803,7 @@ export function calculateModelFeatureDistribution(metrics: CopilotMetrics[]): Mo
         editMode: data.features.get('chat_panel_edit_mode') || 0,
         inlineMode: data.features.get('chat_inline') || 0,
         codeCompletion: data.features.get('code_completion') || 0,
-        codeReview: data.features.get('code_review') || 0,
-        workspace: data.features.get('chat_panel_workspace_mode') || 0,
+        codeReview: data.features.get('code_review') || 0,        
         other: 0
       };
       
