@@ -36,6 +36,7 @@ import CodingAgentImpactChart from '../components/CodingAgentImpactChart';
 import CodeCompletionImpactChart from '../components/CodeCompletionImpactChart';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
+import MetricTile from '../components/MetricTile';
 
 type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality';
 
@@ -329,155 +330,73 @@ export default function Home() {
               </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-green-600">Total Records</p>
-                    <p className="text-2xl font-bold text-green-900">{stats.totalRecords.toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-emerald-600">Chat Users</p>
-                    <p className="text-2xl font-bold text-emerald-900">{stats.chatUsers.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-700">Out of {stats.uniqueUsers.toLocaleString()} unique users</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-violet-50 rounded-lg p-4 border border-violet-200">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-violet-600">Agent Mode Users</p>
-                    <p className="text-2xl font-bold text-violet-900">{stats.agentUsers.toLocaleString()}</p>
-                    <p className="text-xs text-violet-700">Out of {stats.uniqueUsers.toLocaleString()} unique users</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-amber-600">Completion Only Users</p>
-                    <p className="text-2xl font-bold text-amber-900">{stats.completionOnlyUsers.toLocaleString()}</p>
-                    <p className="text-xs text-amber-700">Out of {stats.uniqueUsers.toLocaleString()} unique users</p>
-                  </div>
-                </div>
-              </div>
+              <MetricTile
+                title="Total Records"
+                value={stats.totalRecords}
+                accent="green"
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+              />
+              <MetricTile
+                title="Chat Users"
+                value={stats.chatUsers}
+                accent="emerald"
+                subtitle={`Out of ${stats.uniqueUsers.toLocaleString()} unique users`}
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>}
+              />
+              <MetricTile
+                title="Agent Mode Users"
+                value={stats.agentUsers}
+                accent="violet"
+                subtitle={`Out of ${stats.uniqueUsers.toLocaleString()} unique users`}
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+              />
+              <MetricTile
+                title="Completion Only Users"
+                value={stats.completionOnlyUsers}
+                accent="amber"
+                subtitle={`Out of ${stats.uniqueUsers.toLocaleString()} unique users`}
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 mt-6">
-              <button
+              <MetricTile
+                title="Unique Users"
+                value={stats.uniqueUsers}
+                accent="blue"
+                interactive
                 onClick={() => setCurrentView('users')}
-                className="bg-blue-50 rounded-lg p-4 border border-blue-200 hover:bg-blue-100 transition-colors text-left group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-blue-600 group-hover:text-blue-700">Unique Users</p>
-                      <p className="text-2xl font-bold text-blue-900">{stats.uniqueUsers.toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <svg className="w-6 h-6 text-blue-500 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-
-              <button
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg>}
+              />
+              <MetricTile
+                title="Top Language"
+                value={stats.topLanguage?.name || 'N/A'}
+                subtitle={`${stats.topLanguage?.engagements?.toLocaleString() || '0'} engagements`}
+                accent="purple"
+                interactive
                 onClick={() => setCurrentView('languages')}
-                className="bg-purple-50 rounded-lg p-4 border border-purple-200 hover:bg-purple-100 transition-colors text-left group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-purple-600 group-hover:text-purple-700">Top Language</p>
-                      <p className="text-lg font-bold text-purple-900">{stats.topLanguage?.name || 'N/A'}</p>
-                      <p className="text-xs text-purple-700">{stats.topLanguage?.engagements?.toLocaleString() || '0'} engagements</p>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <svg className="w-6 h-6 text-purple-500 group-hover:text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-
-              <button
+                size="md"
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+              />
+              <MetricTile
+                title="Top IDE"
+                value={stats.topIde?.name || 'N/A'}
+                subtitle={`${stats.topIde?.entries?.toLocaleString() || '0'} users`}
+                accent="orange"
+                interactive
                 onClick={() => setCurrentView('ides')}
-                className="bg-orange-50 rounded-lg p-4 border border-orange-200 hover:bg-orange-100 transition-colors text-left group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-orange-600 group-hover:text-orange-700">Top IDE</p>
-                      <p className="text-lg font-bold text-orange-900">{stats.topIde?.name || 'N/A'}</p>
-                      <p className="text-xs text-orange-700">{stats.topIde?.entries?.toLocaleString() || '0'} users</p>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <svg className="w-6 h-6 text-orange-500 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
-
-              <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-indigo-600">Top Model</p>
-                    <p className="text-lg font-bold text-indigo-900">{stats.topModel?.name || 'N/A'}</p>
-                    <p className="text-xs text-indigo-700">{stats.topModel?.engagements?.toLocaleString() || '0'} engagements</p>
-                  </div>
-                </div>
-              </div>
+                size="md"
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+              />
+              <MetricTile
+                title="Top Model"
+                value={stats.topModel?.name || 'N/A'}
+                subtitle={`${stats.topModel?.engagements?.toLocaleString() || '0'} engagements`}
+                accent="indigo"
+                size="md"
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>}
+                showArrow={false}
+              />
             </div>
 
             {/* Daily Engagement Chart */}
