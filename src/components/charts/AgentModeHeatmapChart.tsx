@@ -47,7 +47,6 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
 
   // Calculate summary statistics
   const totalRequests = data.reduce((sum, d) => sum + d.agentModeRequests, 0);
-  const totalCost = data.reduce((sum, d) => sum + d.serviceValue, 0);
   const peakDay = data.reduce((max, d) => d.agentModeRequests > max.agentModeRequests ? d : max, data[0]);
   const avgRequestsPerDay = data.length > 0 ? Math.round((totalRequests / data.length) * 100) / 100 : 0;
 
@@ -168,8 +167,7 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
             return [
               '',
               `Unique Users: ${dayData.uniqueUsers}`,
-              `Intensity Level: ${dayData.intensity}/5`,
-              `Service Value: $${dayData.serviceValue}`
+              `Intensity Level: ${dayData.intensity}/5`
             ];
           }
         }
@@ -216,7 +214,7 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="text-center">
           <div className="text-2xl font-bold text-red-600">{totalRequests}</div>
           <div className="text-sm text-gray-600">Total Requests</div>
@@ -226,11 +224,6 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
           <div className="text-2xl font-bold text-blue-600">{data.reduce((sum, d) => sum + d.uniqueUsers, 0)}</div>
           <div className="text-sm text-gray-600">User-Days</div>
           <div className="text-xs text-gray-500">Total user sessions</div>
-        </div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600">${Math.round(totalCost * 100) / 100}</div>
-          <div className="text-sm text-gray-600">PRU Cost</div>
-          <div className="text-xs text-gray-500">Estimated total</div>
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-green-600">{peakDay.agentModeRequests}</div>
@@ -270,20 +263,12 @@ export default function AgentModeHeatmapChart({ data }: AgentModeHeatmapChartPro
       )}
 
       {/* Usage Insights */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mt-6">
         <div className="p-4 bg-red-50 rounded-lg">
           <h4 className="font-semibold text-red-800 mb-2">Agent Mode Insights</h4>
           <p className="text-sm text-red-700">
             Agent Mode is a premium feature that creates autonomous coding sessions. 
             {totalRequests > 100 ? ' High usage indicates strong adoption of advanced AI features.' : ' Consider promoting Agent Mode for complex coding tasks.'}
-          </p>
-        </div>
-        <div className="p-4 bg-purple-50 rounded-lg">
-          <h4 className="font-semibold text-purple-800 mb-2">Cost Analysis</h4>
-          <p className="text-sm text-purple-700">
-            Total estimated PRU cost: ${Math.round(totalCost * 100) / 100}. 
-            Average cost per request: ${totalRequests > 0 ? Math.round((totalCost / totalRequests) * 100) / 100 : 0}.
-            {totalCost > 50 ? ' Significant investment in premium AI features.' : ' Moderate premium feature usage.'}
           </p>
         </div>
       </div>
