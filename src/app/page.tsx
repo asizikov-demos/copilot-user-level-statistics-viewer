@@ -32,14 +32,13 @@ import FeatureAdoptionChart from '../components/FeatureAdoptionChart';
 import PRUCostAnalysisChart from '../components/PRUCostAnalysisChart';
 import AgentModeHeatmapChart from '../components/AgentModeHeatmapChart';
 import ModelFeatureDistributionChart from '../components/ModelFeatureDistributionChart';
-import CodingAgentImpactChart from '../components/CodingAgentImpactChart';
-import CodeCompletionImpactChart from '../components/CodeCompletionImpactChart';
+import CopilotImpactView from '../components/CopilotImpactView';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/MetricTile';
 import { useMetricsData } from '../components/MetricsContext';
 
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality';
+type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact';
 
 export default function Home() {
   // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
@@ -294,6 +293,15 @@ export default function Home() {
           />
         )}
 
+        {/* Show Copilot Impact View */}
+        {stats && currentView === 'copilotImpact' && (
+          <CopilotImpactView
+            agentImpactData={agentImpactData}
+            codeCompletionImpactData={codeCompletionImpactData}
+            onBack={() => setCurrentView('overview')}
+          />
+        )}
+
         {/* Show Unique Users View */}
         {stats && currentView === 'users' && (
           <UniqueUsersView 
@@ -416,8 +424,8 @@ export default function Home() {
                 value={''}
                 subtitle="Understand Impact for your organization"
                 accent="indigo"
-                href="/copilot-impact"
-                showArrow={true}
+                interactive
+                onClick={() => setCurrentView('copilotImpact')}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>}
               />
             </div>
