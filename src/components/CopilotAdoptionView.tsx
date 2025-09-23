@@ -376,7 +376,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             <p className="text-sm text-orange-700">
               {outdatedPlugins.length === 0 
                 ? 'Excellent! All IntelliJ users are on recent plugin versions with latest features and security updates.'
-                : `${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0)} user${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 's' : ''} ${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 'are' : 'is'} using outdated plugins. Consider upgrading for better performance and new features.`
+                : `${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0)} user${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 's' : ''} ${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 'are' : 'is'} using outdated plugins which can result in incomplete telemetry and skewed statistics. Consider upgrading for better performance, feature completeness, and accurate reporting.`
               }
             </p>
           </div>
