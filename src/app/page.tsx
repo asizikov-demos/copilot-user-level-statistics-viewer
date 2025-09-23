@@ -27,18 +27,16 @@ import IDEView from '../components/IDEView';
 import EngagementChart from '../components/EngagementChart';
 import ChatUsersChart from '../components/ChatUsersChart';
 import ChatRequestsChart from '../components/ChatRequestsChart';
-import PRUModelUsageChart from '../components/PRUModelUsageChart';
 import FeatureAdoptionChart from '../components/FeatureAdoptionChart';
-import PRUCostAnalysisChart from '../components/PRUCostAnalysisChart';
 import AgentModeHeatmapChart from '../components/AgentModeHeatmapChart';
-import ModelFeatureDistributionChart from '../components/ModelFeatureDistributionChart';
+import PRUUsageAnalysisView from '../components/PRUUsageAnalysisView';
 import CopilotImpactView from '../components/CopilotImpactView';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/MetricTile';
 import { useMetricsData } from '../components/MetricsContext';
 
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact';
+type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage';
 
 export default function Home() {
   // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
@@ -302,6 +300,16 @@ export default function Home() {
           />
         )}
 
+        {/* Show PRU Usage Analysis View */}
+        {stats && currentView === 'pruUsage' && (
+          <PRUUsageAnalysisView
+            modelUsageData={modelUsageData}
+            pruAnalysisData={pruAnalysisData}
+            modelFeatureDistributionData={modelFeatureDistributionData}
+            onBack={() => setCurrentView('overview')}
+          />
+        )}
+
         {/* Show Unique Users View */}
         {stats && currentView === 'users' && (
           <UniqueUsersView 
@@ -417,7 +425,7 @@ export default function Home() {
               />
             </div>
 
-            {/* Copilot Impact Tile Row (new row among existing metric tiles) */}
+            {/* Additional Analysis Tiles Row */}
             <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-6 mt-6">
               <MetricTile
                 title="Copilot Impact"
@@ -427,6 +435,15 @@ export default function Home() {
                 interactive
                 onClick={() => setCurrentView('copilotImpact')}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>}
+              />
+              <MetricTile
+                title="PRU Usage Analysis"
+                value={''}
+                subtitle="Understand Premium Model utilization"
+                accent="purple"
+                interactive
+                onClick={() => setCurrentView('pruUsage')}
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M9 7h12M9 11h12M9 15h12M3 7h.01M3 11h.01M3 15h.01M9 19h12M3 19h.01" /></svg>}
               />
             </div>
 
@@ -446,7 +463,7 @@ export default function Home() {
             </div>
 
 
-            {/* PRU Analysis Section */}
+            {/* PRU Analysis Section (reduced after moving detailed charts to dedicated view) */}
             <div className="mt-8">
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Premium Request Units (PRU) Analysis</h3>
@@ -460,12 +477,6 @@ export default function Home() {
                   PRU Analysis: {pruAnalysisData?.length || 0} records
                 </div>
               </div>
-
-              {/* PRU Model Usage Chart */}
-              <div className="mb-8 w-full">
-                <PRUModelUsageChart data={modelUsageData || []} />
-              </div>
-
               {/* Feature Adoption Chart */}
               <div className="mb-8 w-full">
                 <FeatureAdoptionChart data={featureAdoptionData || {
@@ -479,20 +490,9 @@ export default function Home() {
                   codeReviewUsers: 0
                 }} />
               </div>
-
-              {/* PRU Service Value Analysis Chart */}
-              <div className="mb-8 w-full">
-                <PRUCostAnalysisChart data={pruAnalysisData || []} />
-              </div>
-
               {/* Agent Mode Heatmap Chart */}
               <div className="mb-8 w-full">
                 <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
-              </div>
-
-              {/* Model Feature Distribution Chart */}
-              <div className="mb-8 w-full">
-                <ModelFeatureDistributionChart data={modelFeatureDistributionData || []} />
               </div>
             </div>
 
