@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CopilotMetrics, MetricsStats } from '../types/metrics';
 import { 
   parseMetricsFile, 
@@ -37,10 +37,13 @@ import CodeCompletionImpactChart from '../components/CodeCompletionImpactChart';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/MetricTile';
+import { useMetricsData } from '../components/MetricsContext';
 
 type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality';
 
 export default function Home() {
+  // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
+  const { setFilteredData } = useMetricsData();
   const [rawMetrics, setRawMetrics] = useState<CopilotMetrics[]>([]);
   const [originalStats, setOriginalStats] = useState<MetricsStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -138,6 +141,13 @@ export default function Home() {
     agentImpactData,
     codeCompletionImpactData
   } = filteredData;
+
+  // Sync filtered data into global context whenever recalculated (only when stats exist to avoid empty placeholder overwriting non-empty state during transitions).
+  useEffect(() => {
+    if (stats) {
+      setFilteredData(filteredData as any);
+    }
+  }, [filteredData, stats, setFilteredData]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -399,6 +409,19 @@ export default function Home() {
               />
             </div>
 
+            {/* Copilot Impact Tile Row (new row among existing metric tiles) */}
+            <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-4 gap-6 mt-6">
+              <MetricTile
+                title="Copilot Impact"
+                value={''}
+                subtitle="Understand Impact for your organization"
+                accent="indigo"
+                href="/copilot-impact"
+                showArrow={true}
+                icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>}
+              />
+            </div>
+
             {/* Daily Engagement Chart */}
             <div className="mt-8 w-full">
               <EngagementChart data={engagementData} />
@@ -414,25 +437,6 @@ export default function Home() {
               <ChatRequestsChart data={chatRequestsData} />
             </div>
 
-            {/* Copilot Impact Analysis Section */}
-            <div className="mt-8">
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Copilot Impact Analysis</h3>
-                <p className="text-gray-600 text-sm">
-                  Analyze the impact and productivity gains from Copilot features, including code completion and agent mode contributions to your codebase.
-                </p>
-              </div>
-              
-              {/* Coding Agent Impact Chart */}
-              <div className="mb-8 w-full">
-                <CodingAgentImpactChart data={agentImpactData || []} />
-              </div>
-
-              {/* Code Completion Impact Chart */}
-              <div className="mb-8 w-full">
-                <CodeCompletionImpactChart data={codeCompletionImpactData || []} />
-              </div>
-            </div>
 
             {/* PRU Analysis Section */}
             <div className="mt-8">
