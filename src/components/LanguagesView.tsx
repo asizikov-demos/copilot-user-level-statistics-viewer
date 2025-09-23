@@ -103,7 +103,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
       </div>
 
       {/* Summary Stats */}
-  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-11 gap-4">
+  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-2xl font-bold text-blue-600">{totalLanguages}</div>
           <div className="text-sm text-gray-600">Total Languages</div>

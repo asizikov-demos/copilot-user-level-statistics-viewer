@@ -91,6 +91,15 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       .sort((a, b) => b.userCount - a.userCount);
   }, [metrics]);
 
+  // True count of unique IntelliJ users (do NOT sum per-version counts because a user may appear under multiple versions over the reporting window)
+  const totalUniqueIntellijUsers = React.useMemo(() => {
+    const userSet = new Set<string>();
+    for (const v of pluginVersionAnalysis) {
+      for (const username of v.usernames) userSet.add(username);
+    }
+    return userSet.size;
+  }, [pluginVersionAnalysis]);
+
   // Get latest 8 stable (non-nightly) versions from JetBrains data
   const latestEightUpdates = React.useMemo(() => {
     if (!jetbrainsUpdates) return [];
@@ -206,7 +215,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <MetricTile
               title="Total IntelliJ Users"
-              value={pluginVersionAnalysis.reduce((sum, p) => sum + p.userCount, 0)}
+              value={totalUniqueIntellijUsers}
               accent="blue"
               subtitle="Users with plugin version data"
               icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}

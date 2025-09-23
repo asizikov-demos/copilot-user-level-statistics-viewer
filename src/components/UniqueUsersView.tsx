@@ -92,7 +92,7 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
       </div>
 
       {/* Summary Stats */}
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-11 gap-4">
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="text-2xl font-bold text-blue-600">{users.length}</div>
           <div className="text-sm text-gray-600">Total Users</div>
