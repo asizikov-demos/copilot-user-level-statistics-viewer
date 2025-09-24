@@ -26,6 +26,12 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
 
       <div className="space-y-8">
         <ModeImpactChart
+          data={joinedImpactData || []}
+          title="Combined Copilot Impact"
+          description="Aggregate impact across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
+          emptyStateMessage="No combined impact data available."
+        />
+        <ModeImpactChart
           data={agentImpactData || []}
           title="Copilot Agent Mode Impact"
           description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
@@ -48,12 +54,6 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
           title="Copilot Inline Mode Impact"
           description="Daily lines of code added and deleted when developers work inline with Copilot."
           emptyStateMessage="No Inline Mode impact data available."
-        />
-        <ModeImpactChart
-          data={joinedImpactData || []}
-          title="Combined Copilot Impact"
-          description="Aggregate impact across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
-          emptyStateMessage="No combined impact data available."
         />
       </div>
     </div>
