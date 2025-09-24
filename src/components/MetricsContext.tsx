@@ -12,7 +12,8 @@ import {
   AgentModeHeatmapData,
   ModelFeatureDistributionData,
   AgentImpactData,
-  CodeCompletionImpactData
+  CodeCompletionImpactData,
+  ModeImpactData
 } from '../utils/metricsParser';
 import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
 
@@ -32,6 +33,9 @@ export interface FilteredMetricsData {
   modelFeatureDistributionData: ModelFeatureDistributionData[];
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
+  editModeImpactData: ModeImpactData[];
+  inlineModeImpactData: ModeImpactData[];
+  joinedImpactData: ModeImpactData[];
 }
 
 interface MetricsContextValue {

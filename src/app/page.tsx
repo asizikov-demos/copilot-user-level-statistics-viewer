@@ -17,7 +17,10 @@ import {
   calculateAgentModeHeatmap,
   calculateModelFeatureDistribution,
   calculateAgentImpactData,
-  calculateCodeCompletionImpactData
+  calculateCodeCompletionImpactData,
+  calculateEditModeImpactData,
+  calculateInlineModeImpactData,
+  calculateJoinedImpactData
 } from '../utils/metricsParser';
 import { filterMetricsByDateRange, getFilteredDateRange } from '../utils/dateFilters';
 import UniqueUsersView from '../components/UniqueUsersView';
@@ -70,7 +73,10 @@ export default function Home() {
         agentModeHeatmapData: [],
         modelFeatureDistributionData: [],
         agentImpactData: [],
-        codeCompletionImpactData: []
+        codeCompletionImpactData: [],
+        editModeImpactData: [],
+        inlineModeImpactData: [],
+        joinedImpactData: []
       };
     }
 
@@ -94,6 +100,9 @@ export default function Home() {
     const filteredModelFeatureDistributionData = calculateModelFeatureDistribution(filteredMetrics);
     const filteredAgentImpactData = calculateAgentImpactData(filteredMetrics);
     const filteredCodeCompletionImpactData = calculateCodeCompletionImpactData(filteredMetrics);
+  const filteredEditModeImpactData = calculateEditModeImpactData(filteredMetrics);
+  const filteredInlineModeImpactData = calculateInlineModeImpactData(filteredMetrics);
+  const filteredJoinedImpactData = calculateJoinedImpactData(filteredMetrics);
 
     // Update the date range in stats based on filter
     const { startDay, endDay } = getFilteredDateRange(dateRangeFilter, originalStats.reportStartDay, originalStats.reportEndDay);
@@ -117,7 +126,10 @@ export default function Home() {
       agentModeHeatmapData: filteredAgentModeHeatmapData,
       modelFeatureDistributionData: filteredModelFeatureDistributionData,
       agentImpactData: filteredAgentImpactData,
-      codeCompletionImpactData: filteredCodeCompletionImpactData
+      codeCompletionImpactData: filteredCodeCompletionImpactData,
+      editModeImpactData: filteredEditModeImpactData,
+      inlineModeImpactData: filteredInlineModeImpactData,
+      joinedImpactData: filteredJoinedImpactData
     };
     return result;
   }, [rawMetrics, originalStats, dateRangeFilter, removeUnknownLanguages]);
@@ -136,7 +148,10 @@ export default function Home() {
     agentModeHeatmapData,
     modelFeatureDistributionData,
     agentImpactData,
-    codeCompletionImpactData
+    codeCompletionImpactData,
+    editModeImpactData,
+    inlineModeImpactData,
+    joinedImpactData
   } = filteredData;
 
   // Sync filtered data into global context whenever recalculated (only when stats exist to avoid empty placeholder overwriting non-empty state during transitions).
@@ -296,6 +311,9 @@ export default function Home() {
           <CopilotImpactView
             agentImpactData={agentImpactData}
             codeCompletionImpactData={codeCompletionImpactData}
+            editModeImpactData={editModeImpactData}
+            inlineModeImpactData={inlineModeImpactData}
+            joinedImpactData={joinedImpactData}
             onBack={() => setCurrentView('overview')}
           />
         )}

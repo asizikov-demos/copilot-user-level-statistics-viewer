@@ -918,3 +918,92 @@ export function calculateCodeCompletionImpactData(metrics: CopilotMetrics[]): Co
     
   return result;
 }
+
+export interface ModeImpactData {
+  date: string;
+  locAdded: number;
+  locDeleted: number;
+  netChange: number;
+  userCount: number;
+  totalUniqueUsers?: number;
+}
+
+function calculateFeatureImpactData(metrics: CopilotMetrics[], featureNames: string[]): ModeImpactData[] {
+  if (metrics.length === 0 || featureNames.length === 0) {
+    return [];
+  }
+
+  const dailyData = new Map<string, {
+    locAdded: number;
+    locDeleted: number;
+    userIds: Set<number>;
+  }>();
+
+  const allUniqueUsers = new Set<number>();
+
+  for (const metric of metrics) {
+    let totalLocAdded = 0;
+    let totalLocDeleted = 0;
+    let hasActivity = false;
+
+    for (const feature of metric.totals_by_feature) {
+      if (!featureNames.includes(feature.feature)) continue;
+
+      const locAdded = feature.loc_added_sum || 0;
+      const locDeleted = feature.loc_deleted_sum || 0;
+
+      totalLocAdded += locAdded;
+      totalLocDeleted += locDeleted;
+
+      if (locAdded !== 0 || locDeleted !== 0) {
+        hasActivity = true;
+      }
+    }
+
+    if (!hasActivity) continue;
+
+    const date = metric.day;
+    if (!dailyData.has(date)) {
+      dailyData.set(date, {
+        locAdded: 0,
+        locDeleted: 0,
+        userIds: new Set<number>()
+      });
+    }
+
+    const dayData = dailyData.get(date)!;
+    dayData.locAdded += totalLocAdded;
+    dayData.locDeleted += totalLocDeleted;
+    dayData.userIds.add(metric.user_id);
+    allUniqueUsers.add(metric.user_id);
+  }
+
+  return Array.from(dailyData.entries())
+    .map(([date, data]) => ({
+      date,
+      locAdded: data.locAdded,
+      locDeleted: data.locDeleted,
+      netChange: data.locAdded - data.locDeleted,
+      userCount: data.userIds.size,
+      totalUniqueUsers: allUniqueUsers.size
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+export function calculateEditModeImpactData(metrics: CopilotMetrics[]): ModeImpactData[] {
+  return calculateFeatureImpactData(metrics, ['chat_panel_edit_mode']);
+}
+
+export function calculateInlineModeImpactData(metrics: CopilotMetrics[]): ModeImpactData[] {
+  return calculateFeatureImpactData(metrics, ['chat_inline']);
+}
+
+export function calculateJoinedImpactData(metrics: CopilotMetrics[]): ModeImpactData[] {
+  return calculateFeatureImpactData(metrics, [
+    'code_completion',
+    'chat_panel_edit_mode',
+    'chat_inline',
+    'chat_panel_agent_mode',
+    'agent_edit'
+  ]);
+}
