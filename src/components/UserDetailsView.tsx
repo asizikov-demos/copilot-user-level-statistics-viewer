@@ -6,6 +6,7 @@ import { translateFeature } from '../utils/featureTranslations';
 import { getIDEIcon, formatIDEName } from '../utils/ideIcons';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
 import { calculateDailyPRUAnalysis } from '../utils/metricsParser';
+import { MODEL_MULTIPLIERS, SERVICE_VALUE_RATE } from '../domain/modelConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import { Pie, Bar, Chart } from 'react-chartjs-2';
 
@@ -142,19 +143,12 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     }, [] as typeof userMetrics[0]['totals_by_model_feature']);
 
   // Helper functions for new charts
-  
-  // PRU Model Multipliers
-  const MODEL_MULTIPLIERS: Record<string, number> = {
-    'gpt-4.1': 0, 'gpt-4o': 0, 'gpt-4.0': 0, 'gpt-4o-latest': 0,
-    'claude-opus-4': 10, 'claude-4.0-sonnet': 1, 'claude-3.7-sonnet': 1.25,
-    'claude-3': 1, 'claude-3-opus': 10, 'claude-3-sonnet': 1, 'claude-3-haiku': 1, 'claude-2': 1, 'gpt-5': 1,
-    'gemini-2.0-flash': 0.25, 'gemini-2.5-pro': 1, 'gemini-pro': 0.33, 'gemini': 0.33,
-    'unknown': 1
-  };
 
   const getModelMultiplier = (modelName: string): number => {
     const normalizedModel = modelName.toLowerCase();
-    if (MODEL_MULTIPLIERS[normalizedModel]) return MODEL_MULTIPLIERS[normalizedModel];
+    if (MODEL_MULTIPLIERS[normalizedModel] !== undefined) {
+      return MODEL_MULTIPLIERS[normalizedModel];
+    }
     for (const [key, multiplier] of Object.entries(MODEL_MULTIPLIERS)) {
       if (normalizedModel.includes(key)) return multiplier;
     }
@@ -192,7 +186,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         standardModels,
         unknownModels,
         totalPRUs: Math.round(totalPRUs * 100) / 100,
-        serviceValue: Math.round(totalPRUs * 0.04 * 100) / 100
+  serviceValue: Math.round(totalPRUs * SERVICE_VALUE_RATE * 100) / 100
       };
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
@@ -227,7 +221,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         agentModeRequests,
         unknownModeRequests,
         totalPRUs,
-        serviceValue: Math.round(totalPRUs * 0.04 * 100) / 100
+  serviceValue: Math.round(totalPRUs * SERVICE_VALUE_RATE * 100) / 100
       };
     });
 
