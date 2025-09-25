@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import { DailyPRUAnalysisData } from '../../utils/metricsParser';
+import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(
   CategoryScale,
@@ -298,28 +299,25 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
 
       {/* Cost Breakdown */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-purple-50 rounded-lg">
-          <h4 className="font-semibold text-purple-800 mb-2">PRU Efficiency</h4>
-          <p className="text-sm text-purple-700">
+        <InsightsCard title="PRU Efficiency" variant="purple">
+          <p>
             Average cost per PRU request: ${totalPRURequests > 0 ? Math.round((totalCost / totalPRURequests) * 100) / 100 : 0}.
             {avgPRUPercentage > 30 ? ' High premium model usage.' : avgPRUPercentage > 15 ? ' Moderate premium usage.' : ' Primarily standard models.'}
           </p>
-        </div>
-        <div className="p-4 bg-green-50 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">Cost Optimization</h4>
-          <p className="text-sm text-green-700">
+        </InsightsCard>
+        <InsightsCard title="Cost Optimization" variant="green">
+          <p>
             {avgPRUPercentage > 50 ? 'Consider reviewing premium model usage for optimization opportunities.' : 
              avgPRUPercentage > 25 ? 'Balanced usage of premium and standard models.' :
              'Efficient use of included models minimizes additional costs.'}
           </p>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">Model Insights</h4>
-          <p className="text-sm text-blue-700">
+        </InsightsCard>
+        <InsightsCard title="Model Insights" variant="blue">
+          <p>
             Top premium models used: {topModels.slice(0, 3).join(', ') || 'None'}.
             {topModels.length > 3 && ` +${topModels.length - 3} more`}
           </p>
-        </div>
+        </InsightsCard>
       </div>
     </div>
   );

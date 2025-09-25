@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { ModelFeatureDistributionData } from '../../utils/metricsParser';
+import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(
   CategoryScale,
@@ -319,21 +320,19 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
 
       {/* Feature Insights */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-red-50 rounded-lg">
-          <h4 className="font-semibold text-red-800 mb-2">Premium Feature Usage</h4>
-          <p className="text-sm text-red-700">
-            Agent Mode is the most advanced feature due to its capabilities. 
+        <InsightsCard title="Premium Feature Usage" variant="red">
+          <p>
+            Agent Mode is the most advanced feature due to its capabilities.
             {filteredData.some(d => d.features.agentMode > 0) ? ' Active Agent Mode usage detected.' : ' Consider promoting Agent Mode for complex tasks.'}
           </p>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">Cost Optimization</h4>
-          <p className="text-sm text-blue-700">
+        </InsightsCard>
+        <InsightsCard title="Cost Optimization" variant="blue">
+          <p>
             {totalCost > 100 ? 'High premium feature usage. This is a good utilization of included PRUs.' :
              totalCost > 50 ? 'Moderate premium usage. Good balance of features and cost.' :
              'Efficient use of standard models and features.'}
           </p>
-        </div>
+        </InsightsCard>
       </div>
     </div>
   );

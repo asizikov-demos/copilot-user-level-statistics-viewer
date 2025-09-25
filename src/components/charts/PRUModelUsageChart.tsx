@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import { DailyModelUsageData } from '../../utils/metricsParser';
+import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(
   CategoryScale,
@@ -198,12 +199,14 @@ export default function PRUModelUsageChart({ data }: PRUModelUsageChartProps) {
         <Chart type={chartType === 'area' ? 'line' : 'bar'} data={chartData} options={options} />
       </div>
 
-      {/* Info */}
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-800">
-          <strong>PRU Models:</strong> Premium models like Claude and Gemini that consume Premium Request Units (PRUs). 
-          <strong className="ml-2">Standard Models:</strong> GPT-4.1 and GPT-4o included with paid plans at no additional cost.
-        </p>
+      {/* Insights */}
+      <div className="mt-4">
+        <InsightsCard title="Model Types" variant="blue">
+          <p>
+            <strong>PRU Models:</strong> Premium models like Claude and Gemini that consume Premium Request Units (PRUs).{' '}
+            <strong className="ml-1">Standard Models:</strong> GPT-4.1 and GPT-4o included with paid plans at no additional cost.
+          </p>
+        </InsightsCard>
       </div>
     </div>
   );
