@@ -36,9 +36,10 @@ import CopilotImpactView from '../components/CopilotImpactView';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/ui/MetricTile';
+import ModelDetailsView from '../components/ModelDetailsView';
 import { useMetricsData, FilteredMetricsData } from '../components/MetricsContext';
 
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption';
+type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption' | 'modelDetails';
 
 export default function Home() {
   // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
@@ -56,6 +57,7 @@ export default function Home() {
   const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
   const [removeUnknownLanguages, setRemoveUnknownLanguages] = useState<boolean>(false);
   const [enterpriseName, setEnterpriseName] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   // Calculate filtered data based on date range and language filters
   const filteredData = useMemo(() => {
@@ -373,6 +375,16 @@ export default function Home() {
           />
         )}
 
+        {/* Show Model Details View */}
+        {stats && currentView === 'modelDetails' && selectedModel && (
+          <ModelDetailsView
+            onBack={() => {
+              setCurrentView('overview');
+              setSelectedModel(null);
+            }}
+          />
+        )}
+
         {/* Statistics Section */}
         {stats && currentView === 'overview' && (
           <div className="flex gap-6">
@@ -466,8 +478,15 @@ export default function Home() {
                 subtitle={`${stats.topModel?.engagements?.toLocaleString() || '0'} engagements`}
                 accent="indigo"
                 size="md"
+                interactive={!!stats.topModel && stats.topModel.name !== 'N/A'}
+                disabled={!stats.topModel || stats.topModel.name === 'N/A'}
+                onClick={() => {
+                  if (stats.topModel && stats.topModel.name !== 'N/A') {
+                    setSelectedModel(stats.topModel.name);
+                    setCurrentView('modelDetails');
+                  }
+                }}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>}
-                showArrow={false}
               />
             </div>
 
