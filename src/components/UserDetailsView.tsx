@@ -11,6 +11,7 @@ import { calculateDailyPRUAnalysis, calculateJoinedImpactData } from '../utils/m
 import { SERVICE_VALUE_RATE, getModelMultiplier } from '../domain/modelConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import { Bar, Chart } from 'react-chartjs-2';
+import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
 import SectionHeader from './ui/SectionHeader';
@@ -30,7 +31,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   const [isModelTableExpanded, setIsModelTableExpanded] = useState(false);
 
   // State for chart view types
-  const [pruModelChartType, setPruModelChartType] = useState<'area' | 'bar'>('area');
   const [agentHeatmapChartType, setAgentHeatmapChartType] = useState<'heatmap' | 'line' | 'bar'>('heatmap');
 
   // Calculate aggregated stats for this user
@@ -661,76 +661,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     }
   };
 
-  // Model Usage Chart functions
-  const modelUsageChartData = {
-    labels: userModelUsageData.map(d => new Date(d.date).toLocaleDateString()),
-    datasets: [
-      {
-        label: 'Premium Models (PRU)',
-        data: userModelUsageData.map(d => d.pruModels),
-        backgroundColor: 'rgba(239, 68, 68, 0.6)',
-        borderColor: 'rgb(239, 68, 68)',
-        borderWidth: 2,
-        fill: pruModelChartType === 'area',
-        tension: 0.4
-      },
-      {
-        label: 'Standard Models (GPT-4.1/4o)',
-        data: userModelUsageData.map(d => d.standardModels),
-        backgroundColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgb(34, 197, 94)',
-        borderWidth: 2,
-        fill: pruModelChartType === 'area',
-        tension: 0.4
-      },
-      {
-        label: 'Unknown Models',
-        data: userModelUsageData.map(d => d.unknownModels),
-        backgroundColor: 'rgba(156, 163, 175, 0.6)',
-        borderColor: 'rgb(156, 163, 175)',
-        borderWidth: 2,
-        fill: pruModelChartType === 'area',
-        tension: 0.4
-      }
-    ]
-  };
-
-  const modelUsageChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: TooltipItem<'line' | 'bar'>) {
-            const value = context.parsed.y;
-            const datasetLabel = context.dataset.label;
-            return `${datasetLabel}: ${value} requests`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Date',
-        },
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Number of Requests',
-        },
-        beginAtZero: true,
-      },
-    },
-  };
 
   // Agent Heatmap Chart functions
   const getIntensityColor = (intensity: number) => {
@@ -957,106 +887,10 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         languageBarChartOptions={languageBarChartOptions}
       />
 
-      {/* PRU Service Value Analysis */}
-      {userPRUAnalysisData.some(d => d.pruRequests > 0 || d.standardRequests > 0) && (
-        <PRUCostAnalysisChart data={userPRUAnalysisData} />
-      )}
+      <PRUCostAnalysisChart data={userPRUAnalysisData} />
 
       {/* Daily PRU vs Standard Model Usage */}
-      {userModelUsageData.some(d => d.pruModels > 0 || d.standardModels > 0 || d.unknownModels > 0) && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Daily PRU vs Standard Model Usage</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setPruModelChartType('area')}
-                className={`px-3 py-1 text-sm rounded ${
-                  pruModelChartType === 'area' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Area
-              </button>
-              <button
-                onClick={() => setPruModelChartType('bar')}
-                className={`px-3 py-1 text-sm rounded ${
-                  pruModelChartType === 'bar' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                Bar
-              </button>
-            </div>
-          </div>
-
-          {/* Summary Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            {(() => {
-              const totalPRURequests = userModelUsageData.reduce((sum, d) => sum + d.pruModels, 0);
-              const totalStandardRequests = userModelUsageData.reduce((sum, d) => sum + d.standardModels, 0);
-              const totalUnknownRequests = userModelUsageData.reduce((sum, d) => sum + d.unknownModels, 0);
-              const totalPRUs = userModelUsageData.reduce((sum, d) => sum + d.totalPRUs, 0);
-              const totalCost = userModelUsageData.reduce((sum, d) => sum + d.serviceValue, 0);
-              const grandTotal = totalPRURequests + totalStandardRequests + totalUnknownRequests;
-
-              return (
-                <>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-red-600">{totalPRURequests}</div>
-                    <div className="text-sm text-gray-600">PRU Requests</div>
-                    <div className="text-xs text-gray-500">
-                      {grandTotal > 0 ? `${Math.round((totalPRURequests / grandTotal) * 100)}%` : '0%'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{totalStandardRequests}</div>
-                    <div className="text-sm text-gray-600">Standard Requests</div>
-                    <div className="text-xs text-gray-500">
-                      {grandTotal > 0 ? `${Math.round((totalStandardRequests / grandTotal) * 100)}%` : '0%'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-600">{totalUnknownRequests}</div>
-                    <div className="text-sm text-gray-600">Unknown Requests</div>
-                    <div className="text-xs text-gray-500">
-                      {grandTotal > 0 ? `${Math.round((totalUnknownRequests / grandTotal) * 100)}%` : '0%'}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{Math.round(totalPRUs * 100) / 100}</div>
-                    <div className="text-sm text-gray-600">Total PRUs</div>
-                    <div className="text-xs text-gray-500">
-                      Avg: {userModelUsageData.length > 0 ? Math.round((totalPRUs / userModelUsageData.length) * 100) / 100 : 0}/day
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">${Math.round(totalCost * 100) / 100}</div>
-                    <div className="text-sm text-gray-600">Service Value</div>
-                    <div className="text-xs text-gray-500">
-                      Avg: ${userModelUsageData.length > 0 ? Math.round((totalCost / userModelUsageData.length) * 100) / 100 : 0}/day
-                    </div>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-
-          {/* Chart */}
-          <div className="h-96">
-            <Chart type={pruModelChartType === 'area' ? 'line' : 'bar'} data={modelUsageChartData} options={modelUsageChartOptions} />
-          </div>
-
-          {/* Info */}
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>PRU Models:</strong> Premium models like Claude and Gemini that consume Premium Request Units (PRUs). 
-              <strong className="ml-2">Standard Models:</strong> GPT-4.1 and GPT-4o included with paid plans at no additional cost.
-            </p>
-          </div>
-        </div>
-      )}
+        <PRUModelUsageChart data={userModelUsageData} />
 
       {/* Chat Panel Usage: Agent Mode vs Unknown Mode */}
       {userAgentHeatmapData.some(d => d.agentModeRequests > 0 || d.unknownModeRequests > 0) && (
