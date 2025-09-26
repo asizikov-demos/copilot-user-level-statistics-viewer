@@ -182,8 +182,12 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
   // Calculate summary statistics
   const totalInteractions = filteredData.reduce((sum, d) => sum + d.totalInteractions, 0);
   const totalPRUs = filteredData.reduce((sum, d) => sum + d.totalPRUs, 0);
-  const totalCost = filteredData.reduce((sum, d) => sum + d.serviceValue, 0);
-  const highestCostModel = filteredData.reduce((max, d) => d.serviceValue > max.serviceValue ? d : max, filteredData[0]);
+  const totalServiceValue = filteredData.reduce((sum, d) => sum + d.serviceValue, 0);
+  const highestServiceValueModel = filteredData.reduce((max, d) => d.serviceValue > max.serviceValue ? d : max, filteredData[0]);
+
+  const AGENT_MODE_USAGE_THRESHOLD = 0.20; // 20%
+  const totalAgentModeInteractions = filteredData.reduce((sum, d) => sum + d.features.agentMode, 0);
+  const agentModeUsageRatio = totalInteractions > 0 ? totalAgentModeInteractions / totalInteractions : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -248,14 +252,14 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
           <div className="text-xs text-gray-500">From all features</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">${Math.round(totalCost * 100) / 100}</div>
-          <div className="text-sm text-gray-600">Total Cost</div>
+          <div className="text-2xl font-bold text-green-600">${Math.round(totalServiceValue * 100) / 100}</div>
+          <div className="text-sm text-gray-600">Total Realised Service Value</div>
           <div className="text-xs text-gray-500">Estimated</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-red-600">{highestCostModel?.multiplier || 0}x</div>
+          <div className="text-2xl font-bold text-red-600">{highestServiceValueModel?.multiplier || 0}x</div>
           <div className="text-sm text-gray-600">Highest Multiplier</div>
-          <div className="text-xs text-gray-500">{highestCostModel?.modelDisplayName || 'N/A'}</div>
+          <div className="text-xs text-gray-500">{highestServiceValueModel?.modelDisplayName || 'N/A'}</div>
         </div>
       </div>
 
@@ -291,7 +295,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
                 <th className="px-4 py-2">Multiplier</th>
                 <th className="px-4 py-2">Interactions</th>
                 <th className="px-4 py-2">PRUs</th>
-                <th className="px-4 py-2">Cost</th>
+                <th className="px-4 py-2">Service Value</th>
                 <th className="px-4 py-2">Top Feature</th>
               </tr>
             </thead>
@@ -319,18 +323,13 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
       </div>
 
       {/* Feature Insights */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <InsightsCard title="Premium Feature Usage" variant="red">
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-1 gap-4">
+        <InsightsCard title="Advanced Feature Usage" variant="blue">
           <p>
             Agent Mode is the most advanced feature due to its capabilities.
-            {filteredData.some(d => d.features.agentMode > 0) ? ' Active Agent Mode usage detected.' : ' Consider promoting Agent Mode for complex tasks.'}
-          </p>
-        </InsightsCard>
-        <InsightsCard title="Cost Optimization" variant="blue">
-          <p>
-            {totalCost > 100 ? 'High premium feature usage. This is a good utilization of included PRUs.' :
-             totalCost > 50 ? 'Moderate premium usage. Good balance of features and cost.' :
-             'Efficient use of standard models and features.'}
+            {agentModeUsageRatio >= AGENT_MODE_USAGE_THRESHOLD 
+              ? ' Active Agent Mode usage detected.' 
+              : ' Consider promoting Agent Mode for complex tasks.'}
           </p>
         </InsightsCard>
       </div>
