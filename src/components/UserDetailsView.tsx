@@ -36,11 +36,8 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   const totalInteractions = userMetrics.reduce((sum, metric) => sum + metric.user_initiated_interaction_count, 0);
   const totalGeneration = userMetrics.reduce((sum, metric) => sum + metric.code_generation_activity_count, 0);
   const totalAcceptance = userMetrics.reduce((sum, metric) => sum + metric.code_acceptance_activity_count, 0);
-  // New LOC totals (replacing legacy Generated/Accepted LOC)
-  const totalLocAdded = userMetrics.reduce((sum, metric) => sum + metric.loc_added_sum, 0);
-  const totalLocDeleted = userMetrics.reduce((sum, metric) => sum + metric.loc_deleted_sum, 0);
-  const totalLocSuggestedToAdd = userMetrics.reduce((sum, metric) => sum + metric.loc_suggested_to_add_sum, 0);
-  const totalLocSuggestedToDelete = userMetrics.reduce((sum, metric) => sum + metric.loc_suggested_to_delete_sum, 0);
+
+
   const daysActive = userMetrics.length;
   const usedAgent = userMetrics.some(metric => metric.used_agent);
   const usedChat = userMetrics.some(metric => metric.used_chat);
@@ -510,18 +507,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       'gpt-4-turbo': '#0052A3',
       'gpt-3.5': '#74AA9C',
       'gpt-3.5-turbo': '#5D8A7A',
-      'claude-3': '#FF6B35',
-      'claude-3-opus': '#E55934',
-      'claude-3-sonnet': '#CC4125',
-      'claude-3-haiku': '#B8301F',
-      'claude-2': '#A02318',
-      'gemini': '#4285F4',
       'gemini-pro': '#1A73E8',
-      'codegen': '#8B5CF6',
-      'codellama': '#F59E0B',
-      'starcoder': '#EC4899',
-      'copilot': '#24292e',
-      'github-copilot': '#24292e',
     };
 
     // Create datasets for each model
@@ -899,31 +885,18 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
           accent="purple"
         />
         <DashboardStatsCard
-          value={totalLocAdded}
-          label="LOC Added"
-          accent="orange"
-        />
-        <DashboardStatsCard
-          value={totalLocDeleted}
-          label="LOC Deleted"
-          accent="rose"
-        />
-        <DashboardStatsCard
-          value={totalLocSuggestedToAdd}
-          label="Suggested Add"
-          accent="teal"
-        />
-        <DashboardStatsCard
-          value={totalLocSuggestedToDelete}
-          label="Suggested Delete"
-          accent="indigo"
-        />
-        <DashboardStatsCard
           value={daysActive}
           label="Days Active"
           accent="indigo"
         />
       </div>
+      
+      <ModeImpactChart
+        data={userCombinedImpactData}
+        title="Combined Copilot Impact"
+        description="Daily lines of code added and deleted across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
+        emptyStateMessage="No combined impact data available."
+      />
 
       {/* Summary */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -1135,15 +1108,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
           )}
         </div>
       </div>
-
-      {userCombinedImpactData.length > 0 && (
-        <ModeImpactChart
-          data={userCombinedImpactData}
-          title="Combined Copilot Impact"
-          description="Daily lines of code added and deleted across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
-          emptyStateMessage="No combined impact data available."
-        />
-      )}
 
       {/* PRU Service Value Analysis */}
       {userPRUAnalysisData.some(d => d.pruRequests > 0 || d.standardRequests > 0) && (
