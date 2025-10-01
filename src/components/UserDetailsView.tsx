@@ -326,20 +326,10 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       'vim': '#019733',
       'neovim': '#57A143',
       'emacs': '#7F5AB6',
-      'atom': '#66595C',
+      'eclipse': '#66595C',
       'sublime_text': '#FF9800',
       'xcode': '#1575F9',
-      'android_studio': '#3DDC84',
       'intellij': '#FE315D',
-      'pycharm': '#21D789',
-      'webstorm': '#00CDD7',
-      'phpstorm': '#B345F1',
-      'rubymine': '#FE315D',
-      'clion': '#21D789',
-      'goland': '#00ADD8',
-      'datagrip': '#9775FA',
-      'rider': '#C21456',
-      'appcode': '#1575F9',
     };
 
     // Create datasets for each IDE

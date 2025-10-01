@@ -167,6 +167,11 @@ export default function Home() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    const lowerName = file.name.toLowerCase();
+    if (!lowerName.endsWith('.json') && !lowerName.endsWith('.ndjson')) {
+      setError('Unsupported file type. Please upload a .json or .ndjson file.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -241,7 +246,7 @@ export default function Home() {
             GitHub Copilot Usage Metrics Viewer
           </h1>
           <p className="text-gray-600">
-            Upload your GitHub Copilot User Level metrics json-file to view usage statistics
+            Upload your GitHub Copilot User Level metrics JSON / NDJSON file (.json or .ndjson) to view usage statistics
           </p>
         </div>
 
@@ -252,7 +257,7 @@ export default function Home() {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
               <input
                 type="file"
-                accept=".json"
+                accept=".json,.ndjson"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
@@ -277,7 +282,7 @@ export default function Home() {
                 <span className="text-sm font-medium text-gray-700">
                   Click to upload or drag and drop
                 </span>
-                <span className="text-xs text-gray-500">JSON files only</span>
+                <span className="text-xs text-gray-500">Accepted: .json, .ndjson</span>
               </label>
             </div>
             
