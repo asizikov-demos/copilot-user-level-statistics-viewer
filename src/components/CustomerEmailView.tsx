@@ -5,7 +5,7 @@ import SectionHeader from './ui/SectionHeader';
 import ModeImpactChart from './charts/ModeImpactChart';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import PremiumModelsUsageChart from './charts/PremiumModelsUsageChart';
-import type { CopilotMetrics, MetricsStats } from '../types/metrics';
+import type { CopilotMetrics } from '../types/metrics';
 import type { FeatureAdoptionData, AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../utils/metricsParser';
 import { isPremiumModel } from '../domain/modelConfig';
 

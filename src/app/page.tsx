@@ -348,7 +348,6 @@ export default function Home() {
             joinedImpactData={joinedImpactData}
             agentImpactData={agentImpactData}
             codeCompletionImpactData={codeCompletionImpactData}
-            stats={stats}
             onBack={() => setCurrentView('overview')}
           />
         )}
