@@ -588,6 +588,14 @@ export interface DailyPRUAnalysisData {
   topModel: string;
   topModelPRUs: number;
   topModelIsPremium: boolean; // Explicit premium flag for the top model
+  // Expanded model details for the day (new field; legacy single topModel fields retained for compatibility)
+  models: Array<{
+    name: string;           // canonical model name (lowercased)
+    requests: number;       // total user initiated interactions for this model that day
+    prus: number;           // total PRUs consumed (requests * multiplier)
+    isPremium: boolean;     // whether model is premium (from isPremiumModel)
+    multiplier: number;     // multiplier used for PRU calculation
+  }>;
 }
 
 export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAnalysisData[] {
@@ -595,7 +603,7 @@ export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAn
     pruRequests: number;
     standardRequests: number;
     totalPRUs: number;
-    modelPRUs: Map<string, number>;
+    modelStats: Map<string, { requests: number; prus: number; multiplier: number; isPremium: boolean }>;
   }>();
   
   for (const metric of metrics) {
@@ -605,24 +613,29 @@ export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAn
         pruRequests: 0, 
         standardRequests: 0, 
         totalPRUs: 0,
-        modelPRUs: new Map()
+        modelStats: new Map()
       });
     }
-    
+
     const dayData = dailyMetrics.get(date)!;
-    
+
     for (const modelFeature of metric.totals_by_model_feature) {
       const model = modelFeature.model.toLowerCase();
       const count = modelFeature.user_initiated_interaction_count;
       const multiplier = getModelMultiplier(model);
       const prus = count * multiplier;
-      
+      const premium = isPremiumModel(model);
+
       dayData.totalPRUs += prus;
-      
-      // Track PRUs by model
-      const currentModelPRUs = dayData.modelPRUs.get(model) || 0;
-      dayData.modelPRUs.set(model, currentModelPRUs + prus);
-      
+
+      const existing = dayData.modelStats.get(model);
+      if (existing) {
+        existing.requests += count;
+        existing.prus += prus;
+      } else {
+        dayData.modelStats.set(model, { requests: count, prus, multiplier, isPremium: premium });
+      }
+
       if (multiplier === 0) {
         dayData.standardRequests += count;
       } else {
@@ -634,9 +647,18 @@ export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAn
   return Array.from(dailyMetrics.entries())
     .map(([date, data]) => {
       const total = data.pruRequests + data.standardRequests;
-      const topModelEntry = Array.from(data.modelPRUs.entries())
-        .sort((a, b) => b[1] - a[1])[0];
-      const topModelName = topModelEntry ? topModelEntry[0] : 'unknown';
+      const modelsArray = Array.from(data.modelStats.entries())
+        .map(([name, stats]) => ({
+          name,
+          requests: stats.requests,
+          prus: Math.round(stats.prus * 100) / 100,
+          isPremium: stats.isPremium,
+          multiplier: stats.multiplier
+        }))
+        // Sort models by PRUs (desc), then by requests (desc) for deterministic ordering
+        .sort((a, b) => (b.prus - a.prus) || (b.requests - a.requests));
+      const topModelEntry = modelsArray[0];
+      const topModelName = topModelEntry ? topModelEntry.name : 'unknown';
       return {
         date,
         pruRequests: data.pruRequests,
@@ -645,8 +667,9 @@ export function calculateDailyPRUAnalysis(metrics: CopilotMetrics[]): DailyPRUAn
         totalPRUs: Math.round(data.totalPRUs * 100) / 100,
         serviceValue: Math.round(data.totalPRUs * SERVICE_VALUE_RATE * 100) / 100,
         topModel: topModelName,
-        topModelPRUs: topModelEntry ? Math.round(topModelEntry[1] * 100) / 100 : 0,
-        topModelIsPremium: isPremiumModel(topModelName)
+        topModelPRUs: topModelEntry ? topModelEntry.prus : 0,
+        topModelIsPremium: topModelEntry ? topModelEntry.isPremium : false,
+        models: modelsArray
       };
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

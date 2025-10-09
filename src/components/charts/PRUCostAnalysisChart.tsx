@@ -54,14 +54,26 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
   const totalRequests = totalPRURequests + totalStandardRequests;
   const avgPRUPercentage = data.length > 0 ? data.reduce((sum, d) => sum + d.pruPercentage, 0) / data.length : 0;
 
-  // Find most expensive day and top model
+  // Find most expensive day
   const maxCostDay = data.reduce((max, d) => d.serviceValue > max.serviceValue ? d : max, data[0]);
-  // Collect unique premium models only (using explicit flag passed in data)
-  const topModels = [...new Set(
-    data
-      .filter(d => d.topModelIsPremium && d.topModel !== 'unknown')
-      .map(d => d.topModel)
-  )];
+
+  // Aggregate premium models across the entire period using expanded daily models list
+  const premiumModelAggregate = data.reduce((acc, day) => {
+    for (const m of day.models) {
+      if (!m.isPremium || m.name === 'unknown') continue;
+      const existing = acc.get(m.name) || { prus: 0, requests: 0 };
+      existing.prus += m.prus;
+      existing.requests += m.requests;
+      acc.set(m.name, existing);
+    }
+    return acc;
+  }, new Map<string, { prus: number; requests: number }>());
+
+  const sortedPremiumModels = Array.from(premiumModelAggregate.entries())
+    .map(([name, stats]) => ({ name, ...stats }))
+    .sort((a, b) => (b.prus - a.prus) || (b.requests - a.requests));
+
+  const topModels = sortedPremiumModels.map(m => m.name);
 
   const getChartData = () => {
     switch (viewType) {
