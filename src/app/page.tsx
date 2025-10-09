@@ -34,12 +34,13 @@ import CopilotAdoptionView from '../components/CopilotAdoptionView';
 import PRUUsageAnalysisView from '../components/PRUUsageAnalysisView';
 import CopilotImpactView from '../components/CopilotImpactView';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
+import CustomerEmailView from '../components/CustomerEmailView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/ui/MetricTile';
 import ModelDetailsView from '../components/ModelDetailsView';
 import { useMetricsData, FilteredMetricsData } from '../components/MetricsContext';
 
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption' | 'modelDetails';
+type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption' | 'modelDetails' | 'customerEmail';
 
 export default function Home() {
   // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
@@ -339,6 +340,18 @@ export default function Home() {
           />
         )}
 
+        {/* Show Customer Email Report View */}
+        {stats && currentView === 'customerEmail' && (
+          <CustomerEmailView
+            metrics={metrics}
+            featureAdoptionData={featureAdoptionData}
+            joinedImpactData={joinedImpactData}
+            agentImpactData={agentImpactData}
+            codeCompletionImpactData={codeCompletionImpactData}
+            onBack={() => setCurrentView('overview')}
+          />
+        )}
+
         {/* Show PRU Usage Analysis View */}
         {stats && currentView === 'pruUsage' && (
           <PRUUsageAnalysisView
@@ -530,6 +543,12 @@ export default function Home() {
                   className="w-full px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-md transition-colors"
                 >
                   Data Quality Analysis
+                </button>
+                <button
+                  onClick={() => setCurrentView('customerEmail')}
+                  className="w-full mt-3 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors"
+                >
+                  Generate Customer Email
                 </button>
               </div>
             </div>
