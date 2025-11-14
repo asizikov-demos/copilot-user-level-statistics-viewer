@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "update:plugins": "ts-node data-utils/update-plugin-versions.ts"
+    "update:plugins": "node --experimental-strip-types data-utils/update-plugin-versions.ts"
   },
   "dependencies": {
     "chart.js": "^4.5.0",

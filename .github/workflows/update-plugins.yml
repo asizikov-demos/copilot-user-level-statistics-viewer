@@ -29,8 +29,6 @@ jobs:
 
       - name: Update plugin versions
         run: npm run update:plugins
-        env:
-          TS_NODE_COMPILER_OPTIONS: '{"module":"esnext"}'
 
       - name: Check for changes
         id: git-diff

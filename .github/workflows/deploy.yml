@@ -54,8 +54,6 @@ jobs:
       
       - name: Update plugin versions
         run: npm run update:plugins
-        env:
-          TS_NODE_COMPILER_OPTIONS: '{"module":"esnext"}'
         if: github.ref == 'refs/heads/main'
             
       - name: Build application
