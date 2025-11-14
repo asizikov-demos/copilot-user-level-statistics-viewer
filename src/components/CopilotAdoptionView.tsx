@@ -28,6 +28,15 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
   const [jetbrainsUpdates, setJetbrainsUpdates] = useState<JetBrainsPluginUpdate[] | null>(null);
   const [jbError, setJbError] = useState<string | null>(null);
   const [jbLoading, setJbLoading] = useState<boolean>(false);
+  // VS Code extension versions state
+  interface VsCodeExtensionVersion {
+    version: string;
+    releaseDate: string; // ISO string
+  }
+
+  const [vscodeVersions, setVsCodeVersions] = useState<VsCodeExtensionVersion[] | null>(null);
+  const [vsError, setVsError] = useState<string | null>(null);
+  const [vsLoading, setVsLoading] = useState<boolean>(false);
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -63,6 +72,47 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     }
     loadUpdates();
     return () => { isMounted = false; };
+  }, []);
+
+  // VS Code versions: load rolling history from vscode.json
+  useEffect(() => {
+    let isMounted = true;
+    async function loadVsCodeVersions() {
+      try {
+        setVsLoading(true);
+
+        const res = await fetch('/data/vscode.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: unknown = await res.json();
+
+        if (!data || typeof data !== 'object' || !Array.isArray((data as { versions?: unknown }).versions)) {
+          throw new Error('Unexpected response shape');
+        }
+
+        const versionsArray = (data as { versions: unknown[] }).versions;
+
+        const mapped: VsCodeExtensionVersion[] = versionsArray.map((item) => {
+          const obj = item as { version?: unknown; releaseDate?: unknown };
+          return {
+            version: typeof obj.version === 'string' ? obj.version : 'n/a',
+            releaseDate:
+              typeof obj.releaseDate === 'string'
+                ? obj.releaseDate
+                : String(obj.releaseDate ?? ''),
+          };
+        });
+
+        if (isMounted) setVsCodeVersions(mapped);
+      } catch (e) {
+        if (isMounted) setVsError((e as Error).message);
+      } finally {
+        if (isMounted) setVsLoading(false);
+      }
+    }
+    loadVsCodeVersions();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Plugin version analysis
@@ -202,10 +252,16 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       <div className="mt-10">
         <h3 className="text-lg font-medium text-gray-900 mb-2">Plugin Version Analysis</h3>
         <p className="text-gray-600 text-sm mb-6 max-w-2xl">
-          Analyze IntelliJ plugin versions across your organization to identify users with outdated plugins that may be missing important features and bug fixes.
+          Analyze plugin versions across your organization to identify users with outdated plugins that may be missing important features and bug fixes.
         </p>
 
-        {/* Plugin Summary Metrics */}
+        {/* JetBrains Subsection */}
+        <h4 className="text-md font-semibold text-gray-900 mb-1">JetBrains</h4>
+        <p className="text-gray-600 text-xs mb-4 max-w-2xl">
+          IntelliJ-based IDEs using the GitHub Copilot JetBrains plugin.
+        </p>
+
+        {/* Plugin Summary Metrics (JetBrains) */}
         {pluginVersionAnalysis.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <MetricTile
@@ -237,7 +293,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           </div>
         )}
 
-        {/* Outdated Plugins Table */}
+        {/* Outdated JetBrains Plugins Table */}
         {pluginVersionAnalysis.length > 0 && (
           <div className="mb-8">
             <h4 className="text-md font-semibold text-gray-800 mb-3">Outdated Plugins</h4>
@@ -320,9 +376,9 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
         </div>
         )}
 
-        {/* Latest 8 Versions Table (Collapsible: show 2 by default) */}
+        {/* JetBrains: Latest 8 Versions Table (Collapsible: show 2 by default) */}
         <div className="mb-8">
-          <h4 className="text-md font-semibold text-gray-800 mb-3">Latest 8 Plugin Versions</h4>
+          <h4 className="text-md font-semibold text-gray-800 mb-3">JetBrains &mdash; Latest 8 Plugin Versions</h4>
           <ExpandableTableSection
             items={latestEightUpdates}
             initialCount={2}
@@ -358,6 +414,59 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                       <tr key={update.version} className="hover:bg-gray-50">
                         <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{update.version}</td>
                         <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{formatDate(update.releaseDate)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ExpandableTableSection>
+        </div>
+
+        {/* Visual Studio Code Subsection */}
+        <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
+        <p className="text-gray-600 text-xs mb-4 max-w-2xl">
+          VS Code using the GitHub Copilot extension. Version history is maintained as a rolling window of recent releases.
+        </p>
+
+        <div className="mb-8">
+          <ExpandableTableSection
+            items={vscodeVersions || []}
+            initialCount={2}
+            buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+            buttonExpandedLabel="Show Less"
+          >
+            {({ visibleItems }) => (
+              <div className="overflow-x-auto border border-gray-200 rounded-md">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-medium text-gray-700">Version</th>
+                      <th className="px-4 py-2 text-left font-medium text-gray-700">Release Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {vsLoading && (
+                      <tr>
+                        <td className="px-4 py-3 text-gray-500" colSpan={2}>Loading&hellip;</td>
+                      </tr>
+                    )}
+                    {vsError && !vsLoading && (
+                      <tr>
+                        <td className="px-4 py-3 text-red-600" colSpan={2}>
+                          Failed to load VS Code versions: {vsError}
+                        </td>
+                      </tr>
+                    )}
+                    {!vsLoading && !vsError && vscodeVersions && vscodeVersions.length === 0 && (
+                      <tr>
+                        <td className="px-4 py-3 text-gray-500" colSpan={2}>No version data available.</td>
+                      </tr>
+                    )}
+                    {!vsLoading && !vsError && visibleItems.map((v) => (
+                      <tr key={v.version} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{v.version}</td>
+                        <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{formatDate(v.releaseDate)}</td>
                       </tr>
                     ))}
                   </tbody>
