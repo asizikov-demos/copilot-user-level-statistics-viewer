@@ -1,4 +1,7 @@
 name: Scheduled Plugin Versions Update
+permissions:
+  contents: read
+  actions: write
 
 on:
   schedule:
