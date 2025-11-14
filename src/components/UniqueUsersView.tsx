@@ -2,6 +2,7 @@
 
 import { UserSummary, CopilotMetrics } from '../types/metrics';
 import { useState } from 'react';
+import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import SectionHeader from './ui/SectionHeader';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 
@@ -18,6 +19,7 @@ type SortDirection = 'asc' | 'desc';
 export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick }: UniqueUsersViewProps) {
   const [sortField, setSortField] = useState<SortField>('total_user_initiated_interactions');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
 
   const handleUserClick = (user: UserSummary) => {
     const userMetrics = rawMetrics.filter(metric => metric.user_id === user.user_id);
@@ -33,7 +35,7 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
     }
   };
 
-  const sortedUsers = [...users].sort((a, b) => {
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
     let aVal = a[sortField];
     let bVal = b[sortField];
     
@@ -127,6 +129,19 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-4">
+          <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
+            Search by user login
+          </label>
+          <input
+            id="userSearch"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Start typing a username..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
