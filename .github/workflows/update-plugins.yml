@@ -43,7 +43,7 @@ jobs:
         if: steps.git-diff.outputs.changes == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: 'Update plugin versions'
+          commit-message: "Update plugin versions"
           branch: automated/plugin-versions-update
           delete-branch: true
           title: 'Update Plugin Versions'
