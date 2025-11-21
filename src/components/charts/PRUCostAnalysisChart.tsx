@@ -14,7 +14,7 @@ import {
   TooltipItem
 } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
-import { DailyPRUAnalysisData } from '../../utils/metricsParser';
+import { DailyPRUAnalysisData } from '../../utils/metricCalculators';
 import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(

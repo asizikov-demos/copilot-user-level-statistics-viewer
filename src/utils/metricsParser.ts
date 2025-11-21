@@ -84,16 +84,20 @@ export async function parseMetricsStream(file: File, onProgress?: (count: number
       }
       
       if (onProgress) {
-         onProgress(processedCount);
+        onProgress(processedCount);
       }
     }
 
     // Process remaining buffer
     if (buffer.trim()) {
-       const metric = validateAndParseLine(buffer);
-       if (metric) {
-         metrics.push(metric);
-       }
+      const metric = validateAndParseLine(buffer);
+      if (metric) {
+        metrics.push(metric);
+        processedCount++;
+        if (onProgress) {
+          onProgress(processedCount);
+        }
+      }
     }
   } finally {
     reader.releaseLock();

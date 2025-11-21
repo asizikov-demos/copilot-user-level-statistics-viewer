@@ -12,7 +12,7 @@ import {
   TooltipItem,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import type { ModeImpactData } from '../../utils/metricsParser';
+import type { ModeImpactData } from '../../utils/metricCalculators';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 

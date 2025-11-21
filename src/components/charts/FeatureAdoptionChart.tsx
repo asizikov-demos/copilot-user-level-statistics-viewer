@@ -12,7 +12,7 @@ import {
   TooltipItem
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { FeatureAdoptionData } from '../../utils/metricsParser';
+import { FeatureAdoptionData } from '../../utils/metricCalculators';
 import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(

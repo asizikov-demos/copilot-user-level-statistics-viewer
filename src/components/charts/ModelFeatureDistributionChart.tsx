@@ -13,7 +13,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
-import { ModelFeatureDistributionData } from '../../utils/metricsParser';
+import { ModelFeatureDistributionData } from '../../utils/metricCalculators';
 import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(

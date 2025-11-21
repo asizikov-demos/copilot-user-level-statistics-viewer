@@ -13,7 +13,7 @@ import {
   TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { DailyChatUsersData } from '../../utils/metricsParser';
+import { DailyChatUsersData } from '../../utils/metricCalculators';
 
 ChartJS.register(
   CategoryScale,

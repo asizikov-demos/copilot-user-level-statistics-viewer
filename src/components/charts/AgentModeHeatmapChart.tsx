@@ -14,7 +14,7 @@ import {
   TooltipItem
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
-import { AgentModeHeatmapData } from '../../utils/metricsParser';
+import { AgentModeHeatmapData } from '../../utils/metricCalculators';
 import InsightsCard from '../ui/InsightsCard';
 
 ChartJS.register(

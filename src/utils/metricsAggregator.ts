@@ -61,6 +61,7 @@ export function aggregateMetrics(
   
   // Stats & User Summaries
   const userMap = new Map<number, UserSummary>();
+  const userActiveDays = new Map<number, Set<string>>();
   const userUsageMap = new Map<number, { used_chat: boolean; used_agent: boolean }>();
   const languageEngagements = new Map<string, number>();
   const ideUsers = new Map<string, Set<number>>();
@@ -163,6 +164,7 @@ export function aggregateMetrics(
         used_agent: false,
         used_chat: false,
       });
+      userActiveDays.set(userId, new Set());
     }
     const userSummary = userMap.get(userId)!;
     userSummary.total_user_initiated_interactions += metric.user_initiated_interaction_count;
@@ -172,7 +174,7 @@ export function aggregateMetrics(
     userSummary.total_loc_deleted += metric.loc_deleted_sum;
     userSummary.total_loc_suggested_to_add += metric.loc_suggested_to_add_sum;
     userSummary.total_loc_suggested_to_delete += metric.loc_suggested_to_delete_sum;
-    userSummary.days_active += 1;
+    userActiveDays.get(userId)!.add(date);
     userSummary.used_agent = userSummary.used_agent || metric.used_agent;
     userSummary.used_chat = userSummary.used_chat || metric.used_chat;
 
@@ -442,7 +444,10 @@ export function aggregateMetrics(
   };
 
   // User Summaries
-  const userSummaries = Array.from(userMap.values()).sort((a, b) => b.total_user_initiated_interactions - a.total_user_initiated_interactions);
+  const userSummaries = Array.from(userMap.values()).map(user => ({
+    ...user,
+    days_active: userActiveDays.get(user.user_id)?.size || 0
+  })).sort((a, b) => b.total_user_initiated_interactions - a.total_user_initiated_interactions);
 
   // Daily Engagement
   const engagementData = Array.from(dailyEngagement.entries())
