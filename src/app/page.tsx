@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { CopilotMetrics, MetricsStats } from '../types/metrics';
 import { 
-  parseMetricsFile, 
+  parseMetricsStream,
   calculateStats, 
   aggregateMetrics
 } from '../utils/metricsParser';
@@ -131,8 +131,8 @@ export default function Home() {
     setError(null);
 
     try {
-      const fileContent = await file.text();
-      const parsedMetrics = parseMetricsFile(fileContent);
+      // Use streaming parser instead of loading full file into memory
+      const parsedMetrics = await parseMetricsStream(file);
       const calculatedStats = calculateStats(parsedMetrics);
 
       const firstMetric = parsedMetrics[0];
