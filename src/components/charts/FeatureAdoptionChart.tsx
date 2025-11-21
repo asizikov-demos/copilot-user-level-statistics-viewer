@@ -48,7 +48,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     { name: 'Chat Features', count: data.chatUsers, color: 'rgb(59, 130, 246)', description: 'Users who used any chat feature' },
     { name: 'Ask Mode', count: data.askModeUsers, color: 'rgb(147, 51, 234)', description: 'Users who used chat ask mode' },
     { name: 'Edit Mode', count: data.editModeUsers, color: 'rgb(245, 158, 11)', description: 'Users who used chat edit mode' },
-    { name: 'Agent Mode', count: data.agentModeUsers, color: 'rgb(239, 68, 68)', description: 'Users who used agent mode (premium)' },
+    { name: 'Agent Mode', count: data.agentModeUsers, color: 'rgb(239, 68, 68)', description: 'Users who used agent mode' },
     { name: 'Inline Chat', count: data.inlineModeUsers, color: 'rgb(168, 85, 247)', description: 'Users who used inline chat' },
     { name: 'Code Review', count: data.codeReviewUsers, color: 'rgb(20, 184, 166)', description: 'Users who used code review features' }
   ];
