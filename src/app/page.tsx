@@ -5,25 +5,9 @@ import { CopilotMetrics, MetricsStats } from '../types/metrics';
 import { 
   parseMetricsFile, 
   calculateStats, 
-  calculateUserSummaries, 
-  calculateDailyEngagement, 
-  calculateDailyChatUsers, 
-  calculateDailyChatRequests, 
-  calculateLanguageStats, 
-  filterUnknownLanguages,
-  calculateDailyModelUsage,
-  calculateFeatureAdoption,
-  calculateDailyPRUAnalysis,
-  calculateAgentModeHeatmap,
-  calculateModelFeatureDistribution,
-  calculateAgentImpactData,
-  calculateCodeCompletionImpactData,
-  calculateEditModeImpactData,
-  calculateInlineModeImpactData,
-  calculateAskModeImpactData,
-  calculateJoinedImpactData
+  aggregateMetrics
 } from '../utils/metricsParser';
-import { filterMetricsByDateRange, getFilteredDateRange } from '../utils/dateFilters';
+import { getFilteredDateRange } from '../utils/dateFilters';
 import UniqueUsersView from '../components/UniqueUsersView';
 import UserDetailsView from '../components/UserDetailsView';
 import LanguagesView from '../components/LanguagesView';
@@ -39,7 +23,7 @@ import CustomerEmailView from '../components/CustomerEmailView';
 import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
 import MetricTile from '../components/ui/MetricTile';
 import ModelDetailsView from '../components/ModelDetailsView';
-import { useMetricsData, FilteredMetricsData } from '../components/MetricsContext';
+import { useMetricsData } from '../components/MetricsContext';
 
 type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption' | 'modelDetails' | 'customerEmail';
 
@@ -86,60 +70,24 @@ export default function Home() {
       };
     }
 
-    // Apply language filter first if enabled
-    const processedMetrics = removeUnknownLanguages ? filterUnknownLanguages(rawMetrics) : rawMetrics;
-    
-    // Then apply date range filter
-    const filteredMetrics = filterMetricsByDateRange(processedMetrics, dateRangeFilter, originalStats.reportEndDay);
-    const filteredStats = calculateStats(filteredMetrics);
-    const filteredUserSummaries = calculateUserSummaries(filteredMetrics);
-    const filteredEngagementData = calculateDailyEngagement(filteredMetrics);
-    const filteredChatUsersData = calculateDailyChatUsers(filteredMetrics);
-    const filteredChatRequestsData = calculateDailyChatRequests(filteredMetrics);
-    const filteredLanguageStats = calculateLanguageStats(filteredMetrics);
-    
-    // Calculate PRU analysis data
-    const filteredModelUsageData = calculateDailyModelUsage(filteredMetrics);
-    const filteredFeatureAdoptionData = calculateFeatureAdoption(filteredMetrics);
-    const filteredPRUAnalysisData = calculateDailyPRUAnalysis(filteredMetrics);
-    const filteredAgentModeHeatmapData = calculateAgentModeHeatmap(filteredMetrics);
-    const filteredModelFeatureDistributionData = calculateModelFeatureDistribution(filteredMetrics);
-    const filteredAgentImpactData = calculateAgentImpactData(filteredMetrics);
-    const filteredCodeCompletionImpactData = calculateCodeCompletionImpactData(filteredMetrics);
-    const filteredEditModeImpactData = calculateEditModeImpactData(filteredMetrics);
-    const filteredInlineModeImpactData = calculateInlineModeImpactData(filteredMetrics);
-    const filteredAskModeImpactData = calculateAskModeImpactData(filteredMetrics);
-    const filteredJoinedImpactData = calculateJoinedImpactData(filteredMetrics);
+    const aggregated = aggregateMetrics(rawMetrics, {
+      removeUnknownLanguages,
+      dateFilter: dateRangeFilter,
+      reportEndDay: originalStats.reportEndDay
+    });
 
     // Update the date range in stats based on filter
     const { startDay, endDay } = getFilteredDateRange(dateRangeFilter, originalStats.reportStartDay, originalStats.reportEndDay);
     const updatedStats = {
-      ...filteredStats,
+      ...aggregated.stats,
       reportStartDay: startDay,
       reportEndDay: endDay
     };
 
-    const result: FilteredMetricsData = {
-      metrics: filteredMetrics,
-      stats: updatedStats,
-      userSummaries: filteredUserSummaries,
-      engagementData: filteredEngagementData,
-      chatUsersData: filteredChatUsersData,
-      chatRequestsData: filteredChatRequestsData,
-      languageStats: filteredLanguageStats,
-      modelUsageData: filteredModelUsageData,
-      featureAdoptionData: filteredFeatureAdoptionData,
-      pruAnalysisData: filteredPRUAnalysisData,
-      agentModeHeatmapData: filteredAgentModeHeatmapData,
-      modelFeatureDistributionData: filteredModelFeatureDistributionData,
-      agentImpactData: filteredAgentImpactData,
-      codeCompletionImpactData: filteredCodeCompletionImpactData,
-      editModeImpactData: filteredEditModeImpactData,
-      inlineModeImpactData: filteredInlineModeImpactData,
-      askModeImpactData: filteredAskModeImpactData,
-      joinedImpactData: filteredJoinedImpactData
+    return {
+      ...aggregated,
+      stats: updatedStats
     };
-    return result;
   }, [rawMetrics, originalStats, dateRangeFilter, removeUnknownLanguages]);
 
   const { 
