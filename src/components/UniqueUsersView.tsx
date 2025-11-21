@@ -192,9 +192,6 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
                 <button onClick={() => handleSort('total_loc_suggested_to_add')} className="flex items-center hover:text-gray-700 focus:outline-none">Suggested Add {getSortIcon('total_loc_suggested_to_add')}</button>
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                <button onClick={() => handleSort('total_loc_suggested_to_delete')} className="flex items-center hover:text-gray-700 focus:outline-none">Suggested Delete {getSortIcon('total_loc_suggested_to_delete')}</button>
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
                 <button
                   onClick={() => handleSort('days_active')}
                   className="flex items-center hover:text-gray-700 focus:outline-none"
@@ -242,7 +239,6 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
                 <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_added.toLocaleString()}</div></td>
                 <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_deleted.toLocaleString()}</div></td>
                 <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_suggested_to_add.toLocaleString()}</div></td>
-                <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_suggested_to_delete.toLocaleString()}</div></td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{user.days_active}</div>
                 </td>
