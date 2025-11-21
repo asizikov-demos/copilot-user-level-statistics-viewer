@@ -1030,9 +1030,14 @@ export function calculateInlineModeImpactData(metrics: CopilotMetrics[]): ModeIm
   return calculateFeatureImpactData(metrics, ['chat_inline']);
 }
 
+export function calculateAskModeImpactData(metrics: CopilotMetrics[]): ModeImpactData[] {
+  return calculateFeatureImpactData(metrics, ['chat_panel_ask_mode']);
+}
+
 export function calculateJoinedImpactData(metrics: CopilotMetrics[]): ModeImpactData[] {
   return calculateFeatureImpactData(metrics, [
     'code_completion',
+    'chat_panel_ask_mode',
     'chat_panel_edit_mode',
     'chat_inline',
     'chat_panel_agent_mode',

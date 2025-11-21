@@ -15,6 +15,7 @@ interface CustomerEmailViewProps {
   joinedImpactData: ModeImpactData[];
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
+  askModeImpactData: ModeImpactData[];
   onBack: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function CustomerEmailView({
   joinedImpactData,
   agentImpactData,
   codeCompletionImpactData,
+  askModeImpactData,
   onBack
 }: CustomerEmailViewProps) {
   const [contactName, setContactName] = useState('');
@@ -45,6 +47,7 @@ function escapeHtml(text: string) {
   const combinedImpactChartRef = useRef<HTMLDivElement>(null);
   const agentModeChartRef = useRef<HTMLDivElement>(null);
   const codeCompletionChartRef = useRef<HTMLDivElement>(null);
+  const askModeChartRef = useRef<HTMLDivElement>(null);
   const featureAdoptionChartRef = useRef<HTMLDivElement>(null);
   const premiumModelsChartRef = useRef<HTMLDivElement>(null);
 
@@ -120,6 +123,7 @@ function escapeHtml(text: string) {
       const combinedImpactImage = captureChartAsImage(combinedImpactChartRef);
       const agentModeImage = captureChartAsImage(agentModeChartRef);
       const codeCompletionImage = captureChartAsImage(codeCompletionChartRef);
+      const askModeImage = captureChartAsImage(askModeChartRef);
       const featureAdoptionImage = captureChartAsImage(featureAdoptionChartRef);
       const premiumModelsImage = captureChartAsImage(premiumModelsChartRef);
 
@@ -148,11 +152,11 @@ function escapeHtml(text: string) {
 
 <p>I wanted to give you a few updates on GitHub Copilot.</p>
 
-<p>A few days ago, I signed you up for a Copilot Insights Dashboard and User-Level Statistics API private preview. You can find it at:<br>
+<p>We started Copilot Insights Dashboard and User-Level Statistics API Public Preview. You can find it at:<br>
 <a href="https://github.com/enterprises/${enterpriseSlug || '[ENTERPRISE SLUG]'}/insights/copilot?period=28d&interval=1d">https://github.com/enterprises/${enterpriseSlug || '[ENTERPRISE SLUG]'}/insights/copilot?period=28d&interval=1d</a></p>
 
-<p>As this is a private preview, I can share the preview documentation with you:<br>
-<a href="https://docs.github.com/en/enterprise-cloud@latest/early-access/copilot-metrics">https://docs.github.com/en/enterprise-cloud@latest/early-access/copilot-metrics</a></p>
+<p>You can find the documentation here:<br>
+<a href="https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/copilot-metrics">https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/copilot-metrics</a></p>
 
 <p>There you'll find valuable information about Copilot Adoption at ${companyName || '[Company Name]'}.</p>
 
@@ -196,6 +200,11 @@ ${agentModeImage ? `
 ${codeCompletionImage ? `
 <p class="chart-title">Code Completion Impact</p>
 <img src="${codeCompletionImage}" alt="Code Completion Impact Chart" />
+` : ''}
+
+${askModeImage ? `
+<p class="chart-title">Copilot Ask Mode Impact</p>
+<img src="${askModeImage}" alt="Ask Mode Impact Chart" />
 ` : ''}
 
 <p>Lines of Code (LoC) is not the best way to measure productivity impact, of course, but it's a good indicator of adoption level and the level of user engagement.</p>
@@ -255,7 +264,7 @@ ${premiumModelsImage ? `
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <SectionHeader
-          title="Customer Email Report"
+          title="Executive Summary Email"
           description="Curated summary of key Copilot impact, adoption, and premium model usage metrics suitable for sharing in a customer-facing update."
           onBack={onBack}
           className="mb-6"
@@ -357,7 +366,7 @@ ${premiumModelsImage ? `
           <p>I wanted to give you a few updates on GitHub Copilot.</p>
           
           <p>
-            A few days ago, I signed you up for a Copilot Insights Dashboard and User-Level Statistics API private preview.
+            We started Copilot Insights Dashboard and User-Level Statistics API Public Preview.
             You can find it at:
             <br />
             <a 
@@ -371,15 +380,15 @@ ${premiumModelsImage ? `
           </p>
           
           <p>
-            As this is a private preview, I can share the preview documentation with you:
+            You can find the documentation here:
             <br />
             <a 
-              href="https://docs.github.com/en/enterprise-cloud@latest/early-access/copilot-metrics"
+              href="https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/copilot-metrics"
               className="text-indigo-600 hover:text-indigo-800 underline break-all"
               target="_blank"
               rel="noopener noreferrer"
             >
-              https://docs.github.com/en/enterprise-cloud@latest/early-access/copilot-metrics
+              https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/copilot-metrics
             </a>
           </p>
           
@@ -487,6 +496,15 @@ ${premiumModelsImage ? `
               title="Copilot Agent Mode Impact"
               description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
               emptyStateMessage="No agent mode impact data available."
+            />
+          </div>
+
+          <div ref={askModeChartRef}>
+            <ModeImpactChart
+              data={askModeImpactData || []}
+              title="Copilot Ask Mode Impact"
+              description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+              emptyStateMessage="No Ask Mode impact data available."
             />
           </div>
 

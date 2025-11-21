@@ -20,6 +20,7 @@ import {
   calculateCodeCompletionImpactData,
   calculateEditModeImpactData,
   calculateInlineModeImpactData,
+  calculateAskModeImpactData,
   calculateJoinedImpactData
 } from '../utils/metricsParser';
 import { filterMetricsByDateRange, getFilteredDateRange } from '../utils/dateFilters';
@@ -80,6 +81,7 @@ export default function Home() {
         codeCompletionImpactData: [],
         editModeImpactData: [],
         inlineModeImpactData: [],
+        askModeImpactData: [],
         joinedImpactData: []
       };
     }
@@ -104,9 +106,10 @@ export default function Home() {
     const filteredModelFeatureDistributionData = calculateModelFeatureDistribution(filteredMetrics);
     const filteredAgentImpactData = calculateAgentImpactData(filteredMetrics);
     const filteredCodeCompletionImpactData = calculateCodeCompletionImpactData(filteredMetrics);
-  const filteredEditModeImpactData = calculateEditModeImpactData(filteredMetrics);
-  const filteredInlineModeImpactData = calculateInlineModeImpactData(filteredMetrics);
-  const filteredJoinedImpactData = calculateJoinedImpactData(filteredMetrics);
+    const filteredEditModeImpactData = calculateEditModeImpactData(filteredMetrics);
+    const filteredInlineModeImpactData = calculateInlineModeImpactData(filteredMetrics);
+    const filteredAskModeImpactData = calculateAskModeImpactData(filteredMetrics);
+    const filteredJoinedImpactData = calculateJoinedImpactData(filteredMetrics);
 
     // Update the date range in stats based on filter
     const { startDay, endDay } = getFilteredDateRange(dateRangeFilter, originalStats.reportStartDay, originalStats.reportEndDay);
@@ -133,6 +136,7 @@ export default function Home() {
       codeCompletionImpactData: filteredCodeCompletionImpactData,
       editModeImpactData: filteredEditModeImpactData,
       inlineModeImpactData: filteredInlineModeImpactData,
+      askModeImpactData: filteredAskModeImpactData,
       joinedImpactData: filteredJoinedImpactData
     };
     return result;
@@ -155,6 +159,7 @@ export default function Home() {
     codeCompletionImpactData,
     editModeImpactData,
     inlineModeImpactData,
+    askModeImpactData,
     joinedImpactData
   } = filteredData;
 
@@ -392,6 +397,7 @@ export default function Home() {
             codeCompletionImpactData={codeCompletionImpactData}
             editModeImpactData={editModeImpactData}
             inlineModeImpactData={inlineModeImpactData}
+            askModeImpactData={askModeImpactData}
             joinedImpactData={joinedImpactData}
             onBack={() => setCurrentView('overview')}
           />
@@ -405,6 +411,7 @@ export default function Home() {
             joinedImpactData={joinedImpactData}
             agentImpactData={agentImpactData}
             codeCompletionImpactData={codeCompletionImpactData}
+            askModeImpactData={askModeImpactData}
             onBack={() => setCurrentView('overview')}
           />
         )}
@@ -605,7 +612,7 @@ export default function Home() {
                   onClick={() => setCurrentView('customerEmail')}
                   className="w-full mt-3 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors"
                 >
-                  Generate Customer Email
+                  Executive Summary Email
                 </button>
               </div>
             </div>

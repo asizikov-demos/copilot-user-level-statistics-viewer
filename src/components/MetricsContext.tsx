@@ -35,6 +35,7 @@ export interface FilteredMetricsData {
   codeCompletionImpactData: CodeCompletionImpactData[];
   editModeImpactData: ModeImpactData[];
   inlineModeImpactData: ModeImpactData[];
+  askModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
 

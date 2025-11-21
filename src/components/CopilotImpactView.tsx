@@ -10,11 +10,12 @@ interface CopilotImpactViewProps {
   codeCompletionImpactData: CodeCompletionImpactData[];
   editModeImpactData: ModeImpactData[];
   inlineModeImpactData: ModeImpactData[];
+  askModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
   onBack: () => void;
 }
 
-export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, joinedImpactData, onBack }: CopilotImpactViewProps) {
+export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, joinedImpactData, onBack }: CopilotImpactViewProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <SectionHeader
@@ -28,7 +29,7 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         <ModeImpactChart
           data={joinedImpactData || []}
           title="Combined Copilot Impact"
-          description="Aggregate impact across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
+          description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
           emptyStateMessage="No combined impact data available."
         />
         <ModeImpactChart
@@ -36,6 +37,12 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
           title="Copilot Agent Mode Impact"
           description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
           emptyStateMessage="No agent mode impact data available."
+        />
+        <ModeImpactChart
+          data={askModeImpactData || []}
+          title="Copilot Ask Mode Impact"
+          description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+          emptyStateMessage="No Ask Mode impact data available."
         />
         <ModeImpactChart
           data={codeCompletionImpactData || []}

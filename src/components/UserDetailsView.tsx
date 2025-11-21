@@ -697,7 +697,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       <ModeImpactChart
         data={userCombinedImpactData}
         title="Combined Copilot Impact"
-        description="Daily lines of code added and deleted across Code Completion, Agent Mode, Edit Mode, and Inline Mode activities."
+        description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
         emptyStateMessage="No combined impact data available."
       />
 
