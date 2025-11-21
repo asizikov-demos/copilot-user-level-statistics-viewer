@@ -238,8 +238,8 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
 
           {topIDE && (
             <DashboardStatsCard
-              value={topIDEUserShare}
-              label={`${formatIDEName(topIDE.ide)} User Share %`}
+              value={`${topIDEUserShare.toLocaleString()}%`}
+              label={`${formatIDEName(topIDE.ide)} User Share`}
               accent="teal"
               tone="tint"
               icon={(
