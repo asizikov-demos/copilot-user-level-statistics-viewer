@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-
-export type DateRangeFilter = 'all' | 'last28days' | 'last14days' | 'last7days';
+import { DateRangeFilter } from '../types/filters';
 
 interface FilterPanelProps {
   onDateRangeChange: (filter: DateRangeFilter) => void;

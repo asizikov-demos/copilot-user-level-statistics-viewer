@@ -1,5 +1,5 @@
 import { CopilotMetrics } from '../types/metrics';
-import { DateRangeFilter } from '../components/FilterPanel';
+import { DateRangeFilter } from '../types/filters';
 
 export function filterMetricsByDateRange(
   metrics: CopilotMetrics[], 

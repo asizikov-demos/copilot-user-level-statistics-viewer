@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { CopilotMetrics, MetricsStats } from '../types/metrics';
+import { useState, useEffect } from 'react';
+import { CopilotMetrics } from '../types/metrics';
 import { parseMetricsStream } from '../utils/metricsParser';
 import { calculateStats } from '../utils/metricCalculators';
 import { useMetricsProcessing } from '../hooks/useMetricsProcessing';
@@ -17,36 +17,38 @@ import PRUUsageAnalysisView from '../components/PRUUsageAnalysisView';
 import CopilotImpactView from '../components/CopilotImpactView';
 import DataQualityAnalysisView from '../components/DataQualityAnalysisView';
 import CustomerEmailView from '../components/CustomerEmailView';
-import FilterPanel, { DateRangeFilter } from '../components/FilterPanel';
+import FilterPanel from '../components/FilterPanel';
 import MetricTile from '../components/ui/MetricTile';
 import ModelDetailsView from '../components/ModelDetailsView';
-import { useMetricsData } from '../components/MetricsContext';
-
-type ViewMode = 'overview' | 'users' | 'userDetails' | 'languages' | 'ides' | 'dataQuality' | 'copilotImpact' | 'pruUsage' | 'copilotAdoption' | 'modelDetails' | 'customerEmail';
+import { useMetricsData, useRawMetrics } from '../components/MetricsContext';
+import { useNavigation } from '../state/NavigationContext';
+import { useFilters } from '../state/FilterContext';
+import { VIEW_MODES } from '../types/navigation';
 
 export default function Home() {
-  // Publish filtered metrics to context so other pages (e.g., Copilot Impact Analysis) can consume.
+  // Use context hooks
   const { setFilteredData } = useMetricsData();
-  const [rawMetrics, setRawMetrics] = useState<CopilotMetrics[]>([]);
-  const [originalStats, setOriginalStats] = useState<MetricsStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<ViewMode>('overview');
-  const [selectedUser, setSelectedUser] = useState<{
-    login: string;
-    id: number;
-    metrics: CopilotMetrics[];
-  } | null>(null);
-  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>('all');
-  const [removeUnknownLanguages, setRemoveUnknownLanguages] = useState<boolean>(false);
-  const [enterpriseName, setEnterpriseName] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
+  const { 
+    rawMetrics, originalStats, enterpriseName, isLoading, error,
+    setRawMetrics, setOriginalStats, setEnterpriseName, setIsLoading, setError, resetRawMetrics
+  } = useRawMetrics();
+  const { 
+    currentView, selectedUser, selectedModel,
+    navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
+  } = useNavigation();
+  const { 
+    dateRange, removeUnknownLanguages,
+    setDateRange, setRemoveUnknownLanguages, resetFilters
+  } = useFilters();
+
+  // Local state for user metrics (needed for UserDetailsView)
+  const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
 
   // Calculate filtered data based on date range and language filters
   const filteredData = useMetricsProcessing(
     rawMetrics,
     originalStats,
-    dateRangeFilter,
+    dateRange,
     removeUnknownLanguages
   );
 
@@ -117,31 +119,15 @@ export default function Home() {
   };
 
   const resetData = () => {
-    setOriginalStats(null);
-    setRawMetrics([]);
-    setError(null);
-    setCurrentView('overview');
-    setSelectedUser(null);
-    setDateRangeFilter('all');
-    setRemoveUnknownLanguages(false);
-    setEnterpriseName(null);
-  };
-
-  const handleDateRangeChange = (filter: DateRangeFilter) => {
-    setDateRangeFilter(filter);
-  };
-
-  const handleRemoveUnknownLanguagesChange = (remove: boolean) => {
-    setRemoveUnknownLanguages(remove);
+    resetRawMetrics();
+    resetNavigation();
+    resetFilters();
+    setSelectedUserMetrics([]);
   };
 
   const handleUserClick = (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => {
-    setSelectedUser({
-      login: userLogin,
-      id: userId,
-      metrics: userMetrics
-    });
-    setCurrentView('userDetails');
+    setSelectedUserMetrics(userMetrics);
+    selectUser({ login: userLogin, id: userId });
   };
 
   const formatDate = (dateString: string) => {
@@ -275,31 +261,31 @@ export default function Home() {
         )}
 
         {/* Show Data Quality Analysis View */}
-        {stats && currentView === 'dataQuality' && (
+        {stats && currentView === VIEW_MODES.DATA_QUALITY && (
           <DataQualityAnalysisView 
             metrics={metrics} 
-            onBack={() => setCurrentView('overview')} 
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
           />
         )}
 
         {/* Show Languages View */}
-        {stats && currentView === 'languages' && (
+        {stats && currentView === VIEW_MODES.LANGUAGES && (
           <LanguagesView 
             languages={languageStats} 
-            onBack={() => setCurrentView('overview')} 
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
           />
         )}
 
         {/* Show IDE View */}
-        {stats && currentView === 'ides' && (
+        {stats && currentView === VIEW_MODES.IDES && (
           <IDEView 
             metrics={metrics} 
-            onBack={() => setCurrentView('overview')} 
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
           />
         )}
 
         {/* Show Copilot Impact View */}
-        {stats && currentView === 'copilotImpact' && (
+        {stats && currentView === VIEW_MODES.COPILOT_IMPACT && (
           <CopilotImpactView
             agentImpactData={agentImpactData}
             codeCompletionImpactData={codeCompletionImpactData}
@@ -307,12 +293,12 @@ export default function Home() {
             inlineModeImpactData={inlineModeImpactData}
             askModeImpactData={askModeImpactData}
             joinedImpactData={joinedImpactData}
-            onBack={() => setCurrentView('overview')}
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
           />
         )}
 
         {/* Show Customer Email Report View */}
-        {stats && currentView === 'customerEmail' && (
+        {stats && currentView === VIEW_MODES.CUSTOMER_EMAIL && (
           <CustomerEmailView
             metrics={metrics}
             featureAdoptionData={featureAdoptionData}
@@ -320,63 +306,63 @@ export default function Home() {
             agentImpactData={agentImpactData}
             codeCompletionImpactData={codeCompletionImpactData}
             askModeImpactData={askModeImpactData}
-            onBack={() => setCurrentView('overview')}
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
           />
         )}
 
         {/* Show PRU Usage Analysis View */}
-        {stats && currentView === 'pruUsage' && (
+        {stats && currentView === VIEW_MODES.PRU_USAGE && (
           <PRUUsageAnalysisView
             modelUsageData={modelUsageData}
             pruAnalysisData={pruAnalysisData}
             modelFeatureDistributionData={modelFeatureDistributionData}
-            onBack={() => setCurrentView('overview')}
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
           />
         )}
 
         {/* Show Copilot Adoption Analysis View */}
-        {stats && currentView === 'copilotAdoption' && (
+        {stats && currentView === VIEW_MODES.COPILOT_ADOPTION && (
           <CopilotAdoptionView
             featureAdoptionData={featureAdoptionData}
             agentModeHeatmapData={agentModeHeatmapData}
             stats={stats}
             metrics={metrics}
-            onBack={() => setCurrentView('overview')}
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
           />
         )}
 
         {/* Show Unique Users View */}
-        {stats && currentView === 'users' && (
+        {stats && currentView === VIEW_MODES.USERS && (
           <UniqueUsersView 
             users={userSummaries} 
             rawMetrics={metrics}
-            onBack={() => setCurrentView('overview')} 
+            onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
             onUserClick={handleUserClick}
           />
         )}
 
         {/* Show User Details View */}
-        {stats && currentView === 'userDetails' && selectedUser && (
+        {stats && currentView === VIEW_MODES.USER_DETAILS && selectedUser && (
           <UserDetailsView
-            userMetrics={selectedUser.metrics}
+            userMetrics={selectedUserMetrics}
             userLogin={selectedUser.login}
             userId={selectedUser.id}
-            onBack={() => setCurrentView('users')}
+            onBack={() => navigateTo(VIEW_MODES.USERS)}
           />
         )}
 
         {/* Show Model Details View */}
-        {stats && currentView === 'modelDetails' && selectedModel && (
+        {stats && currentView === VIEW_MODES.MODEL_DETAILS && selectedModel && (
           <ModelDetailsView
             onBack={() => {
-              setCurrentView('overview');
-              setSelectedModel(null);
+              navigateTo(VIEW_MODES.OVERVIEW);
+              clearSelectedModel();
             }}
           />
         )}
 
         {/* Statistics Section */}
-        {stats && currentView === 'overview' && (
+        {stats && currentView === VIEW_MODES.OVERVIEW && (
           <div className="flex gap-6">
             {/* Main Content */}
             <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -409,7 +395,7 @@ export default function Home() {
                 value={stats.uniqueUsers}
                 accent="blue"
                 interactive
-                onClick={() => setCurrentView('users')}
+                onClick={() => navigateTo(VIEW_MODES.USERS)}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg>}
               />
               <MetricTile
@@ -418,7 +404,7 @@ export default function Home() {
                 subtitle={`${stats.topLanguage?.engagements?.toLocaleString() || '0'} engagements`}
                 accent="purple"
                 interactive
-                onClick={() => setCurrentView('languages')}
+                onClick={() => navigateTo(VIEW_MODES.LANGUAGES)}
                 size="md"
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
               />
@@ -428,7 +414,7 @@ export default function Home() {
                 subtitle={`${stats.topIde?.entries?.toLocaleString() || '0'} users`}
                 accent="orange"
                 interactive
-                onClick={() => setCurrentView('ides')}
+                onClick={() => navigateTo(VIEW_MODES.IDES)}
                 size="md"
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
               />
@@ -441,7 +427,7 @@ export default function Home() {
                 subtitle="Understand Impact for your organization"
                 accent="indigo"
                 interactive
-                onClick={() => setCurrentView('copilotImpact')}
+                onClick={() => navigateTo(VIEW_MODES.COPILOT_IMPACT)}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" /></svg>}
               />
               <MetricTile
@@ -450,7 +436,7 @@ export default function Home() {
                 subtitle="Understand Premium Model utilization"
                 accent="purple"
                 interactive
-                onClick={() => setCurrentView('pruUsage')}
+                onClick={() => navigateTo(VIEW_MODES.PRU_USAGE)}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M9 7h12M9 11h12M9 15h12M3 7h.01M3 11h.01M3 15h.01M9 19h12M3 19h.01" /></svg>}
               />
               <MetricTile
@@ -459,7 +445,7 @@ export default function Home() {
                 subtitle="Understand Copilot Adoption in your organization"
                 accent="violet"
                 interactive
-                onClick={() => setCurrentView('copilotAdoption')}
+                onClick={() => navigateTo(VIEW_MODES.COPILOT_ADOPTION)}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
               />
               <MetricTile
@@ -472,8 +458,7 @@ export default function Home() {
                 disabled={!stats.topModel || stats.topModel.name === 'N/A'}
                 onClick={() => {
                   if (stats.topModel && stats.topModel.name !== 'N/A') {
-                    setSelectedModel(stats.topModel.name);
-                    setCurrentView('modelDetails');
+                    selectModel(stats.topModel.name);
                   }
                 }}
                 icon={<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>}
@@ -502,22 +487,22 @@ export default function Home() {
             {/* Side Panel */}
             <div className="w-64 flex-shrink-0">
               <FilterPanel
-                onDateRangeChange={handleDateRangeChange}
-                currentFilter={dateRangeFilter}
+                onDateRangeChange={setDateRange}
+                currentFilter={dateRange}
                 reportStartDay={originalStats?.reportStartDay || ''}
                 reportEndDay={originalStats?.reportEndDay || ''}
                 removeUnknownLanguages={removeUnknownLanguages}
-                onRemoveUnknownLanguagesChange={handleRemoveUnknownLanguagesChange}
+                onRemoveUnknownLanguagesChange={setRemoveUnknownLanguages}
               />
               <div className="mt-4">
                 <button
-                  onClick={() => setCurrentView('dataQuality')}
+                  onClick={() => navigateTo(VIEW_MODES.DATA_QUALITY)}
                   className="w-full px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-md transition-colors"
                 >
                   Data Quality Analysis
                 </button>
                 <button
-                  onClick={() => setCurrentView('customerEmail')}
+                  onClick={() => navigateTo(VIEW_MODES.CUSTOMER_EMAIL)}
                   className="w-full mt-3 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors"
                 >
                   Executive Summary Email

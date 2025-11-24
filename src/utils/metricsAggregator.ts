@@ -1,5 +1,5 @@
 import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
-import { DateRangeFilter } from '../components/FilterPanel';
+import { DateRangeFilter } from '../types/filters';
 import { getFilteredDateRange } from './dateFilters';
 import { SERVICE_VALUE_RATE, getModelMultiplier, isPremiumModel } from '../domain/modelConfig';
 import { 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { CopilotMetrics, MetricsStats } from '../types/metrics';
-import { DateRangeFilter } from '../components/FilterPanel';
+import { DateRangeFilter } from '../types/filters';
 import { aggregateMetrics } from '../utils/metricsAggregator';
 import { getFilteredDateRange } from '../utils/dateFilters';
 
