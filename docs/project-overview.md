@@ -149,8 +149,8 @@ The project is a **Next.js 15 App Router** single-page application written in **
 src/
 	app/
 		layout.tsx        // Root layout and page shell
-		page.tsx          // Main SPA page: upload, filters, views, charts
-		providers.tsx     // Wraps app with MetricsProvider context
+		page.tsx          // Main SPA entry point (slim, delegates to components)
+		providers.tsx     // Wraps app with context providers
 
 	components/
 		MetricsContext.tsx           // React context for filtered metrics data
@@ -165,6 +165,22 @@ src/
 		DataQualityAnalysisView.tsx  // Data quality checks and hints
 		CustomerEmailView.tsx        // Generated customer-facing summary
 		ModelDetailsView.tsx         // Per-model details
+
+		layout/                      // Layout components
+			AppHeader.tsx
+			MainLayout.tsx
+			ViewRouter.tsx           // Maps ViewMode to appropriate component
+			index.ts
+
+		features/                    // Feature-based organization
+			file-upload/
+				FileUploadArea.tsx
+				PrivacyNotice.tsx
+				HowToGetData.tsx
+				index.ts
+			overview/
+				OverviewDashboard.tsx
+				index.ts
 
 		charts/                      // Chart.js-based visualizations
 			EngagementChart.tsx
@@ -185,42 +201,99 @@ src/
 			ExpandableTableSection.tsx
 			ActivityCalendar.tsx
 			DayDetailsModal.tsx
+			ChartContainer.tsx       // Unified chart wrapper
+			DataTable/               // Compound component for sortable tables
 
 	domain/
-		modelConfig.ts   // Model catalog, PRU multipliers, premium flags, service value rate
+		modelConfig.ts               // Model catalog, PRU multipliers, premium flags
+		calculators/                 // Split calculation logic
+			statsCalculator.ts
+			engagementCalculator.ts
+			chatCalculator.ts
+			languageCalculator.ts
+			modelUsageCalculator.ts
+			featureAdoptionCalculator.ts
+			impactCalculator.ts
+			index.ts
 
 	hooks/
-		useUsernameTrieSearch.ts // Efficient username searching in larger datasets
+		useUsernameTrieSearch.ts     // Efficient username searching
+		useMetricsProcessing.ts      // Metrics filtering and aggregation
+		useFileUpload.ts             // File upload handling
+		usePluginVersions.ts         // Plugin version fetching
+		useSortableTable.ts          // Table sorting logic
+		useExpandableList.ts         // Expandable list state
+
+	state/                           // Centralized state management
+		NavigationContext.tsx        // View navigation state
+		FilterContext.tsx            // Filter state (date range, language)
 
 	types/
-		metrics.ts       // Core metrics TypeScript types
+		metrics.ts                   // Core metrics TypeScript types
+		navigation.ts                // View mode and navigation types
+		filters.ts                   // Filter types
+		events.ts                    // Strict event handler types
+		branded.ts                   // Branded types for IDs
+		index.ts                     // Barrel export
 
 	utils/
-		metricsParser.ts // Parsing, aggregation and derivation logic
-		dateFilters.ts   // Date range filtering helpers
-		featureTranslations.ts // Human-readable labels for feature identifiers
-		ideIcons.tsx     // IDE icon mapping for visualization
+		metricsParser.ts             // Parsing JSON/NDJSON input
+		metricsAggregator.ts         // Orchestrates calculators for aggregation
+		metricCalculators.ts         // Core calculation functions
+		dateFilters.ts               // Date range filtering helpers
+		featureTranslations.ts       // Human-readable labels for features
+		formatters.ts                // Number and date formatting utilities
+		ideIcons.tsx                 // IDE icon mapping for visualization
 ```
 
 ### 3.2. Context and State Management
 
-State is managed entirely on the client using React hooks:
+State is managed on the client using React hooks and multiple context providers:
 
-- `src/components/MetricsContext.tsx` defines a `MetricsProvider` and `useMetricsData` hook.
-- `app/page.tsx` owns the **raw metrics** (`rawMetrics`) and **original aggregated stats** (`originalStats`), along with UI view state (current view, selected user, date range, language filter, selected model, enterprise name).
-- A memoized `filteredData` object is computed in `Home` (in `page.tsx`) whenever raw data or filters change.
-- When `filteredData.stats` is available, it is pushed into the global context via `setFilteredData(filteredData)`, allowing other components/views to reuse the current filtered slice without re-parsing.
+- **`src/components/MetricsContext.tsx`** defines `MetricsProvider` with two hooks:
+	- `useMetricsData` – access to filtered metrics data
+	- `useRawMetrics` – access to raw metrics, original stats, and enterprise name
+- **`src/state/NavigationContext.tsx`** manages view navigation:
+	- Current view mode (`ViewMode`)
+	- Selected user and model state
+	- Navigation actions (`navigateTo`, `selectUser`, `selectModel`, etc.)
+- **`src/state/FilterContext.tsx`** manages filter state:
+	- Date range filter
+	- Language filter (remove unknown languages)
+	- Filter actions
+
+The main `page.tsx` is now slim and delegates to:
+- `ViewRouter` – handles view switching based on `currentView`
+- `OverviewDashboard` – renders the main dashboard
+- `FileUploadArea` – handles file upload UI
+
+The `useMetricsProcessing` hook computes filtered and aggregated data whenever raw data or filters change, and the result is pushed to the global context.
 
 ### 3.3. Computation Layer
 
-All non-trivial computation is centralized in `src/utils/metricsParser.ts`:
+Computation is organized into focused modules:
 
-- `parseMetricsFile` – parses JSON/NDJSON, filters out deprecated-schema records, lightly validates required fields, and returns an array of `CopilotMetrics`.
-- `calculateStats`, `calculateUserSummaries`, `calculateDailyEngagement`, `calculateDailyChatUsers`, `calculateDailyChatRequests`, `calculateLanguageStats` – aggregation for core views.
-- `calculateDailyModelUsage`, `calculateFeatureAdoption`, `calculateDailyPRUAnalysis`, `calculateAgentModeHeatmap`, `calculateModelFeatureDistribution` – PRU and model-related analytics, leveraging `getModelMultiplier` and `isPremiumModel` from `modelConfig`.
-- `calculateAgentImpactData`, `calculateCodeCompletionImpactData`, `calculateEditModeImpactData`, `calculateInlineModeImpactData`, `calculateJoinedImpactData` – LOC impact time series for different feature sets.
+**Parsing** (`src/utils/metricsParser.ts`):
+- `parseMetricsFile` – parses JSON/NDJSON, filters out deprecated-schema records, validates required fields
 
-Date range filtering is implemented separately in `src/utils/dateFilters.ts` and applied **after** language filtering.
+**Calculators** (`src/domain/calculators/`):
+- `statsCalculator.ts` – basic stats (users, records, top items)
+- `engagementCalculator.ts` – daily engagement data
+- `chatCalculator.ts` – chat users and requests
+- `languageCalculator.ts` – language statistics
+- `modelUsageCalculator.ts` – model usage and PRU data
+- `featureAdoptionCalculator.ts` – feature adoption funnel
+- `impactCalculator.ts` – LOC impact by feature
+
+**Aggregator** (`src/utils/metricsAggregator.ts`):
+- `aggregateMetrics` – orchestrates all calculators to produce `FilteredMetricsData`
+
+**Metric Calculators** (`src/utils/metricCalculators.ts`):
+- Additional calculation functions including `calculateStats`, `calculateUserSummaries`, `calculateDailyEngagement`, `calculateDailyChatUsers`, `calculateDailyChatRequests`, `calculateLanguageStats`
+- PRU and model-related analytics: `calculateDailyModelUsage`, `calculateFeatureAdoption`, `calculateDailyPRUAnalysis`, `calculateAgentModeHeatmap`, `calculateModelFeatureDistribution`
+- LOC impact time series: `calculateAgentImpactData`, `calculateCodeCompletionImpactData`, `calculateEditModeImpactData`, `calculateInlineModeImpactData`, `calculateJoinedImpactData`
+
+Date range filtering is implemented in `src/utils/dateFilters.ts` and applied **after** language filtering.
 
 ### 3.4. Domain Model Configuration
 
@@ -246,29 +319,30 @@ This section describes the life cycle of data from file upload to visualization.
 
 ```mermaid
 flowchart LR
-  A[User uploads JSON or NDJSON metrics file] --> B[handleFileUpload in page.tsx]
+  A[User uploads JSON or NDJSON metrics file] --> B[useFileUpload hook]
 
   B --> C[parseMetricsFile in metricsParser.ts]
   C --> D[calculateStats to get originalStats]
 
-  D --> E[Store rawMetrics and originalStats in Home state]
+  D --> E[Store rawMetrics and originalStats in MetricsContext]
 
-  E --> F[useMemo in Home computes filteredData with filters]
+  E --> F[useMetricsProcessing hook computes filteredData]
 
   F --> G[setFilteredData via MetricsContext]
 
-  G --> H[Overview and detail views]
+  G --> H[ViewRouter renders appropriate view]
 
   H --> I[Chart components using Chart.js]
 
-  subgraph Filters
-    J[FilterPanel date and language] --> F
+  subgraph Contexts
+    NC[NavigationContext] --> H
+    FC[FilterContext] --> F
   end
 ```
 
 ### 4.2. Upload and Parsing
 
-1. In `src/app/page.tsx`, the **file upload** input calls `handleFileUpload` when a user selects a file.
+1. The `useFileUpload` hook (in `src/hooks/useFileUpload.ts`) handles file upload when a user selects a file.
 2. `handleFileUpload`:
 	 - Validates file extension (`.json` or `.ndjson`).
 	 - Reads the file content as text.
@@ -285,11 +359,11 @@ flowchart LR
 4. `handleFileUpload` then:
 	 - Calls `calculateStats(parsedMetrics)` to compute `originalStats`.
 	 - Derives an `enterpriseName` from `user_login` suffix or `enterprise_id`.
-	 - Stores `rawMetrics` and `originalStats` in component state.
+	 - Stores `rawMetrics` and `originalStats` in `MetricsContext`.
 
 ### 4.3. Filtering and Derived Data
 
-Once `rawMetrics` and `originalStats` exist, a memoized block in `Home` (`page.tsx`) computes `filteredData` every time relevant inputs change:
+Once `rawMetrics` and `originalStats` exist, the `useMetricsProcessing` hook computes `filteredData` every time relevant inputs change:
 
 1. **Language filtering** (optional):
 	 - If `removeUnknownLanguages` is `true`, `filterUnknownLanguages(rawMetrics)` is applied.
@@ -299,7 +373,7 @@ Once `rawMetrics` and `originalStats` exist, a memoized block in `Home` (`page.t
 	 - `filterMetricsByDateRange` (in `dateFilters.ts`) receives the processed metrics, the selected `DateRangeFilter`, and `originalStats.reportEndDay`.
 	 - Based on the filter (`all`, `last7days`, `last14days`, `last28days`), a moving window ending at `reportEndDay` is computed, and only records whose `day` falls within that range are kept.
 
-3. **Aggregation and analytics** on the filtered slice:
+3. **Aggregation and analytics** on the filtered slice (via `metricsAggregator.ts` and individual calculators):
 	 - `calculateStats` – recomputed for the filtered metrics.
 	 - `calculateUserSummaries` – user-level totals and activity flags.
 	 - `calculateDailyEngagement`, `calculateDailyChatUsers`, `calculateDailyChatRequests` – time series for engagement and chat usage.
@@ -315,13 +389,12 @@ Once `rawMetrics` and `originalStats` exist, a memoized block in `Home` (`page.t
 	 - `getFilteredDateRange` recomputes `reportStartDay`/`reportEndDay` according to the active date filter, and `stats` is updated to reflect the filtered time window.
 
 5. The resulting `FilteredMetricsData` object is:
-	 - Returned from the `useMemo` block in `Home`.
-	 - Exposed as local variables (`metrics`, `stats`, `userSummaries`, `engagementData`, etc.) for the main overview.
 	 - Published to the global `MetricsContext` using `setFilteredData(filteredData)` inside a `useEffect` (only when `stats` is non-null).
+	 - Consumed by `ViewRouter` and individual view components.
 
 ### 4.4. Views and Navigation
 
-The main page (`src/app/page.tsx`) maintains a `currentView` state (`ViewMode`) that controls which view is rendered:
+Navigation is managed by `NavigationContext` which maintains `currentView` state (`ViewMode`). The `ViewRouter` component (`src/components/layout/ViewRouter.tsx`) maps `currentView` to the appropriate component:
 
 - `overview` – default dashboard, with:
 	- File upload prompt (when no data yet)
@@ -347,7 +420,7 @@ Navigation between these views is driven by buttons and tiles in the overview UI
 
 ### 4.5. Chart Rendering
 
-All charts live under `src/components/charts/` and use **Chart.js** wrapped by **react-chartjs-2**. Typical inputs are the derived data arrays from `metricsParser.ts` (e.g., `DailyEngagementData[]`, `DailyPRUAnalysisData[]`, etc.). Each chart component is responsible for:
+All charts live under `src/components/charts/` and use **Chart.js** wrapped by **react-chartjs-2**. Many charts use the `ChartContainer` component for consistent styling. Typical inputs are the derived data arrays from `metricCalculators.ts` (e.g., `DailyEngagementData[]`, `DailyPRUAnalysisData[]`, etc.). Each chart component is responsible for:
 
 - Mapping domain data into Chart.js datasets and labels
 - Configuring axes and tooltips
@@ -361,22 +434,34 @@ All charts live under `src/components/charts/` and use **Chart.js** wrapped by *
 flowchart TB
 	subgraph NextJSAppRouter
 		direction TB
-		L[layout.tsx] --> P[providers.tsx with MetricsProvider]
-		P --> H[page.tsx Home component]
+		L[layout.tsx] --> P[providers.tsx with all Contexts]
+		P --> H[page.tsx slim entry point]
+		H --> VR[ViewRouter]
 	end
 
 	subgraph StateAndContext
-		H -->|setFilteredData| C[MetricsContext filteredData]
+		MC[MetricsContext filteredData]
+		NC[NavigationContext currentView]
+		FC[FilterContext dateRange and filters]
 	end
 
 	subgraph ComputationLayer
-		MP[metricsParser.ts parse and aggregate]
+		MP[metricsParser.ts parse]
+		MA[metricsAggregator.ts aggregate]
+		CALC[domain/calculators/ split logic]
 		DF[dateFilters.ts date helpers]
-		MC[modelConfig.ts model config]
+		MConf[modelConfig.ts model config]
+	end
+
+	subgraph HooksLayer
+		UFU[useFileUpload]
+		UMP[useMetricsProcessing]
+		UPV[usePluginVersions]
+		UST[useSortableTable]
 	end
 
 	subgraph ViewsAndComponents
-		OV[Overview metrics and charts]
+		OV[OverviewDashboard]
 		UV[UniqueUsersView]
 		UD[UserDetailsView]
 		LV[LanguagesView]
@@ -389,26 +474,26 @@ flowchart TB
 		CE[CustomerEmailView]
 	end
 
-	H --> MP
-	H --> DF
-	MP --> MC
+	VR --> OV
+	VR --> UV
+	VR --> LV
+	VR --> IV
+	VR --> CI
+	VR --> PR
+	VR --> CA
+	VR --> DQ
+	VR --> MD
+	VR --> CE
 
-	H --> OV
-	H --> UV
-	H --> LV
-	H --> IV
-	H --> CI
-	H --> PR
-	H --> CA
-	H --> DQ
-	H --> MD
-	H --> CE
+	UFU --> MP
+	UMP --> MA
+	MA --> CALC
+	CALC --> MConf
+	UMP --> DF
 
-	C --> CI
-	C --> PR
-	C --> CA
-	C --> MD
-	C --> CE
+	MC --> VR
+	NC --> VR
+	FC --> UMP
 ```
 
 ---
@@ -417,9 +502,11 @@ flowchart TB
 
 - The app is a **client-side Next.js dashboard** for **GitHub Copilot User Level Metrics**.
 - Data is provided as newline-delimited JSON or JSON array exports from GitHub; only the **new LOC schema** is supported.
-- All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsParser.ts` + `modelConfig.ts`**.
-- Filters (date range and language) affect all views and charts via a centralized **`FilteredMetricsData`** structure shared through **`MetricsContext`**.
+- All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsParser.ts`**, **`metricsAggregator.ts`**, **`domain/calculators/`**, and **`modelConfig.ts`**.
+- State is managed through multiple React contexts: **`MetricsContext`** for data, **`NavigationContext`** for view routing, and **`FilterContext`** for filters.
+- Reusable hooks (`useFileUpload`, `useMetricsProcessing`, `usePluginVersions`, `useSortableTable`, `useExpandableList`) encapsulate common logic.
 - The UI is organized into multiple views that share the same filtered dataset, providing different perspectives on the same underlying metrics.
+- Type safety is enhanced through strict event handler types (`events.ts`), discriminated unions for view props (`navigation.ts`), and branded types for IDs (`branded.ts`).
 
 Use this document as the entry point when onboarding to the codebase or when extending analytics and visualizations.
 
