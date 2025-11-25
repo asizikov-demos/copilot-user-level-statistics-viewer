@@ -56,6 +56,8 @@ export {
   computePRUAnalysisData,
   computeAgentModeHeatmapData,
   computeModelFeatureDistributionData,
+  calculateDailyPRUAnalysisFromMetrics,
+  calculateDailyModelUsageFromMetrics,
 } from './modelUsageCalculator';
 
 // Feature Adoption Calculator
@@ -84,4 +86,8 @@ export {
   computeInlineModeImpactData,
   computeAskModeImpactData,
   computeJoinedImpactData,
+  calculateJoinedImpactFromMetrics,
+  calculateEditModeImpactFromMetrics,
+  calculateInlineModeImpactFromMetrics,
+  calculateAskModeImpactFromMetrics,
 } from './impactCalculator';

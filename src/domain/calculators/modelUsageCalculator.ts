@@ -1,4 +1,5 @@
 import { SERVICE_VALUE_RATE, getModelMultiplier, isPremiumModel } from '../modelConfig';
+import { CopilotMetrics } from '../../types/metrics';
 
 export interface DailyModelUsageData {
   date: string;
@@ -275,4 +276,52 @@ export function computeModelFeatureDistributionData(
     })
     .filter(item => item.totalInteractions > 0)
     .sort((a, b) => b.totalPRUs - a.totalPRUs);
+}
+
+export function calculateDailyPRUAnalysisFromMetrics(
+  metrics: CopilotMetrics[]
+): DailyPRUAnalysisData[] {
+  const accumulator = createModelUsageAccumulator();
+
+  for (const metric of metrics) {
+    const date = metric.day;
+    const userId = metric.user_id;
+
+    for (const modelFeature of metric.totals_by_model_feature) {
+      accumulateModelFeature(
+        accumulator,
+        date,
+        userId,
+        modelFeature.model,
+        modelFeature.feature,
+        modelFeature.user_initiated_interaction_count
+      );
+    }
+  }
+
+  return computePRUAnalysisData(accumulator);
+}
+
+export function calculateDailyModelUsageFromMetrics(
+  metrics: CopilotMetrics[]
+): DailyModelUsageData[] {
+  const accumulator = createModelUsageAccumulator();
+
+  for (const metric of metrics) {
+    const date = metric.day;
+    const userId = metric.user_id;
+
+    for (const modelFeature of metric.totals_by_model_feature) {
+      accumulateModelFeature(
+        accumulator,
+        date,
+        userId,
+        modelFeature.model,
+        modelFeature.feature,
+        modelFeature.user_initiated_interaction_count
+      );
+    }
+  }
+
+  return computeDailyModelUsageData(accumulator);
 }

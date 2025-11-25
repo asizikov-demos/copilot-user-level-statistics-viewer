@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { CopilotMetrics } from '../types/metrics';
 import { translateFeature } from '../utils/featureTranslations';
 import { formatIDEName } from '../utils/ideIcons';
 import IDEActivityChart from './charts/IDEActivityChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
-import { calculateDailyPRUAnalysis, calculateJoinedImpactData } from '../utils/metricCalculators';
-import { SERVICE_VALUE_RATE, getModelMultiplier } from '../domain/modelConfig';
+import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage } from '../utils/metricCalculators';
+import { getModelMultiplier } from '../domain/modelConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import UserSummaryChart from './charts/UserSummaryChart';
@@ -57,247 +57,225 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     });
   };
 
-  // Calculate aggregated stats for this user
-  const totalInteractions = userMetrics.reduce((sum, metric) => sum + metric.user_initiated_interaction_count, 0);
-  const totalGeneration = userMetrics.reduce((sum, metric) => sum + metric.code_generation_activity_count, 0);
-  const totalAcceptance = userMetrics.reduce((sum, metric) => sum + metric.code_acceptance_activity_count, 0);
-  const totalStandardModelRequests = userMetrics.reduce((sum, metric) => {
-    return sum + metric.totals_by_model_feature
-      .filter(modelFeature => {
-        const model = modelFeature.model.toLowerCase();
-        const multiplier = getModelMultiplier(model);
-        return model !== 'unknown' && model !== '' && multiplier === 0;
-      })
-      .reduce((innerSum, modelFeature) => innerSum + modelFeature.user_initiated_interaction_count, 0);
-  }, 0);
+  // Memoized aggregated stats for this user
+  const { totalInteractions, totalGeneration, totalAcceptance, totalStandardModelRequests, totalPremiumModelRequests, daysActive, usedAgent, usedChat } = useMemo(() => {
+    let interactions = 0;
+    let generation = 0;
+    let acceptance = 0;
+    let standardRequests = 0;
+    let premiumRequests = 0;
+    let agent = false;
+    let chat = false;
 
-  const totalPremiumModelRequests = userMetrics.reduce((sum, metric) => {
-    return sum + metric.totals_by_model_feature
-      .filter(modelFeature => {
-        const model = modelFeature.model.toLowerCase();
-        const multiplier = getModelMultiplier(model);
-        return model !== 'unknown' && model !== '' && multiplier > 0;
-      })
-      .reduce((innerSum, modelFeature) => innerSum + modelFeature.user_initiated_interaction_count, 0);
-  }, 0);
-
-
-  const daysActive = userMetrics.length;
-  const usedAgent = userMetrics.some(metric => metric.used_agent);
-  const usedChat = userMetrics.some(metric => metric.used_chat);
-
-  // Get unique plugin versions ordered by date descending
-  const uniquePluginVersions = userMetrics
-    .flatMap(metric => metric.totals_by_ide)
-    .filter(ide => ide.last_known_plugin_version)
-    .map(ide => ide.last_known_plugin_version!)
-    .reduce((acc, plugin) => {
-      const key = `${plugin.plugin}-${plugin.plugin_version}`;
-      const existing = acc.find(p => `${p.plugin}-${p.plugin_version}` === key);
-      
-      if (!existing) {
-        acc.push(plugin);
-      } else {
-        // Keep the one with the latest date
-        if (new Date(plugin.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
-          const index = acc.indexOf(existing);
-          acc[index] = plugin;
-        }
-      }
-      
-      return acc;
-    }, [] as NonNullable<typeof userMetrics[0]['totals_by_ide'][0]['last_known_plugin_version']>[])
-    .sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
-
-  // Aggregate totals by feature
-  const featureAggregates = userMetrics
-    .flatMap(metric => metric.totals_by_feature)
-    .reduce((acc, feature) => {
-      const existing = acc.find(f => f.feature === feature.feature);
-      if (existing) {
-        existing.user_initiated_interaction_count += feature.user_initiated_interaction_count;
-        existing.code_generation_activity_count += feature.code_generation_activity_count;
-        existing.code_acceptance_activity_count += feature.code_acceptance_activity_count;
-        existing.loc_added_sum += feature.loc_added_sum;
-        existing.loc_deleted_sum += feature.loc_deleted_sum;
-        existing.loc_suggested_to_add_sum += feature.loc_suggested_to_add_sum;
-        existing.loc_suggested_to_delete_sum += feature.loc_suggested_to_delete_sum;
-      } else {
-        acc.push({ ...feature });
-      }
-      return acc;
-    }, [] as typeof userMetrics[0]['totals_by_feature']);
-
-  // Aggregate totals by IDE
-  const ideAggregates = userMetrics
-    .flatMap(metric => metric.totals_by_ide)
-    .reduce((acc, ide) => {
-      const existing = acc.find(i => i.ide === ide.ide);
-      if (existing) {
-        existing.user_initiated_interaction_count += ide.user_initiated_interaction_count;
-        existing.code_generation_activity_count += ide.code_generation_activity_count;
-        existing.code_acceptance_activity_count += ide.code_acceptance_activity_count;
-        existing.loc_added_sum += ide.loc_added_sum;
-        existing.loc_deleted_sum += ide.loc_deleted_sum;
-        existing.loc_suggested_to_add_sum += ide.loc_suggested_to_add_sum;
-        existing.loc_suggested_to_delete_sum += ide.loc_suggested_to_delete_sum;
-      } else {
-        acc.push({ ...ide });
-      }
-      return acc;
-    }, [] as typeof userMetrics[0]['totals_by_ide']);
-
-  // Aggregate totals by language and feature
-  const languageFeatureAggregates = userMetrics
-    .flatMap(metric => metric.totals_by_language_feature)
-    .reduce((acc, item) => {
-      const key = `${item.language}-${item.feature}`;
-      const existing = acc.find(i => `${i.language}-${i.feature}` === key);
-      if (existing) {
-        existing.code_generation_activity_count += item.code_generation_activity_count;
-        existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
-        existing.loc_added_sum += item.loc_added_sum;
-        existing.loc_deleted_sum += item.loc_deleted_sum;
-        existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
-        existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
-      } else {
-        acc.push({ ...item });
-      }
-      return acc;
-    }, [] as typeof userMetrics[0]['totals_by_language_feature']);
-
-  // Aggregate totals by model and feature
-  const modelFeatureAggregates = userMetrics
-    .flatMap(metric => metric.totals_by_model_feature)
-    .reduce((acc, item) => {
-      const key = `${item.model}-${item.feature}`;
-      const existing = acc.find(i => `${i.model}-${i.feature}` === key);
-      if (existing) {
-        existing.user_initiated_interaction_count += item.user_initiated_interaction_count;
-        existing.code_generation_activity_count += item.code_generation_activity_count;
-        existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
-        existing.loc_added_sum += item.loc_added_sum;
-        existing.loc_deleted_sum += item.loc_deleted_sum;
-        existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
-        existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
-      } else {
-        acc.push({ ...item });
-      }
-      return acc;
-    }, [] as typeof userMetrics[0]['totals_by_model_feature']);
-
-  // Helper functions for new charts
-
-  // Calculate daily model usage data for single user
-  const calculateUserModelUsage = () => {
-    return userMetrics.map(metric => {
-      let pruModels = 0;
-      let standardModels = 0;
-      let unknownModels = 0;
-      let totalPRUs = 0;
+    for (const metric of userMetrics) {
+      interactions += metric.user_initiated_interaction_count;
+      generation += metric.code_generation_activity_count;
+      acceptance += metric.code_acceptance_activity_count;
+      agent = agent || metric.used_agent;
+      chat = chat || metric.used_chat;
 
       for (const modelFeature of metric.totals_by_model_feature) {
         const model = modelFeature.model.toLowerCase();
-        const interactions = modelFeature.user_initiated_interaction_count;
         const multiplier = getModelMultiplier(model);
-        const prus = interactions * multiplier;
-
-        totalPRUs += prus;
-
-        if (model === 'unknown' || model === '') {
-          unknownModels += interactions;
-        } else if (multiplier === 0) {
-          standardModels += interactions;
-        } else {
-          pruModels += interactions;
+        if (model !== 'unknown' && model !== '') {
+          if (multiplier === 0) {
+            standardRequests += modelFeature.user_initiated_interaction_count;
+          } else {
+            premiumRequests += modelFeature.user_initiated_interaction_count;
+          }
         }
       }
+    }
 
-      return {
-        date: metric.day,
-        pruModels,
-        standardModels,
-        unknownModels,
-        totalPRUs: Math.round(totalPRUs * 100) / 100,
-  serviceValue: Math.round(totalPRUs * SERVICE_VALUE_RATE * 100) / 100
-      };
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
+    return {
+      totalInteractions: interactions,
+      totalGeneration: generation,
+      totalAcceptance: acceptance,
+      totalStandardModelRequests: standardRequests,
+      totalPremiumModelRequests: premiumRequests,
+      daysActive: userMetrics.length,
+      usedAgent: agent,
+      usedChat: chat,
+    };
+  }, [userMetrics]);
 
-  const userPRUAnalysisData = calculateDailyPRUAnalysis(userMetrics);
-  const userCombinedImpactData = calculateJoinedImpactData(userMetrics);
-  const userModelUsageData = calculateUserModelUsage();
+  // Memoized unique plugin versions ordered by date descending
+  const uniquePluginVersions = useMemo(() => {
+    return userMetrics
+      .flatMap(metric => metric.totals_by_ide)
+      .filter(ide => ide.last_known_plugin_version)
+      .map(ide => ide.last_known_plugin_version!)
+      .reduce((acc, plugin) => {
+        const key = `${plugin.plugin}-${plugin.plugin_version}`;
+        const existing = acc.find(p => `${p.plugin}-${p.plugin_version}` === key);
+        
+        if (!existing) {
+          acc.push(plugin);
+        } else {
+          if (new Date(plugin.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
+            const index = acc.indexOf(existing);
+            acc[index] = plugin;
+          }
+        }
+        
+        return acc;
+      }, [] as NonNullable<typeof userMetrics[0]['totals_by_ide'][0]['last_known_plugin_version']>[])
+      .sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
+  }, [userMetrics]);
 
-  // Prepare chart data
+  // Memoized aggregate totals by feature
+  const featureAggregates = useMemo(() => {
+    return userMetrics
+      .flatMap(metric => metric.totals_by_feature)
+      .reduce((acc, feature) => {
+        const existing = acc.find(f => f.feature === feature.feature);
+        if (existing) {
+          existing.user_initiated_interaction_count += feature.user_initiated_interaction_count;
+          existing.code_generation_activity_count += feature.code_generation_activity_count;
+          existing.code_acceptance_activity_count += feature.code_acceptance_activity_count;
+          existing.loc_added_sum += feature.loc_added_sum;
+          existing.loc_deleted_sum += feature.loc_deleted_sum;
+          existing.loc_suggested_to_add_sum += feature.loc_suggested_to_add_sum;
+          existing.loc_suggested_to_delete_sum += feature.loc_suggested_to_delete_sum;
+        } else {
+          acc.push({ ...feature });
+        }
+        return acc;
+      }, [] as typeof userMetrics[0]['totals_by_feature']);
+  }, [userMetrics]);
+
+  // Memoized aggregate totals by IDE
+  const ideAggregates = useMemo(() => {
+    return userMetrics
+      .flatMap(metric => metric.totals_by_ide)
+      .reduce((acc, ide) => {
+        const existing = acc.find(i => i.ide === ide.ide);
+        if (existing) {
+          existing.user_initiated_interaction_count += ide.user_initiated_interaction_count;
+          existing.code_generation_activity_count += ide.code_generation_activity_count;
+          existing.code_acceptance_activity_count += ide.code_acceptance_activity_count;
+          existing.loc_added_sum += ide.loc_added_sum;
+          existing.loc_deleted_sum += ide.loc_deleted_sum;
+          existing.loc_suggested_to_add_sum += ide.loc_suggested_to_add_sum;
+          existing.loc_suggested_to_delete_sum += ide.loc_suggested_to_delete_sum;
+        } else {
+          acc.push({ ...ide });
+        }
+        return acc;
+      }, [] as typeof userMetrics[0]['totals_by_ide']);
+  }, [userMetrics]);
+
+  // Memoized aggregate totals by language and feature
+  const languageFeatureAggregates = useMemo(() => {
+    return userMetrics
+      .flatMap(metric => metric.totals_by_language_feature)
+      .reduce((acc, item) => {
+        const key = `${item.language}-${item.feature}`;
+        const existing = acc.find(i => `${i.language}-${i.feature}` === key);
+        if (existing) {
+          existing.code_generation_activity_count += item.code_generation_activity_count;
+          existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
+          existing.loc_added_sum += item.loc_added_sum;
+          existing.loc_deleted_sum += item.loc_deleted_sum;
+          existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
+          existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, [] as typeof userMetrics[0]['totals_by_language_feature']);
+  }, [userMetrics]);
+
+  // Memoized aggregate totals by model and feature
+  const modelFeatureAggregates = useMemo(() => {
+    return userMetrics
+      .flatMap(metric => metric.totals_by_model_feature)
+      .reduce((acc, item) => {
+        const key = `${item.model}-${item.feature}`;
+        const existing = acc.find(i => `${i.model}-${i.feature}` === key);
+        if (existing) {
+          existing.user_initiated_interaction_count += item.user_initiated_interaction_count;
+          existing.code_generation_activity_count += item.code_generation_activity_count;
+          existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
+          existing.loc_added_sum += item.loc_added_sum;
+          existing.loc_deleted_sum += item.loc_deleted_sum;
+          existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
+          existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
+        } else {
+          acc.push({ ...item });
+        }
+        return acc;
+      }, [] as typeof userMetrics[0]['totals_by_model_feature']);
+  }, [userMetrics]);
+
+  // Memoized PRU analysis and impact data using domain calculators
+  const userPRUAnalysisData = useMemo(() => calculateDailyPRUAnalysis(userMetrics), [userMetrics]);
+  const userCombinedImpactData = useMemo(() => calculateJoinedImpactData(userMetrics), [userMetrics]);
+  const userModelUsageData = useMemo(() => calculateDailyModelUsage(userMetrics), [userMetrics]);
+
+  // Memoized chart data
   // 1. IDEs chart data (based on interactions)
-  const ideChartData = {
+  const ideChartData = useMemo(() => ({
     labels: ideAggregates.map(ide => formatIDEName(ide.ide)),
     datasets: [{
       data: ideAggregates.map(ide => ide.user_initiated_interaction_count),
       backgroundColor: [
-        '#3B82F6', // blue
-        '#10B981', // green
-        '#F59E0B', // yellow
-        '#EF4444', // red
-        '#8B5CF6', // purple
-        '#F97316', // orange
+        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316',
       ],
       borderWidth: 2,
       borderColor: '#fff',
     }]
-  };
+  }), [ideAggregates]);
 
   // 2. Programming Languages chart data (based on generations)
-  const languageGenerations = languageFeatureAggregates.reduce((acc, item) => {
-    if (item.language && item.language !== '' && item.language !== 'unknown') {
-      acc[item.language] = (acc[item.language] || 0) + item.code_generation_activity_count;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const { languageGenerations, languageChartData } = useMemo(() => {
+    const generations = languageFeatureAggregates.reduce((acc, item) => {
+      if (item.language && item.language !== '' && item.language !== 'unknown') {
+        acc[item.language] = (acc[item.language] || 0) + item.code_generation_activity_count;
+      }
+      return acc;
+    }, {} as Record<string, number>);
 
-  const languageChartData = {
-    labels: Object.keys(languageGenerations),
-    datasets: [{
-      data: Object.values(languageGenerations),
-      backgroundColor: [
-        '#06B6D4', // cyan
-        '#84CC16', // lime
-        '#F59E0B', // amber
-        '#EC4899', // pink
-        '#8B5CF6', // violet
-        '#10B981', // emerald
-        '#F97316', // orange
-        '#EF4444', // red
-      ],
-      borderWidth: 2,
-      borderColor: '#fff',
-    }]
-  };
+    return {
+      languageGenerations: generations,
+      languageChartData: {
+        labels: Object.keys(generations),
+        datasets: [{
+          data: Object.values(generations),
+          backgroundColor: [
+            '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316', '#EF4444',
+          ],
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      }
+    };
+  }, [languageFeatureAggregates]);
 
   // 3. Models chart data (based on interactions regardless of feature)
-  const modelInteractions = modelFeatureAggregates.reduce((acc, item) => {
-    if (item.model && item.model !== '') {
-      acc[item.model] = (acc[item.model] || 0) + item.user_initiated_interaction_count;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const { modelInteractions, modelChartData } = useMemo(() => {
+    const interactions = modelFeatureAggregates.reduce((acc, item) => {
+      if (item.model && item.model !== '') {
+        acc[item.model] = (acc[item.model] || 0) + item.user_initiated_interaction_count;
+      }
+      return acc;
+    }, {} as Record<string, number>);
 
-  const modelChartData = {
-    labels: Object.keys(modelInteractions),
-    datasets: [{
-      data: Object.values(modelInteractions),
-      backgroundColor: [
-        '#6366F1', // indigo
-        '#14B8A6', // teal
-        '#F59E0B', // amber
-        '#EF4444', // red
-        '#8B5CF6', // purple
-        '#10B981', // green
-      ],
-      borderWidth: 2,
-      borderColor: '#fff',
-    }]
-  };
+    return {
+      modelInteractions: interactions,
+      modelChartData: {
+        labels: Object.keys(interactions),
+        datasets: [{
+          data: Object.values(interactions),
+          backgroundColor: [
+            '#6366F1', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6', '#10B981',
+          ],
+          borderWidth: 2,
+          borderColor: '#fff',
+        }]
+      }
+    };
+  }, [modelFeatureAggregates]);
 
   const chartOptions = {
     responsive: true,
@@ -324,21 +302,14 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     }
   };
 
-  // Prepare bar chart data for IDE activity by day
-  const createIDEBarChartData = () => {
-    // Get all unique IDEs across all days
+  // Memoized bar chart data for IDE activity by day
+  const ideBarChartData = useMemo(() => {
     const allIDEs = Array.from(
-      new Set(
-        userMetrics.flatMap(metric => 
-          metric.totals_by_ide.map(ide => ide.ide)
-        )
-      )
+      new Set(userMetrics.flatMap(metric => metric.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
-    // Get all days and sort them
     const allDays = userMetrics.map(metric => metric.day).sort();
 
-    // Define colors for each IDE
     const ideColors: Record<string, string> = {
       'vscode': '#007ACC',
       'visual_studio': '#5C2D91',
@@ -352,18 +323,17 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       'intellij': '#FE315D',
     };
 
-    // Create datasets for each IDE
+    const fallbackColors = [
+      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
+      '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
+    ];
+
     const datasets = allIDEs.map((ide, index) => {
       const data = allDays.map(day => {
         const dayMetric = userMetrics.find(m => m.day === day);
         const ideData = dayMetric?.totals_by_ide.find(i => i.ide === ide);
         return ideData?.user_initiated_interaction_count || 0;
       });
-
-      const fallbackColors = [
-        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
-        '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
-      ];
 
       return {
         label: formatIDEName(ide),
@@ -372,31 +342,22 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         borderColor: ideColors[ide] || fallbackColors[index % fallbackColors.length],
         borderWidth: 1,
       };
-    }).filter(dataset => dataset.data.some(value => value > 0)); // Only include IDEs with data
+    }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
       labels: allDays.map(day => new Date(day).toLocaleDateString()),
       datasets: datasets,
     };
-  };
+  }, [userMetrics]);
 
-  const ideBarChartData = createIDEBarChartData();
-
-  // Prepare bar chart data for language activity by day
-  const createLanguageBarChartData = () => {
-    // Get all unique languages across all days
+  // Memoized bar chart data for language activity by day
+  const languageBarChartData = useMemo(() => {
     const allLanguages = Array.from(
-      new Set(
-        userMetrics.flatMap(metric => 
-          metric.totals_by_language_feature.map(item => item.language)
-        )
-      )
+      new Set(userMetrics.flatMap(metric => metric.totals_by_language_feature.map(item => item.language)))
     ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
 
-    // Get all days and sort them
     const allDays = userMetrics.map(metric => metric.day).sort();
 
-    // Define colors for each language
     const languageColors: Record<string, string> = {
       'javascript': '#F7DF1E',
       'typescript': '#3178C6',
@@ -440,7 +401,11 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       'assembly': '#6E4C13',
     };
 
-    // Create datasets for each language
+    const fallbackColors = [
+      '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', 
+      '#10B981', '#F97316', '#EF4444', '#3B82F6', '#14B8A6'
+    ];
+
     const datasets = allLanguages.map((language, index) => {
       const data = allDays.map(day => {
         const dayMetric = userMetrics.find(m => m.day === day);
@@ -450,11 +415,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         return languageData;
       });
 
-      const fallbackColors = [
-        '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', 
-        '#10B981', '#F97316', '#EF4444', '#3B82F6', '#14B8A6'
-      ];
-
       return {
         label: language.charAt(0).toUpperCase() + language.slice(1),
         data: data,
@@ -462,31 +422,22 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         borderColor: languageColors[language.toLowerCase()] || fallbackColors[index % fallbackColors.length],
         borderWidth: 1,
       };
-    }).filter(dataset => dataset.data.some(value => value > 0)); // Only include languages with data
+    }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
       labels: allDays.map(day => new Date(day).toLocaleDateString()),
       datasets: datasets,
     };
-  };
+  }, [userMetrics]);
 
-  const languageBarChartData = createLanguageBarChartData();
-
-  // Prepare bar chart data for model activity by day
-  const createModelBarChartData = () => {
-    // Get all unique models across all days
+  // Memoized bar chart data for model activity by day
+  const modelBarChartData = useMemo(() => {
     const allModels = Array.from(
-      new Set(
-        userMetrics.flatMap(metric => 
-          metric.totals_by_model_feature.map(item => item.model)
-        )
-      )
+      new Set(userMetrics.flatMap(metric => metric.totals_by_model_feature.map(item => item.model)))
     ).filter(model => model && model !== '' && model !== 'unknown').sort();
 
-    // Get all days and sort them
     const allDays = userMetrics.map(metric => metric.day).sort();
 
-    // Define colors for each model
     const modelColors: Record<string, string> = {
       'gpt-4': '#10A37F',
       'gpt-4o': '#0066CC',
@@ -496,7 +447,11 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       'gemini-pro': '#1A73E8',
     };
 
-    // Create datasets for each model
+    const fallbackColors = [
+      '#6366F1', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6', 
+      '#10B981', '#F97316', '#06B6D4', '#84CC16', '#EC4899'
+    ];
+
     const datasets = allModels.map((model, index) => {
       const data = allDays.map(day => {
         const dayMetric = userMetrics.find(m => m.day === day);
@@ -506,11 +461,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         return modelData;
       });
 
-      const fallbackColors = [
-        '#6366F1', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6', 
-        '#10B981', '#F97316', '#06B6D4', '#84CC16', '#EC4899'
-      ];
-
       return {
         label: model.charAt(0).toUpperCase() + model.slice(1),
         data: data,
@@ -518,15 +468,13 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         borderColor: modelColors[model.toLowerCase()] || fallbackColors[index % fallbackColors.length],
         borderWidth: 1,
       };
-    }).filter(dataset => dataset.data.some(value => value > 0)); // Only include models with data
+    }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
       labels: allDays.map(day => new Date(day).toLocaleDateString()),
       datasets: datasets,
     };
-  };
-
-  const modelBarChartData = createModelBarChartData();
+  }, [userMetrics]);
 
   const barChartOptions = {
     responsive: true,

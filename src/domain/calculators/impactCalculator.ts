@@ -1,3 +1,5 @@
+import { CopilotMetrics } from '../../types/metrics';
+
 export interface ImpactData {
   date: string;
   locAdded: number;
@@ -221,4 +223,45 @@ export function computeAskModeImpactData(accumulator: ImpactAccumulator): ModeIm
 
 export function computeJoinedImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
   return formatImpactMap(accumulator.dailyJoinedImpact, accumulator.allUniqueUsers.size);
+}
+
+function processMetricsForImpact(metrics: CopilotMetrics[]): ImpactAccumulator {
+  const accumulator = createImpactAccumulator();
+
+  for (const metric of metrics) {
+    const date = metric.day;
+    const userId = metric.user_id;
+
+    ensureImpactDates(accumulator, date);
+
+    const featureImpacts: FeatureImpactInput[] = metric.totals_by_feature.map(f => ({
+      feature: f.feature,
+      locAdded: f.loc_added_sum || 0,
+      locDeleted: f.loc_deleted_sum || 0,
+    }));
+
+    accumulateFeatureImpacts(accumulator, date, userId, featureImpacts);
+  }
+
+  return accumulator;
+}
+
+export function calculateJoinedImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeJoinedImpactData(accumulator);
+}
+
+export function calculateEditModeImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeEditModeImpactData(accumulator);
+}
+
+export function calculateInlineModeImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeInlineModeImpactData(accumulator);
+}
+
+export function calculateAskModeImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeAskModeImpactData(accumulator);
 }

@@ -114,7 +114,10 @@ export function computeStats(
   };
 }
 
-export function calculateStatsFromMetrics(metrics: CopilotMetrics[]): MetricsStats {
+export function calculateStatsFromMetrics(
+  metrics: CopilotMetrics[],
+  options?: { filterLanguage?: (language: string) => boolean }
+): MetricsStats {
   if (metrics.length === 0) {
     return {
       uniqueUsers: 0,
@@ -131,6 +134,7 @@ export function calculateStatsFromMetrics(metrics: CopilotMetrics[]): MetricsSta
   }
 
   const accumulator = createStatsAccumulator();
+  const filterLanguage = options?.filterLanguage;
 
   for (const metric of metrics) {
     accumulateUserUsage(accumulator, metric.user_id, metric.used_chat, metric.used_agent);
@@ -140,6 +144,9 @@ export function calculateStatsFromMetrics(metrics: CopilotMetrics[]): MetricsSta
     }
 
     for (const langFeature of metric.totals_by_language_feature) {
+      if (filterLanguage && filterLanguage(langFeature.language)) {
+        continue;
+      }
       const engagements = langFeature.code_generation_activity_count + langFeature.code_acceptance_activity_count;
       accumulateLanguageEngagement(accumulator, langFeature.language, engagements);
     }
