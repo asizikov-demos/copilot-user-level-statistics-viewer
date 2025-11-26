@@ -262,14 +262,13 @@ ${premiumModelsImage ? `
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <SectionHeader
-          title="Executive Summary Email"
-          description="Curated summary of key Copilot impact, adoption, and premium model usage metrics suitable for sharing in a customer-facing update."
-          onBack={onBack}
-          className="mb-6"
-        />
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <SectionHeader
+        title="Executive Summary Email"
+        description="Curated summary of key Copilot impact, adoption, and premium model usage metrics suitable for sharing in a customer-facing update."
+        onBack={onBack}
+        className="mb-6"
+      />
 
         {/* Input Fields Section */}
         <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-6">
@@ -328,10 +327,9 @@ ${premiumModelsImage ? `
             </label>
           </div>
         </div>
-      </div>
 
       {/* Email Body Section */}
-      <div className="bg-white rounded-lg shadow-sm border-2 border-gray-300 p-6 flex justify-center">
+      <div className="mt-6 pt-6 border-t border-gray-200 flex justify-center">
         <div className="w-full" style={{ maxWidth: '900px' }}>
           <div className="mb-6 pb-4 border-b-2 border-gray-200 flex justify-between items-center">
             <div>
