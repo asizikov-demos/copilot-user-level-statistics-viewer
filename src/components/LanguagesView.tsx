@@ -83,19 +83,17 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
   // Determine how many items to show
   const maxItemsToShow = 10;
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <SectionHeader
-          title="Programming Languages Analysis"
-          description="Detailed breakdown of language usage patterns"
-          onBack={onBack}
-          descriptionClassName="text-gray-600 mt-1"
-        />
-      </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <SectionHeader
+        title="Programming Languages Analysis"
+        description="Detailed breakdown of language usage patterns"
+        onBack={onBack}
+        descriptionClassName="text-gray-600 mt-1"
+        className="mb-6"
+      />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4 mb-6">
         <DashboardStatsCard
           value={totalLanguages}
           label="Total Languages"
@@ -139,9 +137,9 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
       </div>
 
       {/* Two Column Layout for Tables */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200">
         {/* Languages by Number of Generations */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Code Generations</h3>
           <ExpandableTableSection
             items={languagesByGenerations}
@@ -203,7 +201,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
         </div>
 
         {/* Languages by Number of Users */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Number of Users</h3>
           <ExpandableTableSection
             items={languagesByUsers}
@@ -266,7 +264,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
       </div>
 
       {/* Net Productivity Impact by Language */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Net Productivity Impact by Language</h3>
         <p className="text-sm text-gray-500 mb-4">
           Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
@@ -339,7 +337,7 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
       </div>
 
       {/* Full Languages Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
         <ExpandableTableSection
           items={sortedLanguages}

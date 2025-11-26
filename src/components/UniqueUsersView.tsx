@@ -67,17 +67,15 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
   const completionOnlyUsers = users.filter(user => !user.used_chat && !user.used_agent).length;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <SectionHeader
-          title="Unique Users"
-          onBack={onBack}
-        />
-      </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <SectionHeader
+        title="Unique Users"
+        onBack={onBack}
+        className="mb-6"
+      />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-6">
         <DashboardStatsCard
           value={users.length}
           label="Total Users"
@@ -116,7 +114,7 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="mt-6 pt-6 border-t border-gray-200">
         <div className="mb-4">
           <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
             Search by user login

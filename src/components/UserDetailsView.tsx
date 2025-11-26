@@ -511,20 +511,18 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <SectionHeader
-          title={userLogin}
-          description={<p className="text-gray-600">User ID: {userId}</p>}
-          onBack={onBack}
-          titleClassName="text-2xl font-bold text-gray-900"
-          backButtonLabel="← Back to Users"
-        />
-      </div>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <SectionHeader
+        title={userLogin}
+        description={<p className="text-gray-600">User ID: {userId}</p>}
+        onBack={onBack}
+        titleClassName="text-2xl font-bold text-gray-900"
+        backButtonLabel="← Back to Users"
+        className="mb-6"
+      />
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
         <DashboardStatsCard
           value={totalInteractions}
           label="Total Interactions"
@@ -556,33 +554,44 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
           accent="indigo"
         />
       </div>
-      
-      <ModeImpactChart
+
+      {/* Combined Impact Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <ModeImpactChart
         data={userCombinedImpactData}
         title="Combined Copilot Impact"
         description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
         emptyStateMessage="No combined impact data available."
       />
+      </div>
 
-      <ActivityCalendar userMetrics={userMetrics} onDayClick={handleDayClick} />
+      {/* Activity Calendar Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <ActivityCalendar userMetrics={userMetrics} onDayClick={handleDayClick} />
+      </div>
 
-      <UserSummaryChart
-        usedChat={usedChat}
-        usedAgent={usedAgent}
-        ideChartData={ideAggregates.length > 0 ? ideChartData : undefined}
-        languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
-        modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
-        chartOptions={chartOptions}
-      />
+      {/* User Summary Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <UserSummaryChart
+          usedChat={usedChat}
+          usedAgent={usedAgent}
+          ideChartData={ideAggregates.length > 0 ? ideChartData : undefined}
+          languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
+          modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
+          chartOptions={chartOptions}
+        />
+      </div>
 
       {/* Totals by IDE */}
-      <IDEActivityChart
-        userMetrics={userMetrics}
-        pluginVersions={uniquePluginVersions}
-      />
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <IDEActivityChart
+          userMetrics={userMetrics}
+          pluginVersions={uniquePluginVersions}
+        />
+      </div>
 
       {/* Totals by Feature */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="mt-8 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h3>
         <div className="overflow-x-auto">
           <table className="w-full divide-y divide-gray-200">
@@ -616,21 +625,29 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         </div>
       </div>
 
-      <UserActivityByLanguageAndFeatureChart
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <UserActivityByLanguageAndFeatureChart
         languageFeatureAggregates={languageFeatureAggregates}
         languageBarChartData={languageBarChartData}
         languageBarChartOptions={languageBarChartOptions}
-      />
+        />
+      </div>
 
-      <PRUCostAnalysisChart data={userPRUAnalysisData} />
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <PRUCostAnalysisChart data={userPRUAnalysisData} />
+      </div>
 
-      <PRUModelUsageChart data={userModelUsageData} />
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <PRUModelUsageChart data={userModelUsageData} />
+      </div>
 
-      <UserActivityByModelAndFeatureChart
-        modelFeatureAggregates={modelFeatureAggregates}
-        modelBarChartData={modelBarChartData}
-        modelBarChartOptions={modelBarChartOptions}
-      />
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <UserActivityByModelAndFeatureChart
+          modelFeatureAggregates={modelFeatureAggregates}
+          modelBarChartData={modelBarChartData}
+          modelBarChartOptions={modelBarChartOptions}
+        />
+      </div>
 
       <DayDetailsModal
         isOpen={modalState.isOpen}
