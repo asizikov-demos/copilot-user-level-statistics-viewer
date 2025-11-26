@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,7 +15,13 @@ import {
 import { Line } from 'react-chartjs-2';
 import { CopilotMetrics } from '../types/metrics';
 import SectionHeader from './ui/SectionHeader';
-import ExpandableTableSection from './ui/ExpandableTableSection';
+import {
+  DataTable,
+  DataTableHeader,
+  DataTableBody,
+  DataTableColumn,
+  DataTableExpandButton,
+} from './ui/DataTable';
 import type { VoidCallback } from '../types/events';
 
 ChartJS.register(
@@ -191,6 +197,8 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
     };
   }, [metrics]);
 
+  const [isPluginVersionsExpanded, setIsPluginVersionsExpanded] = useState(false);
+
   const formatModes = (modes: string[]): string => {
     return modes.join(', ');
   };
@@ -306,53 +314,41 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">IDEs Associated with Unknown Models</h3>
         {ideSummary.length > 0 ? (
-          <ExpandableTableSection
-            items={ideSummary}
+          <DataTable
+            data={ideSummary}
             initialCount={10}
-            buttonCollapsedLabel={(total) => `Show All ${total} IDEs`}
-            buttonExpandedLabel="Show Less"
           >
-            {({ visibleItems }) => (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        IDE
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Metrics with Unknown Model
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Impacted Users
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Plugin Versions (Count)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visibleItems.map((row, index) => (
-                      <tr key={row.ide} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{row.ide}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.occurrences.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.uniqueUsers.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.pluginVersions.length.toLocaleString()}</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </ExpandableTableSection>
+            <DataTableHeader className="bg-gray-50">
+              <DataTableColumn<IdeSummaryRow> field="ide" sortable>IDE</DataTableColumn>
+              <DataTableColumn<IdeSummaryRow> field="occurrences" sortable>Metrics with Unknown Model</DataTableColumn>
+              <DataTableColumn<IdeSummaryRow> field="uniqueUsers" sortable>Impacted Users</DataTableColumn>
+              <DataTableColumn>Plugin Versions (Count)</DataTableColumn>
+            </DataTableHeader>
+            <DataTableBody<IdeSummaryRow>
+              rowClassName={(_, index) => index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+            >
+              {(row) => (
+                <>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{row.ide}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{row.occurrences.toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{row.uniqueUsers.toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{row.pluginVersions.length.toLocaleString()}</div>
+                  </td>
+                </>
+              )}
+            </DataTableBody>
+            <DataTableExpandButton
+              collapsedLabel={(total) => `Show All ${total} IDEs`}
+              expandedLabel="Show Less"
+            />
+          </DataTable>
         ) : (
           <div className="text-center text-gray-500 py-10 border border-dashed border-gray-300 rounded-lg">
             No IDE associations found for unknown models.
@@ -363,61 +359,57 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">Plugin Versions Reported with Unknown Models</h3>
         {ideSummary.length > 0 ? (
-          <ExpandableTableSection
-            items={ideSummary}
-            initialCount={0}
-            defaultExpanded={false}
-            buttonCollapsedLabel={(total) => `Show Plugin Versions (${total.toLocaleString()} IDEs)`}
-            buttonExpandedLabel="Hide Plugin Versions"
-            buttonAlignment="left"
-          >
-            {({ visibleItems, isExpanded }) => (
-              <>
-                {isExpanded ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            IDE
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Plugin Versions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {visibleItems.map((row, index) => (
-                          <tr key={`${row.ide}-plugins`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{row.ide}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
-                                {row.pluginVersions.length > 0 ? (
-                                  <ul className="list-disc list-inside space-y-1">
-                                    {row.pluginVersions.map(plugin => (
-                                      <li key={`${row.ide}-${plugin}`}>{plugin}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <span className="text-gray-500">None</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-4 text-sm text-gray-600">
-                    Click &quot;Show Plugin Versions&quot; to view IDE plugin details associated with unknown models.
-                  </div>
-                )}
-              </>
+          <>
+            <div className="text-left mb-3">
+              <button
+                type="button"
+                onClick={() => setIsPluginVersionsExpanded(!isPluginVersionsExpanded)}
+                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+                aria-expanded={isPluginVersionsExpanded}
+              >
+                {isPluginVersionsExpanded ? 'Hide Plugin Versions' : `Show Plugin Versions (${ideSummary.length.toLocaleString()} IDEs)`}
+              </button>
+            </div>
+            {isPluginVersionsExpanded ? (
+              <DataTable
+                data={ideSummary}
+                tableClassName="min-w-full divide-y divide-gray-200"
+              >
+                <DataTableHeader className="bg-gray-50">
+                  <DataTableColumn<IdeSummaryRow> field="ide" sortable>IDE</DataTableColumn>
+                  <DataTableColumn>Plugin Versions</DataTableColumn>
+                </DataTableHeader>
+                <DataTableBody<IdeSummaryRow>
+                  rowClassName={(_, index) => index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                >
+                  {(row) => (
+                    <>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{row.ide}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {row.pluginVersions.length > 0 ? (
+                            <ul className="list-disc list-inside space-y-1">
+                              {row.pluginVersions.map(plugin => (
+                                <li key={`${row.ide}-${plugin}`}>{plugin}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <span className="text-gray-500">None</span>
+                          )}
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </DataTableBody>
+              </DataTable>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-4 text-sm text-gray-600">
+                Click &quot;Show Plugin Versions&quot; to view IDE plugin details associated with unknown models.
+              </div>
             )}
-          </ExpandableTableSection>
+          </>
         ) : (
           <div className="text-center text-gray-500 py-10 border border-dashed border-gray-300 rounded-lg">
             No plugin version data available for unknown models.
@@ -434,65 +426,52 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
           <p className="text-gray-600">All agent users have proper Agent Mode feature reporting</p>
         </div>
       ) : (
-        <ExpandableTableSection
-          items={usersWithDataQualityIssues}
+        <DataTable
+          data={usersWithDataQualityIssues}
           initialCount={10}
-          buttonCollapsedLabel={(total) => `Show All ${total} Users`}
-          buttonExpandedLabel="Show Less"
+          tableClassName="min-w-full divide-y divide-gray-200"
         >
-          {({ visibleItems }) => (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Used Agent Flag
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Chat Modes Used
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Plugins Used
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {visibleItems.map((user, index) => (
-                    <tr key={`${user.userId}-${user.userLogin}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.userLogin}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{user.userId}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          {user.usedAgent ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {user.usedModes.length > 0 ? formatModes(user.usedModes) : 'None'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {formatPlugins(user.pluginsUsed)}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </ExpandableTableSection>
+          <DataTableHeader className="bg-gray-50">
+            <DataTableColumn<DataQualityUser> field="userLogin" sortable>User Name</DataTableColumn>
+            <DataTableColumn<DataQualityUser> field="userId" sortable>User ID</DataTableColumn>
+            <DataTableColumn>Used Agent Flag</DataTableColumn>
+            <DataTableColumn>Chat Modes Used</DataTableColumn>
+            <DataTableColumn>Plugins Used</DataTableColumn>
+          </DataTableHeader>
+          <DataTableBody<DataQualityUser>
+            rowClassName={(_, index) => index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+          >
+            {(user) => (
+              <>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{user.userLogin}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-500">{user.userId}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                    {user.usedAgent ? 'Yes' : 'No'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {user.usedModes.length > 0 ? formatModes(user.usedModes) : 'None'}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {formatPlugins(user.pluginsUsed)}
+                  </div>
+                </td>
+              </>
+            )}
+          </DataTableBody>
+          <DataTableExpandButton
+            collapsedLabel={(total) => `Show All ${total} Users`}
+            expandedLabel="Show Less"
+          />
+        </DataTable>
       )}
 
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">

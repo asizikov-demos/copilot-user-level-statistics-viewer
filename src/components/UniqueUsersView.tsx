@@ -2,9 +2,15 @@
 
 import { UserSummary, CopilotMetrics } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
-import { useSortableTable } from '../hooks/useSortableTable';
 import SectionHeader from './ui/SectionHeader';
 import DashboardStatsCard from './ui/DashboardStatsCard';
+import {
+  DataTable,
+  DataTableHeader,
+  DataTableBody,
+  DataTableColumn,
+  DataTableEmptyState,
+} from './ui/DataTable';
 import type { VoidCallback } from '../types/events';
 
 interface UniqueUsersViewProps {
@@ -14,50 +20,14 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_code_acceptance_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
-
 export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
-  const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
-    filteredUsers,
-    'total_user_initiated_interactions',
-    'desc'
-  );
 
   const handleUserClick = (user: UserSummary) => {
     const userMetrics = rawMetrics.filter(metric => metric.user_id === user.user_id);
     onUserClick(user.user_login, user.user_id, userMetrics);
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return (
-        <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    
-    return sortDirection === 'asc' ? (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4l9 16 9-16H3z" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 20L12 4 3 20h18z" />
-      </svg>
-    );
-  };
-
-  const renderSortButton = (field: SortField, label: string) => (
-    <button
-      onClick={() => handleSort(field)}
-      className="flex items-center hover:text-gray-700 focus:outline-none"
-    >
-      {label}
-      {getSortIcon(field)}
-    </button>
-  );
   // Calculate summary statistics
   const totalInteractions = users.reduce((sum, user) => sum + user.total_user_initiated_interactions, 0);
   const totalGeneration = users.reduce((sum, user) => sum + user.total_code_generation_activities, 0);
@@ -130,46 +100,27 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                {renderSortButton('user_login', 'User')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_user_initiated_interactions', 'User Interactions')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_code_generation_activities', 'Code Generation')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_code_acceptance_activities', 'Code Acceptance')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_added', 'LOC Added')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_deleted', 'LOC Deleted')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_suggested_to_add', 'Suggested Add')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('days_active', 'Days Active')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                Features Used
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedUsers.map((user) => (
-              <tr 
-                key={user.user_id} 
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleUserClick(user)}
-              >
+        <DataTable
+          data={filteredUsers}
+          defaultSortField="total_user_initiated_interactions"
+          defaultSortDirection="desc"
+        >
+          <DataTableHeader className="bg-gray-50">
+            <DataTableColumn<UserSummary> field="user_login" sortable width="25%">User</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_user_initiated_interactions" sortable>User Interactions</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_code_generation_activities" sortable>Code Generation</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_code_acceptance_activities" sortable>Code Acceptance</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_loc_added" sortable>LOC Added</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_loc_deleted" sortable>LOC Deleted</DataTableColumn>
+            <DataTableColumn<UserSummary> field="total_loc_suggested_to_add" sortable>Suggested Add</DataTableColumn>
+            <DataTableColumn<UserSummary> field="days_active" sortable>Days Active</DataTableColumn>
+            <DataTableColumn>Features Used</DataTableColumn>
+          </DataTableHeader>
+          <DataTableBody<UserSummary>
+            onRowClick={handleUserClick}
+          >
+            {(user) => (
+              <>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
@@ -219,17 +170,11 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
                     )}
                   </div>
                 </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {users.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No user data available</p>
-        </div>
-      )}
+              </>
+            )}
+          </DataTableBody>
+          <DataTableEmptyState message="No user data available" />
+        </DataTable>
       </div>
     </div>
   );
