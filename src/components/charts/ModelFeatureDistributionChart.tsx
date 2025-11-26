@@ -200,25 +200,25 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
       value: totalInteractions,
       label: 'Total Interactions',
       sublabel: `${filteredData.length} models`,
-      color: 'text-blue-600' as const
+      colorClass: 'text-blue-600' as const
     },
     {
       value: Math.round(totalPRUs * 100) / 100,
       label: 'Total PRUs',
       sublabel: 'From all features',
-      color: 'text-purple-600' as const
+      colorClass: 'text-purple-600' as const
     },
     {
       value: `$${Math.round(totalServiceValue * 100) / 100}`,
       label: 'Total Realised Service Value',
       sublabel: 'Estimated',
-      color: 'text-green-600' as const
+      colorClass: 'text-green-600' as const
     },
     {
       value: `${highestServiceValueModel?.multiplier || 0}x`,
       label: 'Highest Multiplier',
       sublabel: highestServiceValueModel?.modelDisplayName || 'N/A',
-      color: 'text-red-600' as const
+      colorClass: 'text-red-600' as const
     }
   ];
 

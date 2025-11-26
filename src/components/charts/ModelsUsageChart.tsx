@@ -84,7 +84,7 @@ export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartP
     const dominantThreshold = 0.5;
     const strongDominanceThreshold = 0.7;
 
-    let insightVariant: 'green' | 'blue' | 'red' | 'orange' | 'purple' = 'blue';
+    let insightVariant: 'green' | 'blue' | 'red' | 'orange' | 'purple';
     const paragraphs: string[] = [];
     const title = `${isPremium ? 'Premium' : 'Standard'} Model Usage Insights`;
     let showDocLink = false;

@@ -45,7 +45,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-haiku-4.5', 0.33, true),
   new Model('gemini-2.0-flash', 0.25, true),
   new Model('gemini-2.5-pro', 1, true),
-    new Model('gemini-3.0-pro', 1, true),
+  new Model('gemini-3.0-pro', 1, true),
 
 
   // Default multiplier for unknown models
