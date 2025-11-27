@@ -14,10 +14,10 @@ import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
 import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndFeatureChart';
-import SectionHeader from './ui/SectionHeader';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
+import { ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler);
@@ -511,16 +511,16 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title={userLogin}
-        description={<p className="text-gray-600">User ID: {userId}</p>}
-        onBack={onBack}
-        titleClassName="text-2xl font-bold text-gray-900"
-        backButtonLabel="← Back to Users"
-        className="mb-6"
-      />
-
+    <ViewPanel
+      headerProps={{
+        title: userLogin,
+        description: <p className="text-gray-600">User ID: {userId}</p>,
+        onBack,
+        titleClassName: 'text-2xl font-bold text-gray-900',
+        backButtonLabel: '← Back to Users',
+      }}
+      contentClassName="space-y-8"
+    >
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
         <DashboardStatsCard
@@ -655,6 +655,6 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         date={modalState.selectedDate}
         dayMetrics={modalState.selectedMetrics}
       />
-    </div>
+    </ViewPanel>
   );
 }

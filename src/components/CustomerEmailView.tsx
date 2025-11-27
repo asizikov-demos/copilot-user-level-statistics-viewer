@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from 'react';
-import SectionHeader from './ui/SectionHeader';
 import ModeImpactChart from './charts/ModeImpactChart';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import ModelsUsageChart from './charts/ModelsUsageChart';
+import { ViewPanel } from './ui';
 import type { CopilotMetrics } from '../types/metrics';
 import type { FeatureAdoptionData, AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../domain/calculators/metricCalculators';
 import { isPremiumModel } from '../domain/modelConfig';
@@ -262,14 +262,14 @@ ${premiumModelsImage ? `
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title="Executive Summary Email"
-        description="Curated summary of key Copilot impact, adoption, and premium model usage metrics suitable for sharing in a customer-facing update."
-        onBack={onBack}
-        className="mb-6"
-      />
-
+    <ViewPanel
+      headerProps={{
+        title: 'Executive Summary Email',
+        description: 'Curated summary of key Copilot impact, adoption, and premium model usage metrics suitable for sharing in a customer-facing update.',
+        onBack,
+      }}
+      contentClassName="space-y-6"
+    >
         {/* Input Fields Section */}
         <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Configuration</h3>
@@ -566,6 +566,6 @@ ${premiumModelsImage ? `
         </div>
         </div>
       </div>
-    </div>
+    </ViewPanel>
   );
 }

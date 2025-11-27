@@ -2,9 +2,9 @@
 
 import { LanguageStats } from '../domain/calculators/metricCalculators';
 import { useState } from 'react';
-import SectionHeader from './ui/SectionHeader';
 import ExpandableTableSection from './ui/ExpandableTableSection';
 import DashboardStatsCard from './ui/DashboardStatsCard';
+import { ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
 
 interface LanguagesViewProps {
@@ -83,15 +83,15 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
   // Determine how many items to show
   const maxItemsToShow = 10;
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title="Programming Languages Analysis"
-        description="Detailed breakdown of language usage patterns"
-        onBack={onBack}
-        descriptionClassName="text-gray-600 mt-1"
-        className="mb-6"
-      />
-
+    <ViewPanel
+      headerProps={{
+        title: 'Programming Languages Analysis',
+        description: 'Detailed breakdown of language usage patterns',
+        onBack,
+        descriptionClassName: 'text-gray-600 mt-1',
+      }}
+      contentClassName="space-y-6"
+    >
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4 mb-6">
         <DashboardStatsCard
@@ -470,6 +470,6 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
           </div>
         )}
       </div>
-    </div>
+    </ViewPanel>
   );
 }

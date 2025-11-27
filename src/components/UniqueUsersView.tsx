@@ -3,8 +3,8 @@
 import { UserSummary, CopilotMetrics } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
-import SectionHeader from './ui/SectionHeader';
 import DashboardStatsCard from './ui/DashboardStatsCard';
+import { ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
 
 interface UniqueUsersViewProps {
@@ -67,13 +67,13 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
   const completionOnlyUsers = users.filter(user => !user.used_chat && !user.used_agent).length;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title="Unique Users"
-        onBack={onBack}
-        className="mb-6"
-      />
-
+    <ViewPanel
+      headerProps={{
+        title: 'Unique Users',
+        onBack,
+      }}
+      contentClassName="space-y-6"
+    >
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-6">
         <DashboardStatsCard
@@ -229,6 +229,6 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
         </div>
       )}
       </div>
-    </div>
+    </ViewPanel>
   );
 }

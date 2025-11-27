@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import SectionHeader from './ui/SectionHeader';
 import { useRawMetrics } from './MetricsContext';
 import { useFilters } from '../state/FilterContext';
 import { filterMetricsByDateRange } from '../utils/dateFilters';
@@ -9,6 +8,7 @@ import ModelsUsageChart from './charts/ModelsUsageChart';
 import InsightsCard from './ui/InsightsCard';
 import { KNOWN_MODELS } from '../domain/modelConfig';
 import type { VoidCallback } from '../types/events';
+import { ViewPanel } from './ui';
 
 interface ModelDetailsViewProps {
   onBack: VoidCallback;
@@ -160,13 +160,14 @@ export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
   }, [metrics]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title={`Model Usage`}
-        description="Detailed model insights along with model usage trends."
-        onBack={onBack}
-        className="mb-6"
-      />
+    <ViewPanel
+      headerProps={{
+        title: 'Model Usage',
+        description: 'Detailed model insights along with model usage trends.',
+        onBack,
+      }}
+      contentClassName="space-y-6"
+    >
       <div className="space-y-6">
         <div className="text-sm text-gray-500">
           Each seat comes with at least 300 Premium Request Units (PRUs) that reset monthly. Comparing premium and standard usage helps ensure those high-value requests are fully utilized before they expire.
@@ -198,6 +199,6 @@ export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
         <ModelsUsageChart metrics={metrics} variant="standard" />
         <ModelsUsageChart metrics={metrics} variant="premium" />
       </div>
-    </div>
+    </ViewPanel>
   );
 }
