@@ -3,7 +3,6 @@
 import React from 'react';
 import { CopilotMetrics } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
-import SectionHeader from './ui/SectionHeader';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import {
   DataTable,
@@ -11,6 +10,7 @@ import {
   DataTableBody,
   DataTableColumn,
 } from './ui/DataTable';
+import { ViewPanel, MetricTileIcon } from './ui';
 import type { VoidCallback } from '../types/events';
 
 interface IDEStats {
@@ -156,14 +156,14 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <SectionHeader
-        title="IDE Statistics"
-        description="Overview of IDE usage across your organization."
-        onBack={onBack}
-        className="mb-6"
-      />
-
+    <ViewPanel
+      headerProps={{
+        title: 'IDE Statistics',
+        description: 'Overview of IDE usage across your organization.',
+        onBack,
+      }}
+      contentClassName="space-y-8"
+    >
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <DashboardStatsCard
@@ -171,11 +171,7 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
             label="Total IDEs"
             accent="blue"
             tone="tint"
-            icon={(
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            )}
+            icon={<MetricTileIcon name="top-ide" />}
           />
 
           <DashboardStatsCard
@@ -183,11 +179,7 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
             label="Avg Users per IDE"
             accent="green"
             tone="tint"
-            icon={(
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h3m0 0a3 3 0 106 0 3 3 0 00-6 0zm9 0h3m0 0a3 3 0 106 0 3 3 0 00-6 0z" />
-              </svg>
-            )}
+            icon={<MetricTileIcon name="average-users" />}
           />
 
           <DashboardStatsCard
@@ -195,11 +187,7 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
             label="Multi-IDE Users"
             accent="purple"
             tone="tint"
-            icon={(
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h6m-6 4h4M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
-              </svg>
-            )}
+            icon={<MetricTileIcon name="multi-ide" />}
           />
 
           {topIDE && (
@@ -208,11 +196,7 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
               label={`${formatIDEName(topIDE.ide)} User Share`}
               accent="teal"
               tone="tint"
-              icon={(
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                </svg>
-              )}
+              icon={<MetricTileIcon name="share" />}
             />
           )}
         </div>
@@ -273,6 +257,6 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
           </DataTable>
         </div>
       </div>
-    </div>
+    </ViewPanel>
   );
 }

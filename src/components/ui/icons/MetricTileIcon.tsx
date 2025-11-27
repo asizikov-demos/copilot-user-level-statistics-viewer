@@ -19,6 +19,9 @@ export type MetricTileIconName =
   | "plugin-outdated"
   | "vs-users"
   | "vs-versions"
+  | "average-users"
+  | "multi-ide"
+  | "share"
   | "warning"
   | "upgrade"
   | "default";
@@ -163,6 +166,30 @@ const ICON_PATHS: Record<MetricTileIconName, React.ReactElement> = {
       strokeLinejoin="round"
       strokeWidth={2}
       d="M3 7h18M3 12h18M3 17h18"
+    />
+  ),
+  "average-users": (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12h3m0 0a3 3 0 106 0 3 3 0 00-6 0zm9 0h3m0 0a3 3 0 106 0 3 3 0 00-6 0z"
+    />
+  ),
+  "multi-ide": (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M7 8h10M7 12h6m-6 4h4M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"
+    />
+  ),
+  share: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
     />
   ),
   warning: (
