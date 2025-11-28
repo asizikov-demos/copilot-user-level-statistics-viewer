@@ -4,6 +4,7 @@ import { UserSummary, CopilotMetrics } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
+import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import type { VoidCallback } from '../types/events';
 
 interface UniqueUsersViewProps {
@@ -28,35 +29,116 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
     onUserClick(user.user_login, user.user_id, userMetrics);
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return (
-        <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    
-    return sortDirection === 'asc' ? (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4l9 16 9-16H3z" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 20L12 4 3 20h18z" />
-      </svg>
-    );
-  };
+  const tableSortState = { field: sortField as string, direction: sortDirection };
 
-  const renderSortButton = (field: SortField, label: string) => (
-    <button
-      onClick={() => handleSort(field)}
-      className="flex items-center hover:text-gray-700 focus:outline-none"
-    >
-      {label}
-      {getSortIcon(field)}
-    </button>
-  );
+  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+
+  const columns: TableColumn<UserSummary>[] = [
+    {
+      id: 'user_login',
+      header: 'User',
+      sortable: true,
+      headerClassName: `${headerBaseClass} w-1/4`,
+      className: 'px-6 py-4 whitespace-nowrap',
+      renderCell: (user) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-10 w-10">
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-sm font-medium text-blue-700">
+                {user.user_login.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <div className="ml-4">
+            <div className="text-sm font-medium text-gray-900">{user.user_login}</div>
+            <div className="text-sm text-gray-500">ID: {user.user_id}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'total_user_initiated_interactions',
+      header: 'User Interactions',
+      sortable: true,
+      accessor: 'total_user_initiated_interactions',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'total_code_generation_activities',
+      header: 'Code Generation',
+      sortable: true,
+      accessor: 'total_code_generation_activities',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'total_code_acceptance_activities',
+      header: 'Code Acceptance',
+      sortable: true,
+      accessor: 'total_code_acceptance_activities',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'total_loc_added',
+      header: 'LOC Added',
+      sortable: true,
+      accessor: 'total_loc_added',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'total_loc_deleted',
+      header: 'LOC Deleted',
+      sortable: true,
+      accessor: 'total_loc_deleted',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'total_loc_suggested_to_add',
+      header: 'Suggested Add',
+      sortable: true,
+      accessor: 'total_loc_suggested_to_add',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'days_active',
+      header: 'Days Active',
+      sortable: true,
+      accessor: 'days_active',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
+      id: 'features_used',
+      header: 'Features Used',
+      headerClassName: `${headerBaseClass} w-1/8`,
+      className: 'px-6 py-4 whitespace-nowrap',
+      renderCell: (user) => (
+        <div className="flex flex-wrap gap-1">
+          {user.used_chat && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              Chat
+            </span>
+          )}
+          {user.used_agent && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Agent
+            </span>
+          )}
+          {!user.used_chat && !user.used_agent && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              Completion Only
+            </span>
+          )}
+        </div>
+      ),
+    },
+  ];
   // Calculate summary statistics
   const totalInteractions = users.reduce((sum, user) => sum + user.total_user_initiated_interactions, 0);
   const totalGeneration = users.reduce((sum, user) => sum + user.total_code_generation_activities, 0);
@@ -135,103 +217,21 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
           />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-                {renderSortButton('user_login', 'User')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_user_initiated_interactions', 'User Interactions')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_code_generation_activities', 'Code Generation')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_code_acceptance_activities', 'Code Acceptance')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_added', 'LOC Added')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_deleted', 'LOC Deleted')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('total_loc_suggested_to_add', 'Suggested Add')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                {renderSortButton('days_active', 'Days Active')}
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/8">
-                Features Used
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {sortedUsers.map((user) => (
-              <tr 
-                key={user.user_id} 
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleUserClick(user)}
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-700">
-                          {user.user_login.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.user_login}</div>
-                      <div className="text-sm text-gray-500">ID: {user.user_id}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.total_user_initiated_interactions.toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.total_code_generation_activities.toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.total_code_acceptance_activities.toLocaleString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_added.toLocaleString()}</div></td>
-                <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_deleted.toLocaleString()}</div></td>
-                <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{user.total_loc_suggested_to_add.toLocaleString()}</div></td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{user.days_active}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-wrap gap-1">
-                    {user.used_chat && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Chat
-                      </span>
-                    )}
-                    {user.used_agent && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        Agent
-                      </span>
-                    )}
-                    {!user.used_chat && !user.used_agent && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Completion Only
-                      </span>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <MetricsTable<UserSummary>
+            data={sortedUsers}
+            columns={columns}
+            sortState={tableSortState}
+            onSortChange={({ field }) => handleSort(field as SortField)}
+            rowClassName={() => 'hover:bg-gray-50 cursor-pointer transition-colors'}
+            tableClassName="w-full divide-y divide-gray-200"
+            theadClassName="bg-gray-50"
+            onRowClick={(user) => handleUserClick(user)}
+          />
+        </div>
 
       {users.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No user data available</p>
+            <p className="text-gray-500">No user data available</p>
         </div>
       )}
       </div>

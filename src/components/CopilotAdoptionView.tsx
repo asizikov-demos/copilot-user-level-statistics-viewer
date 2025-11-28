@@ -5,6 +5,7 @@ import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import AgentModeHeatmapChart from './charts/AgentModeHeatmapChart';
 import { MetricTileGroup, MetricTileIcon, StatsGrid, ViewPanel } from './ui';
 import ExpandableTableSection from './ui/ExpandableTableSection';
+import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
@@ -156,6 +157,141 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     }
   }
 
+  const tableHeaderClass = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const narrowCellClass = 'px-4 py-2 text-sm text-gray-900 whitespace-nowrap';
+  const usernameCellClass = 'px-4 py-2 text-sm text-gray-900';
+
+  const renderUsernames = (pluginVersion: string, usernames: string[], expandedSet: Set<string>, toggle: (version: string) => void) => {
+    if (usernames.length <= 3) {
+      return <span className="text-xs text-gray-600">{usernames.join(', ')}</span>;
+    }
+
+    const isExpanded = expandedSet.has(pluginVersion);
+    const shown = isExpanded ? usernames.join(', ') : `${usernames.slice(0, 3).join(', ')}...`;
+    return (
+      <div>
+        <span className="text-xs text-gray-600">{shown}</span>
+        <button
+          onClick={() => toggle(pluginVersion)}
+          className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
+        >
+          {isExpanded ? 'Show Less' : `Show All ${usernames.length}`}
+        </button>
+      </div>
+    );
+  };
+
+  const toggleExpanded = (setState: React.Dispatch<React.SetStateAction<Set<string>>>, version: string) => {
+    setState((prev) => {
+      const next = new Set(prev);
+      if (next.has(version)) {
+        next.delete(version);
+      } else {
+        next.add(version);
+      }
+      return next;
+    });
+  };
+
+  const outdatedPluginsColumns: TableColumn<typeof outdatedPlugins[number]>[] = [
+    {
+      id: 'version',
+      header: 'Plugin Version',
+      headerClassName: `${tableHeaderClass} text-red-600`,
+      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
+      renderCell: (plugin) => plugin.version,
+    },
+    {
+      id: 'releaseDate',
+      header: 'Release Date',
+      headerClassName: `${tableHeaderClass} text-red-600`,
+      className: narrowCellClass,
+      renderCell: (plugin) => {
+        const releaseDate = jetbrainsVersionDateMap.get(plugin.version);
+        return releaseDate ? formatDate(releaseDate) : 'N/A';
+      },
+    },
+    {
+      id: 'userCount',
+      header: 'Number of Users',
+      headerClassName: `${tableHeaderClass} text-red-600`,
+      className: `${narrowCellClass} text-center`,
+      accessor: 'userCount',
+    },
+    {
+      id: 'usernames',
+      header: 'Usernames',
+      headerClassName: `${tableHeaderClass} text-red-600`,
+      className: usernameCellClass,
+      renderCell: (plugin) => renderUsernames(plugin.version, plugin.usernames, expandedUsernames, (version) => toggleExpanded(setExpandedUsernames, version)),
+    },
+  ];
+
+  const jetbrainsVersionsColumns: TableColumn<typeof latestEightUpdates[number]>[] = [
+    {
+      id: 'version',
+      header: 'Version',
+      headerClassName: tableHeaderClass,
+      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
+      renderCell: (update) => update.version,
+    },
+    {
+      id: 'releaseDate',
+      header: 'Release Date',
+      headerClassName: tableHeaderClass,
+      className: narrowCellClass,
+      renderCell: (update) => formatDate(update.releaseDate),
+    },
+  ];
+
+  const vscodeVersionsColumns: TableColumn<(typeof vscodeVersions)[number]>[] = [
+    {
+      id: 'version',
+      header: 'Version',
+      headerClassName: tableHeaderClass,
+      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
+      renderCell: (version) => version.version,
+    },
+    {
+      id: 'releaseDate',
+      header: 'Release Date',
+      headerClassName: tableHeaderClass,
+      className: narrowCellClass,
+      renderCell: (version) => formatDate(version.releaseDate),
+    },
+  ];
+
+  const vscodeVersionAnalysisColumns: TableColumn<typeof vscodeVersionAnalysis[number]>[] = [
+    {
+      id: 'version',
+      header: 'Extension Version',
+      headerClassName: tableHeaderClass,
+      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
+      renderCell: (item) => item.version,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      headerClassName: tableHeaderClass,
+      className: narrowCellClass,
+      renderCell: (item) => (latestVsCodeVersions.includes(item.version) ? 'Latest window' : 'Outdated'),
+    },
+    {
+      id: 'userCount',
+      header: 'Number of Users',
+      headerClassName: tableHeaderClass,
+      className: `${narrowCellClass} text-center`,
+      accessor: 'userCount',
+    },
+    {
+      id: 'usernames',
+      header: 'Usernames',
+      headerClassName: tableHeaderClass,
+      className: usernameCellClass,
+      renderCell: (item) => renderUsernames(item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
+    },
+  ];
+
   return (
     <ViewPanel
       headerProps={{
@@ -165,51 +301,47 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       }}
       contentClassName="space-y-10"
     >
-      <section className="space-y-6">
-        <MetricTileGroup
-          title="User Adoption Metrics"
-          items={[
-            {
-              title: 'Chat Users',
-              value: stats.chatUsers,
-              accent: 'emerald',
-              subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-              icon: <MetricTileIcon name="chat-users" />,
-            },
-            {
-              title: 'Agent Mode Users',
-              value: stats.agentUsers,
-              accent: 'violet',
-              subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-              icon: <MetricTileIcon name="agent-users" />,
-            },
-            {
-              title: 'Completion Only Users',
-              value: stats.completionOnlyUsers,
-              accent: 'amber',
-              subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-              icon: <MetricTileIcon name="completion-only-users" />,
-            },
-          ]}
-        />
-        <FeatureAdoptionChart
-          data={
-            featureAdoptionData || {
-              totalUsers: 0,
-              completionUsers: 0,
-              chatUsers: 0,
-              agentModeUsers: 0,
-              askModeUsers: 0,
-              editModeUsers: 0,
-              inlineModeUsers: 0,
-              codeReviewUsers: 0,
-            }
+      <MetricTileGroup
+        title="User Adoption Metrics"
+        items={[
+          {
+            title: 'Chat Users',
+            value: stats.chatUsers,
+            accent: 'emerald',
+            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
+            icon: <MetricTileIcon name="chat-users" />,
+          },
+          {
+            title: 'Agent Mode Users',
+            value: stats.agentUsers,
+            accent: 'violet',
+            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
+            icon: <MetricTileIcon name="agent-users" />,
+          },
+          {
+            title: 'Completion Only Users',
+            value: stats.completionOnlyUsers,
+            accent: 'amber',
+            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
+            icon: <MetricTileIcon name="completion-only-users" />,
+          },
+        ]}
+      />
+      <FeatureAdoptionChart
+        data={
+          featureAdoptionData || {
+            totalUsers: 0,
+            completionUsers: 0,
+            chatUsers: 0,
+            agentModeUsers: 0,
+            askModeUsers: 0,
+            editModeUsers: 0,
+            inlineModeUsers: 0,
+            codeReviewUsers: 0,
           }
-        />
-        <div className="pt-4">
-          <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
-        </div>
-      </section>
+        }
+      />
+      <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
 
       <section className="space-y-6">
         <div>
@@ -278,60 +410,13 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   >
                     {({ visibleItems }) => (
                       <div className="overflow-x-auto border border-gray-200 rounded-md">
-                        <table className="min-w-full divide-y divide-gray-200 text-sm">
-                          <thead className="bg-red-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left font-medium text-gray-700">Plugin Version</th>
-                              <th className="px-4 py-2 text-left font-medium text-gray-700">Release Date</th>
-                              <th className="px-4 py-2 text-left font-medium text-gray-700">Number of Users</th>
-                              <th className="px-4 py-2 text-left font-medium text-gray-700">Usernames</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100 bg-white">
-                            {visibleItems.map((plugin) => {
-                              const cdate = jetbrainsVersionDateMap.get(plugin.version);
-                              const releaseDate = cdate ? formatDate(cdate) : 'N/A';
-                              return (
-                                <tr key={plugin.version} className="hover:bg-gray-50">
-                                  <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{plugin.version}</td>
-                                  <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{releaseDate}</td>
-                                  <td className="px-4 py-2 text-center">{plugin.userCount}</td>
-                                  <td className="px-4 py-2">
-                                    <div className="max-w-md">
-                                      {plugin.usernames.length <= 3 ? (
-                                        <span className="text-xs text-gray-600">
-                                          {plugin.usernames.join(', ')}
-                                        </span>
-                                      ) : (
-                                        <div>
-                                          <span className="text-xs text-gray-600">
-                                            {expandedUsernames.has(plugin.version)
-                                              ? plugin.usernames.join(', ')
-                                              : `${plugin.usernames.slice(0, 3).join(', ')}...`}
-                                          </span>
-                                          <button
-                                            onClick={() => {
-                                              const newExpanded = new Set(expandedUsernames);
-                                              if (expandedUsernames.has(plugin.version)) {
-                                                newExpanded.delete(plugin.version);
-                                              } else {
-                                                newExpanded.add(plugin.version);
-                                              }
-                                              setExpandedUsernames(newExpanded);
-                                            }}
-                                            className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
-                                          >
-                                            {expandedUsernames.has(plugin.version) ? 'Show Less' : `Show All ${plugin.usernames.length}`}
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                        <MetricsTable
+                          data={visibleItems}
+                          columns={outdatedPluginsColumns}
+                          tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                          theadClassName="bg-red-50"
+                          rowClassName={() => 'hover:bg-gray-50'}
+                        />
                       </div>
                     )}
                   </ExpandableTableSection>
@@ -353,37 +438,21 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                 >
                   {({ visibleItems }) => (
                     <div className="overflow-x-auto border border-gray-200 rounded-md">
-                      <table className="min-w-full divide-y divide-gray-200 text-sm">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2 text-left font-medium text-gray-700">Version</th>
-                            <th className="px-4 py-2 text-left font-medium text-gray-700">Release Date</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                          {jbLoading && (
-                            <tr>
-                              <td className="px-4 py-3 text-gray-500" colSpan={2}>Loading…</td>
-                            </tr>
-                          )}
-                          {jbError && !jbLoading && (
-                            <tr>
-                              <td className="px-4 py-3 text-red-600" colSpan={2}>Failed to load plugin versions: {jbError}</td>
-                            </tr>
-                          )}
-                          {!jbLoading && !jbError && jetbrainsUpdates.length === 0 && (
-                            <tr>
-                              <td className="px-4 py-3 text-gray-500" colSpan={2}>No version data available.</td>
-                            </tr>
-                          )}
-                          {!jbLoading && !jbError && visibleItems.map((update) => (
-                            <tr key={update.version} className="hover:bg-gray-50">
-                              <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{update.version}</td>
-                              <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{formatDate(update.releaseDate)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {jbLoading ? (
+                        <div className="px-4 py-3 text-gray-500">Loading…</div>
+                      ) : jbError ? (
+                        <div className="px-4 py-3 text-red-600">Failed to load plugin versions: {jbError}</div>
+                      ) : jetbrainsUpdates.length === 0 ? (
+                        <div className="px-4 py-3 text-gray-500">No version data available.</div>
+                      ) : (
+                        <MetricsTable
+                          data={visibleItems}
+                          columns={jetbrainsVersionsColumns}
+                          tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                          theadClassName="bg-gray-50"
+                          rowClassName={() => 'hover:bg-gray-50'}
+                        />
+                      )}
                     </div>
                   )}
                 </ExpandableTableSection>
@@ -441,39 +510,21 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           >
             {({ visibleItems }) => (
               <div className="overflow-x-auto border border-gray-200 rounded-md">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">Version</th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-700">Release Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 bg-white">
-                    {vsLoading && (
-                      <tr>
-                        <td className="px-4 py-3 text-gray-500" colSpan={2}>Loading&hellip;</td>
-                      </tr>
-                    )}
-                    {vsError && !vsLoading && (
-                      <tr>
-                        <td className="px-4 py-3 text-red-600" colSpan={2}>
-                          Failed to load VS Code versions: {vsError}
-                        </td>
-                      </tr>
-                    )}
-                    {!vsLoading && !vsError && vscodeVersions.length === 0 && (
-                      <tr>
-                        <td className="px-4 py-3 text-gray-500" colSpan={2}>No version data available.</td>
-                      </tr>
-                    )}
-                    {!vsLoading && !vsError && visibleItems.map((v) => (
-                      <tr key={v.version} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{v.version}</td>
-                        <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{formatDate(v.releaseDate)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {vsLoading ? (
+                  <div className="px-4 py-3 text-gray-500">Loading&hellip;</div>
+                ) : vsError ? (
+                  <div className="px-4 py-3 text-red-600">Failed to load VS Code versions: {vsError}</div>
+                ) : vscodeVersions.length === 0 ? (
+                  <div className="px-4 py-3 text-gray-500">No version data available.</div>
+                ) : (
+                  <MetricsTable
+                    data={visibleItems}
+                    columns={vscodeVersionsColumns}
+                    tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                    theadClassName="bg-gray-50"
+                    rowClassName={() => 'hover:bg-gray-50'}
+                  />
+                )}
               </div>
             )}
           </ExpandableTableSection>
@@ -492,53 +543,13 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               >
                 {({ visibleItems }) => (
                   <div className="overflow-x-auto border border-gray-200 rounded-md">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 text-left font-medium text-gray-700">Extension Version</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-700">Status</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-700">Number of Users</th>
-                          <th className="px-4 py-2 text-left font-medium text-gray-700">Usernames</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 bg-white">
-                        {visibleItems.map((plugin) => {
-                          const isLatest = latestVsCodeVersions.includes(plugin.version);
-                          const isExpanded = expandedVsUsernames.has(plugin.version);
-                          const userLabel = isExpanded
-                            ? plugin.usernames.join(', ')
-                            : `${plugin.usernames.slice(0, 3).join(', ')}${plugin.usernames.length > 3 ? '...' : ''}`;
-                          return (
-                            <tr key={plugin.version} className={isLatest ? 'hover:bg-gray-50' : 'hover:bg-red-50'}>
-                              <td className="px-4 py-2 font-mono text-gray-900 whitespace-nowrap">{plugin.version}</td>
-                              <td className="px-4 py-2 text-gray-700 whitespace-nowrap">{isLatest ? 'Latest window' : 'Outdated'}</td>
-                              <td className="px-4 py-2 text-center">{plugin.userCount}</td>
-                              <td className="px-4 py-2">
-                                <div className="max-w-md">
-                                  <span className="text-xs text-gray-600">{userLabel}</span>
-                                  {plugin.usernames.length > 3 && (
-                                    <button
-                                      onClick={() => {
-                                        const next = new Set(expandedVsUsernames);
-                                        if (isExpanded) {
-                                          next.delete(plugin.version);
-                                        } else {
-                                          next.add(plugin.version);
-                                        }
-                                        setExpandedVsUsernames(next);
-                                      }}
-                                      className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
-                                    >
-                                      {isExpanded ? 'Show Less' : `Show All ${plugin.usernames.length}`}
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                    <MetricsTable
+                      data={visibleItems}
+                      columns={vscodeVersionAnalysisColumns}
+                      tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                      theadClassName="bg-gray-50"
+                      rowClassName={(item, index) => `${latestVsCodeVersions.includes(item.version) ? 'hover:bg-gray-50' : 'hover:bg-red-50'} ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                    />
                   </div>
                 )}
               </ExpandableTableSection>

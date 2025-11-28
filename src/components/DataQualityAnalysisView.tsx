@@ -15,6 +15,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import { CopilotMetrics } from '../types/metrics';
 import ExpandableTableSection from './ui/ExpandableTableSection';
+import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel, MetricTileGroup, MetricTileIcon } from './ui';
 import type { VoidCallback } from '../types/events';
 
@@ -199,6 +200,115 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
     return plugins.length > 0 ? plugins.join(', ') : 'None';
   };
 
+  const headerClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+
+  const ideSummaryColumns: TableColumn<IdeSummaryRow>[] = [
+    {
+      id: 'ide',
+      header: 'IDE',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (row) => <div className="text-sm font-medium text-gray-900">{row.ide}</div>,
+    },
+    {
+      id: 'occurrences',
+      header: 'Metrics with Unknown Model',
+      headerClassName: headerClass,
+      className: cellClass,
+      accessor: 'occurrences',
+    },
+    {
+      id: 'uniqueUsers',
+      header: 'Impacted Users',
+      headerClassName: headerClass,
+      className: cellClass,
+      accessor: 'uniqueUsers',
+    },
+    {
+      id: 'pluginVersionsCount',
+      header: 'Plugin Versions (Count)',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (row) => <div className="text-sm text-gray-900">{row.pluginVersions.length.toLocaleString()}</div>,
+    },
+  ];
+
+  const idePluginColumns: TableColumn<IdeSummaryRow>[] = [
+    {
+      id: 'ide',
+      header: 'IDE',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (row) => <div className="text-sm font-medium text-gray-900">{row.ide}</div>,
+    },
+    {
+      id: 'pluginVersions',
+      header: 'Plugin Versions',
+      headerClassName: headerClass,
+      className: 'px-6 py-4',
+      renderCell: (row) => (
+        row.pluginVersions.length > 0 ? (
+          <ul className="list-disc list-inside space-y-1 text-sm text-gray-900">
+            {row.pluginVersions.map((plugin) => (
+              <li key={`${row.ide}-${plugin}`}>{plugin}</li>
+            ))}
+          </ul>
+        ) : (
+          <span className="text-sm text-gray-500">None</span>
+        )
+      ),
+    },
+  ];
+
+  const userIssueColumns: TableColumn<DataQualityUser>[] = [
+    {
+      id: 'userLogin',
+      header: 'User Name',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (user) => <div className="text-sm font-medium text-gray-900">{user.userLogin}</div>,
+    },
+    {
+      id: 'userId',
+      header: 'User ID',
+      headerClassName: headerClass,
+      className: cellClass,
+      accessor: 'userId',
+    },
+    {
+      id: 'usedAgent',
+      header: 'Used Agent Flag',
+      headerClassName: headerClass,
+      className: 'px-6 py-4 whitespace-nowrap',
+      renderCell: (user) => (
+        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+          {user.usedAgent ? 'Yes' : 'No'}
+        </span>
+      ),
+    },
+    {
+      id: 'usedModes',
+      header: 'Chat Modes Used',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (user) => (
+        <div className="text-sm text-gray-900">
+          {user.usedModes.length > 0 ? formatModes(user.usedModes) : 'None'}
+        </div>
+      ),
+    },
+    {
+      id: 'pluginsUsed',
+      header: 'Plugins Used',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (user) => (
+        <div className="text-sm text-gray-900">{formatPlugins(user.pluginsUsed)}</div>
+      ),
+    },
+  ];
+
   const unknownModelChartData = {
     labels: unknownModelTrend.map(point => point.day),
     datasets: [
@@ -308,42 +418,13 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
           >
             {({ visibleItems }) => (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        IDE
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Metrics with Unknown Model
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Impacted Users
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Plugin Versions (Count)
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visibleItems.map((row, index) => (
-                      <tr key={row.ide} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{row.ide}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.occurrences.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.uniqueUsers.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{row.pluginVersions.length.toLocaleString()}</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <MetricsTable<IdeSummaryRow>
+                  data={visibleItems}
+                  columns={ideSummaryColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200"
+                  theadClassName="bg-gray-50"
+                  rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+                />
               </div>
             )}
           </ExpandableTableSection>
@@ -369,40 +450,13 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
               <>
                 {isExpanded ? (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            IDE
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Plugin Versions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {visibleItems.map((row, index) => (
-                          <tr key={`${row.ide}-plugins`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{row.ide}</div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
-                                {row.pluginVersions.length > 0 ? (
-                                  <ul className="list-disc list-inside space-y-1">
-                                    {row.pluginVersions.map(plugin => (
-                                      <li key={`${row.ide}-${plugin}`}>{plugin}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <span className="text-gray-500">None</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <MetricsTable<IdeSummaryRow>
+                      data={visibleItems}
+                      columns={idePluginColumns}
+                      tableClassName="min-w-full divide-y divide-gray-200"
+                      theadClassName="bg-gray-50"
+                      rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+                    />
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-4 text-sm text-gray-600">
@@ -436,54 +490,13 @@ export default function DataQualityAnalysisView({ metrics, onBack }: DataQuality
         >
           {({ visibleItems }) => (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Used Agent Flag
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Chat Modes Used
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Plugins Used
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {visibleItems.map((user, index) => (
-                    <tr key={`${user.userId}-${user.userLogin}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.userLogin}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{user.userId}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                          {user.usedAgent ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {user.usedModes.length > 0 ? formatModes(user.usedModes) : 'None'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {formatPlugins(user.pluginsUsed)}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <MetricsTable<DataQualityUser>
+                data={visibleItems}
+                columns={userIssueColumns}
+                tableClassName="min-w-full divide-y divide-gray-200"
+                theadClassName="bg-gray-50"
+                rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+              />
             </div>
           )}
         </ExpandableTableSection>

@@ -1,8 +1,9 @@
 'use client';
 
 import { LanguageStats } from '../domain/calculators/metricCalculators';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ExpandableTableSection from './ui/ExpandableTableSection';
+import MetricsTable, { SortDirection, SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
 
@@ -12,55 +13,69 @@ interface LanguagesViewProps {
 }
 
 type SortField = 'language' | 'totalGenerations' | 'totalAcceptances' | 'totalEngagements' | 'uniqueUsers' | 'locAdded' | 'locDeleted' | 'locSuggestedToAdd' | 'locSuggestedToDelete';
-type SortDirection = 'asc' | 'desc';
+
+const compareSortableValues = (a: string | number, b: string | number, direction: SortDirection) => {
+  if (typeof a === 'string' && typeof b === 'string') {
+    const result = a.localeCompare(b);
+    return direction === 'asc' ? result : -result;
+  }
+
+  const aNumber = Number(a);
+  const bNumber = Number(b);
+
+  if (aNumber === bNumber) {
+    return 0;
+  }
+
+  if (direction === 'asc') {
+    return aNumber < bNumber ? -1 : 1;
+  }
+
+  return aNumber > bNumber ? -1 : 1;
+};
+
+const formatAcceptanceRate = (lang: LanguageStats) => {
+  return lang.totalGenerations > 0
+    ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
+    : '0.0';
+};
 
 export default function LanguagesView({ languages, onBack }: LanguagesViewProps) {
-  const [sortField, setSortField] = useState<SortField>('totalEngagements');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
-
-  const sortedLanguages = [...languages].sort((a, b) => {
-    let aVal = a[sortField];
-    let bVal = b[sortField];
-    
-    if (typeof aVal === 'string') {
-      aVal = aVal.toLowerCase();
-      bVal = (bVal as string).toLowerCase();
-    }
-    
-    if (sortDirection === 'asc') {
-      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-    } else {
-      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-    }
+  const [tableSortState, setTableSortState] = useState<TableSortState>({
+    field: 'totalEngagements',
+    direction: 'desc',
   });
 
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) {
-      return (
-        <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    
-    return sortDirection === 'asc' ? (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4l9 16 9-16H3z" />
-      </svg>
-    ) : (
-      <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 20L12 4 3 20h18z" />
-      </svg>
-    );
+  const sortSelectors = useMemo<Record<SortField, (lang: LanguageStats) => string | number>>(
+    () => ({
+      language: (lang) => lang.language.toLowerCase(),
+      totalGenerations: (lang) => lang.totalGenerations,
+      totalAcceptances: (lang) => lang.totalAcceptances,
+      totalEngagements: (lang) => lang.totalEngagements,
+      uniqueUsers: (lang) => lang.uniqueUsers,
+      locAdded: (lang) => lang.locAdded,
+      locDeleted: (lang) => lang.locDeleted,
+      locSuggestedToAdd: (lang) => lang.locSuggestedToAdd,
+      locSuggestedToDelete: (lang) => lang.locSuggestedToDelete,
+    }),
+    [],
+  );
+
+  const sortedLanguages = useMemo(() => {
+    const field = (tableSortState.field as SortField) || 'totalEngagements';
+    const selector = sortSelectors[field];
+    const direction = tableSortState.direction;
+
+    return [...languages].sort((a, b) => {
+      const aVal = selector(a);
+      const bVal = selector(b);
+      return compareSortableValues(aVal, bVal, direction);
+    });
+  }, [languages, sortSelectors, tableSortState]);
+
+  const handleTableSortChange = (next: TableSortState) => {
+    const field = (next.field as SortField) || 'totalEngagements';
+    setTableSortState({ field, direction: next.direction });
   };
 
   // Calculate summary statistics
@@ -120,9 +135,271 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
   ];
 
   // Create sorted lists for the two tables
-  const languagesByGenerations = [...languages].sort((a, b) => b.totalGenerations - a.totalGenerations);
-  const languagesByUsers = [...languages].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
-  const languagesByNetLocImpact = [...languages].sort((a, b) => (b.locAdded - b.locDeleted) - (a.locAdded - a.locDeleted));
+  const languagesByGenerations = useMemo(
+    () => [...languages].sort((a, b) => b.totalGenerations - a.totalGenerations),
+    [languages],
+  );
+
+  const languagesByUsers = useMemo(
+    () => [...languages].sort((a, b) => b.uniqueUsers - a.uniqueUsers),
+    [languages],
+  );
+
+  const languagesByNetLocImpact = useMemo(
+    () => [...languages].sort((a, b) => (b.locAdded - b.locDeleted) - (a.locAdded - a.locDeleted)),
+    [languages],
+  );
+
+  const generationRankMap = useMemo(() => {
+    const map = new Map<string, number>();
+    languagesByGenerations.forEach((lang, index) => {
+      map.set(lang.language, index + 1);
+    });
+    return map;
+  }, [languagesByGenerations]);
+
+  const userRankMap = useMemo(() => {
+    const map = new Map<string, number>();
+    languagesByUsers.forEach((lang, index) => {
+      map.set(lang.language, index + 1);
+    });
+    return map;
+  }, [languagesByUsers]);
+
+  const netImpactRankMap = useMemo(() => {
+    const map = new Map<string, number>();
+    languagesByNetLocImpact.forEach((lang, index) => {
+      map.set(lang.language, index + 1);
+    });
+    return map;
+  }, [languagesByNetLocImpact]);
+
+  const narrowHeaderClassName = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const narrowCellClassName = 'px-4 py-4 whitespace-nowrap text-sm text-gray-900';
+  const wideCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+
+  const languagesByGenerationsColumns: TableColumn<LanguageStats>[] = [
+    {
+      id: 'language',
+      header: 'Language',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => {
+        const rank = generationRankMap.get(lang.language) ?? '-';
+        return (
+          <div className="flex items-center">
+            <div className="flex-shrink-0 h-8 w-8 mr-3">
+              <div className="h-8 w-8 rounded bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                {rank}
+              </div>
+            </div>
+            <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'generations',
+      header: 'Generations',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
+      ),
+    },
+    {
+      id: 'acceptanceRate',
+      header: 'Acceptance Rate',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+      ),
+    },
+  ];
+
+  const languagesByUsersColumns: TableColumn<LanguageStats>[] = [
+    {
+      id: 'language',
+      header: 'Language',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => {
+        const rank = userRankMap.get(lang.language) ?? '-';
+        return (
+          <div className="flex items-center">
+            <div className="flex-shrink-0 h-8 w-8 mr-3">
+              <div className="h-8 w-8 rounded bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                {rank}
+              </div>
+            </div>
+            <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+          </div>
+        );
+      },
+    },
+    {
+      id: 'users',
+      header: 'Users',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{lang.uniqueUsers.toLocaleString()}</div>
+      ),
+    },
+    {
+      id: 'avgEngagements',
+      header: 'Avg Engagements',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => {
+        const avgEngagements = lang.uniqueUsers > 0
+          ? (lang.totalEngagements / lang.uniqueUsers).toFixed(1)
+          : '0.0';
+        return <div className="text-sm text-gray-900">{avgEngagements}</div>;
+      },
+    },
+  ];
+
+  const languagesByNetImpactColumns: TableColumn<LanguageStats>[] = [
+    {
+      id: 'rank',
+      header: 'Rank',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => {
+        const rank = netImpactRankMap.get(lang.language);
+        return <div className="text-sm font-medium text-gray-900">{rank ?? '–'}</div>;
+      },
+    },
+    {
+      id: 'language',
+      header: 'Language',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+      ),
+    },
+    {
+      id: 'netImpact',
+      header: 'Net LOC Impact',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => {
+        const netLocImpact = lang.locAdded - lang.locDeleted;
+        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
+        return (
+          <div className={`text-sm font-medium ${impactColor}`}>
+            {netLocImpact.toLocaleString()}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'totalGenerations',
+      header: 'Total Generations',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
+      ),
+    },
+    {
+      id: 'acceptanceRate',
+      header: 'Acceptance Rate',
+      headerClassName: narrowHeaderClassName,
+      className: narrowCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+      ),
+    },
+  ];
+
+  const tableRowClassName = () => 'hover:bg-gray-50';
+
+  const completeLanguagesColumns: TableColumn<LanguageStats>[] = [
+    {
+      id: 'language',
+      header: 'Language',
+      sortable: true,
+      className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900',
+      renderCell: (lang) => (
+        <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+      ),
+    },
+    {
+      id: 'totalEngagements',
+      header: 'Total Engagements',
+      sortable: true,
+      accessor: 'totalEngagements',
+      className: wideCellClassName,
+    },
+    {
+      id: 'totalGenerations',
+      header: 'Generations',
+      sortable: true,
+      accessor: 'totalGenerations',
+      className: wideCellClassName,
+    },
+    {
+      id: 'totalAcceptances',
+      header: 'Acceptances',
+      sortable: true,
+      accessor: 'totalAcceptances',
+      className: wideCellClassName,
+    },
+    {
+      id: 'uniqueUsers',
+      header: 'Unique Users',
+      sortable: true,
+      accessor: 'uniqueUsers',
+      className: wideCellClassName,
+    },
+    {
+      id: 'locAdded',
+      header: 'LOC Added',
+      sortable: true,
+      accessor: 'locAdded',
+      className: wideCellClassName,
+    },
+    {
+      id: 'locDeleted',
+      header: 'LOC Deleted',
+      sortable: true,
+      accessor: 'locDeleted',
+      className: wideCellClassName,
+    },
+    {
+      id: 'locSuggestedToAdd',
+      header: 'Suggested Add',
+      sortable: true,
+      accessor: 'locSuggestedToAdd',
+      className: wideCellClassName,
+    },
+    {
+      id: 'netLocImpact',
+      header: 'Net LOC Impact',
+      className: wideCellClassName,
+      renderCell: (lang) => {
+        const netLocImpact = lang.locAdded - lang.locDeleted;
+        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
+        return (
+          <div className={`text-sm font-medium ${impactColor}`}>
+            {netLocImpact.toLocaleString()}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'acceptanceRate',
+      header: 'Acceptance Rate',
+      className: wideCellClassName,
+      renderCell: (lang) => (
+        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+      ),
+    },
+  ];
 
   // Determine how many items to show
   const maxItemsToShow = 10;
@@ -157,52 +434,13 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
           >
             {({ visibleItems }) => (
               <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Language
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Generations
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acceptance Rate
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visibleItems.map((lang) => {
-                      const acceptanceRate = lang.totalGenerations > 0 
-                        ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
-                        : '0.0';
-                      const globalRank = languagesByGenerations.findIndex((candidate) => candidate === lang) + 1;
-
-                      return (
-                        <tr key={lang.language} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-8 w-8 mr-3">
-                                <div className="h-8 w-8 rounded bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
-                                  {globalRank}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{lang.language}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{acceptanceRate}%</div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <MetricsTable
+                  data={visibleItems}
+                  columns={languagesByGenerationsColumns}
+                  rowClassName={tableRowClassName}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  theadClassName="bg-gray-50"
+                />
               </div>
             )}
           </ExpandableTableSection>
@@ -219,52 +457,13 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
           >
             {({ visibleItems }) => (
               <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Language
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Users
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Avg Engagements
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visibleItems.map((lang) => {
-                      const avgEngagements = lang.uniqueUsers > 0 
-                        ? (lang.totalEngagements / lang.uniqueUsers).toFixed(1)
-                        : '0.0';
-                      const globalRank = languagesByUsers.findIndex((candidate) => candidate === lang) + 1;
-
-                      return (
-                        <tr key={lang.language} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-8 w-8 mr-3">
-                                <div className="h-8 w-8 rounded bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                                  {globalRank}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{lang.language}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{lang.uniqueUsers.toLocaleString()}</div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{avgEngagements}</div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <MetricsTable
+                  data={visibleItems}
+                  columns={languagesByUsersColumns}
+                  rowClassName={tableRowClassName}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  theadClassName="bg-gray-50"
+                />
               </div>
             )}
           </ExpandableTableSection>
@@ -285,60 +484,13 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
         >
           {({ visibleItems }) => (
             <div className="overflow-x-auto">
-              <table className="w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rank
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Language
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Net LOC Impact
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Generations
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acceptance Rate
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {visibleItems.map((lang) => {
-                    const acceptanceRate = lang.totalGenerations > 0
-                      ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
-                      : '0.0';
-                    const netLocImpact = lang.locAdded - lang.locDeleted;
-                    const rank = languagesByNetLocImpact.findIndex((candidate) => candidate === lang) + 1;
-
-                    const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
-
-                    return (
-                      <tr key={lang.language} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{rank}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{lang.language}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${impactColor}`}>
-                            {netLocImpact.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{acceptanceRate}%</div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <MetricsTable
+                data={visibleItems}
+                columns={languagesByNetImpactColumns}
+                rowClassName={tableRowClassName}
+                tableClassName="w-full divide-y divide-gray-200"
+                theadClassName="bg-gray-50"
+              />
             </div>
           )}
         </ExpandableTableSection>
@@ -355,119 +507,15 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
         >
           {({ visibleItems }) => (
             <div className="overflow-x-auto">
-              <table className="w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('language')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        Language
-                        {getSortIcon('language')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('totalEngagements')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        Total Engagements
-                        {getSortIcon('totalEngagements')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('totalGenerations')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        Generations
-                        {getSortIcon('totalGenerations')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('totalAcceptances')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        Acceptances
-                        {getSortIcon('totalAcceptances')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('uniqueUsers')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        Unique Users
-                        {getSortIcon('uniqueUsers')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        onClick={() => handleSort('locAdded')}
-                        className="flex items-center hover:text-gray-700 focus:outline-none"
-                      >
-                        LOC Added
-                        {getSortIcon('locAdded')}
-                      </button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button onClick={() => handleSort('locDeleted')} className="flex items-center hover:text-gray-700 focus:outline-none">LOC Deleted {getSortIcon('locDeleted')}</button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button onClick={() => handleSort('locSuggestedToAdd')} className="flex items-center hover:text-gray-700 focus:outline-none">Suggested Add {getSortIcon('locSuggestedToAdd')}</button>
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Net LOC Impact
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acceptance Rate
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {visibleItems.map((lang) => {
-                    const acceptanceRate = lang.totalGenerations > 0 
-                      ? ((lang.totalAcceptances / lang.totalGenerations) * 100).toFixed(1)
-                      : '0.0';
-
-                    const netLocImpact = lang.locAdded - lang.locDeleted;
-                    const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
-
-                    return (
-                      <tr key={lang.language} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{lang.language}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lang.totalEngagements.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lang.totalAcceptances.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lang.uniqueUsers.toLocaleString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{lang.locAdded.toLocaleString()}</div></td>
-                        <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{lang.locDeleted.toLocaleString()}</div></td>
-                        <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{lang.locSuggestedToAdd.toLocaleString()}</div></td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${impactColor}`}>
-                            {netLocImpact.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{acceptanceRate}%</div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <MetricsTable
+                data={visibleItems}
+                columns={completeLanguagesColumns}
+                sortState={tableSortState}
+                onSortChange={handleTableSortChange}
+                rowClassName={tableRowClassName}
+                tableClassName="w-full divide-y divide-gray-200"
+                theadClassName="bg-gray-50"
+              />
             </div>
           )}
         </ExpandableTableSection>

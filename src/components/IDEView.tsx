@@ -4,14 +4,10 @@ import React from 'react';
 import { CopilotMetrics } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import DashboardStatsCard from './ui/DashboardStatsCard';
-import {
-  DataTable,
-  DataTableHeader,
-  DataTableBody,
-  DataTableColumn,
-} from './ui/DataTable';
+import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel, MetricTileIcon } from './ui';
 import type { VoidCallback } from '../types/events';
+import { useSortableTable } from '../hooks/useSortableTable';
 
 interface IDEStats {
   ide: string;
@@ -31,7 +27,7 @@ interface IDEViewProps {
 }
 
 export default function IDEView({ metrics, onBack }: IDEViewProps) {
-  const calculateIDEStats = (): IDEStats[] => {
+  const ideStats = React.useMemo(() => {
     const ideMap = new Map<string, {
       users: Set<number>;
       totalEngagements: number;
@@ -84,11 +80,21 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
         locSuggestedToAdd: stats.locSuggestedToAdd,
         locSuggestedToDelete: stats.locSuggestedToDelete
       }));
-  };
+  }, [metrics]);
 
-  const ideStats = calculateIDEStats();
-  const idesByUsers = [...ideStats].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
-  const idesByEngagements = [...ideStats].sort((a, b) => b.totalEngagements - a.totalEngagements);
+  const {
+    sortField: usersSortField,
+    sortDirection: usersSortDirection,
+    sortedItems: sortedIdesByUsers,
+    handleSort: handleUsersSort,
+  } = useSortableTable<IDEStats, keyof IDEStats>(ideStats, 'uniqueUsers', 'desc');
+
+  const {
+    sortField: engagementsSortField,
+    sortDirection: engagementsSortDirection,
+    sortedItems: sortedIdesByEngagements,
+    handleSort: handleEngagementsSort,
+  } = useSortableTable<IDEStats, keyof IDEStats>(ideStats, 'totalEngagements', 'desc');
 
   const totalIDEs = ideStats.length;
   const sumUsersPerIDE = ideStats.reduce((sum, ide) => sum + ide.uniqueUsers, 0);
@@ -107,53 +113,116 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
 
   const multiIDEUsersCount = Array.from(userIdToIDEs.values()).filter(ides => ides.size > 1).length;
   const totalUniqueIDEUsers = userIdToIDEs.size;
-  const topIDE = idesByUsers[0];
+  const topIDE = sortedIdesByUsers[0];
   const topIDEUserShare = topIDE && totalUniqueIDEUsers > 0
     ? Math.round((topIDE.uniqueUsers / totalUniqueIDEUsers) * 1000) / 10
     : 0;
 
-  const renderIDERow = (ide: IDEStats, sortBy: 'users' | 'engagements') => {
+  const headerClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+
+  const renderIDEInfo = (ide: IDEStats) => {
     const IDEIcon = getIDEIcon(ide.ide);
-    const acceptanceRate = ide.totalGenerations > 0 
-      ? (ide.totalAcceptances / ide.totalGenerations * 100).toFixed(1)
-      : '0.0';
-    
     return (
-      <>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 mr-3">
-              <IDEIcon />
-            </div>
-            <div>
-              <div className="text-sm font-medium text-gray-900">
-                {formatIDEName(ide.ide)}
-              </div>
-              <div className="text-sm text-gray-500">
-                {ide.ide}
-              </div>
-            </div>
+      <div className="flex items-center">
+        <div className="flex-shrink-0 mr-3">
+          <IDEIcon />
+        </div>
+        <div>
+          <div className="text-sm font-medium text-gray-900">
+            {formatIDEName(ide.ide)}
           </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-          {sortBy === 'users' ? ide.uniqueUsers.toLocaleString() : ide.totalEngagements.toLocaleString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {ide.totalGenerations.toLocaleString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {ide.totalAcceptances.toLocaleString()}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.locAdded.toLocaleString()}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.locDeleted.toLocaleString()}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.locSuggestedToAdd.toLocaleString()}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.locSuggestedToDelete.toLocaleString()}</td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {acceptanceRate}%
-        </td>
-      </>
+          <div className="text-sm text-gray-500">
+            {ide.ide}
+          </div>
+        </div>
+      </div>
     );
   };
+
+  const renderAcceptanceRate = (ide: IDEStats) => {
+    const acceptanceRate = ide.totalGenerations > 0
+      ? (ide.totalAcceptances / ide.totalGenerations * 100).toFixed(1)
+      : '0.0';
+    return <div className="text-sm text-gray-900">{acceptanceRate}%</div>;
+  };
+
+  const createColumns = (primary: { field: keyof IDEStats; label: string }): TableColumn<IDEStats>[] => [
+    {
+      id: 'ide',
+      header: 'IDE',
+      sortable: true,
+      headerClassName: headerClass,
+      className: 'px-6 py-4 whitespace-nowrap',
+      renderCell: (ide) => renderIDEInfo(ide),
+    },
+    {
+      id: primary.field as string,
+      header: primary.label,
+      sortable: true,
+      accessor: primary.field,
+      headerClassName: headerClass,
+      className: `${cellClass} font-medium`,
+    },
+    {
+      id: 'totalGenerations',
+      header: 'Generations',
+      sortable: true,
+      accessor: 'totalGenerations',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'totalAcceptances',
+      header: 'Acceptances',
+      sortable: true,
+      accessor: 'totalAcceptances',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'locAdded',
+      header: 'LOC Added',
+      sortable: true,
+      accessor: 'locAdded',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'locDeleted',
+      header: 'LOC Deleted',
+      sortable: true,
+      accessor: 'locDeleted',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'locSuggestedToAdd',
+      header: 'Suggested Add',
+      sortable: true,
+      accessor: 'locSuggestedToAdd',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'locSuggestedToDelete',
+      header: 'Suggested Delete',
+      sortable: true,
+      accessor: 'locSuggestedToDelete',
+      headerClassName: headerClass,
+      className: cellClass,
+    },
+    {
+      id: 'acceptanceRate',
+      header: 'Acceptance Rate',
+      headerClassName: headerClass,
+      className: cellClass,
+      renderCell: (ide) => renderAcceptanceRate(ide),
+    },
+  ];
+
+  const usersColumns = createColumns({ field: 'uniqueUsers', label: 'Unique Users' });
+  const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'Total Engagements' });
 
   return (
     <ViewPanel
@@ -205,56 +274,30 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">IDEs Ordered by Number of Users</h3>
           </div>
-          <DataTable
-            data={idesByUsers}
-            defaultSortField="uniqueUsers"
-            defaultSortDirection="desc"
-          >
-            <DataTableHeader>
-              <DataTableColumn<IDEStats> field="ide" sortable>IDE</DataTableColumn>
-              <DataTableColumn<IDEStats> field="uniqueUsers" sortable>Unique Users</DataTableColumn>
-              <DataTableColumn<IDEStats> field="totalGenerations" sortable>Generations</DataTableColumn>
-              <DataTableColumn<IDEStats> field="totalAcceptances" sortable>Acceptances</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locAdded" sortable>LOC Added</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locDeleted" sortable>LOC Deleted</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locSuggestedToAdd" sortable>Suggested Add</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locSuggestedToDelete" sortable>Suggested Delete</DataTableColumn>
-              <DataTableColumn>Acceptance Rate</DataTableColumn>
-            </DataTableHeader>
-            <DataTableBody<IDEStats>
-              rowClassName={(_, index) => index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-            >
-              {(ide) => renderIDERow(ide, 'users')}
-            </DataTableBody>
-          </DataTable>
+          <MetricsTable<IDEStats>
+            data={sortedIdesByUsers}
+            columns={usersColumns}
+            sortState={{ field: usersSortField as string, direction: usersSortDirection }}
+            onSortChange={({ field }) => handleUsersSort(field as keyof IDEStats)}
+            tableClassName="w-full divide-y divide-gray-200"
+            theadClassName="bg-gray-50"
+            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+          />
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">IDEs Ordered by Number of Engagements</h3>
           </div>
-          <DataTable
-            data={idesByEngagements}
-            defaultSortField="totalEngagements"
-            defaultSortDirection="desc"
-          >
-            <DataTableHeader>
-              <DataTableColumn<IDEStats> field="ide" sortable>IDE</DataTableColumn>
-              <DataTableColumn<IDEStats> field="totalEngagements" sortable>Total Engagements</DataTableColumn>
-              <DataTableColumn<IDEStats> field="totalGenerations" sortable>Generations</DataTableColumn>
-              <DataTableColumn<IDEStats> field="totalAcceptances" sortable>Acceptances</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locAdded" sortable>LOC Added</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locDeleted" sortable>LOC Deleted</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locSuggestedToAdd" sortable>Suggested Add</DataTableColumn>
-              <DataTableColumn<IDEStats> field="locSuggestedToDelete" sortable>Suggested Delete</DataTableColumn>
-              <DataTableColumn>Acceptance Rate</DataTableColumn>
-            </DataTableHeader>
-            <DataTableBody<IDEStats>
-              rowClassName={(_, index) => index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-            >
-              {(ide) => renderIDERow(ide, 'engagements')}
-            </DataTableBody>
-          </DataTable>
+          <MetricsTable<IDEStats>
+            data={sortedIdesByEngagements}
+            columns={engagementsColumns}
+            sortState={{ field: engagementsSortField as string, direction: engagementsSortDirection }}
+            onSortChange={({ field }) => handleEngagementsSort(field as keyof IDEStats)}
+            tableClassName="w-full divide-y divide-gray-200"
+            theadClassName="bg-gray-50"
+            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+          />
         </div>
       </div>
     </ViewPanel>
