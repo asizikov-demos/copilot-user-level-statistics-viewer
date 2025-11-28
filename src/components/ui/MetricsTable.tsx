@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { Key, ReactNode } from 'react';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -15,7 +15,6 @@ export interface TableColumn<T> {
   sortable?: boolean;
   className?: string;
   headerClassName?: string;
-  sortAccessor?: (item: T) => unknown;
 }
 
 export interface MetricsTableProps<T> {
@@ -28,6 +27,7 @@ export interface MetricsTableProps<T> {
   theadClassName?: string;
   tbodyClassName?: string;
   onRowClick?: (item: T, index: number) => void;
+  getRowKey?: (item: T, index: number) => Key;
 }
 
 function SortIndicator({ active, direction }: { active: boolean; direction: SortDirection }) {
@@ -60,6 +60,7 @@ export function MetricsTable<T>({
   theadClassName,
   tbodyClassName,
   onRowClick,
+  getRowKey,
 }: MetricsTableProps<T>) {
   const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const cellBaseClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
@@ -72,6 +73,9 @@ export function MetricsTable<T>({
             const isSortable = Boolean(onSortChange && column.sortable);
             const isActive = Boolean(sortState && sortState.field === column.id);
             const headerClassName = column.headerClassName ?? headerBaseClass;
+            const ariaSortValue = isSortable
+              ? (isActive ? (sortState?.direction === 'asc' ? 'ascending' : 'descending') : 'none')
+              : undefined;
 
             if (!isSortable) {
               return (
@@ -84,7 +88,7 @@ export function MetricsTable<T>({
             const nextDirection: SortDirection = isActive && sortState?.direction === 'asc' ? 'desc' : 'asc';
 
             return (
-              <th key={column.id} scope="col" className={headerClassName}>
+              <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
                 <button
                   type="button"
                   onClick={() => onSortChange?.({ field: column.id, direction: nextDirection })}
@@ -101,10 +105,11 @@ export function MetricsTable<T>({
       <tbody className={tbodyClassName ?? 'bg-white divide-y divide-gray-200'}>
         {data.map((item, index) => {
           const rowClass = rowClassName?.(item, index) ?? '';
+          const rowKey = getRowKey?.(item, index) ?? index;
 
           return (
             <tr
-              key={index}
+              key={rowKey}
               className={rowClass}
               onClick={onRowClick ? () => onRowClick(item, index) : undefined}
             >
