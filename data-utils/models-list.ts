@@ -17,26 +17,32 @@ const SKIP_PREFIXES = ['sample'];
 
 type JsonValue = unknown;
 
-async function collectModelNames(): Promise<string[]> {
-  const entries = await readdir(EXAMPLE_DIR, { withFileTypes: true });
+async function collectModelNames(customPaths?: string[]): Promise<string[]> {
   const models = new Set<string>();
 
-  for (const entry of entries) {
-    if (!entry.isFile()) continue;
+  if (customPaths && customPaths.length > 0) {
+    for (const input of customPaths) {
+      const resolvedPath = path.resolve(process.cwd(), input);
+      const fileName = path.basename(resolvedPath);
 
-    const fileName = entry.name;
-    const lower = fileName.toLowerCase();
+      await processFile(resolvedPath, fileName, models);
+    }
+  } else {
+    const entries = await readdir(EXAMPLE_DIR, { withFileTypes: true });
 
-    if (!lower.endsWith('.json')) continue;
-    if (SKIP_FILES.has(lower)) continue;
-    if (SKIP_PREFIXES.some(prefix => lower.startsWith(prefix))) continue;
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
 
-    const filePath = path.join(EXAMPLE_DIR, fileName);
-    const content = await readFile(filePath, 'utf8');
+      const fileName = entry.name;
+      const lower = fileName.toLowerCase();
+      const isJsonLike = lower.endsWith('.json') || lower.endsWith('.ndjson');
 
-    const records = parseJsonContent(content, fileName);
-    for (const record of records) {
-      collectModelsFromValue(record, models);
+      if (!isJsonLike) continue;
+      if (SKIP_FILES.has(lower)) continue;
+      if (SKIP_PREFIXES.some(prefix => lower.startsWith(prefix))) continue;
+
+      const filePath = path.join(EXAMPLE_DIR, fileName);
+      await processFile(filePath, fileName, models);
     }
   }
 
@@ -97,6 +103,19 @@ function collectModelsFromValue(value: JsonValue, models: Set<string>): void {
   }
 }
 
+async function processFile(filePath: string, fileName: string, models: Set<string>): Promise<void> {
+  try {
+    const content = await readFile(filePath, 'utf8');
+    const records = parseJsonContent(content, fileName);
+
+    for (const record of records) {
+      collectModelsFromValue(record, models);
+    }
+  } catch (error) {
+    console.warn(`Skipping ${fileName}: ${(error as Error).message}`);
+  }
+}
+
 function renderMarkdown(models: string[]): string {
   const lines: string[] = [];
   lines.push('# Model Inventory');
@@ -119,7 +138,8 @@ function renderMarkdown(models: string[]): string {
 }
 
 async function main(): Promise<void> {
-  const models = await collectModelNames();
+  const inputArgs = process.argv.slice(2);
+  const models = await collectModelNames(inputArgs.length > 0 ? inputArgs : undefined);
   const markdown = renderMarkdown(models);
 
   await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
