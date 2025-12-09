@@ -14,13 +14,13 @@ A modern web application for visualizing GitHub Copilot usage metrics data. Uplo
 - **🔍 Individual User Details**: Drill down into specific user metrics and activity patterns
 - **🏢 IDE & Feature Breakdown**: View usage statistics by IDE, programming language, and Copilot features
 - **📱 Responsive Design**: Modern, mobile-friendly interface built with Tailwind CSS
-- **⚡ Fast Performance**: Built with Next.js 15 with Turbopack for optimal performance
+- **⚡ Fast Performance**: Built with Next.js 16 with Turbopack for optimal performance
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 20.9.0+ (required by Next.js 16)
 - npm, yarn, pnpm, or bun
 
 ### Installation
