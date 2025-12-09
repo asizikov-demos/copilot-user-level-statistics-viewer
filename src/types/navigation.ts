@@ -22,7 +22,6 @@ export const VIEW_MODES = {
   USER_DETAILS: 'userDetails',
   LANGUAGES: 'languages',
   IDES: 'ides',
-  DATA_QUALITY: 'dataQuality',
   COPILOT_IMPACT: 'copilotImpact',
   PRU_USAGE: 'pruUsage',
   COPILOT_ADOPTION: 'copilotAdoption',
@@ -105,11 +104,6 @@ export interface IDEsViewProps extends BackNavigableViewProps {
   metrics: CopilotMetrics[];
 }
 
-export interface DataQualityViewProps extends BackNavigableViewProps {
-  view: typeof VIEW_MODES.DATA_QUALITY;
-  metrics: CopilotMetrics[];
-}
-
 export interface CopilotImpactViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.COPILOT_IMPACT;
   agentImpactData: AgentImpactData[];
@@ -159,7 +153,6 @@ export type ViewProps =
   | UserDetailsViewProps
   | LanguagesViewProps
   | IDEsViewProps
-  | DataQualityViewProps
   | CopilotImpactViewProps
   | PRUUsageViewProps
   | CopilotAdoptionViewProps

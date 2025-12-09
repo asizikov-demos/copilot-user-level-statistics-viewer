@@ -15,7 +15,6 @@ import UniqueUsersView from '../UniqueUsersView';
 import UserDetailsView from '../UserDetailsView';
 import LanguagesView from '../LanguagesView';
 import IDEView from '../IDEView';
-import DataQualityAnalysisView from '../DataQualityAnalysisView';
 import CopilotImpactView from '../CopilotImpactView';
 import CustomerEmailView from '../CustomerEmailView';
 import PRUUsageAnalysisView from '../PRUUsageAnalysisView';
@@ -101,14 +100,6 @@ const ViewRouter: React.FC = () => {
   }
 
   switch (currentView) {
-    case VIEW_MODES.DATA_QUALITY:
-      return (
-        <DataQualityAnalysisView 
-          metrics={filteredMetrics} 
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
-        />
-      );
-
     case VIEW_MODES.LANGUAGES:
       return (
         <LanguagesView 
