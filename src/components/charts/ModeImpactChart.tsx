@@ -71,6 +71,8 @@ export default function ModeImpactChart({
       const dataset = context.dataset.label;
       const value = context.parsed.y;
 
+      if (value === null) return '';
+
       if (dataset === 'Lines Added') {
         return `Lines Added: +${value.toLocaleString()}`;
       }
