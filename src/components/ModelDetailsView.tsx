@@ -94,7 +94,7 @@ export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
     const premiumLead = premiumTotal - standardTotal;
 
     const paragraphs: string[] = [];
-    let variant: 'green' | 'blue' | 'red' | 'orange' | 'purple' = 'blue';
+    let variant: 'green' | 'red' | 'orange' | 'purple';
 
     if (premiumShare < 0.2) {
       variant = 'red';

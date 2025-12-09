@@ -182,20 +182,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           removeUnknownLanguages={removeUnknownLanguages}
           onRemoveUnknownLanguagesChange={onRemoveUnknownLanguagesChange}
         />
-        <div className="mt-4">
-          <button
-            onClick={() => onNavigate(VIEW_MODES.DATA_QUALITY)}
-            className="w-full px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 rounded-md transition-colors"
-          >
-            Data Quality Analysis
-          </button>
-          <button
-            onClick={() => onNavigate(VIEW_MODES.CUSTOMER_EMAIL)}
-            className="w-full mt-3 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md transition-colors"
-          >
-            Executive Summary Email
-          </button>
-        </div>
       </div>
     </div>
   );
