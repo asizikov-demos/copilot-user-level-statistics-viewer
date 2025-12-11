@@ -49,26 +49,28 @@ export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartP
     const sortedModels = Object.keys(modelTotals).sort((a, b) => (modelTotals[b] || 0) - (modelTotals[a] || 0));
 
     const UNKNOWN_COLOR = 'hsl(0, 70%, 50%)';
-    const getModelColor = (model: string, index: number, totalModels: number): string => {
+    const modelsWithoutUnknown = sortedModels.filter(m => m !== 'unknown');
+    const modelIndexMap = new Map(modelsWithoutUnknown.map((m, i) => [m, i]));
+
+    const getModelColor = (model: string): string => {
       if (model === 'unknown') {
         return UNKNOWN_COLOR;
       }
-      const modelsWithoutUnknown = sortedModels.filter(m => m !== 'unknown');
-      const adjustedIndex = modelsWithoutUnknown.indexOf(model);
+      const adjustedIndex = modelIndexMap.get(model) ?? 0;
       const hueStep = isPremium ? 45 : 55;
       const startHue = 30;
       const hue = (startHue + adjustedIndex * hueStep) % 360;
       if (hue >= 350 || hue <= 10) {
-        return `hsl(${(hue + 20) % 360}, 70%, 55%)`;
+        return `hsl(${(hue + 50) % 360}, 70%, 55%)`;
       }
       return `hsl(${hue}, 70%, 55%)`;
     };
 
-    const datasets = sortedModels.map((model, idx) => ({
+    const datasets = sortedModels.map((model) => ({
       label: model,
       data: sortedDates.map(d => map[d]?.[model] || 0),
-      backgroundColor: getModelColor(model, idx, sortedModels.length),
-      borderColor: getModelColor(model, idx, sortedModels.length),
+      backgroundColor: getModelColor(model),
+      borderColor: getModelColor(model),
       borderWidth: 1,
       stack: isPremium ? 'premium-models' : 'standard-models'
     }));
