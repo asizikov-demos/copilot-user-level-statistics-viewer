@@ -259,3 +259,13 @@ export function calculateAskModeImpactFromMetrics(metrics: CopilotMetrics[]): Mo
   const accumulator = processMetricsForImpact(metrics);
   return computeAskModeImpactData(accumulator);
 }
+
+export function calculateAgentImpactFromMetrics(metrics: CopilotMetrics[]): AgentImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeAgentImpactData(accumulator);
+}
+
+export function calculateCodeCompletionImpactFromMetrics(metrics: CopilotMetrics[]): CodeCompletionImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeCodeCompletionImpactData(accumulator);
+}

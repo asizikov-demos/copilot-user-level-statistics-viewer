@@ -7,7 +7,7 @@ import { formatIDEName } from './icons/IDEIcons';
 import IDEActivityChart from './charts/IDEActivityChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
-import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage } from '../domain/calculators/metricCalculators';
+import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage, calculateAgentImpactData, calculateAskModeImpactData, calculateCodeCompletionImpactData } from '../domain/calculators/metricCalculators';
 import { getModelMultiplier } from '../domain/modelConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
@@ -38,6 +38,8 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     selectedDate: '',
     selectedMetrics: undefined,
   });
+
+  const [isImpactBreakdownExpanded, setIsImpactBreakdownExpanded] = useState(false);
 
   const handleDayClick = (date: string, dayMetrics?: CopilotMetrics) => {
     setModalState({
@@ -203,6 +205,9 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   const userPRUAnalysisData = useMemo(() => calculateDailyPRUAnalysis(userMetrics), [userMetrics]);
   const userCombinedImpactData = useMemo(() => calculateJoinedImpactData(userMetrics), [userMetrics]);
   const userModelUsageData = useMemo(() => calculateDailyModelUsage(userMetrics), [userMetrics]);
+  const userAgentImpactData = useMemo(() => calculateAgentImpactData(userMetrics), [userMetrics]);
+  const userAskModeImpactData = useMemo(() => calculateAskModeImpactData(userMetrics), [userMetrics]);
+  const userCompletionImpactData = useMemo(() => calculateCodeCompletionImpactData(userMetrics), [userMetrics]);
   const ideChartData = useMemo(() => ({
     labels: ideAggregates.map(ide => formatIDEName(ide.ide)),
     datasets: [{
@@ -547,8 +552,47 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         title="Combined Copilot Impact"
         description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
         emptyStateMessage="No combined impact data available."
-      />      
+      />
 
+      {/* Impact Breakdown Section */}
+      <div className="border-t border-gray-200 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Impact Breakdown</h3>
+            <p className="text-sm text-gray-600 mt-1">View detailed impact by mode</p>
+          </div>
+          <button
+            onClick={() => setIsImpactBreakdownExpanded(!isImpactBreakdownExpanded)}
+            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+          >
+            {isImpactBreakdownExpanded ? 'Hide Breakdown' : 'Show Breakdown'}
+          </button>
+        </div>
+        
+        {isImpactBreakdownExpanded && (
+          <div className="space-y-8 mt-6">
+            <ModeImpactChart
+              data={userAgentImpactData}
+              title="Copilot Agent Mode Impact"
+              description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
+              emptyStateMessage="No agent mode impact data available."
+            />
+            <ModeImpactChart
+              data={userAskModeImpactData}
+              title="Ask Mode Impact"
+              description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+              emptyStateMessage="No Ask Mode impact data available."
+            />
+            <ModeImpactChart
+              data={userCompletionImpactData}
+              title="Completions Impact"
+              description="Daily lines of code added and deleted when developers accept Copilot code completions."
+              emptyStateMessage="No code completion impact data available."
+            />
+          </div>
+        )}
+      </div>
+      
       <ActivityCalendar userMetrics={userMetrics} onDayClick={handleDayClick} />
 
       <UserSummaryChart

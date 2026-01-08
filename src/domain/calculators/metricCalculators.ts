@@ -8,6 +8,8 @@ import {
   calculateEditModeImpactFromMetrics,
   calculateInlineModeImpactFromMetrics,
   calculateAskModeImpactFromMetrics,
+  calculateAgentImpactFromMetrics,
+  calculateCodeCompletionImpactFromMetrics,
 } from './impactCalculator';
 
 export type {
@@ -44,3 +46,7 @@ export const calculateEditModeImpactData = calculateEditModeImpactFromMetrics;
 export const calculateInlineModeImpactData = calculateInlineModeImpactFromMetrics;
 
 export const calculateAskModeImpactData = calculateAskModeImpactFromMetrics;
+
+export const calculateAgentImpactData = calculateAgentImpactFromMetrics;
+
+export const calculateCodeCompletionImpactData = calculateCodeCompletionImpactFromMetrics;
