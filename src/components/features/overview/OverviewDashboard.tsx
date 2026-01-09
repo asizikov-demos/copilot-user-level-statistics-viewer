@@ -1,21 +1,24 @@
 'use client';
 
-import React from 'react';
-import { MetricsStats } from '../../../types/metrics';
-import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData } from '../../../domain/calculators/metricCalculators';
+import React, { useMemo } from 'react';
+import { MetricsStats, UserSummary } from '../../../types/metrics';
+import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData, LanguageStats } from '../../../domain/calculators/metricCalculators';
 import FilterPanel from '../../FilterPanel';
-import { MetricTileGroup, MetricTileIcon } from '../../ui';
+import { MetricTileGroup, MetricTileIcon, ExportButton } from '../../ui';
 import EngagementChart from '../../charts/EngagementChart';
 import ChatUsersChart from '../../charts/ChatUsersChart';
 import ChatRequestsChart from '../../charts/ChatRequestsChart';
 import { DateRangeFilter } from '../../../types/filters';
 import { ViewMode, VIEW_MODES } from '../../../types/navigation';
 import type { VoidCallback, ValueCallback, BooleanFilterCallback } from '../../../types/events';
+import type { ExportData } from '../../../utils/exports';
 
 interface OverviewDashboardProps {
   stats: MetricsStats;
   originalStats: MetricsStats | null;
   enterpriseName: string | null;
+  userSummaries: UserSummary[];
+  languageStats: LanguageStats[];
   engagementData: DailyEngagementData[];
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
@@ -32,6 +35,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   stats,
   originalStats,
   enterpriseName,
+  userSummaries,
+  languageStats,
   engagementData,
   chatUsersData,
   chatRequestsData,
@@ -51,6 +56,16 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     });
   };
 
+  const exportData: ExportData = useMemo(() => ({
+    stats,
+    enterpriseName,
+    userSummaries,
+    languageStats,
+    engagementData,
+    chatUsersData,
+    chatRequestsData,
+  }), [stats, enterpriseName, userSummaries, languageStats, engagementData, chatUsersData, chatRequestsData]);
+
   return (
     <div className="flex gap-6">
       <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -63,12 +78,14 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </>
             )}
           </h2>
-          <button
-            onClick={onReset}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-          >
-            Upload New File
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onReset}
+              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
+            >
+              Upload New File
+            </button>
+          </div>
         </div>
       
         <MetricTileGroup
@@ -174,6 +191,11 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       </div>
 
       <div className="w-64 flex-shrink-0">
+        <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Export Data</h3>
+          <ExportButton exportData={exportData} fullWidth />
+        </div>
+        
         <FilterPanel
           onDateRangeChange={onDateRangeChange}
           currentFilter={dateRange}
