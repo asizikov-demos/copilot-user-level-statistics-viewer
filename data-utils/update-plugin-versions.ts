@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const MAX_VERSION_HISTORY = 20;
+
 interface SimpleVersionInfo {
   version: string;
   releaseDate: string;
@@ -32,13 +34,15 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
-  const url = 'https://plugins.jetbrains.com/api/plugins/17718/updates?channel=&size=10';
+  const url = `https://plugins.jetbrains.com/api/plugins/17718/updates?channel=&size=${MAX_VERSION_HISTORY}`;
   const data = await fetchJson<JetBrainsUpdate[]>(url);
 
-  return data.map((item) => ({
-    version: item.version,
-    releaseDate: new Date(Number(item.cdate)).toISOString(),
-  }));
+  return data
+    .map((item) => ({
+      version: item.version,
+      releaseDate: new Date(Number(item.cdate)).toISOString(),
+    }))
+    .slice(0, MAX_VERSION_HISTORY);
 }
 
 async function fetchVsCodeVersions(): Promise<SimpleVersionInfo[]> {
@@ -52,7 +56,7 @@ async function fetchVsCodeVersions(): Promise<SimpleVersionInfo[]> {
           },
         ],
         pageNumber: 1,
-        pageSize: 1,
+        pageSize: MAX_VERSION_HISTORY,
         sortBy: 0,
         sortOrder: 0,
       },
@@ -83,23 +87,18 @@ async function fetchVsCodeVersions(): Promise<SimpleVersionInfo[]> {
   }
 
   const versions = ext.versions ?? [];
-  const latest = versions[0];
-  if (!latest) {
-    return [];
-  }
+  const normalized = versions.slice(0, MAX_VERSION_HISTORY).map((v) => ({
+    version: v.version,
+    releaseDate: new Date(v.lastUpdated).toISOString(),
+  }));
 
-  return [
-    {
-      version: latest.version,
-      releaseDate: new Date(latest.lastUpdated).toISOString(),
-    },
-  ];
+  return normalized;
 }
 
 function mergeVsCodeVersions(
   existing: SimpleVersionInfo[],
   latest: SimpleVersionInfo[],
-  maxVersions = 10,
+  maxVersions = MAX_VERSION_HISTORY,
 ): SimpleVersionInfo[] {
   const map = new Map<string, SimpleVersionInfo>();
 
@@ -149,11 +148,11 @@ async function main(): Promise<void> {
       }
     }
 
-    const mergedVsCodeVersions = mergeVsCodeVersions(
-      existingVsCodeVersions,
-      latestVsCodeVersions,
-      10,
-    );
+  const mergedVsCodeVersions = mergeVsCodeVersions(
+    existingVsCodeVersions,
+    latestVsCodeVersions,
+    MAX_VERSION_HISTORY,
+  );
 
     const jetbrainsPayload = { versions: jbVersions };
     const vscodePayload = { versions: mergedVsCodeVersions };

@@ -101,12 +101,12 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     return userSet.size;
   }, [vscodeVersionAnalysis]);
 
-  const latestEightUpdates = React.useMemo(() => {
+  const latestTwentyUpdates = React.useMemo(() => {
     const stable = jetbrainsUpdates.filter(u => !u.version.toLowerCase().endsWith('-nightly'));
-    return stable.slice(0, 8);
+    return stable.slice(0, 20);
   }, [jetbrainsUpdates]);
 
-  const latestEightVersions = React.useMemo(() => latestEightUpdates.map(u => u.version), [latestEightUpdates]);
+  const latestTwentyVersions = React.useMemo(() => latestTwentyUpdates.map(u => u.version), [latestTwentyUpdates]);
 
   const latestVsCodeVersions = React.useMemo(
     () => vscodeVersions.map(v => v.version),
@@ -127,9 +127,9 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
 
   const outdatedPlugins = React.useMemo(() => {
     return pluginVersionAnalysis.filter(plugin => 
-      !latestEightVersions.includes(plugin.version)
+      !latestTwentyVersions.includes(plugin.version)
     );
-  }, [pluginVersionAnalysis, latestEightVersions]);
+  }, [pluginVersionAnalysis, latestTwentyVersions]);
 
   const outdatedVsCodePlugins = React.useMemo(
     () =>
@@ -219,7 +219,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     },
   ];
 
-  const jetbrainsVersionsColumns: TableColumn<typeof latestEightUpdates[number]>[] = [
+  const jetbrainsVersionsColumns: TableColumn<typeof latestTwentyUpdates[number]>[] = [
     {
       id: 'version',
       header: 'Version',
@@ -391,7 +391,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div>
                 <h4 className="text-md font-semibold text-gray-800 mb-3">Outdated Plugins</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Plugin versions that are not among the latest 8 stable releases. Users with outdated plugins may be missing important features and security updates.
+                  Plugin versions that are not among the latest 20 stable releases. Users with outdated plugins may be missing important features and security updates.
                 </p>
                 {outdatedPlugins.length > 0 ? (
                   <ExpandableTableSection
@@ -421,9 +421,9 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               </div>
 
               <div>
-                <h4 className="text-md font-semibold text-gray-800 mb-3">JetBrains &mdash; Latest 8 Plugin Versions</h4>
+                <h4 className="text-md font-semibold text-gray-800 mb-3">JetBrains &mdash; Latest 20 Plugin Versions</h4>
                 <ExpandableTableSection
-                  items={latestEightUpdates}
+                  items={latestTwentyUpdates}
                   initialCount={2}
                   buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
                   buttonExpandedLabel="Show Less"
@@ -455,7 +455,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           <div>
             <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
             <p className="text-gray-600 text-xs mb-4 max-w-2xl">
-              VS Code using the GitHub Copilot extension. Version history is maintained as a rolling window of recent releases.
+              VS Code using the GitHub Copilot extension. Version history is maintained as a rolling window of the latest 20 releases.
             </p>
           </div>
 
