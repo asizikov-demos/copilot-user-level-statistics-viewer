@@ -148,11 +148,11 @@ async function main(): Promise<void> {
       }
     }
 
-  const mergedVsCodeVersions = mergeVsCodeVersions(
-    existingVsCodeVersions,
-    latestVsCodeVersions,
-    MAX_VERSION_HISTORY,
-  );
+    const mergedVsCodeVersions = mergeVsCodeVersions(
+      existingVsCodeVersions,
+      latestVsCodeVersions,
+      MAX_VERSION_HISTORY,
+    );
 
     const jetbrainsPayload = { versions: jbVersions };
     const vscodePayload = { versions: mergedVsCodeVersions };
