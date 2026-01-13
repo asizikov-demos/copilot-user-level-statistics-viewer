@@ -1,0 +1,94 @@
+name: Sync Copilot model multipliers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *' # daily
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: copilot-model-multipliers
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch GitHub Docs page
+        run: |
+          set -euo pipefail
+          mkdir -p .cache
+          curl -sSL https://docs.github.com/en/copilot/reference/ai-models/supported-models -o .cache/supported-models.html
+
+      - name: Extract Model multipliers section
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          html=open('.cache/supported-models.html','r',encoding='utf-8',errors='ignore').read()
+          h=re.search(r'<h2 id="model-multipliers"[\s\S]*?</h2>', html)
+          if not h:
+            raise SystemExit('Could not find model-multipliers section')
+          after=html[h.end():]
+          t=re.search(r'<table[\s\S]*?</table>', after)
+          if not t:
+            raise SystemExit('Could not find multipliers table after model-multipliers heading')
+          open('.cache/model-multipliers-table.html','w',encoding='utf-8').write(t.group(0))
+          PY
+
+      - name: Ensure gh-models extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh extension install https://github.com/github/gh-models || gh extension upgrade github/gh-models
+
+      - name: Extract multipliers via phi-4
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh models run --file .github/prompts/extract-model-multipliers.prompt.yml \
+            --var input="$(cat .cache/model-multipliers-table.html)" \
+            > .cache/model-multipliers.json
+
+      - name: Compare against src/domain/modelConfig.ts
+        id: compare
+        run: |
+          set -euo pipefail
+          node data-utils/check-model-multipliers.mjs \
+            --extracted .cache/model-multipliers.json \
+            --report .cache/report.md
+        continue-on-error: true
+
+      - name: Set issue flag
+        id: flag
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.compare.outcome }}" = "success" ]; then
+            echo "needs_issue=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_issue=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create issue
+        if: steps.flag.outputs.needs_issue == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          title="Copilot model multipliers out of sync"
+
+          if gh issue list --state open --search "$title" --json number --jq 'length' | grep -q '^0$'; then
+            gh issue create \
+              --title "$title" \
+              --body-file .cache/report.md
+          else
+            echo "Open issue already exists; skipping creation."
+          fi

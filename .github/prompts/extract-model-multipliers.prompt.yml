@@ -1,0 +1,35 @@
+name: Extract Copilot model multipliers
+description: Extracts the "Model multipliers" table into machine-readable JSON.
+model: microsoft/phi-4
+modelParameters:
+  temperature: 0
+  maxTokens: 900
+messages:
+  - role: system
+    content: |
+      You extract structured data from HTML.
+      Return ONLY valid JSON, with no surrounding backticks and no markdown.
+      The first character of your response must be "{" and the last character must be "}".
+      Numbers must be JSON numbers (not strings).
+  - role: user
+    content: |
+      Extract the model multiplier table from the following HTML snippet.
+
+      Rules:
+      - The table has columns: "Model", "Multiplier for paid plans", "Multiplier for Copilot Free".
+      - Output JSON with this exact schema:
+        {
+          "models": [
+            {
+              "displayName": string,
+              "paidMultiplier": number,
+              "freeMultiplier": number | null
+            }
+          ]
+        }
+      - "Not applicable" must be returned as null.
+      - Preserve the model display name exactly as shown in the table.
+      - Include every row from the table.
+
+      HTML:
+      {{input}}
