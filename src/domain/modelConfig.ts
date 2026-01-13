@@ -23,6 +23,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-4o-latest', 0, false),
   new Model('gpt-5-mini', 0, false),
   new Model('grok-code-fast', 0, false),
+  new Model('grok-code-fast-1', 0, false),
 
   // Premium models with multipliers
   new Model('gpt-5', 1, true),
