@@ -194,6 +194,8 @@ const ViewRouter: React.FC = () => {
           stats={stats}
           originalStats={originalStats}
           enterpriseName={enterpriseName}
+          userSummaries={userSummaries}
+          languageStats={languageStats}
           engagementData={engagementData}
           chatUsersData={chatUsersData}
           chatRequestsData={chatRequestsData}
