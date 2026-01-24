@@ -28,7 +28,7 @@ const ViewRouter: React.FC = () => {
     currentView, selectedUser, selectedModel,
     navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
   } = useNavigation();
-  const { handleFileUpload, isLoading, error } = useFileUpload();
+  const { handleFileUpload, handleSampleLoad, isLoading, error } = useFileUpload();
 
   const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
 
@@ -78,6 +78,7 @@ const ViewRouter: React.FC = () => {
     return (
       <FileUploadArea
         onFileUpload={handleFileUpload}
+        onSampleLoad={handleSampleLoad}
         isLoading={isLoading}
         error={error}
       />

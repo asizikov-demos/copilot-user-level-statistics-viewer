@@ -6,12 +6,14 @@ import HowToGetData from './HowToGetData';
 
 interface FileUploadAreaProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSampleLoad: () => void;
   isLoading: boolean;
   error: string | null;
 }
 
 const FileUploadArea: React.FC<FileUploadAreaProps> = ({
   onFileUpload,
+  onSampleLoad,
   isLoading,
   error,
 }) => {
@@ -96,6 +98,16 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             <span className="text-xs text-gray-500">Accepted: .json, .ndjson</span>
           </label>
         </div>
+        <div className="mt-4 text-center">
+          <button
+            onClick={onSampleLoad}
+            disabled={isLoading}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          >
+            Load Sample Report
+          </button>
+        </div>
+        
         
         {isLoading && (
           <div className="mt-4 text-center">
