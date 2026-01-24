@@ -108,7 +108,6 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           </button>
         </div>
         
-        
         {isLoading && (
           <div className="mt-4 text-center">
             <div className="inline-flex items-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CopilotMetrics } from '../../types/metrics';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
