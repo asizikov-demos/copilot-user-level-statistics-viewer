@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CopilotMetrics } from '../../types/metrics';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
@@ -28,7 +28,7 @@ const ViewRouter: React.FC = () => {
     currentView, selectedUser, selectedModel,
     navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
   } = useNavigation();
-  const { handleFileUpload, isLoading, error } = useFileUpload();
+  const { handleFileUpload, handleSampleLoad, isLoading, error } = useFileUpload();
 
   const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
 
@@ -78,6 +78,7 @@ const ViewRouter: React.FC = () => {
     return (
       <FileUploadArea
         onFileUpload={handleFileUpload}
+        onSampleLoad={handleSampleLoad}
         isLoading={isLoading}
         error={error}
       />

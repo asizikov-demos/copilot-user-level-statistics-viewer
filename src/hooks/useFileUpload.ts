@@ -8,6 +8,7 @@ import { useRawMetrics } from '../components/MetricsContext';
 
 interface UseFileUploadReturn {
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+  handleSampleLoad: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -34,6 +35,21 @@ export function useFileUpload(): UseFileUploadReturn {
     return derivedEnterpriseName;
   }, []);
 
+  const processMetricsFile = useCallback(async (file: File) => {
+    const parsedMetrics = await parseMetricsStream(file);
+    const calculatedStats = calculateStats(parsedMetrics);
+
+    const firstMetric = parsedMetrics[0];
+    if (firstMetric) {
+      setEnterpriseName(deriveEnterpriseName(firstMetric));
+    } else {
+      setEnterpriseName(null);
+    }
+    
+    setRawMetrics(parsedMetrics);
+    setOriginalStats(calculatedStats);
+  }, [deriveEnterpriseName, setRawMetrics, setOriginalStats, setEnterpriseName]);
+
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -48,27 +64,38 @@ export function useFileUpload(): UseFileUploadReturn {
     setError(null);
 
     try {
-      const parsedMetrics = await parseMetricsStream(file);
-      const calculatedStats = calculateStats(parsedMetrics);
-
-      const firstMetric = parsedMetrics[0];
-      if (firstMetric) {
-        setEnterpriseName(deriveEnterpriseName(firstMetric));
-      } else {
-        setEnterpriseName(null);
-      }
-      
-      setRawMetrics(parsedMetrics);
-      setOriginalStats(calculatedStats);
+      await processMetricsFile(file);
     } catch (err) {
       setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
-  }, [deriveEnterpriseName, setRawMetrics, setOriginalStats, setEnterpriseName, setIsLoading, setError]);
+  }, [processMetricsFile, setIsLoading, setError]);
+
+  const handleSampleLoad = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/data/sample-report.ndjson');
+      if (!response.ok) {
+        throw new Error('Failed to load sample report');
+      }
+      
+      const blob = await response.blob();
+      const file = new File([blob], 'sample-report.ndjson', { type: 'application/x-ndjson' });
+      
+      await processMetricsFile(file);
+    } catch (err) {
+      setError(`Failed to load sample report: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [processMetricsFile, setIsLoading, setError]);
 
   return {
     handleFileUpload,
+    handleSampleLoad,
     isLoading,
     error,
   };
