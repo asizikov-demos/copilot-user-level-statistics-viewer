@@ -1,14 +1,16 @@
-'use client';
+"use client";
 
 import React, { useState, useRef } from 'react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
+import { MultiFileProgress } from '../../../domain/metricsParser';
 
 interface FileUploadAreaProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSampleLoad: () => void;
   isLoading: boolean;
   error: string | null;
+  uploadProgress?: MultiFileProgress | null;
 }
 
 const FileUploadArea: React.FC<FileUploadAreaProps> = ({
@@ -16,6 +18,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
   onSampleLoad,
   isLoading,
   error,
+  uploadProgress,
 }) => {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,10 +40,11 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      const file = files[0];
       if (fileInputRef.current) {
         const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
+        for (let i = 0; i < files.length; i++) {
+          dataTransfer.items.add(files[i]);
+        }
         fileInputRef.current.files = dataTransfer.files;
         
         const event = new Event('change', { bubbles: true });
@@ -71,6 +75,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             ref={fileInputRef}
             type="file"
             accept=".json,.ndjson"
+            multiple
             onChange={onFileUpload}
             className="hidden"
             id="file-upload"
@@ -95,7 +100,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             <span className="text-sm font-medium text-gray-700">
               Click to upload or drag and drop
             </span>
-            <span className="text-xs text-gray-500">Accepted: .json, .ndjson</span>
+            <span className="text-xs text-gray-500">Accepted: .json, .ndjson (multiple files supported)</span>
           </label>
         </div>
         <div className="mt-4 text-center">
@@ -110,9 +115,22 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
         
         {isLoading && (
           <div className="mt-4 text-center">
-            <div className="inline-flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-gray-600">Processing file...</span>
+            <div className="inline-flex flex-col items-center space-y-2">
+              <div className="inline-flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                <span className="text-gray-600">
+                  {uploadProgress && uploadProgress.totalFiles > 1
+                    ? `Processing file ${uploadProgress.currentFile} of ${uploadProgress.totalFiles}...`
+                    : 'Processing file...'}
+                </span>
+              </div>
+              {uploadProgress && (
+                <div className="text-sm text-gray-500">
+                  <span className="font-medium">{uploadProgress.fileName}</span>
+                  <span className="mx-2">•</span>
+                  <span>{uploadProgress.recordsProcessed.toLocaleString()} records processed</span>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { CopilotMetrics } from '../types/metrics';
-import { parseMetricsStream } from '../domain/metricsParser';
+import { parseMetricsStream, parseMultipleMetricsStreams, MultiFileProgress, MultiFileResult } from '../domain/metricsParser';
 import { calculateStats } from '../domain/calculators/metricCalculators';
 import { useRawMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
@@ -12,9 +12,11 @@ interface UseFileUploadReturn {
   handleSampleLoad: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
+  uploadProgress: MultiFileProgress | null;
 }
 
 export function useFileUpload(): UseFileUploadReturn {
+  const [uploadProgress, setUploadProgress] = useState<MultiFileProgress | null>(null);
   const {
     isLoading,
     error,
@@ -36,8 +38,7 @@ export function useFileUpload(): UseFileUploadReturn {
     return derivedEnterpriseName;
   }, []);
 
-  const processMetricsFile = useCallback(async (file: File) => {
-    const parsedMetrics = await parseMetricsStream(file);
+  const processMetrics = useCallback((parsedMetrics: CopilotMetrics[]) => {
     const calculatedStats = calculateStats(parsedMetrics);
 
     const firstMetric = parsedMetrics[0];
@@ -51,27 +52,71 @@ export function useFileUpload(): UseFileUploadReturn {
     setOriginalStats(calculatedStats);
   }, [deriveEnterpriseName, setRawMetrics, setOriginalStats, setEnterpriseName]);
 
-  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const processMetricsFile = useCallback(async (file: File) => {
+    const parsedMetrics = await parseMetricsStream(file, (count) => {
+      setUploadProgress({
+        currentFile: 1,
+        totalFiles: 1,
+        fileName: file.name,
+        recordsProcessed: count,
+      });
+    });
+    processMetrics(parsedMetrics);
+  }, [processMetrics]);
 
-    const lowerName = file.name.toLowerCase();
-    if (!lowerName.endsWith('.json') && !lowerName.endsWith('.ndjson')) {
-      setError('Unsupported file type. Please upload a .json or .ndjson file.');
-      return;
+  const processMultipleFiles = useCallback(async (files: File[]): Promise<MultiFileResult> => {
+    const result = await parseMultipleMetricsStreams(files, (progress) => {
+      setUploadProgress(progress);
+    });
+    return result;
+  }, []);
+
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) return;
+
+    const files = Array.from(fileList);
+    
+    for (const file of files) {
+      const lowerName = file.name.toLowerCase();
+      if (!lowerName.endsWith('.json') && !lowerName.endsWith('.ndjson')) {
+        setError(`Unsupported file type: ${file.name}. Please upload .json or .ndjson files.`);
+        return;
+      }
     }
 
     setIsLoading(true);
     setError(null);
+    setUploadProgress(null);
 
     try {
-      await processMetricsFile(file);
+      if (files.length === 1) {
+        await processMetricsFile(files[0]);
+      } else {
+        const result = await processMultipleFiles(files);
+        
+        if (result.metrics.length > 0) {
+          processMetrics(result.metrics);
+        }
+        
+        if (result.errors.length > 0) {
+          const errorMessages = result.errors.map(
+            (e) => `File ${e.fileIndex} of ${files.length} (${e.fileName}): ${e.error}`
+          );
+          if (result.metrics.length > 0) {
+            setError(`Partial success. ${result.errors.length} file(s) failed:\n${errorMessages.join('\n')}`);
+          } else {
+            setError(`Failed to parse all files:\n${errorMessages.join('\n')}`);
+          }
+        }
+      }
     } catch (err) {
-      setError(`Failed to parse file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(`Failed to parse files: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
+      setUploadProgress(null);
     }
-  }, [processMetricsFile, setIsLoading, setError]);
+  }, [processMetricsFile, processMultipleFiles, processMetrics, setIsLoading, setError]);
 
   const handleSampleLoad = useCallback(async () => {
     setIsLoading(true);
@@ -99,5 +144,6 @@ export function useFileUpload(): UseFileUploadReturn {
     handleSampleLoad,
     isLoading,
     error,
+    uploadProgress,
   };
 }
