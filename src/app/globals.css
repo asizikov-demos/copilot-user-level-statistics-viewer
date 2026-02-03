@@ -34,13 +34,6 @@
     display: none !important;
   }
 
-  /* Chart container print optimizations */
-  [class*="chartHeight"] {
-    height: auto !important;
-    min-height: 180px !important;
-    max-height: 220px !important;
-  }
-
   /* Ensure chart legend is readable */
   .chartjs-legend {
     font-size: 9px !important;
