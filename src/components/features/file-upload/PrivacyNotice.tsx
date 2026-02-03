@@ -17,12 +17,12 @@ const PrivacyNotice: React.FC = () => {
           <p className="text-sm text-blue-800">
             This application is open source and can be audited for security and privacy compliance. The source code is available at{' '}
             <a
-              href="https://github.com/asizikov-demos/copilot-premium-requests-report-viewer"
+              href="https://github.com/asizikov-demos/copilot-user-level-statistics-viewer"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-700 underline hover:text-blue-900"
             >
-              github.com/asizikov-demos/copilot-premium-requests-report-viewer
+              github.com/asizikov-demos/copilot-user-level-statistics-viewer
             </a>
             .
           </p>
