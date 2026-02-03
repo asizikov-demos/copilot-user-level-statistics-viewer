@@ -59,10 +59,6 @@ export default function ExecutiveSummaryView({
   featureAdoptionData,
   onBack,
 }: ExecutiveSummaryViewProps) {
-  const handleExportPdf = () => {
-    window.print();
-  };
-
   const reportRange = `${formatLongDate(stats.reportStartDay)} – ${formatLongDate(stats.reportEndDay)}`;
   const generatedOn = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -91,15 +87,6 @@ export default function ExecutiveSummaryView({
         onBack,
         backButtonLabel: '← Back',
         backButtonClassName: 'print:hidden',
-        actions: (
-          <button
-            type="button"
-            onClick={handleExportPdf}
-            className="print:hidden px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-          >
-            Export PDF
-          </button>
-        ),
         description: (
           <div className="mt-2 space-y-1 text-sm text-gray-700 print:text-black">
             <div className="flex flex-wrap gap-x-6 gap-y-1">

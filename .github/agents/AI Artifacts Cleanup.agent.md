@@ -63,7 +63,7 @@ Comments documenting the AI's internal thought process:
 - `// Updated to fix the issue`
 - `// As discussed above...`
 
----qsdafasdf
+---
 
 ### Category 3: Test Pattern Comments (Medium Priority)
 Mechanical test-structure comments humans rarely write:
