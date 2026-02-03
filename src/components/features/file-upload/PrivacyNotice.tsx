@@ -15,7 +15,16 @@ const PrivacyNotice: React.FC = () => {
             Your data is processed entirely in your browser. No data is uploaded to any server or transmitted over the network. All analysis happens locally on your device.
           </p>
           <p className="text-sm text-blue-800">
-            This application is open source and can be audited for security and privacy compliance.
+            This application is open source and can be audited for security and privacy compliance. The source code is available at{' '}
+            <a
+              href="https://github.com/asizikov-demos/copilot-premium-requests-report-viewer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 underline hover:text-blue-900"
+            >
+              github.com/asizikov-demos/copilot-premium-requests-report-viewer
+            </a>
+            .
           </p>
         </div>
       </div>
