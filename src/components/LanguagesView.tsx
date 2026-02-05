@@ -6,9 +6,13 @@ import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { SortDirection, SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
+import { CopilotMetrics } from '../types/metrics';
+import LanguageDailyChart from './charts/LanguageDailyChart';
+import { translateFeature } from '../domain/featureTranslations';
 
 interface LanguagesViewProps {
   languages: LanguageStats[];
+  metrics: CopilotMetrics[];
   onBack: VoidCallback;
 }
 
@@ -40,7 +44,7 @@ const formatAcceptanceRate = (lang: LanguageStats) => {
     : '0.0';
 };
 
-export default function LanguagesView({ languages, onBack }: LanguagesViewProps) {
+export default function LanguagesView({ languages, metrics, onBack }: LanguagesViewProps) {
   const [tableSortState, setTableSortState] = useState<TableSortState>({
     field: 'totalEngagements',
     direction: 'desc',
@@ -316,6 +320,54 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
 
   const tableRowClassName = () => 'hover:bg-gray-50';
 
+  const languageFeatureImpactData = useMemo(() => {
+    const languageFeatureMap = new Map<string, Map<string, number>>();
+    const allFeatures = new Set<string>();
+    const languageTotals = new Map<string, number>();
+
+    for (const metric of metrics) {
+      for (const lf of metric.totals_by_language_feature) {
+        const language = lf.language;
+        const feature = lf.feature;
+        const locImpact = lf.loc_added_sum + lf.loc_deleted_sum;
+
+        if (!language || language === 'unknown') continue;
+
+        allFeatures.add(feature);
+
+        if (!languageFeatureMap.has(language)) {
+          languageFeatureMap.set(language, new Map());
+        }
+        const featureMap = languageFeatureMap.get(language)!;
+        featureMap.set(feature, (featureMap.get(feature) || 0) + locImpact);
+
+        languageTotals.set(language, (languageTotals.get(language) || 0) + locImpact);
+      }
+    }
+
+    const sortedLanguages = Array.from(languageTotals.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([lang]) => lang);
+
+    const sortedFeatures = Array.from(allFeatures).sort();
+
+    const rows = sortedLanguages.map(language => {
+      const featureMap = languageFeatureMap.get(language) || new Map();
+      const featureValues: Record<string, number> = {};
+      for (const feature of sortedFeatures) {
+        featureValues[feature] = featureMap.get(feature) || 0;
+      }
+      return {
+        language,
+        total: languageTotals.get(language) || 0,
+        features: featureValues,
+      };
+    });
+
+    return { rows, features: sortedFeatures };
+  }, [metrics]);
+
   const completeLanguagesColumns: TableColumn<LanguageStats>[] = [
     {
       id: 'language',
@@ -416,6 +468,64 @@ export default function LanguagesView({ languages, onBack }: LanguagesViewProps)
         gapClassName="gap-4"
         items={summaryCards}
       />
+
+      {/* Daily Language Charts */}
+      <div className="space-y-6 mt-6 pt-6 border-t border-gray-200">
+        <LanguageDailyChart metrics={metrics} variant="generations" />
+        <LanguageDailyChart metrics={metrics} variant="loc" />
+      </div>
+
+      {/* LOC Impact by Language and Feature */}
+      {languageFeatureImpactData.rows.length > 0 && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">LOC Impact by Language and Feature</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Lines of code impacted (added + deleted) for top 10 languages, broken down by Copilot feature.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Language
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total
+                  </th>
+                  {languageFeatureImpactData.features.map((feature) => (
+                    <th
+                      key={feature}
+                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {translateFeature(feature)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {languageFeatureImpactData.rows.map((row, index) => (
+                  <tr key={row.language} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {row.language}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                      {row.total.toLocaleString()}
+                    </td>
+                    {languageFeatureImpactData.features.map((feature) => (
+                      <td
+                        key={feature}
+                        className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right"
+                      >
+                        {row.features[feature].toLocaleString()}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Two Column Layout for Tables */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200">
