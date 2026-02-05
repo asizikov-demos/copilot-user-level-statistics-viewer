@@ -104,9 +104,10 @@ const ViewRouter: React.FC = () => {
 
     case VIEW_MODES.LANGUAGES:
       return (
-        <LanguagesView 
-          languages={languageStats} 
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
+        <LanguagesView
+          languages={languageStats}
+          metrics={rawMetrics}
+          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
