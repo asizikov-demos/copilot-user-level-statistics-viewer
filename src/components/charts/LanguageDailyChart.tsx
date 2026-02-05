@@ -32,7 +32,7 @@ const LANGUAGE_COLORS = [
 export default function LanguageDailyChart({ metrics, variant }: LanguageDailyChartProps) {
   const isGenerations = variant === 'generations';
 
-  const { labels, datasets, total, languageTotals } = useMemo(() => {
+  const { labels, datasets, total } = useMemo(() => {
     const daySet = new Set<string>();
     const languageTotals: Record<string, number> = {};
     const map: Record<string, Record<string, number>> = {};
@@ -76,7 +76,6 @@ export default function LanguageDailyChart({ metrics, variant }: LanguageDailyCh
       labels: sortedDates.map(d => formatShortDate(d)),
       datasets,
       total,
-      languageTotals,
     };
   }, [metrics, isGenerations]);
 
