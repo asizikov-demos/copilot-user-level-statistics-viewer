@@ -46,6 +46,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4', 10, true),
   new Model('claude-opus-4.1', 10, true),
   new Model('claude-opus-4.5', 3, true),
+  new Model('claude-opus-4.6', 3, true),
   new Model('claude-4.5-haiku', 0.33, true),
   new Model('gemini-2.0-flash', 0.25, true),
   new Model('gemini-2.5-pro', 1, true),
