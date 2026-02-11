@@ -215,11 +215,16 @@ src/
 
 	hooks/
 		useUsernameTrieSearch.ts     // Efficient username searching
-		useMetricsProcessing.ts      // Metrics filtering and aggregation
-		useFileUpload.ts             // File upload handling
+		useMetricsProcessing.ts      // Async metrics aggregation via Web Worker
+		useFileUpload.ts             // File upload handling via Web Worker
 		usePluginVersions.ts         // Plugin version fetching
 		useSortableTable.ts          // Table sorting logic
 		useExpandableList.ts         // Expandable list state
+
+	workers/                         // Web Worker for off-thread processing
+		types.ts                    // Worker message protocol types
+		metricsWorker.ts            // Worker entry point (parsing + aggregation)
+		metricsWorkerClient.ts      // Promise-based client API for main thread
 
 	state/                           // Centralized state management
 		NavigationContext.tsx        // View navigation state
@@ -253,14 +258,42 @@ The main `page.tsx` is now slim and delegates to:
 - `OverviewDashboard` – renders the main dashboard
 - `FileUploadArea` – handles file upload UI
 
-The `useMetricsProcessing` hook computes aggregated data whenever raw metrics change, and the result is used directly by `ViewRouter`.
+The `useMetricsProcessing` hook offloads aggregation to a Web Worker, keeping the main thread responsive. The result is used directly by `ViewRouter`.
 
-### 3.3. Computation Layer
+### 3.3. Web Worker Architecture
+
+CPU-intensive parsing and aggregation are offloaded to a dedicated Web Worker to prevent UI thread blocking:
+
+- **`src/workers/metricsWorker.ts`** – Worker entry point that handles `parseFiles` and `aggregate` messages
+- **`src/workers/metricsWorkerClient.ts`** – Promise-based client API used by hooks on the main thread
+- **`src/workers/types.ts`** – Typed message protocol (`WorkerRequest` / `WorkerResponse`)
+
+The worker is pre-bundled into `public/workers/metricsWorker.js` using **esbuild** (via `scripts/build-worker.mjs`) as a self-contained IIFE. This approach is compatible with Next.js static export (`output: 'export'`) and avoids Turbopack/webpack worker bundling limitations. The build command runs `npm run build:worker` before `next build`.
+
+#### Worker Message Protocol
+
+**Main Thread → Worker:**
+| Message Type | Payload | Purpose |
+|---|---|---|
+| `parseFiles` | `{ id, files: File[] }` | Stream-parse uploaded files into `CopilotMetrics[]` |
+| `aggregate` | `{ id, metrics: CopilotMetrics[] }` | Compute `AggregatedMetrics` from raw metrics |
+
+**Worker → Main Thread:**
+| Message Type | Payload | Purpose |
+|---|---|---|
+| `parseProgress` | `{ id, progress: MultiFileProgress }` | Incremental progress during file parsing |
+| `parseResult` | `{ id, result: MultiFileResult }` | Parsed metrics + any per-file errors |
+| `aggregateResult` | `{ id, result: AggregatedMetrics }` | Computed aggregated metrics |
+| `error` | `{ id, error: string }` | Error during processing |
+
+### 3.4. Computation Layer
 
 Computation is organized into focused modules:
 
-**Parsing** (`src/utils/metricsParser.ts`):
-- `parseMetricsFile` – parses JSON/NDJSON, filters out deprecated-schema records, validates required fields
+**Parsing** (`src/domain/metricsParser.ts`, `src/infra/metricsFileParser.ts`):
+- `parseMetricsLine` – parses a single NDJSON line, validates schema, applies string interning
+- `parseMetricsStream` / `parseMultipleMetricsStreams` – stream-parses files using `File.stream()` API
+- Runs inside the Web Worker for non-blocking file processing
 
 **Calculators** (`src/domain/calculators/`):
 - `statsCalculator.ts` – basic stats (users, records, top items)
@@ -305,18 +338,25 @@ This section describes the life cycle of data from file upload to visualization.
 flowchart LR
   A[User uploads JSON or NDJSON metrics file] --> B[useFileUpload hook]
 
-  B --> C[parseMetricsFile in metricsParser.ts]
+  B -->|postMessage| W1[Web Worker: parseMultipleMetricsStreams]
 
-  C --> D[Store rawMetrics in MetricsContext]
+  W1 -->|postMessage| D[Store rawMetrics in MetricsContext]
 
-  D --> E[useMetricsProcessing hook computes aggregated data]
+  D --> E[useMetricsProcessing hook]
 
-  E --> F[ViewRouter renders appropriate view]
+  E -->|postMessage| W2[Web Worker: aggregateMetrics]
+
+  W2 -->|postMessage| F[ViewRouter renders appropriate view]
 
   F --> G[Chart components using Chart.js]
 
   subgraph Contexts
     NC[NavigationContext] --> F
+  end
+
+  subgraph WebWorker
+    W1
+    W2
   end
 ```
 
@@ -325,16 +365,17 @@ flowchart LR
 1. The `useFileUpload` hook (in `src/hooks/useFileUpload.ts`) handles file upload when a user selects a file.
 2. `handleFileUpload`:
 	 - Validates file extension (`.json` or `.ndjson`).
-	 - Reads the file content as text.
-	 - Invokes `parseMetricsFile(fileContent)` from `metricsParser.ts`.
+	 - Sends files to the Web Worker via `parseFilesInWorker()` from `metricsWorkerClient.ts`.
+	 - The worker streams and parses files off the main thread, sending progress updates back.
 
-3. `parseMetricsFile`:
-	 - Splits content into lines, ignoring blanks.
-	 - Parses each line as JSON.
+3. Inside the worker, `parseMultipleMetricsStreams` from `metricsFileParser.ts`:
+	 - Streams each file using `File.stream()` API with `TextDecoder`.
+	 - Parses each line as JSON via `parseMetricsLine`.
 	 - Skips any record that:
 		 - Uses deprecated LOC fields (`generated_loc_sum`, `accepted_loc_sum`) at the root or nested level.
 		 - Is missing any of the new required LOC fields.
-	 - Casts remaining records to `CopilotMetrics[]` and returns them.
+	 - Uses `StringPool` for string interning to reduce memory usage.
+	 - Returns `CopilotMetrics[]` and any per-file errors to the main thread.
 
 4. `handleFileUpload` then:
 	 - Derives an `enterpriseName` from `user_login` suffix or `enterprise_id`.
@@ -342,7 +383,7 @@ flowchart LR
 
 ### 4.3. Aggregation
 
-Once `rawMetrics` exist, the `useMetricsProcessing` hook computes aggregated data via `aggregateMetrics(rawMetrics)`:
+Once `rawMetrics` exist, the `useMetricsProcessing` hook sends them to the Web Worker for aggregation via `aggregateMetricsInWorker()`. The worker runs `aggregateMetrics(rawMetrics)` off the main thread:
 
 - `computeStats` – summary stats (unique users, top language/IDE/model, date range).
 - `computeUserSummaries` – user-level totals and activity flags.
@@ -406,11 +447,16 @@ flowchart TB
 		NC[NavigationContext currentView]
 	end
 
-	subgraph ComputationLayer
-		MP[metricsParser.ts parse]
+	subgraph WebWorker[Web Worker - Off Main Thread]
+		MFP[metricsFileParser.ts stream parse]
 		MA[metricsAggregator.ts aggregate]
 		CALC[domain/calculators/ split logic]
 		MConf[modelConfig.ts model config]
+	end
+
+	subgraph WorkerBridge[Worker Bridge]
+		WC[metricsWorkerClient.ts]
+		WT[metricsWorker.ts entry point]
 	end
 
 	subgraph HooksLayer
@@ -441,8 +487,11 @@ flowchart TB
 	VR --> CA
 	VR --> MD
 
-	UFU --> MP
-	UMP --> MA
+	UFU --> WC
+	UMP --> WC
+	WC -->|postMessage| WT
+	WT --> MFP
+	WT --> MA
 	MA --> CALC
 	CALC --> MConf
 
@@ -456,7 +505,9 @@ flowchart TB
 
 - The app is a **client-side Next.js dashboard** for **GitHub Copilot User Level Metrics**.
 - Data is provided as newline-delimited JSON or JSON array exports from GitHub; only the **new LOC schema** is supported.
-- All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsParser.ts`**, **`metricsAggregator.ts`**, **`domain/calculators/`**, and **`modelConfig.ts`**.
+- **Parsing and aggregation run in a Web Worker** to keep the UI responsive. The worker is bundled as a separate chunk, compatible with static export to GitHub Pages.
+- All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsFileParser.ts`**, **`metricsParser.ts`**, **`metricsAggregator.ts`**, **`domain/calculators/`**, and **`modelConfig.ts`** — all executed inside the worker.
+- The worker bridge (`src/workers/`) provides a typed, Promise-based API for the main thread hooks.
 - State is managed through React contexts: **`MetricsContext`** for data and **`NavigationContext`** for view routing.
 - Reusable hooks (`useFileUpload`, `useMetricsProcessing`, `usePluginVersions`, `useSortableTable`, `useExpandableList`) encapsulate common logic.
 - The UI is organized into multiple views that share the same filtered dataset, providing different perspectives on the same underlying metrics.
