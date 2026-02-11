@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { CopilotMetrics } from '../types/metrics';
-import { parseMetricsStream, parseMultipleMetricsStreams, MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
+import { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
+import { parseFilesInWorker } from '../workers/metricsWorkerClient';
 import { useRawMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
@@ -48,19 +49,17 @@ export function useFileUpload(): UseFileUploadReturn {
   }, [deriveEnterpriseName, setRawMetrics, setEnterpriseName]);
 
   const processMetricsFile = useCallback(async (file: File) => {
-    const parsedMetrics = await parseMetricsStream(file, (count) => {
-      setUploadProgress({
-        currentFile: 1,
-        totalFiles: 1,
-        fileName: file.name,
-        recordsProcessed: count,
-      });
+    const result = await parseFilesInWorker([file], (progress) => {
+      setUploadProgress(progress);
     });
-    processMetrics(parsedMetrics);
+    if (result.errors.length > 0) {
+      throw new Error(result.errors.map(e => e.error).join('; '));
+    }
+    processMetrics(result.metrics);
   }, [processMetrics]);
 
   const processMultipleFiles = useCallback(async (files: File[]): Promise<MultiFileResult> => {
-    const result = await parseMultipleMetricsStreams(files, (progress) => {
+    const result = await parseFilesInWorker(files, (progress) => {
       setUploadProgress(progress);
     });
     return result;

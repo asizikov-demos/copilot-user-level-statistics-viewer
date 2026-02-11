@@ -1,32 +1,49 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CopilotMetrics } from '../types/metrics';
-import { aggregateMetrics } from '../domain/metricsAggregator';
+import { AggregatedMetrics } from '../domain/metricsAggregator';
+import { aggregateMetricsInWorker } from '../workers/metricsWorkerClient';
 
-export function useMetricsProcessing(rawMetrics: CopilotMetrics[]) {
-  return useMemo(() => {
+export interface MetricsProcessingResult {
+  aggregatedMetrics: AggregatedMetrics | null;
+  isProcessing: boolean;
+  processingError: string | null;
+}
+
+export function useMetricsProcessing(rawMetrics: CopilotMetrics[]): MetricsProcessingResult {
+  const [aggregatedMetrics, setAggregatedMetrics] = useState<AggregatedMetrics | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const currentRequestId = ++requestIdRef.current;
+
     if (!rawMetrics.length) {
-      return {
-        stats: null,
-        userSummaries: [],
-        engagementData: [],
-        chatUsersData: [],
-        chatRequestsData: [],
-        languageStats: [],
-        modelUsageData: [],
-        featureAdoptionData: null,
-        pruAnalysisData: [],
-        agentModeHeatmapData: [],
-        modelFeatureDistributionData: [],
-        agentImpactData: [],
-        codeCompletionImpactData: [],
-        editModeImpactData: [],
-        inlineModeImpactData: [],
-        askModeImpactData: [],
-        cliImpactData: [],
-        joinedImpactData: []
-      };
+      setAggregatedMetrics(null);
+      setIsProcessing(false);
+      setProcessingError(null);
+      return;
     }
 
-    return aggregateMetrics(rawMetrics);
+    setIsProcessing(true);
+    setProcessingError(null);
+
+    aggregateMetricsInWorker(rawMetrics)
+      .then((result) => {
+        if (currentRequestId === requestIdRef.current) {
+          setAggregatedMetrics(result);
+          setIsProcessing(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Aggregation failed:', err);
+        if (currentRequestId === requestIdRef.current) {
+          setAggregatedMetrics(null);
+          setIsProcessing(false);
+          setProcessingError(err instanceof Error ? err.message : 'Aggregation failed');
+        }
+      });
   }, [rawMetrics]);
+
+  return { aggregatedMetrics, isProcessing, processingError };
 }
