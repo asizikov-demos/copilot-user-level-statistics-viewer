@@ -173,7 +173,7 @@ export default function StatsGrid<T>({
   const gridClassName = buildColumnClasses(columns);
   const mergedClassName = mergeClassNames(gridClassName, gapClassName, className);
 
-  let content: ReactNode = null;
+  let content: ReactNode;
 
   if (items && renderItem) {
     content = items.map((item, index) => (
