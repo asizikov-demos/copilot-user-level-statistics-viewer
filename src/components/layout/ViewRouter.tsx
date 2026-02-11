@@ -32,7 +32,58 @@ const ViewRouter: React.FC = () => {
 
   const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
 
-  const filteredData = useMetricsProcessing(rawMetrics);
+  const { aggregatedMetrics, isProcessing, processingError } = useMetricsProcessing(rawMetrics);
+
+  const resetData = () => {
+    resetRawMetrics();
+    resetNavigation();
+    setSelectedUserMetrics([]);
+  };
+
+  const handleUserClick = (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => {
+    setSelectedUserMetrics(userMetrics);
+    selectUser({ login: userLogin, id: userId });
+  };
+
+  if (!rawMetrics.length) {
+    return (
+      <FileUploadArea
+        onFileUpload={handleFileUpload}
+        onSampleLoad={handleSampleLoad}
+        isLoading={isLoading}
+        error={error}
+        uploadProgress={uploadProgress}
+      />
+    );
+  }
+
+  if (processingError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center max-w-md">
+          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to process metrics</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{processingError}</p>
+          <button
+            onClick={resetData}
+            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+          >
+            Start Over
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isProcessing || !aggregatedMetrics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500 dark:text-gray-400">Processing metrics...</p>
+        </div>
+      </div>
+    );
+  }
 
   const { 
     stats, 
@@ -53,30 +104,7 @@ const ViewRouter: React.FC = () => {
     askModeImpactData,
     cliImpactData,
     joinedImpactData
-  } = filteredData;
-
-  const resetData = () => {
-    resetRawMetrics();
-    resetNavigation();
-    setSelectedUserMetrics([]);
-  };
-
-  const handleUserClick = (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => {
-    setSelectedUserMetrics(userMetrics);
-    selectUser({ login: userLogin, id: userId });
-  };
-
-  if (!stats) {
-    return (
-      <FileUploadArea
-        onFileUpload={handleFileUpload}
-        onSampleLoad={handleSampleLoad}
-        isLoading={isLoading}
-        error={error}
-        uploadProgress={uploadProgress}
-      />
-    );
-  }
+  } = aggregatedMetrics;
 
   switch (currentView) {
     case VIEW_MODES.EXECUTIVE_SUMMARY:
