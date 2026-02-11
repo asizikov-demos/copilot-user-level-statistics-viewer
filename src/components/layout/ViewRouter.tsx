@@ -22,7 +22,7 @@ import ExecutiveSummaryView from '../ExecutiveSummaryView';
 const ViewRouter: React.FC = () => {
   const { setFilteredData } = useMetricsData();
   const { 
-    rawMetrics, originalStats, enterpriseName,
+    rawMetrics, enterpriseName,
     resetRawMetrics
   } = useRawMetrics();
   const { 
@@ -33,10 +33,7 @@ const ViewRouter: React.FC = () => {
 
   const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
 
-  const filteredData = useMetricsProcessing(
-    rawMetrics,
-    originalStats
-  );
+  const filteredData = useMetricsProcessing(rawMetrics);
 
   const { 
     stats, 

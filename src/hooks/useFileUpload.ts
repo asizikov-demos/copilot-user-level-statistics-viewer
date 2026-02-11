@@ -3,7 +3,6 @@
 import { useCallback, useState } from 'react';
 import { CopilotMetrics } from '../types/metrics';
 import { parseMetricsStream, parseMultipleMetricsStreams, MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
-import { calculateStats } from '../domain/calculators/metricCalculators';
 import { useRawMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
@@ -21,7 +20,6 @@ export function useFileUpload(): UseFileUploadReturn {
     isLoading,
     error,
     setRawMetrics,
-    setOriginalStats,
     setEnterpriseName,
     setIsLoading,
     setError,
@@ -39,8 +37,6 @@ export function useFileUpload(): UseFileUploadReturn {
   }, []);
 
   const processMetrics = useCallback((parsedMetrics: CopilotMetrics[]) => {
-    const calculatedStats = calculateStats(parsedMetrics);
-
     const firstMetric = parsedMetrics[0];
     if (firstMetric) {
       setEnterpriseName(deriveEnterpriseName(firstMetric));
@@ -49,8 +45,7 @@ export function useFileUpload(): UseFileUploadReturn {
     }
     
     setRawMetrics(parsedMetrics);
-    setOriginalStats(calculatedStats);
-  }, [deriveEnterpriseName, setRawMetrics, setOriginalStats, setEnterpriseName]);
+  }, [deriveEnterpriseName, setRawMetrics, setEnterpriseName]);
 
   const processMetricsFile = useCallback(async (file: File) => {
     const parsedMetrics = await parseMetricsStream(file, (count) => {

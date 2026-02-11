@@ -1,13 +1,10 @@
 import { useMemo } from 'react';
-import { CopilotMetrics, MetricsStats } from '../types/metrics';
+import { CopilotMetrics } from '../types/metrics';
 import { aggregateMetrics } from '../domain/metricsAggregator';
 
-export function useMetricsProcessing(
-  rawMetrics: CopilotMetrics[],
-  originalStats: MetricsStats | null
-) {
+export function useMetricsProcessing(rawMetrics: CopilotMetrics[]) {
   return useMemo(() => {
-    if (!rawMetrics.length || !originalStats) {
+    if (!rawMetrics.length) {
       return {
         stats: null,
         userSummaries: [],
@@ -30,11 +27,6 @@ export function useMetricsProcessing(
       };
     }
 
-    const aggregated = aggregateMetrics(rawMetrics);
-
-    return {
-      ...aggregated,
-      stats: aggregated.stats
-    };
-  }, [rawMetrics, originalStats]);
+    return aggregateMetrics(rawMetrics);
+  }, [rawMetrics]);
 }

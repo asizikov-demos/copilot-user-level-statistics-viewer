@@ -40,7 +40,6 @@ export interface FilteredMetricsData {
 
 interface RawMetricsState {
   rawMetrics: CopilotMetrics[];
-  originalStats: MetricsStats | null;
   enterpriseName: string | null;
   isLoading: boolean;
   error: string | null;
@@ -48,7 +47,6 @@ interface RawMetricsState {
 
 interface RawMetricsActions {
   setRawMetrics: (metrics: CopilotMetrics[]) => void;
-  setOriginalStats: (stats: MetricsStats | null) => void;
   setEnterpriseName: (name: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -67,7 +65,6 @@ const RawMetricsContext = createContext<RawMetricsContextValue | undefined>(unde
 
 const initialRawMetricsState: RawMetricsState = {
   rawMetrics: [],
-  originalStats: null,
   enterpriseName: null,
   isLoading: false,
   error: null,
@@ -78,10 +75,6 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const setRawMetrics = useCallback((metrics: CopilotMetrics[]) => {
     setState((prev) => ({ ...prev, rawMetrics: metrics }));
-  }, []);
-
-  const setOriginalStats = useCallback((stats: MetricsStats | null) => {
-    setState((prev) => ({ ...prev, originalStats: stats }));
   }, []);
 
   const setEnterpriseName = useCallback((name: string | null) => {
@@ -104,13 +97,12 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     () => ({
       ...state,
       setRawMetrics,
-      setOriginalStats,
       setEnterpriseName,
       setIsLoading,
       setError,
       resetRawMetrics,
     }),
-    [state, setRawMetrics, setOriginalStats, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
+    [state, setRawMetrics, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
   );
 
   return (

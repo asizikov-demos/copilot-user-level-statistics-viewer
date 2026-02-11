@@ -4,8 +4,8 @@ import React from 'react';
 import { useRawMetrics } from '../MetricsContext';
 
 const AppHeader: React.FC = () => {
-  const { rawMetrics, originalStats } = useRawMetrics();
-  const hasUploadedData = rawMetrics.length > 0 || Boolean(originalStats);
+  const { rawMetrics } = useRawMetrics();
+  const hasUploadedData = rawMetrics.length > 0;
 
   return (
     <div className="text-center mb-8">
