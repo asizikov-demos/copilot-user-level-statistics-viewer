@@ -116,8 +116,8 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
           </InsightsCard>
           <InsightsCard title="Advanced Features" variant="blue">
             <p>
-              Agent Mode is an advanced feature that can drive significant value for users.
-              {agentRate > 15 ? ' High adoption suggests good value perception.' : ' Consider promoting Agent Mode benefits to increase adoption.'}
+              IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
+              {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
             </p>
           </InsightsCard>
         </div>
