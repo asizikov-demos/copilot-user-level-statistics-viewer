@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
-import { MultiFileProgress } from '../../../domain/metricsParser';
+import { MultiFileProgress } from '../../../infra/metricsFileParser';
 
 interface FileUploadAreaProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
