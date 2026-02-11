@@ -9,6 +9,7 @@ export interface FeatureAdoptionData {
   inlineModeUsers: number;
   codeReviewUsers: number;
   cliUsers: number;
+  advancedUsers: number;
 }
 
 export interface FeatureAdoptionAccumulator {
@@ -48,6 +49,7 @@ export function computeFeatureAdoptionData(
   let inlineModeUsers = 0;
   let codeReviewUsers = 0;
   let cliUsers = 0;
+  let advancedUsers = 0;
 
   const isChatUser = (features: Set<string>) =>
     features.has('chat_panel_unknown_mode') ||
@@ -71,6 +73,7 @@ export function computeFeatureAdoptionData(
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('code_review')) codeReviewUsers++;
     if (isCliUser(features)) cliUsers++;
+    if (isAgentUser(features) || isCliUser(features)) advancedUsers++;
 
     if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser(features)) {
       completionOnlyUsers++;
@@ -88,5 +91,6 @@ export function computeFeatureAdoptionData(
     inlineModeUsers,
     codeReviewUsers,
     cliUsers,
+    advancedUsers,
   };
 }

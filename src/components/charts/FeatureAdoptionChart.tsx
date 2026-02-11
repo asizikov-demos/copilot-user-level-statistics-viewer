@@ -42,7 +42,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
   const chatRate = totalUsers > 0 ? (data.chatUsers / totalUsers) * 100 : 0;
   const agentRate = totalUsers > 0 ? (data.agentModeUsers / totalUsers) * 100 : 0;
   const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
-  const advancedUsersCount = (data?.agentModeUsers || 0) + (data?.cliUsers || 0);
+  const advancedUsersCount = data?.advancedUsers || 0;
   const advancedRate = totalUsers > 0 ? (advancedUsersCount / totalUsers) * 100 : 0;
 
   const chartData = {

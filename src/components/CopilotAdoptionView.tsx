@@ -340,6 +340,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             inlineModeUsers: 0,
             codeReviewUsers: 0,
             cliUsers: 0,
+            advancedUsers: 0,
           }
         }
       />

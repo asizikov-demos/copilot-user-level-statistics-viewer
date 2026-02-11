@@ -208,6 +208,7 @@ export default function ExecutiveSummaryView({
             inlineModeUsers: 0,
             codeReviewUsers: 0,
             cliUsers: 0,
+            advancedUsers: 0,
           }
         }
       />
