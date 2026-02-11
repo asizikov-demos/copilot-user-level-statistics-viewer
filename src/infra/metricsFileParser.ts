@@ -29,8 +29,9 @@ async function processFileStream(
       buffer = lines.pop() || '';
 
       for (const line of lines) {
-        if (!line.trim()) continue;
-        const metric = parseMetricsLine(line, pool);
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+        const metric = parseMetricsLine(trimmedLine, pool);
         if (metric) {
           metrics.push(metric);
           processedCount++;
@@ -42,8 +43,12 @@ async function processFileStream(
       }
     }
 
-    if (buffer.trim()) {
-      const metric = parseMetricsLine(buffer, pool);
+    // Flush the decoder to handle any remaining multi-byte UTF-8 sequences
+    buffer += decoder.decode();
+
+    const trimmedBuffer = buffer.trim();
+    if (trimmedBuffer) {
+      const metric = parseMetricsLine(trimmedBuffer, pool);
       if (metric) {
         metrics.push(metric);
         processedCount++;
