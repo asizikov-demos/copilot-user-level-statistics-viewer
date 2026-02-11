@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { CopilotMetrics } from '../types/metrics';
-import { parseMetricsStream, parseMultipleMetricsStreams, MultiFileProgress, MultiFileResult } from '../domain/metricsParser';
+import { parseMetricsStream, parseMultipleMetricsStreams, MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
 import { calculateStats } from '../domain/calculators/metricCalculators';
 import { useRawMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
