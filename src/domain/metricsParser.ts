@@ -57,7 +57,7 @@ export function parseMetricsFile(fileContent: string): CopilotMetrics[] {
   const pool = new StringPool();
 
   for (const line of lines) {
-    const metric = parseMetricsLine(line, pool);
+    const metric = parseMetricsLine(line.trim(), pool);
     if (metric) {
       metrics.push(metric);
     }
