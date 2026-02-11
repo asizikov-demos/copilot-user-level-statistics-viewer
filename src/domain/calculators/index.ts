@@ -77,9 +77,11 @@ export {
   computeEditModeImpactData,
   computeInlineModeImpactData,
   computeAskModeImpactData,
+  computeCliImpactData,
   computeJoinedImpactData,
   calculateJoinedImpactFromMetrics,
   calculateEditModeImpactFromMetrics,
   calculateInlineModeImpactFromMetrics,
   calculateAskModeImpactFromMetrics,
+  calculateCliImpactFromMetrics,
 } from './impactCalculator';

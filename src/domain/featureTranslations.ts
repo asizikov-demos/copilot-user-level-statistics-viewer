@@ -10,6 +10,7 @@ export const featureTranslations: Record<string, string> = {
   'chat_panel_unknown_mode': 'Chat: Unknown Mode',
   'chat_inline': 'Chat: Inline',
   'agent_edit': 'Agent Edit',
+  'cli_agent': 'CLI Agent',
 };
 
 /**

@@ -8,6 +8,7 @@ export interface FeatureAdoptionData {
   editModeUsers: number;
   inlineModeUsers: number;
   codeReviewUsers: number;
+  cliUsers: number;
 }
 
 export interface FeatureAdoptionAccumulator {
@@ -46,6 +47,7 @@ export function computeFeatureAdoptionData(
   let editModeUsers = 0;
   let inlineModeUsers = 0;
   let codeReviewUsers = 0;
+  let cliUsers = 0;
 
   const isChatUser = (features: Set<string>) =>
     features.has('chat_panel_unknown_mode') ||
@@ -57,6 +59,9 @@ export function computeFeatureAdoptionData(
   const isAgentUser = (features: Set<string>) =>
     features.has('chat_panel_agent_mode') || features.has('agent_edit');
 
+  const isCliUser = (features: Set<string>) =>
+    features.has('cli_agent');
+
   for (const features of accumulator.userFeatures.values()) {
     if (features.has('code_completion')) completionUsers++;
     if (isChatUser(features)) chatUsers++;
@@ -65,8 +70,9 @@ export function computeFeatureAdoptionData(
     if (features.has('chat_panel_edit_mode')) editModeUsers++;
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('code_review')) codeReviewUsers++;
+    if (isCliUser(features)) cliUsers++;
 
-    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features)) {
+    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser(features)) {
       completionOnlyUsers++;
     }
   }
@@ -81,5 +87,6 @@ export function computeFeatureAdoptionData(
     editModeUsers,
     inlineModeUsers,
     codeReviewUsers,
+    cliUsers,
   };
 }

@@ -1,14 +1,14 @@
 import { CopilotMetrics, MetricsStats } from '../../types/metrics';
 
 export interface UserUsageStats {
-  userUsageMap: Map<number, { used_chat: boolean; used_agent: boolean }>;
+  userUsageMap: Map<number, { used_chat: boolean; used_agent: boolean; used_cli: boolean }>;
   languageEngagements: Map<string, number>;
   ideUsers: Map<string, Set<number>>;
   modelEngagements: Map<string, number>;
 }
 
 export interface StatsAccumulator {
-  userUsageMap: Map<number, { used_chat: boolean; used_agent: boolean }>;
+  userUsageMap: Map<number, { used_chat: boolean; used_agent: boolean; used_cli: boolean }>;
   languageEngagements: Map<string, number>;
   ideUsers: Map<string, Set<number>>;
   modelEngagements: Map<string, number>;
@@ -31,12 +31,14 @@ export function accumulateUserUsage(
   accumulator: StatsAccumulator,
   userId: number,
   usedChat: boolean,
-  usedAgent: boolean
+  usedAgent: boolean,
+  usedCli: boolean
 ): void {
-  const existing = accumulator.userUsageMap.get(userId) || { used_chat: false, used_agent: false };
+  const existing = accumulator.userUsageMap.get(userId) || { used_chat: false, used_agent: false, used_cli: false };
   accumulator.userUsageMap.set(userId, {
     used_chat: existing.used_chat || usedChat,
     used_agent: existing.used_agent || usedAgent,
+    used_cli: existing.used_cli || usedCli,
   });
 }
 
@@ -75,12 +77,14 @@ export function computeStats(
 ): MetricsStats {
   let chatUsersCount = 0;
   let agentUsersCount = 0;
+  let cliUsersCount = 0;
   let completionOnlyUsersCount = 0;
 
   for (const usage of accumulator.userUsageMap.values()) {
     if (usage.used_chat) chatUsersCount++;
     if (usage.used_agent) agentUsersCount++;
-    if (!usage.used_chat && !usage.used_agent) completionOnlyUsersCount++;
+    if (usage.used_cli) cliUsersCount++;
+    if (!usage.used_chat && !usage.used_agent && !usage.used_cli) completionOnlyUsersCount++;
   }
 
   const topLanguageEntry = Array.from(accumulator.languageEngagements.entries())
@@ -106,6 +110,7 @@ export function computeStats(
     uniqueUsers: accumulator.userUsageMap.size,
     chatUsers: chatUsersCount,
     agentUsers: agentUsersCount,
+    cliUsers: cliUsersCount,
     completionOnlyUsers: completionOnlyUsersCount,
     reportStartDay: accumulator.reportStartDay,
     reportEndDay: accumulator.reportEndDay,
@@ -125,6 +130,7 @@ export function calculateStatsFromMetrics(
       uniqueUsers: 0,
       chatUsers: 0,
       agentUsers: 0,
+      cliUsers: 0,
       completionOnlyUsers: 0,
       reportStartDay: '',
       reportEndDay: '',
@@ -142,7 +148,7 @@ export function calculateStatsFromMetrics(
   accumulator.reportEndDay = metrics[0].report_end_day;
 
   for (const metric of metrics) {
-    accumulateUserUsage(accumulator, metric.user_id, metric.used_chat, metric.used_agent);
+    accumulateUserUsage(accumulator, metric.user_id, metric.used_chat, metric.used_agent, metric.used_cli);
 
     for (const ideTotal of metric.totals_by_ide) {
       accumulateIdeUser(accumulator, ideTotal.ide, metric.user_id);

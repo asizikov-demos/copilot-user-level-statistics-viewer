@@ -73,12 +73,14 @@ export interface CopilotMetrics {
   }>;
   used_agent: boolean;
   used_chat: boolean;
+  used_cli: boolean;
 }
 
 export interface MetricsStats {
   uniqueUsers: number;
   chatUsers: number;
   agentUsers: number;
+  cliUsers: number;
   completionOnlyUsers: number;
   reportStartDay: string;
   reportEndDay: string;
@@ -101,4 +103,5 @@ export interface UserSummary {
   days_active: number;
   used_agent: boolean;
   used_chat: boolean;
+  used_cli: boolean;
 }
