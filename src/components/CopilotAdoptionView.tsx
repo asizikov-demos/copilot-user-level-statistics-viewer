@@ -295,6 +295,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     >
       <MetricTileGroup
         title="User Adoption Metrics"
+        columns={{ base: 1, md: 2, lg: 4 }}
         items={[
           {
             title: 'Chat Users',
@@ -309,6 +310,13 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             accent: 'violet',
             subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
             icon: <MetricTileIcon name="agent-users" />,
+          },
+          {
+            title: 'CLI Users',
+            value: stats.cliUsers,
+            accent: 'indigo',
+            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
+            icon: <MetricTileIcon name="cli-users" />,
           },
           {
             title: 'Completion Only Users',
@@ -331,6 +339,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             editModeUsers: 0,
             inlineModeUsers: 0,
             codeReviewUsers: 0,
+            cliUsers: 0,
           }
         }
       />

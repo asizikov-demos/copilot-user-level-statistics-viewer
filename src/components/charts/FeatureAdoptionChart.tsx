@@ -31,15 +31,19 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     { name: 'Chat Features', count: data?.chatUsers || 0, color: chartColors.blue.solid, description: 'Users who used any chat feature (Ask/Edit/Agent/Inline)' },
     { name: 'Ask Mode', count: data?.askModeUsers || 0, color: chartColors.purple.solid, description: 'Users who used chat ask mode' },
     { name: 'Edit Mode', count: data?.editModeUsers || 0, color: chartColors.amber.solid, description: 'Users who used chat edit mode' },
-    { name: 'Agent Mode', count: data?.agentModeUsers || 0, color: chartColors.red.solid, description: 'Users who used Agent Mode' },
+    { name: 'IDE Agent Mode', count: data?.agentModeUsers || 0, color: chartColors.red.solid, description: 'Users who used Agent Mode in the IDE' },
+    { name: 'Copilot CLI', count: data?.cliUsers || 0, color: chartColors.pink.solid, description: 'Users who used Copilot CLI' },
     { name: 'Inline Chat', count: data?.inlineModeUsers || 0, color: chartColors.violet.solid, description: 'Users who used inline chat' },
-    { name: 'Code Review', count: data?.codeReviewUsers || 0, color: chartColors.teal.solid, description: 'Users who used code review features' }
+    { name: 'Code Review', count: data?.codeReviewUsers || 0, color: chartColors.teal.solid, description: 'Users who used code review features' },
   ];
 
   const totalUsers = data?.totalUsers || 0;
   const completionRate = totalUsers > 0 ? (data.completionUsers / totalUsers) * 100 : 0;
   const chatRate = totalUsers > 0 ? (data.chatUsers / totalUsers) * 100 : 0;
   const agentRate = totalUsers > 0 ? (data.agentModeUsers / totalUsers) * 100 : 0;
+  const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
+  const advancedUsersCount = (data?.agentModeUsers || 0) + (data?.cliUsers || 0);
+  const advancedRate = totalUsers > 0 ? (advancedUsersCount / totalUsers) * 100 : 0;
 
   const chartData = {
     labels: features.map(f => f.name),
@@ -96,8 +100,9 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
       summaryStats={[
         { value: `${Math.round(completionRate)}%`, label: 'Completion Adoption', sublabel: `${data?.completionUsers || 0} users`, colorClass: 'text-green-600' },
         { value: `${Math.round(chatRate)}%`, label: 'Chat Adoption', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
-        { value: `${Math.round(agentRate)}%`, label: 'Agent Mode Adoption', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
-        { value: `${Math.round(agentRate)}%`, label: 'Advanced Users', sublabel: 'Using Agent Mode', colorClass: 'text-purple-600' },
+        { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode Adoption', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
+        { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI Adoption', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
+        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + Copilot CLI)`, colorClass: 'text-purple-600' },
       ]}
       chartHeight="h-96"
       footer={

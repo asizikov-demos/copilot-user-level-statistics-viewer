@@ -56,6 +56,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
     inlineMode: baseFeatureColors.inlineMode.solid,
     codeCompletion: baseFeatureColors.codeCompletion.solid,
     codeReview: baseFeatureColors.codeReview.solid,
+    cli: baseFeatureColors.cli.solid,
     other: baseFeatureColors.other.solid
   };
 
@@ -66,6 +67,7 @@ export default function ModelFeatureDistributionChart({ data }: ModelFeatureDist
     inlineMode: 'Inline Chat',
     codeCompletion: 'Code Completion',
     codeReview: 'Code Review',
+    cli: 'CLI',
     other: 'Other'
   };
 

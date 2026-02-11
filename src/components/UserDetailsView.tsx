@@ -7,7 +7,7 @@ import { formatIDEName } from './icons/IDEIcons';
 import IDEActivityChart from './charts/IDEActivityChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
-import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage, calculateAgentImpactData, calculateAskModeImpactData, calculateCodeCompletionImpactData } from '../domain/calculators/metricCalculators';
+import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage, calculateAgentImpactData, calculateAskModeImpactData, calculateCodeCompletionImpactData, calculateCliImpactData } from '../domain/calculators/metricCalculators';
 import { getModelMultiplier } from '../domain/modelConfig';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
@@ -57,7 +57,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     });
   };
 
-  const { totalInteractions, totalGeneration, totalAcceptance, totalStandardModelRequests, totalPremiumModelRequests, daysActive, usedAgent, usedChat } = useMemo(() => {
+  const { totalInteractions, totalGeneration, totalAcceptance, totalStandardModelRequests, totalPremiumModelRequests, daysActive, usedAgent, usedChat, usedCli } = useMemo(() => {
     let interactions = 0;
     let generation = 0;
     let acceptance = 0;
@@ -65,6 +65,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     let premiumRequests = 0;
     let agent = false;
     let chat = false;
+    let cli = false;
 
     for (const metric of userMetrics) {
       interactions += metric.user_initiated_interaction_count;
@@ -72,6 +73,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       acceptance += metric.code_acceptance_activity_count;
       agent = agent || metric.used_agent;
       chat = chat || metric.used_chat;
+      cli = cli || metric.used_cli;
 
       for (const modelFeature of metric.totals_by_model_feature) {
         const model = modelFeature.model.toLowerCase();
@@ -95,6 +97,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       daysActive: userMetrics.length,
       usedAgent: agent,
       usedChat: chat,
+      usedCli: cli,
     };
   }, [userMetrics]);
 
@@ -208,6 +211,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
   const userAgentImpactData = useMemo(() => calculateAgentImpactData(userMetrics), [userMetrics]);
   const userAskModeImpactData = useMemo(() => calculateAskModeImpactData(userMetrics), [userMetrics]);
   const userCompletionImpactData = useMemo(() => calculateCodeCompletionImpactData(userMetrics), [userMetrics]);
+  const userCliImpactData = useMemo(() => calculateCliImpactData(userMetrics), [userMetrics]);
   const ideChartData = useMemo(() => ({
     labels: ideAggregates.map(ide => formatIDEName(ide.ide)),
     datasets: [{
@@ -542,7 +546,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 2, md: 4, lg: 8 }}
+        columns={{ base: 2, md: 6 }}
         gapClassName="gap-4"
         items={summaryCards}
       />
@@ -589,6 +593,12 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
               description="Daily lines of code added and deleted when developers accept Copilot code completions."
               emptyStateMessage="No code completion impact data available."
             />
+            <ModeImpactChart
+              data={userCliImpactData}
+              title="CLI Impact"
+              description="Daily lines of code added and deleted through Copilot CLI sessions."
+              emptyStateMessage="No CLI impact data available."
+            />
           </div>
         )}
       </div>
@@ -598,6 +608,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       <UserSummaryChart
         usedChat={usedChat}
         usedAgent={usedAgent}
+        usedCli={usedCli}
         ideChartData={ideAggregates.length > 0 ? ideChartData : undefined}
         languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
         modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
