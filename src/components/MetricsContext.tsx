@@ -1,42 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import {
-  DailyEngagementData,
-  DailyChatUsersData,
-  DailyChatRequestsData,
-  LanguageStats,
-  DailyModelUsageData,
-  FeatureAdoptionData,
-  DailyPRUAnalysisData,
-  AgentModeHeatmapData,
-  ModelFeatureDistributionData,
-  AgentImpactData,
-  CodeCompletionImpactData,
-  ModeImpactData
-} from '../domain/calculators/metricCalculators';
-import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
-
-export interface FilteredMetricsData {
-  stats: MetricsStats | null;
-  userSummaries: UserSummary[];
-  engagementData: DailyEngagementData[];
-  chatUsersData: DailyChatUsersData[];
-  chatRequestsData: DailyChatRequestsData[];
-  languageStats: LanguageStats[];
-  modelUsageData: DailyModelUsageData[];
-  featureAdoptionData: FeatureAdoptionData | null;
-  pruAnalysisData: DailyPRUAnalysisData[];
-  agentModeHeatmapData: AgentModeHeatmapData[];
-  modelFeatureDistributionData: ModelFeatureDistributionData[];
-  agentImpactData: AgentImpactData[];
-  codeCompletionImpactData: CodeCompletionImpactData[];
-  editModeImpactData: ModeImpactData[];
-  inlineModeImpactData: ModeImpactData[];
-  askModeImpactData: ModeImpactData[];
-  cliImpactData: ModeImpactData[];
-  joinedImpactData: ModeImpactData[];
-}
+import { CopilotMetrics } from '../types/metrics';
 
 interface RawMetricsState {
   rawMetrics: CopilotMetrics[];
@@ -53,14 +18,8 @@ interface RawMetricsActions {
   resetRawMetrics: () => void;
 }
 
-interface FilteredMetricsContextValue {
-  filteredData: FilteredMetricsData | null;
-  setFilteredData: (data: FilteredMetricsData | null) => void;
-}
-
 interface RawMetricsContextValue extends RawMetricsState, RawMetricsActions {}
 
-const FilteredMetricsContext = createContext<FilteredMetricsContextValue | undefined>(undefined);
 const RawMetricsContext = createContext<RawMetricsContextValue | undefined>(undefined);
 
 const initialRawMetricsState: RawMetricsState = {
@@ -112,38 +71,7 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-export const FilteredMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [filteredData, setFilteredData] = useState<FilteredMetricsData | null>(null);
-
-  const value = useMemo<FilteredMetricsContextValue>(
-    () => ({ filteredData, setFilteredData }),
-    [filteredData]
-  );
-
-  return (
-    <FilteredMetricsContext.Provider value={value}>
-      {children}
-    </FilteredMetricsContext.Provider>
-  );
-};
-
-export const MetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <RawMetricsProvider>
-      <FilteredMetricsProvider>
-        {children}
-      </FilteredMetricsProvider>
-    </RawMetricsProvider>
-  );
-};
-
-export function useMetricsData(): FilteredMetricsContextValue {
-  const ctx = useContext(FilteredMetricsContext);
-  if (!ctx) {
-    throw new Error('useMetricsData must be used within a FilteredMetricsProvider');
-  }
-  return ctx;
-}
+export const MetricsProvider = RawMetricsProvider;
 
 export function useRawMetrics(): RawMetricsContextValue {
   const ctx = useContext(RawMetricsContext);

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CopilotMetrics } from '../../types/metrics';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
-import { useMetricsData, useRawMetrics } from '../MetricsContext';
+import { useRawMetrics } from '../MetricsContext';
 import { useMetricsProcessing } from '../../hooks/useMetricsProcessing';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { FileUploadArea } from '../features/file-upload';
@@ -20,7 +20,6 @@ import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
 
 const ViewRouter: React.FC = () => {
-  const { setFilteredData } = useMetricsData();
   const { 
     rawMetrics, enterpriseName,
     resetRawMetrics
@@ -55,12 +54,6 @@ const ViewRouter: React.FC = () => {
     cliImpactData,
     joinedImpactData
   } = filteredData;
-
-  useEffect(() => {
-    if (stats) {
-      setFilteredData(filteredData);
-    }
-  }, [filteredData, stats, setFilteredData]);
 
   const resetData = () => {
     resetRawMetrics();

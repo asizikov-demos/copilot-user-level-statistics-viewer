@@ -223,7 +223,6 @@ src/
 
 	state/                           // Centralized state management
 		NavigationContext.tsx        // View navigation state
-		FilterContext.tsx            // Filter state (date range, language)
 
 	types/
 		metrics.ts                   // Core metrics TypeScript types
@@ -234,37 +233,27 @@ src/
 		index.ts                     // Barrel export
 
 	utils/
-		metricsParser.ts             // Parsing JSON/NDJSON input
-		metricsAggregator.ts         // Orchestrates calculators for aggregation
-		metricCalculators.ts         // Core calculation functions
-		dateFilters.ts               // Date range filtering helpers
-		featureTranslations.ts       // Human-readable labels for features
 		formatters.ts                // Number and date formatting utilities
-		ideIcons.tsx                 // IDE icon mapping for visualization
+		basePath.ts                  // Base path helper
 ```
 
 ### 3.2. Context and State Management
 
 State is managed on the client using React hooks and multiple context providers:
 
-- **`src/components/MetricsContext.tsx`** defines `MetricsProvider` with two hooks:
-	- `useMetricsData` – access to filtered metrics data
-	- `useRawMetrics` – access to raw metrics, original stats, and enterprise name
+- **`src/components/MetricsContext.tsx`** defines `MetricsProvider` with one hook:
+	- `useRawMetrics` – access to raw metrics, enterprise name, and loading/error state
 - **`src/state/NavigationContext.tsx`** manages view navigation:
 	- Current view mode (`ViewMode`)
 	- Selected user and model state
 	- Navigation actions (`navigateTo`, `selectUser`, `selectModel`, etc.)
-- **`src/state/FilterContext.tsx`** manages filter state:
-	- Date range filter
-	- Language filter (remove unknown languages)
-	- Filter actions
 
 The main `page.tsx` is now slim and delegates to:
 - `ViewRouter` – handles view switching based on `currentView`
 - `OverviewDashboard` – renders the main dashboard
 - `FileUploadArea` – handles file upload UI
 
-The `useMetricsProcessing` hook computes filtered and aggregated data whenever raw data or filters change, and the result is pushed to the global context.
+The `useMetricsProcessing` hook computes aggregated data whenever raw metrics change, and the result is used directly by `ViewRouter`.
 
 ### 3.3. Computation Layer
 
@@ -282,15 +271,13 @@ Computation is organized into focused modules:
 - `featureAdoptionCalculator.ts` – feature adoption funnel
 - `impactCalculator.ts` – LOC impact by feature
 
-**Aggregator** (`src/utils/metricsAggregator.ts`):
-- `aggregateMetrics` – orchestrates all calculators to produce `FilteredMetricsData`
+**Aggregator** (`src/domain/metricsAggregator.ts`):
+- `aggregateMetrics` – orchestrates all calculators to produce `AggregatedMetrics`
 
-**Metric Calculators** (`src/utils/metricCalculators.ts`):
+**Metric Calculators** (`src/domain/calculators/`):
 - Additional calculation functions including `calculateStats`, `calculateUserSummaries`, `calculateDailyEngagement`, `calculateDailyChatUsers`, `calculateDailyChatRequests`, `calculateLanguageStats`
 - PRU and model-related analytics: `calculateDailyModelUsage`, `calculateFeatureAdoption`, `calculateDailyPRUAnalysis`, `calculateAgentModeHeatmap`, `calculateModelFeatureDistribution`
 - LOC impact time series: `calculateAgentImpactData`, `calculateCodeCompletionImpactData`, `calculateEditModeImpactData`, `calculateInlineModeImpactData`, `calculateJoinedImpactData`
-
-Date range filtering is implemented in `src/utils/dateFilters.ts` and applied **after** language filtering.
 
 ### 3.4. Domain Model Configuration
 
@@ -319,21 +306,17 @@ flowchart LR
   A[User uploads JSON or NDJSON metrics file] --> B[useFileUpload hook]
 
   B --> C[parseMetricsFile in metricsParser.ts]
-  C --> D[calculateStats to get originalStats]
 
-  D --> E[Store rawMetrics and originalStats in MetricsContext]
+  C --> D[Store rawMetrics in MetricsContext]
 
-  E --> F[useMetricsProcessing hook computes filteredData]
+  D --> E[useMetricsProcessing hook computes aggregated data]
 
-  F --> G[setFilteredData via MetricsContext]
+  E --> F[ViewRouter renders appropriate view]
 
-  G --> H[ViewRouter renders appropriate view]
-
-  H --> I[Chart components using Chart.js]
+  F --> G[Chart components using Chart.js]
 
   subgraph Contexts
-    NC[NavigationContext] --> H
-    FC[FilterContext] --> F
+    NC[NavigationContext] --> F
   end
 ```
 
@@ -354,40 +337,25 @@ flowchart LR
 	 - Casts remaining records to `CopilotMetrics[]` and returns them.
 
 4. `handleFileUpload` then:
-	 - Calls `calculateStats(parsedMetrics)` to compute `originalStats`.
 	 - Derives an `enterpriseName` from `user_login` suffix or `enterprise_id`.
-	 - Stores `rawMetrics` and `originalStats` in `MetricsContext`.
+	 - Stores `rawMetrics` in `MetricsContext`.
 
-### 4.3. Filtering and Derived Data
+### 4.3. Aggregation
 
-Once `rawMetrics` and `originalStats` exist, the `useMetricsProcessing` hook computes `filteredData` every time relevant inputs change:
+Once `rawMetrics` exist, the `useMetricsProcessing` hook computes aggregated data via `aggregateMetrics(rawMetrics)`:
 
-1. **Language filtering** (optional):
-	 - If `removeUnknownLanguages` is `true`, `filterUnknownLanguages(rawMetrics)` is applied.
-	 - This strips entries where language is `"unknown"` or empty in `totals_by_language_feature` and `totals_by_language_model`.
+- `computeStats` – summary stats (unique users, top language/IDE/model, date range).
+- `computeUserSummaries` – user-level totals and activity flags.
+- `computeEngagementData`, `computeChatUsersData`, `computeChatRequestsData` – time series for engagement and chat usage.
+- `computeLanguageStats` – aggregates per language.
+- `computeDailyModelUsageData` – PRU vs standard vs unknown by day.
+- `computeFeatureAdoptionData` – user-level adoption across completion/chat modes.
+- `computeDailyPRUAnalysisData` – PRU requests, PRU percentage, total PRUs, service value, and per-model breakdown per day.
+- `computeAgentModeHeatmapData` – agent mode requests, unique users, intensity (0–5), and service value.
+- `computeModelFeatureDistributionData` – model-level interactions by feature category, PRUs and service value.
+- `computeAgentImpactData`, `computeCodeCompletionImpactData`, `computeEditModeImpactData`, `computeInlineModeImpactData`, `computeJoinedImpactData` – mode-specific LOC impact series.
 
-2. **Date range filtering**:
-	 - `filterMetricsByDateRange` (in `dateFilters.ts`) receives the processed metrics, the selected `DateRangeFilter`, and `originalStats.reportEndDay`.
-	 - Based on the filter (`all`, `last7days`, `last14days`, `last28days`), a moving window ending at `reportEndDay` is computed, and only records whose `day` falls within that range are kept.
-
-3. **Aggregation and analytics** on the filtered slice (via `metricsAggregator.ts` and individual calculators):
-	 - `calculateStats` – recomputed for the filtered metrics.
-	 - `calculateUserSummaries` – user-level totals and activity flags.
-	 - `calculateDailyEngagement`, `calculateDailyChatUsers`, `calculateDailyChatRequests` – time series for engagement and chat usage.
-	 - `calculateLanguageStats` – aggregates per language.
-	 - `calculateDailyModelUsage` – PRU vs standard vs unknown by day.
-	 - `calculateFeatureAdoption` – user-level adoption across completion/chat modes.
-	 - `calculateDailyPRUAnalysis` – PRU requests, PRU percentage, total PRUs, service value, and per-model breakdown per day.
-	 - `calculateAgentModeHeatmap` – agent mode requests, unique users, intensity (0–5), and service value.
-	 - `calculateModelFeatureDistribution` – model-level interactions by feature category, PRUs and service value.
-	 - `calculateAgentImpactData`, `calculateCodeCompletionImpactData`, `calculateEditModeImpactData`, `calculateInlineModeImpactData`, `calculateJoinedImpactData` – mode-specific LOC impact series.
-
-4. **Adjusted stats date range**:
-	 - `getFilteredDateRange` recomputes `reportStartDay`/`reportEndDay` according to the active date filter, and `stats` is updated to reflect the filtered time window.
-
-5. The resulting `FilteredMetricsData` object is:
-	 - Published to the global `MetricsContext` using `setFilteredData(filteredData)` inside a `useEffect` (only when `stats` is non-null).
-	 - Consumed by `ViewRouter` and individual view components.
+The resulting `AggregatedMetrics` object is consumed directly by `ViewRouter` and individual view components.
 
 ### 4.4. Views and Navigation
 
@@ -397,7 +365,6 @@ Navigation is managed by `NavigationContext` which maintains `currentView` state
 	- File upload prompt (when no data yet)
 	- Metric tiles (total records, unique users, top language/IDE/model, navigation tiles for Impact/PRU/Adoption)
 	- Time series charts (Engagement, Chat Users, Chat Requests)
-	- Side filter panel (date range, language filter)
 
 - `users` – `UniqueUsersView` listing all users (`UserSummary`) and allowing click-through.
 - `userDetails` – `UserDetailsView` for a selected user (passed `CopilotMetrics[]` for that user).
@@ -435,16 +402,14 @@ flowchart TB
 	end
 
 	subgraph StateAndContext
-		MC[MetricsContext filteredData]
+		MC[MetricsContext rawMetrics]
 		NC[NavigationContext currentView]
-		FC[FilterContext dateRange and filters]
 	end
 
 	subgraph ComputationLayer
 		MP[metricsParser.ts parse]
 		MA[metricsAggregator.ts aggregate]
 		CALC[domain/calculators/ split logic]
-		DF[dateFilters.ts date helpers]
 		MConf[modelConfig.ts model config]
 	end
 
@@ -480,11 +445,9 @@ flowchart TB
 	UMP --> MA
 	MA --> CALC
 	CALC --> MConf
-	UMP --> DF
 
 	MC --> VR
 	NC --> VR
-	FC --> UMP
 ```
 
 ---
@@ -494,7 +457,7 @@ flowchart TB
 - The app is a **client-side Next.js dashboard** for **GitHub Copilot User Level Metrics**.
 - Data is provided as newline-delimited JSON or JSON array exports from GitHub; only the **new LOC schema** is supported.
 - All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsParser.ts`**, **`metricsAggregator.ts`**, **`domain/calculators/`**, and **`modelConfig.ts`**.
-- State is managed through multiple React contexts: **`MetricsContext`** for data, **`NavigationContext`** for view routing, and **`FilterContext`** for filters.
+- State is managed through React contexts: **`MetricsContext`** for data and **`NavigationContext`** for view routing.
 - Reusable hooks (`useFileUpload`, `useMetricsProcessing`, `usePluginVersions`, `useSortableTable`, `useExpandableList`) encapsulate common logic.
 - The UI is organized into multiple views that share the same filtered dataset, providing different perspectives on the same underlying metrics.
 - Type safety is enhanced through strict event handler types (`events.ts`), discriminated unions for view props (`navigation.ts`), and branded types for IDs (`branded.ts`).
