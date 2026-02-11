@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
+    "dev": "npm run build:worker && next dev --turbopack",
+    "build": "npm run build:worker -- --production && next build",
+    "build:worker": "node scripts/build-worker.mjs",
     "start": "next start",
     "lint": "eslint .",
     "update:plugins": "node --experimental-strip-types data-utils/update-plugin-versions.ts"
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
+    "esbuild": "^0.27.3",
     "eslint": "^10.0.0",
     "eslint-config-next": "^16.1.6",
     "playwright": "^1.58.2",
