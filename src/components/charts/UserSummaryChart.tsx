@@ -10,6 +10,7 @@ registerChartJS();
 interface UserSummaryChartProps {
   usedChat: boolean;
   usedAgent: boolean;
+  usedCli: boolean;
   ideChartData?: ChartData<'pie'>;
   languageChartData?: ChartData<'pie'>;
   modelChartData?: ChartData<'pie'>;
@@ -23,6 +24,7 @@ interface UserSummaryChartProps {
 export default function UserSummaryChart({
   usedChat,
   usedAgent,
+  usedCli,
   ideChartData,
   languageChartData,
   modelChartData,
@@ -44,7 +46,12 @@ export default function UserSummaryChart({
               Agent
             </span>
           )}
-          {!usedChat && !usedAgent && (
+          {usedCli && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-800">
+              CLI
+            </span>
+          )}
+          {!usedChat && !usedAgent && !usedCli && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
               Completion Only
             </span>

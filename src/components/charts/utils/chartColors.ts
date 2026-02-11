@@ -69,6 +69,7 @@ export const featureColors = {
   inlineMode: chartColors.violet,
   codeCompletion: chartColors.green,
   codeReview: chartColors.teal,
+  cli: chartColors.pink,
   other: chartColors.gray,
 } as const;
 

@@ -37,6 +37,7 @@ function validateAndParseLine(line: string, pool?: StringPool): CopilotMetrics |
 
     // We rely on upstream schema conformity; at runtime we only soft-validated key fields
     const metric = parsedRaw as unknown as CopilotMetrics;
+    metric.used_cli = metric.used_cli ?? false;
     
     // Apply string interning if pool is provided
     if (pool) {

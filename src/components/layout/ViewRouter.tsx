@@ -55,6 +55,7 @@ const ViewRouter: React.FC = () => {
     editModeImpactData,
     inlineModeImpactData,
     askModeImpactData,
+    cliImpactData,
     joinedImpactData
   } = filteredData;
 
@@ -127,6 +128,7 @@ const ViewRouter: React.FC = () => {
           editModeImpactData={editModeImpactData}
           inlineModeImpactData={inlineModeImpactData}
           askModeImpactData={askModeImpactData}
+          cliImpactData={cliImpactData}
           joinedImpactData={joinedImpactData}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />

@@ -52,6 +52,7 @@ import {
   computeEditModeImpactData,
   computeInlineModeImpactData,
   computeAskModeImpactData,
+  computeCliImpactData,
   computeJoinedImpactData,
 } from './calculators';
 
@@ -72,6 +73,7 @@ export interface AggregatedMetrics {
   editModeImpactData: ModeImpactData[];
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
+  cliImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
 
@@ -108,6 +110,7 @@ function accumulateUserSummary(
       days_active: 0,
       used_agent: false,
       used_chat: false,
+      used_cli: false,
     });
     accumulator.userActiveDays.set(userId, new Set());
   }
@@ -122,6 +125,7 @@ function accumulateUserSummary(
   userSummary.total_loc_suggested_to_delete += metric.loc_suggested_to_delete_sum;
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
+  userSummary.used_cli = userSummary.used_cli || metric.used_cli;
   accumulator.userActiveDays.get(userId)!.add(date);
 }
 
@@ -161,7 +165,7 @@ export function aggregateMetrics(
 
     accumulateUserSummary(userSummaryAccumulator, metric);
 
-    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent);
+    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli);
 
     accumulateEngagement(engagementAccumulator, date, userId);
 
@@ -256,6 +260,7 @@ export function aggregateMetrics(
     editModeImpactData: computeEditModeImpactData(impactAccumulator),
     inlineModeImpactData: computeInlineModeImpactData(impactAccumulator),
     askModeImpactData: computeAskModeImpactData(impactAccumulator),
+    cliImpactData: computeCliImpactData(impactAccumulator),
     joinedImpactData: computeJoinedImpactData(impactAccumulator),
   };
 }

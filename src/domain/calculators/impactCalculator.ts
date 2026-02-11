@@ -19,6 +19,7 @@ export interface ImpactAccumulator {
   dailyEditModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyInlineModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyAskModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
+  dailyCliImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyJoinedImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   allUniqueUsers: Set<number>;
 }
@@ -30,6 +31,7 @@ const JOINED_FEATURES = [
   'chat_inline',
   'chat_panel_agent_mode',
   'agent_edit',
+  'cli_agent',
 ];
 
 export function createImpactAccumulator(): ImpactAccumulator {
@@ -39,6 +41,7 @@ export function createImpactAccumulator(): ImpactAccumulator {
     dailyEditModeImpact: new Map(),
     dailyInlineModeImpact: new Map(),
     dailyAskModeImpact: new Map(),
+    dailyCliImpact: new Map(),
     dailyJoinedImpact: new Map(),
     allUniqueUsers: new Set(),
   };
@@ -73,6 +76,7 @@ export function ensureImpactDates(accumulator: ImpactAccumulator, date: string):
   ensureImpactDate(accumulator.dailyEditModeImpact, date);
   ensureImpactDate(accumulator.dailyInlineModeImpact, date);
   ensureImpactDate(accumulator.dailyAskModeImpact, date);
+  ensureImpactDate(accumulator.dailyCliImpact, date);
   ensureImpactDate(accumulator.dailyJoinedImpact, date);
 }
 
@@ -149,6 +153,16 @@ export function accumulateFeatureImpacts(
       );
     }
 
+    if (feature === 'cli_agent' && hasLoc) {
+      accumulateToMap(
+        accumulator.dailyCliImpact,
+        date,
+        userId,
+        locAdded,
+        locDeleted
+      );
+    }
+
     if (JOINED_FEATURES.includes(feature) && hasLoc) {
       joinedLocAdded += locAdded;
       joinedLocDeleted += locDeleted;
@@ -215,6 +229,10 @@ export function computeAskModeImpactData(accumulator: ImpactAccumulator): ModeIm
   return formatImpactMap(accumulator.dailyAskModeImpact, accumulator.allUniqueUsers.size);
 }
 
+export function computeCliImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
+  return formatImpactMap(accumulator.dailyCliImpact, accumulator.allUniqueUsers.size);
+}
+
 export function computeJoinedImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
   return formatImpactMap(accumulator.dailyJoinedImpact, accumulator.allUniqueUsers.size);
 }
@@ -268,4 +286,9 @@ export function calculateAgentImpactFromMetrics(metrics: CopilotMetrics[]): Agen
 export function calculateCodeCompletionImpactFromMetrics(metrics: CopilotMetrics[]): CodeCompletionImpactData[] {
   const accumulator = processMetricsForImpact(metrics);
   return computeCodeCompletionImpactData(accumulator);
+}
+
+export function calculateCliImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeCliImpactData(accumulator);
 }

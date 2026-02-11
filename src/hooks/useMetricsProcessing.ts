@@ -25,6 +25,7 @@ export function useMetricsProcessing(
         editModeImpactData: [],
         inlineModeImpactData: [],
         askModeImpactData: [],
+        cliImpactData: [],
         joinedImpactData: []
       };
     }

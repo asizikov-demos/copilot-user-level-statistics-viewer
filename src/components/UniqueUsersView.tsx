@@ -130,7 +130,12 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
               Agent
             </span>
           )}
-          {!user.used_chat && !user.used_agent && (
+          {user.used_cli && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+              CLI
+            </span>
+          )}
+          {!user.used_chat && !user.used_agent && !user.used_cli && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Completion Only
             </span>
@@ -144,7 +149,8 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
   const totalAcceptance = users.reduce((sum, user) => sum + user.total_code_acceptance_activities, 0);
   const chatUsers = users.filter(user => user.used_chat).length;
   const agentUsers = users.filter(user => user.used_agent).length;
-  const completionOnlyUsers = users.filter(user => !user.used_chat && !user.used_agent).length;
+  const cliUsers = users.filter(user => user.used_cli).length;
+  const completionOnlyUsers = users.filter(user => !user.used_chat && !user.used_agent && !user.used_cli).length;
 
   const summaryCards = [
     {
@@ -178,6 +184,11 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
       accent: 'indigo' as const,
     },
     {
+      value: cliUsers,
+      label: 'CLI Users',
+      accent: 'rose' as const,
+    },
+    {
       value: completionOnlyUsers,
       label: 'Completion Only Users',
       accent: 'amber' as const,
@@ -195,7 +206,7 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 2, md: 3, lg: 7 }}
+        columns={{ base: 2, md: 4 }}
         gapClassName="gap-4"
         items={summaryCards}
       />

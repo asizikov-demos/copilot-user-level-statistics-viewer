@@ -76,8 +76,10 @@ export default function ExecutiveSummaryView({
   const chatUsers = featureAdoptionData?.chatUsers ?? 0;
   const agentModeUsers = featureAdoptionData?.agentModeUsers ?? 0;
   const completionOnlyUsers = featureAdoptionData?.completionOnlyUsers ?? 0;
+  const cliUsers = featureAdoptionData?.cliUsers ?? 0;
   const chatShare = totalUsers > 0 ? (chatUsers / totalUsers) * 100 : 0;
   const agentModeShare = totalUsers > 0 ? (agentModeUsers / totalUsers) * 100 : 0;
+  const cliShare = totalUsers > 0 ? (cliUsers / totalUsers) * 100 : 0;
   const completionOnlyShare = totalUsers > 0 ? (completionOnlyUsers / totalUsers) * 100 : 0;
 
   return (
@@ -173,6 +175,15 @@ export default function ExecutiveSummaryView({
             </dd>
           </div>
           <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
+            <dt className="font-medium whitespace-nowrap">CLI Users:</dt>
+            <dd className="min-w-0">
+              <span className="tabular-nums font-semibold">{cliUsers.toLocaleString()}</span>
+              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
+                ({formatPercent(cliShare)} of total) — CLI at least once.
+              </span>
+            </dd>
+          </div>
+          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
             <dt className="font-medium whitespace-nowrap">Completion only users:</dt>
             <dd className="min-w-0">
               <span className="tabular-nums font-semibold">{completionOnlyUsers.toLocaleString()}</span>
@@ -196,6 +207,8 @@ export default function ExecutiveSummaryView({
             editModeUsers: 0,
             inlineModeUsers: 0,
             codeReviewUsers: 0,
+            cliUsers: 0,
+            advancedUsers: 0,
           }
         }
       />
