@@ -33,7 +33,7 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(progress);
       }
     });
-    const { result, enterpriseName, recordCount, errors } = response;
+    const { result, enterpriseName, recordCount, errors = [] } = response;
     if (requestIdRef.current !== requestId) return;
     if (recordCount === 0) {
       throw new Error('No metrics found in the uploaded files');
