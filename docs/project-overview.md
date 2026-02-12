@@ -38,7 +38,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 **Raw metrics never leave the worker.** The `parseAndAggregate` flow parses files and aggregates them into a compact `AggregatedMetrics` object entirely within the worker. Only this pre-aggregated result is transferred to the main thread. This significantly reduces memory footprint for large datasets.
 
 **Two React contexts for state:**
-- `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error state, and data actions
+- `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
 **All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The `AggregatedMetrics` type (see `src/types/aggregatedMetrics.ts`) is the sole data contract between the worker and the UI.
@@ -70,7 +70,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 flowchart LR
   A[User uploads .json/.ndjson file] --> B[useFileUpload hook]
   B -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
-  W -->|parseAndAggregateResult| C[MetricsContext stores AggregatedMetrics]
+  W -->|parseAndAggregateResult| C[MetricsContext stores AggregatedMetrics + warnings]
   C --> D[ViewRouter renders current view]
   D --> E[Chart components]
 ```
@@ -80,7 +80,7 @@ flowchart LR
 1. `useFileUpload` validates file extension and sends files to the worker via `parseAndAggregateInWorker()`
 2. The worker streams each file using `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
 3. Records using deprecated LOC fields or missing required fields are skipped
-4. The worker runs `aggregateMetrics()` on the parsed data and returns only the `AggregatedMetrics` result, enterprise name, and record count
+4. The worker runs `aggregateMetrics()` on the parsed data and returns the `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur)
 
 ### 4.2. Aggregation
 
