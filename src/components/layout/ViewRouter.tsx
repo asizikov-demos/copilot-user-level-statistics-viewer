@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
@@ -29,6 +29,10 @@ const ViewRouter: React.FC = () => {
   } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
 
+  useEffect(() => {
+    return () => { terminateWorker(); };
+  }, []);
+
   const resetData = () => {
     terminateWorker();
     resetMetrics();
@@ -39,19 +43,7 @@ const ViewRouter: React.FC = () => {
     selectUser({ login: userLogin, id: userId });
   };
 
-  if (!hasData) {
-    return (
-      <FileUploadArea
-        onFileUpload={handleFileUpload}
-        onSampleLoad={handleSampleLoad}
-        isLoading={isLoading}
-        error={error}
-        uploadProgress={uploadProgress}
-      />
-    );
-  }
-
-  if (error) {
+  if (error && hasData) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-md">
@@ -65,6 +57,18 @@ const ViewRouter: React.FC = () => {
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <FileUploadArea
+        onFileUpload={handleFileUpload}
+        onSampleLoad={handleSampleLoad}
+        isLoading={isLoading}
+        error={error}
+        uploadProgress={uploadProgress}
+      />
     );
   }
 
