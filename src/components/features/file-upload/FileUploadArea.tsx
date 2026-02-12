@@ -74,7 +74,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".json,.ndjson"
+            accept=".ndjson"
             multiple
             onChange={onFileUpload}
             className="hidden"
@@ -100,7 +100,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             <span className="text-sm font-medium text-gray-700">
               Click to upload or drag and drop
             </span>
-            <span className="text-xs text-gray-500">Accepted: .json, .ndjson (multiple files supported)</span>
+            <span className="text-xs text-gray-500">Accepted: .ndjson (multiple files supported)</span>
           </label>
         </div>
         <div className="mt-4 text-center">

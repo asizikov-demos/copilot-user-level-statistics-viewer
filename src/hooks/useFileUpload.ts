@@ -65,13 +65,13 @@ export function useFileUpload(): UseFileUploadReturn {
     
     for (const file of files) {
       const lowerName = file.name.toLowerCase();
-      if (!lowerName.endsWith('.json') && !lowerName.endsWith('.ndjson')) {
+      if (!lowerName.endsWith('.ndjson')) {
         ++requestIdRef.current;
         terminateWorker();
         setIsLoading(false);
         setUploadProgress(null);
         setWarning(null);
-        setError(`Unsupported file type: ${file.name}. Please upload .json or .ndjson files.`);
+        setError(`Unsupported file type: ${file.name}. Please upload .ndjson files.`);
         return;
       }
     }

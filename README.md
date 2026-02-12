@@ -1,6 +1,6 @@
 # GitHub Copilot Usage Metrics Viewer
 
-Visualize GitHub Copilot usage metrics from your organization. Upload metrics JSON/NDJSON files to analyze user engagement, feature usage, and adoption patterns.
+Visualize GitHub Copilot usage metrics from your organization. Upload metrics NDJSON files to analyze user engagement, feature usage, and adoption patterns.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.8-black?logo=next.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)
@@ -8,7 +8,7 @@ Visualize GitHub Copilot usage metrics from your organization. Upload metrics JS
 
 ## Features
 
-- Upload and parse GitHub Copilot metrics JSON/NDJSON files
+- Upload and parse GitHub Copilot metrics NDJSON files
 - View user breakdowns: unique users, chat users, agent users, completion-only users
 - Interactive charts (Chart.js) for usage patterns
 - Drill down into individual user activity
@@ -73,7 +73,7 @@ npm run lint   # Run ESLint
 
 ## Data Format
 
-The application expects GitHub Copilot metrics JSON files:
+The application expects GitHub Copilot metrics NDJSON files:
 
 ```typescript
 interface CopilotMetrics {

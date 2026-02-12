@@ -6,7 +6,7 @@ Project overview: purpose, key design decisions, and data flow.
 
 ## 1. Purpose
 
-A **client-side single-page analytics dashboard** for exploring **GitHub Copilot user-level metrics**. Designed for engineering leaders and admins who receive Copilot usage exports (JSON / NDJSON).
+A **client-side single-page analytics dashboard** for exploring **GitHub Copilot user-level metrics**. Designed for engineering leaders and admins who receive Copilot usage exports (NDJSON).
 
 The app runs entirely in the browser — uploaded metrics files are parsed client-side and never sent to a backend.
 
@@ -16,7 +16,7 @@ Key analysis dimensions: **user**, **IDE**, **language**, **feature**, **model**
 
 ## 2. Data Format
 
-The input is a GitHub Copilot **User Level Metrics** export in `.ndjson` (newline-delimited JSON) or plain JSON array form. Each record is modeled by the `CopilotMetrics` type in `src/types/metrics.ts`.
+The input is a GitHub Copilot **User Level Metrics** export in `.ndjson` (newline-delimited JSON) format. Each record is modeled by the `CopilotMetrics` type in `src/types/metrics.ts`.
 
 Key facts about the input format:
 - Each record represents one user's activity for one day
@@ -68,7 +68,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ```mermaid
 flowchart LR
-  A[User uploads .json/.ndjson file] --> B[useFileUpload hook]
+  A[User uploads .ndjson file] --> B[useFileUpload hook]
   B -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
   W -->|parseAndAggregateResult| C[MetricsContext stores AggregatedMetrics + warnings]
   C --> D[ViewRouter renders current view]

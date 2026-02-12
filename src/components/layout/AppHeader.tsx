@@ -28,7 +28,7 @@ const AppHeader: React.FC = () => {
 
       {!hasData && (
         <p className="text-gray-600">
-          Upload your GitHub Copilot User Level metrics JSON / NDJSON file (.json or .ndjson) to view usage statistics
+          Upload your GitHub Copilot User Level metrics NDJSON file (.ndjson) to view usage statistics
         </p>
       )}
     </div>
