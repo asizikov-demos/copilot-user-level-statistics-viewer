@@ -21,7 +21,7 @@ const HowToGetData: React.FC = () => {
         </div>
         <div className="flex items-start">
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs mr-3 flex-shrink-0 mt-0.5">4</span>
-          <p>Download the <strong>User Level Metrics</strong> file (JSON or NDJSON format)</p>
+          <p>Download the <strong>User Level Metrics</strong> file (NDJSON format)</p>
         </div>
         <div className="mt-4 pt-4 border-t border-gray-200">
           <a 
