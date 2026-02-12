@@ -25,6 +25,7 @@ export function useFileUpload(): UseFileUploadReturn {
     setIsLoading,
     setError,
     setWarning,
+    resetMetrics,
   } = useMetrics();
 
   const processFiles = useCallback(async (files: File[], requestId: number) => {
@@ -78,9 +79,8 @@ export function useFileUpload(): UseFileUploadReturn {
 
     const requestId = ++requestIdRef.current;
     terminateWorker();
+    resetMetrics();
     setIsLoading(true);
-    setError(null);
-    setWarning(null);
     setUploadProgress(null);
 
     try {
@@ -95,14 +95,13 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, setIsLoading, setError, setWarning, setUploadProgress]);
+  }, [processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
 
   const handleSampleLoad = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     terminateWorker();
+    resetMetrics();
     setIsLoading(true);
-    setError(null);
-    setWarning(null);
     setUploadProgress(null);
 
     try {
@@ -127,7 +126,7 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, setIsLoading, setError, setWarning, setUploadProgress]);
+  }, [processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
 
   return {
     handleFileUpload,
