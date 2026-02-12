@@ -1,6 +1,6 @@
 'use client';
 
-import { UserSummary, CopilotMetrics } from '../types/metrics';
+import { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
@@ -9,14 +9,13 @@ import type { VoidCallback } from '../types/events';
 
 interface UniqueUsersViewProps {
   users: UserSummary[];
-  rawMetrics: CopilotMetrics[];
   onBack: VoidCallback;
-  onUserClick: (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => void;
+  onUserClick: (userLogin: string, userId: number) => void;
 }
 
 type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_code_acceptance_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
 
-export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick }: UniqueUsersViewProps) {
+export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,
@@ -25,8 +24,7 @@ export default function UniqueUsersView({ users, rawMetrics, onBack, onUserClick
   );
 
   const handleUserClick = (user: UserSummary) => {
-    const userMetrics = rawMetrics.filter(metric => metric.user_id === user.user_id);
-    onUserClick(user.user_login, user.user_id, userMetrics);
+    onUserClick(user.user_login, user.user_id);
   };
 
   const tableSortState = { field: sortField as string, direction: sortDirection };

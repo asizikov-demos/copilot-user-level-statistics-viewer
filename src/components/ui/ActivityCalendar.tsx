@@ -1,19 +1,21 @@
 'use client';
 
-import { CopilotMetrics } from '../../types/metrics';
+import type { UserDayData } from '../../types/metrics';
 
 interface ActivityCalendarProps {
-  userMetrics: CopilotMetrics[];
-  onDayClick: (date: string, dayMetrics?: CopilotMetrics) => void;
+  days: UserDayData[];
+  reportStartDay: string;
+  reportEndDay: string;
+  onDayClick: (date: string, dayData?: UserDayData) => void;
 }
 
-export default function ActivityCalendar({ userMetrics, onDayClick }: ActivityCalendarProps) {
-  const startDate = new Date(userMetrics[0]?.report_start_day || userMetrics[0]?.day || new Date());
-  const endDate = new Date(userMetrics[0]?.report_end_day || userMetrics[userMetrics.length - 1]?.day || new Date());
+export default function ActivityCalendar({ days, reportStartDay, reportEndDay, onDayClick }: ActivityCalendarProps) {
+  const startDate = new Date(reportStartDay);
+  const endDate = new Date(reportEndDay);
 
-  const metricsMap = new Map<string, CopilotMetrics>();
-  userMetrics.forEach(metric => {
-    metricsMap.set(metric.day, metric);
+  const metricsMap = new Map<string, UserDayData>();
+  days.forEach(day => {
+    metricsMap.set(day.day, day);
   });
 
   const generateDateGrid = () => {

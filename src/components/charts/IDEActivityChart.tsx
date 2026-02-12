@@ -6,7 +6,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
 import { formatShortDate } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
-import type { CopilotMetrics } from '../../types/metrics';
+import type { UserDayData } from '../../types/metrics';
 
 registerChartJS();
 
@@ -22,7 +22,8 @@ interface IDEAggregateItem {
 }
 
 interface IDEActivityChartProps {
-  userMetrics: CopilotMetrics[];
+  ideAggregates: IDEAggregateItem[];
+  days: UserDayData[];
   title?: string;
   pluginVersions?: {
     plugin: string;
@@ -55,57 +56,24 @@ const FALLBACK_COLORS = [
  * a table summarizing aggregate metrics per IDE.
  */
 export default function IDEActivityChart({
-  userMetrics,
+  ideAggregates,
+  days,
   title = 'Activity by IDE',
   pluginVersions
 }: IDEActivityChartProps) {
   const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
 
-  const ideAggregates = useMemo((): IDEAggregateItem[] => {
-    const aggregateMap = new Map<string, IDEAggregateItem>();
-
-    for (const metric of userMetrics) {
-      for (const ideData of metric.totals_by_ide) {
-        const existing = aggregateMap.get(ideData.ide);
-        if (existing) {
-          existing.user_initiated_interaction_count += ideData.user_initiated_interaction_count;
-          existing.code_generation_activity_count += ideData.code_generation_activity_count;
-          existing.code_acceptance_activity_count += ideData.code_acceptance_activity_count;
-          existing.loc_added_sum += ideData.loc_added_sum;
-          existing.loc_deleted_sum += ideData.loc_deleted_sum;
-          existing.loc_suggested_to_add_sum += ideData.loc_suggested_to_add_sum;
-          existing.loc_suggested_to_delete_sum += ideData.loc_suggested_to_delete_sum;
-        } else {
-          aggregateMap.set(ideData.ide, {
-            ide: ideData.ide,
-            user_initiated_interaction_count: ideData.user_initiated_interaction_count,
-            code_generation_activity_count: ideData.code_generation_activity_count,
-            code_acceptance_activity_count: ideData.code_acceptance_activity_count,
-            loc_added_sum: ideData.loc_added_sum,
-            loc_deleted_sum: ideData.loc_deleted_sum,
-            loc_suggested_to_add_sum: ideData.loc_suggested_to_add_sum,
-            loc_suggested_to_delete_sum: ideData.loc_suggested_to_delete_sum,
-          });
-        }
-      }
-    }
-
-    return Array.from(aggregateMap.values()).sort((a, b) =>
-      b.user_initiated_interaction_count - a.user_initiated_interaction_count
-    );
-  }, [userMetrics]);
-
   const barChartData = useMemo(() => {
     const allIDEs = Array.from(
-      new Set(userMetrics.flatMap(metric => metric.totals_by_ide.map(ide => ide.ide)))
+      new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
-    const allDays = userMetrics.map(metric => metric.day).sort();
+    const allDays = days.map(d => d.day).sort();
 
     const datasets = allIDEs.map((ide, index) => {
-      const data = allDays.map(day => {
-        const dayMetric = userMetrics.find(m => m.day === day);
-        const ideData = dayMetric?.totals_by_ide.find(i => i.ide === ide);
+      const data = allDays.map(dayStr => {
+        const dayData = days.find(d => d.day === dayStr);
+        const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
         return ideData?.user_initiated_interaction_count || 0;
       });
 
@@ -122,7 +90,7 @@ export default function IDEActivityChart({
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [userMetrics]);
+  }, [days]);
 
   const barChartOptions: ChartOptions<'bar'> = useMemo(() => ({
     responsive: true,
