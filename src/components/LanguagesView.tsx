@@ -6,13 +6,15 @@ import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { SortDirection, SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
-import { CopilotMetrics } from '../types/metrics';
+import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types/metrics';
 import LanguageDailyChart from './charts/LanguageDailyChart';
 import { translateFeature } from '../domain/featureTranslations';
 
 interface LanguagesViewProps {
   languages: LanguageStats[];
-  metrics: CopilotMetrics[];
+  languageFeatureImpactData: LanguageFeatureImpactData;
+  dailyLanguageGenerationsData: DailyLanguageChartData;
+  dailyLanguageLocData: DailyLanguageChartData;
   onBack: VoidCallback;
 }
 
@@ -44,7 +46,7 @@ const formatAcceptanceRate = (lang: LanguageStats) => {
     : '0.0';
 };
 
-export default function LanguagesView({ languages, metrics, onBack }: LanguagesViewProps) {
+export default function LanguagesView({ languages, languageFeatureImpactData, dailyLanguageGenerationsData, dailyLanguageLocData, onBack }: LanguagesViewProps) {
   const [tableSortState, setTableSortState] = useState<TableSortState>({
     field: 'totalEngagements',
     direction: 'desc',
@@ -320,54 +322,6 @@ export default function LanguagesView({ languages, metrics, onBack }: LanguagesV
 
   const tableRowClassName = () => 'hover:bg-gray-50';
 
-  const languageFeatureImpactData = useMemo(() => {
-    const languageFeatureMap = new Map<string, Map<string, number>>();
-    const allFeatures = new Set<string>();
-    const languageTotals = new Map<string, number>();
-
-    for (const metric of metrics) {
-      for (const lf of metric.totals_by_language_feature) {
-        const language = lf.language;
-        const feature = lf.feature;
-        const locImpact = lf.loc_added_sum + lf.loc_deleted_sum;
-
-        if (!language || language === 'unknown') continue;
-
-        allFeatures.add(feature);
-
-        if (!languageFeatureMap.has(language)) {
-          languageFeatureMap.set(language, new Map());
-        }
-        const featureMap = languageFeatureMap.get(language)!;
-        featureMap.set(feature, (featureMap.get(feature) || 0) + locImpact);
-
-        languageTotals.set(language, (languageTotals.get(language) || 0) + locImpact);
-      }
-    }
-
-    const sortedLanguages = Array.from(languageTotals.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([lang]) => lang);
-
-    const sortedFeatures = Array.from(allFeatures).sort();
-
-    const rows = sortedLanguages.map(language => {
-      const featureMap = languageFeatureMap.get(language) || new Map();
-      const featureValues: Record<string, number> = {};
-      for (const feature of sortedFeatures) {
-        featureValues[feature] = featureMap.get(feature) || 0;
-      }
-      return {
-        language,
-        total: languageTotals.get(language) || 0,
-        features: featureValues,
-      };
-    });
-
-    return { rows, features: sortedFeatures };
-  }, [metrics]);
-
   const completeLanguagesColumns: TableColumn<LanguageStats>[] = [
     {
       id: 'language',
@@ -471,8 +425,8 @@ export default function LanguagesView({ languages, metrics, onBack }: LanguagesV
 
       {/* Daily Language Charts */}
       <div className="space-y-6 mt-6 pt-6 border-t border-gray-200">
-        <LanguageDailyChart metrics={metrics} variant="generations" />
-        <LanguageDailyChart metrics={metrics} variant="loc" />
+        <LanguageDailyChart chartData={dailyLanguageGenerationsData} variant="generations" />
+        <LanguageDailyChart chartData={dailyLanguageLocData} variant="loc" />
       </div>
 
       {/* LOC Impact by Language and Feature */}

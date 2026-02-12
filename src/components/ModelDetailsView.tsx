@@ -1,51 +1,20 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useRawMetrics } from './MetricsContext';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import InsightsCard from './ui/InsightsCard';
-import { KNOWN_MODELS } from '../domain/modelConfig';
+import type { ModelBreakdownData } from '../types/metrics';
 import type { VoidCallback } from '../types/events';
 import { ViewPanel } from './ui';
 
 interface ModelDetailsViewProps {
+  modelBreakdownData: ModelBreakdownData;
   onBack: VoidCallback;
 }
 
-export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
-  const { rawMetrics } = useRawMetrics();
-
+export default function ModelDetailsView({ modelBreakdownData, onBack }: ModelDetailsViewProps) {
   const premiumUtilization = useMemo(() => {
-    if (!rawMetrics || rawMetrics.length === 0) {
-      return null;
-    }
-
-    const modelClassification = KNOWN_MODELS.reduce<Record<string, boolean>>((acc, model) => {
-      acc[model.name.toLowerCase()] = model.isPremium;
-      return acc;
-    }, {});
-
-    let premiumTotal = 0;
-    let standardTotal = 0;
-    let unknownTotal = 0;
-
-    for (const metric of rawMetrics) {
-      for (const modelFeature of metric.totals_by_model_feature) {
-        const count = modelFeature.user_initiated_interaction_count || 0;
-        if (!count) continue;
-
-        const normalizedModel = modelFeature.model.trim().toLowerCase();
-        const classification = modelClassification[normalizedModel];
-
-        if (classification === true) {
-          premiumTotal += count;
-        } else if (classification === false) {
-          standardTotal += count;
-        } else {
-          unknownTotal += count;
-        }
-      }
-    }
+    const { premiumTotal, standardTotal, unknownTotal } = modelBreakdownData;
 
     const trackedTotal = premiumTotal + standardTotal;
     const numberFormatter = new Intl.NumberFormat();
@@ -149,7 +118,7 @@ export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
           ? `There are ${numberFormatter.format(unknownTotal)} interactions from models that are not yet tagged as premium or standard.`
           : undefined
     };
-  }, [rawMetrics]);
+  }, [modelBreakdownData]);
 
   return (
     <ViewPanel
@@ -188,8 +157,8 @@ export default function ModelDetailsView({ onBack }: ModelDetailsViewProps) {
             )}
           </InsightsCard>
         )}
-        <ModelsUsageChart metrics={rawMetrics} variant="standard" />
-        <ModelsUsageChart metrics={rawMetrics} variant="premium" />
+        <ModelsUsageChart modelEntries={modelBreakdownData.standardModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.standardTotal} variant="standard" />
+        <ModelsUsageChart modelEntries={modelBreakdownData.premiumModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.premiumTotal} variant="premium" />
       </div>
     </ViewPanel>
   );

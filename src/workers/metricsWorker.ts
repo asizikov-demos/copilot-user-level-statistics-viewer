@@ -44,5 +44,46 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       }
       break;
     }
+    case 'parseAndAggregate': {
+      try {
+        const parseResult = await parseMultipleMetricsStreams(msg.files, (progress) => {
+          postResponse({ type: 'parseProgress', id: msg.id, progress });
+        });
+        if (parseResult.errors.length > 0 && parseResult.metrics.length === 0) {
+          postResponse({
+            type: 'error',
+            id: msg.id,
+            error: parseResult.errors.map(e => e.error).join('; '),
+          });
+          break;
+        }
+        const aggregated = aggregateMetrics(parseResult.metrics);
+        let enterpriseName: string | null = null;
+        if (parseResult.metrics.length > 0) {
+          const first = parseResult.metrics[0];
+          const loginSuffix = first.user_login?.includes('_')
+            ? first.user_login.split('_').pop()?.trim()
+            : undefined;
+          const enterpriseId = first.enterprise_id.trim();
+          enterpriseName = loginSuffix && loginSuffix.length > 0
+            ? loginSuffix
+            : (enterpriseId.length > 0 ? enterpriseId : null);
+        }
+        postResponse({
+          type: 'parseAndAggregateResult',
+          id: msg.id,
+          result: aggregated,
+          enterpriseName,
+          recordCount: parseResult.metrics.length,
+        });
+      } catch (err) {
+        postResponse({
+          type: 'error',
+          id: msg.id,
+          error: err instanceof Error ? err.message : 'Parse and aggregate failed',
+        });
+      }
+      break;
+    }
   }
 };

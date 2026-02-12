@@ -85,3 +85,40 @@ export {
   calculateAskModeImpactFromMetrics,
   calculateCliImpactFromMetrics,
 } from './impactCalculator';
+
+export {
+  type IDEStatsAccumulator,
+  createIDEStatsAccumulator,
+  accumulateIDEStats,
+  computeIDEStatsData,
+} from './ideStatsCalculator';
+
+export {
+  type PluginVersionAccumulator,
+  createPluginVersionAccumulator,
+  accumulatePluginVersion,
+  computePluginVersionData,
+} from './pluginVersionCalculator';
+
+export {
+  type LanguageFeatureImpactAccumulator,
+  createLanguageFeatureImpactAccumulator,
+  accumulateLanguageFeatureImpact,
+  accumulateDailyLanguage,
+  computeLanguageFeatureImpactData,
+  computeDailyLanguageChartData,
+} from './languageFeatureImpactCalculator';
+
+export {
+  type ModelBreakdownAccumulator,
+  createModelBreakdownAccumulator,
+  accumulateModelBreakdown,
+  computeModelBreakdownData,
+} from './modelBreakdownCalculator';
+
+export {
+  type UserDetailAccumulator,
+  createUserDetailAccumulator,
+  accumulateUserDetail,
+  computeUserDetailedMetrics,
+} from './userDetailCalculator';

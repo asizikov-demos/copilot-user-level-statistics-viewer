@@ -9,97 +9,28 @@ import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
-import type { MetricsStats, CopilotMetrics } from '../types/metrics';
+import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
 import type { VoidCallback } from '../types/events';
 
 interface CopilotAdoptionViewProps {
   featureAdoptionData: FeatureAdoptionData | null;
   agentModeHeatmapData: AgentModeHeatmapData[];
   stats: MetricsStats;
-  metrics: CopilotMetrics[];
+  pluginVersionData: PluginVersionAnalysisData;
   onBack: VoidCallback;
 }
 
-export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, metrics, onBack }: CopilotAdoptionViewProps) {
+export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, onBack }: CopilotAdoptionViewProps) {
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
   const { versions: vscodeVersions, isLoading: vsLoading, error: vsError } = usePluginVersions('vscode');
 
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
   const [expandedVsUsernames, setExpandedVsUsernames] = useState<Set<string>>(new Set());
 
-  const pluginVersionAnalysis = React.useMemo(() => {
-    const versionMap = new Map<string, Set<string>>();
-
-    for (const metric of metrics) {
-      for (const ideTotal of metric.totals_by_ide) {
-        if (ideTotal.ide === 'intellij' && ideTotal.last_known_plugin_version?.plugin_version) {
-          const rawVersion = ideTotal.last_known_plugin_version.plugin_version;
-          const lower = rawVersion.toLowerCase();
-          if (lower.endsWith('-nightly')) continue; // skip nightly builds
-          if (!versionMap.has(rawVersion)) {
-            versionMap.set(rawVersion, new Set());
-          }
-          versionMap.get(rawVersion)!.add(metric.user_login);
-        }
-      }
-    }
-
-    return Array.from(versionMap.entries())
-      .map(([version, usernamesSet]) => ({
-        version,
-        userCount: usernamesSet.size,
-        usernames: Array.from(usernamesSet).sort()
-      }))
-      .sort((a, b) => b.userCount - a.userCount);
-  }, [metrics]);
-
-  // True count of unique IntelliJ users (do NOT sum per-version counts because a user may appear under multiple versions over the reporting window)
-  const totalUniqueIntellijUsers = React.useMemo(() => {
-    const userSet = new Set<string>();
-    for (const v of pluginVersionAnalysis) {
-      for (const username of v.usernames) userSet.add(username);
-    }
-    return userSet.size;
-  }, [pluginVersionAnalysis]);
-
-  const vscodeVersionAnalysis = React.useMemo(() => {
-    const versionMap = new Map<string, Set<string>>();
-
-    for (const metric of metrics) {
-      for (const ideTotal of metric.totals_by_ide) {
-        const pluginInfo = ideTotal.last_known_plugin_version;
-        if (
-          ideTotal.ide === 'vscode' &&
-          pluginInfo?.plugin_version &&
-          pluginInfo.plugin === 'copilot-chat'
-        ) {
-          const rawVersion = pluginInfo.plugin_version;
-          const lower = rawVersion.toLowerCase();
-          if (lower.endsWith('-insider') || lower.endsWith('-nightly')) continue;
-          if (!versionMap.has(rawVersion)) {
-            versionMap.set(rawVersion, new Set());
-          }
-          versionMap.get(rawVersion)!.add(metric.user_login);
-        }
-      }
-    }
-
-    return Array.from(versionMap.entries())
-      .map(([version, usernamesSet]) => ({
-        version,
-        userCount: usernamesSet.size,
-        usernames: Array.from(usernamesSet).sort(),
-      }))
-      .sort((a, b) => b.userCount - a.userCount);
-  }, [metrics]);
-
-  const totalUniqueVsCodeUsers = React.useMemo(() => {
-    const userSet = new Set<string>();
-    for (const v of vscodeVersionAnalysis) {
-      for (const username of v.usernames) userSet.add(username);
-    }
-    return userSet.size;
-  }, [vscodeVersionAnalysis]);
+  const pluginVersionAnalysis = pluginVersionData.jetbrains;
+  const totalUniqueIntellijUsers = pluginVersionData.totalUniqueIntellijUsers;
+  const vscodeVersionAnalysis = pluginVersionData.vscode;
+  const totalUniqueVsCodeUsers = pluginVersionData.totalUniqueVsCodeUsers;
 
   const latestTwentyUpdates = React.useMemo(() => {
     const stable = jetbrainsUpdates.filter(u => !u.version.toLowerCase().endsWith('-nightly'));

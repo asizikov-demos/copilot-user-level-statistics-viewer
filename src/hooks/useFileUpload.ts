@@ -1,10 +1,9 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { CopilotMetrics } from '../types/metrics';
-import { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
-import { parseFilesInWorker } from '../workers/metricsWorkerClient';
-import { useRawMetrics } from '../components/MetricsContext';
+import { MultiFileProgress } from '../infra/metricsFileParser';
+import { parseAndAggregateInWorker } from '../workers/metricsWorkerClient';
+import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
 interface UseFileUploadReturn {
@@ -20,50 +19,22 @@ export function useFileUpload(): UseFileUploadReturn {
   const {
     isLoading,
     error,
-    setRawMetrics,
+    setAggregatedMetrics,
     setEnterpriseName,
     setIsLoading,
     setError,
-  } = useRawMetrics();
+  } = useMetrics();
 
-  const deriveEnterpriseName = useCallback((firstMetric: CopilotMetrics): string | null => {
-    const loginSuffix = firstMetric.user_login?.includes('_')
-      ? firstMetric.user_login.split('_').pop()?.trim()
-      : undefined;
-    const enterpriseId = firstMetric.enterprise_id.trim();
-    const derivedEnterpriseName = loginSuffix && loginSuffix.length > 0 
-      ? loginSuffix 
-      : (enterpriseId.length > 0 ? enterpriseId : null);
-    return derivedEnterpriseName;
-  }, []);
-
-  const processMetrics = useCallback((parsedMetrics: CopilotMetrics[]) => {
-    const firstMetric = parsedMetrics[0];
-    if (firstMetric) {
-      setEnterpriseName(deriveEnterpriseName(firstMetric));
-    } else {
-      setEnterpriseName(null);
-    }
-    
-    setRawMetrics(parsedMetrics);
-  }, [deriveEnterpriseName, setRawMetrics, setEnterpriseName]);
-
-  const processMetricsFile = useCallback(async (file: File) => {
-    const result = await parseFilesInWorker([file], (progress) => {
+  const processFiles = useCallback(async (files: File[]) => {
+    const { result, enterpriseName, recordCount } = await parseAndAggregateInWorker(files, (progress) => {
       setUploadProgress(progress);
     });
-    if (result.errors.length > 0) {
-      throw new Error(result.errors.map(e => e.error).join('; '));
+    if (recordCount === 0) {
+      throw new Error('No metrics found in the uploaded files');
     }
-    processMetrics(result.metrics);
-  }, [processMetrics]);
-
-  const processMultipleFiles = useCallback(async (files: File[]): Promise<MultiFileResult> => {
-    const result = await parseFilesInWorker(files, (progress) => {
-      setUploadProgress(progress);
-    });
-    return result;
-  }, []);
+    setEnterpriseName(enterpriseName);
+    setAggregatedMetrics(result);
+  }, [setAggregatedMetrics, setEnterpriseName]);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
@@ -84,33 +55,14 @@ export function useFileUpload(): UseFileUploadReturn {
     setUploadProgress(null);
 
     try {
-      if (files.length === 1) {
-        await processMetricsFile(files[0]);
-      } else {
-        const result = await processMultipleFiles(files);
-        
-        if (result.metrics.length > 0) {
-          processMetrics(result.metrics);
-        }
-        
-        if (result.errors.length > 0) {
-          const errorMessages = result.errors.map(
-            (e) => `File ${e.fileIndex} of ${files.length} (${e.fileName}): ${e.error}`
-          );
-          if (result.metrics.length > 0) {
-            setError(`Partial success. ${result.errors.length} file(s) failed:\n${errorMessages.join('\n')}`);
-          } else {
-            setError(`Failed to parse all files:\n${errorMessages.join('\n')}`);
-          }
-        }
-      }
+      await processFiles(files);
     } catch (err) {
       setError(`Failed to parse files: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
       setUploadProgress(null);
     }
-  }, [processMetricsFile, processMultipleFiles, processMetrics, setIsLoading, setError]);
+  }, [processFiles, setIsLoading, setError]);
 
   const handleSampleLoad = useCallback(async () => {
     setIsLoading(true);
@@ -125,13 +77,13 @@ export function useFileUpload(): UseFileUploadReturn {
       const blob = await response.blob();
       const file = new File([blob], 'sample-report.ndjson', { type: 'application/x-ndjson' });
       
-      await processMetricsFile(file);
+      await processFiles([file]);
     } catch (err) {
       setError(`Failed to load sample report: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
-  }, [processMetricsFile, setIsLoading, setError]);
+  }, [processFiles, setIsLoading, setError]);
 
   return {
     handleFileUpload,

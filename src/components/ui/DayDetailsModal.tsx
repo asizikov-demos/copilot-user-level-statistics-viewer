@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CopilotMetrics } from '../../types/metrics';
+import type { UserDayData } from '../../types/metrics';
 import { translateFeature } from '../../domain/featureTranslations';
 import { formatIDEName } from '../icons/IDEIcons';
 import ExpandableTableSection from './ExpandableTableSection';
@@ -11,10 +11,11 @@ interface DayDetailsModalProps {
   isOpen: boolean;
   onClose: VoidCallback;
   date: string;
-  dayMetrics?: CopilotMetrics;
+  dayMetrics?: UserDayData;
+  userLogin?: string;
 }
 
-export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics }: DayDetailsModalProps) {
+export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {
   if (!isOpen) return null;
 
   const formatDate = (dateString: string) => {
@@ -35,9 +36,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics }: D
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
-            {hasData && (
+            {hasData && userLogin && (
               <p className="text-sm text-gray-600 mt-1">
-                Activity Details • User: {dayMetrics.user_login}
+                Activity Details • User: {userLogin}
               </p>
             )}
           </div>
