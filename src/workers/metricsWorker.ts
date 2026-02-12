@@ -37,6 +37,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     }
     case 'aggregate': {
       try {
+        storedUserDetailAccumulator = null;
         const { aggregated, userDetailAccumulator } = aggregateMetrics(msg.metrics);
         storedUserDetailAccumulator = userDetailAccumulator;
         postResponse({ type: 'aggregateResult', id: msg.id, result: aggregated });
@@ -51,6 +52,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     }
     case 'parseAndAggregate': {
       try {
+        storedUserDetailAccumulator = null;
         const parseResult = await parseMultipleMetricsStreams(msg.files, (progress) => {
           postResponse({ type: 'parseProgress', id: msg.id, progress });
         });
