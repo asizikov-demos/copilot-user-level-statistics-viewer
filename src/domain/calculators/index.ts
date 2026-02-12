@@ -121,4 +121,5 @@ export {
   createUserDetailAccumulator,
   accumulateUserDetail,
   computeUserDetailedMetrics,
+  computeSingleUserDetailedMetrics,
 } from './userDetailCalculator';
