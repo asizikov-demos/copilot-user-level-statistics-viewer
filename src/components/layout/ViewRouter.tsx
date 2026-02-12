@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { CopilotMetrics } from '../../types/metrics';
+import React, { useEffect } from 'react';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
-import { useMetricsData, useRawMetrics } from '../MetricsContext';
-import { useMetricsProcessing } from '../../hooks/useMetricsProcessing';
+import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
+import { terminateWorker } from '../../workers/metricsWorkerClient';
 import { FileUploadArea } from '../features/file-upload';
 import { OverviewDashboard } from '../features/overview';
 import UniqueUsersView from '../UniqueUsersView';
@@ -20,23 +19,69 @@ import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
 
 const ViewRouter: React.FC = () => {
-  const { setFilteredData } = useMetricsData();
   const { 
-    rawMetrics, originalStats, enterpriseName,
-    resetRawMetrics
-  } = useRawMetrics();
+    hasData, enterpriseName, aggregatedMetrics,
+    isLoading, error, resetMetrics
+  } = useMetrics();
   const { 
     currentView, selectedUser, selectedModel,
     navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
   } = useNavigation();
-  const { handleFileUpload, handleSampleLoad, isLoading, error, uploadProgress } = useFileUpload();
+  const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
 
-  const [selectedUserMetrics, setSelectedUserMetrics] = useState<CopilotMetrics[]>([]);
+  useEffect(() => {
+    return () => { terminateWorker(); };
+  }, []);
 
-  const filteredData = useMetricsProcessing(
-    rawMetrics,
-    originalStats
-  );
+  const resetData = () => {
+    terminateWorker();
+    resetMetrics();
+    resetNavigation();
+  };
+
+  const handleUserClick = (userLogin: string, userId: number) => {
+    selectUser({ login: userLogin, id: userId });
+  };
+
+  if (error && hasData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center max-w-md">
+          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to process metrics</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
+          <button
+            onClick={resetData}
+            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+          >
+            Start Over
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <FileUploadArea
+        onFileUpload={handleFileUpload}
+        onSampleLoad={handleSampleLoad}
+        isLoading={isLoading}
+        error={error}
+        uploadProgress={uploadProgress}
+      />
+    );
+  }
+
+  if (isLoading || !aggregatedMetrics) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-500 dark:text-gray-400">Processing metrics...</p>
+        </div>
+      </div>
+    );
+  }
 
   const { 
     stats, 
@@ -56,37 +101,17 @@ const ViewRouter: React.FC = () => {
     inlineModeImpactData,
     askModeImpactData,
     cliImpactData,
-    joinedImpactData
-  } = filteredData;
-
-  useEffect(() => {
-    if (stats) {
-      setFilteredData(filteredData);
-    }
-  }, [filteredData, stats, setFilteredData]);
-
-  const resetData = () => {
-    resetRawMetrics();
-    resetNavigation();
-    setSelectedUserMetrics([]);
-  };
-
-  const handleUserClick = (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => {
-    setSelectedUserMetrics(userMetrics);
-    selectUser({ login: userLogin, id: userId });
-  };
-
-  if (!stats) {
-    return (
-      <FileUploadArea
-        onFileUpload={handleFileUpload}
-        onSampleLoad={handleSampleLoad}
-        isLoading={isLoading}
-        error={error}
-        uploadProgress={uploadProgress}
-      />
-    );
-  }
+    joinedImpactData,
+    ideStats,
+    multiIDEUsersCount,
+    totalUniqueIDEUsers,
+    pluginVersionData,
+    languageFeatureImpactData,
+    dailyLanguageGenerationsData,
+    dailyLanguageLocData,
+    modelBreakdownData,
+    userDetailedMetrics,
+  } = aggregatedMetrics;
 
   switch (currentView) {
     case VIEW_MODES.EXECUTIVE_SUMMARY:
@@ -107,7 +132,9 @@ const ViewRouter: React.FC = () => {
       return (
         <LanguagesView
           languages={languageStats}
-          metrics={rawMetrics}
+          languageFeatureImpactData={languageFeatureImpactData}
+          dailyLanguageGenerationsData={dailyLanguageGenerationsData}
+          dailyLanguageLocData={dailyLanguageLocData}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
@@ -115,7 +142,9 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.IDES:
       return (
         <IDEView 
-          metrics={rawMetrics} 
+          ideStats={ideStats}
+          multiIDEUsersCount={multiIDEUsersCount}
+          totalUniqueIDEUsers={totalUniqueIDEUsers}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
         />
       );
@@ -150,7 +179,7 @@ const ViewRouter: React.FC = () => {
           featureAdoptionData={featureAdoptionData}
           agentModeHeatmapData={agentModeHeatmapData}
           stats={stats}
-          metrics={rawMetrics}
+          pluginVersionData={pluginVersionData}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
@@ -159,7 +188,6 @@ const ViewRouter: React.FC = () => {
       return (
         <UniqueUsersView 
           users={userSummaries} 
-          rawMetrics={rawMetrics}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
           onUserClick={handleUserClick}
         />
@@ -170,14 +198,23 @@ const ViewRouter: React.FC = () => {
         navigateTo(VIEW_MODES.USERS);
         return null;
       }
-      return (
-        <UserDetailsView
-          userMetrics={selectedUserMetrics}
-          userLogin={selectedUser.login}
-          userId={selectedUser.id}
-          onBack={() => navigateTo(VIEW_MODES.USERS)}
-        />
-      );
+      {
+        const userDetails = userDetailedMetrics.get(selectedUser.id);
+        const userSummary = userSummaries.find(u => u.user_id === selectedUser.id);
+        if (!userDetails || !userSummary) {
+          navigateTo(VIEW_MODES.USERS);
+          return null;
+        }
+        return (
+          <UserDetailsView
+            userDetails={userDetails}
+            userSummary={userSummary}
+            userLogin={selectedUser.login}
+            userId={selectedUser.id}
+            onBack={() => navigateTo(VIEW_MODES.USERS)}
+          />
+        );
+      }
 
     case VIEW_MODES.MODEL_DETAILS:
       if (!selectedModel) {
@@ -186,6 +223,7 @@ const ViewRouter: React.FC = () => {
       }
       return (
         <ModelDetailsView
+          modelBreakdownData={modelBreakdownData}
           onBack={() => {
             navigateTo(VIEW_MODES.OVERVIEW);
             clearSelectedModel();

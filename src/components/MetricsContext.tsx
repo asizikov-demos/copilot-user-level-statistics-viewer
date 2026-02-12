@@ -1,87 +1,49 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import {
-  DailyEngagementData,
-  DailyChatUsersData,
-  DailyChatRequestsData,
-  LanguageStats,
-  DailyModelUsageData,
-  FeatureAdoptionData,
-  DailyPRUAnalysisData,
-  AgentModeHeatmapData,
-  ModelFeatureDistributionData,
-  AgentImpactData,
-  CodeCompletionImpactData,
-  ModeImpactData
-} from '../domain/calculators/metricCalculators';
-import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
+import type { AggregatedMetrics } from '../domain/metricsAggregator';
 
-export interface FilteredMetricsData {
-  stats: MetricsStats | null;
-  userSummaries: UserSummary[];
-  engagementData: DailyEngagementData[];
-  chatUsersData: DailyChatUsersData[];
-  chatRequestsData: DailyChatRequestsData[];
-  languageStats: LanguageStats[];
-  modelUsageData: DailyModelUsageData[];
-  featureAdoptionData: FeatureAdoptionData | null;
-  pruAnalysisData: DailyPRUAnalysisData[];
-  agentModeHeatmapData: AgentModeHeatmapData[];
-  modelFeatureDistributionData: ModelFeatureDistributionData[];
-  agentImpactData: AgentImpactData[];
-  codeCompletionImpactData: CodeCompletionImpactData[];
-  editModeImpactData: ModeImpactData[];
-  inlineModeImpactData: ModeImpactData[];
-  askModeImpactData: ModeImpactData[];
-  cliImpactData: ModeImpactData[];
-  joinedImpactData: ModeImpactData[];
-}
-
-interface RawMetricsState {
-  rawMetrics: CopilotMetrics[];
-  originalStats: MetricsStats | null;
+interface MetricsState {
+  hasData: boolean;
+  aggregatedMetrics: AggregatedMetrics | null;
   enterpriseName: string | null;
   isLoading: boolean;
   error: string | null;
+  warning: string | null;
 }
 
-interface RawMetricsActions {
-  setRawMetrics: (metrics: CopilotMetrics[]) => void;
-  setOriginalStats: (stats: MetricsStats | null) => void;
+interface MetricsActions {
+  setAggregatedMetrics: (metrics: AggregatedMetrics) => void;
+  setHasData: (hasData: boolean) => void;
   setEnterpriseName: (name: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  resetRawMetrics: () => void;
+  setWarning: (warning: string | null) => void;
+  resetMetrics: () => void;
 }
 
-interface FilteredMetricsContextValue {
-  filteredData: FilteredMetricsData | null;
-  setFilteredData: (data: FilteredMetricsData | null) => void;
-}
+interface MetricsContextValue extends MetricsState, MetricsActions {}
 
-interface RawMetricsContextValue extends RawMetricsState, RawMetricsActions {}
+const MetricsContext = createContext<MetricsContextValue | undefined>(undefined);
 
-const FilteredMetricsContext = createContext<FilteredMetricsContextValue | undefined>(undefined);
-const RawMetricsContext = createContext<RawMetricsContextValue | undefined>(undefined);
-
-const initialRawMetricsState: RawMetricsState = {
-  rawMetrics: [],
-  originalStats: null,
+const initialMetricsState: MetricsState = {
+  hasData: false,
+  aggregatedMetrics: null,
   enterpriseName: null,
   isLoading: false,
   error: null,
+  warning: null,
 };
 
-export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<RawMetricsState>(initialRawMetricsState);
+export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<MetricsState>(initialMetricsState);
 
-  const setRawMetrics = useCallback((metrics: CopilotMetrics[]) => {
-    setState((prev) => ({ ...prev, rawMetrics: metrics }));
+  const setAggregatedMetrics = useCallback((metrics: AggregatedMetrics) => {
+    setState((prev) => ({ ...prev, aggregatedMetrics: metrics, hasData: true }));
   }, []);
 
-  const setOriginalStats = useCallback((stats: MetricsStats | null) => {
-    setState((prev) => ({ ...prev, originalStats: stats }));
+  const setHasData = useCallback((hasData: boolean) => {
+    setState((prev) => ({ ...prev, hasData }));
   }, []);
 
   const setEnterpriseName = useCallback((name: string | null) => {
@@ -96,67 +58,45 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState((prev) => ({ ...prev, error: error }));
   }, []);
 
-  const resetRawMetrics = useCallback(() => {
-    setState(initialRawMetricsState);
+  const setWarning = useCallback((warning: string | null) => {
+    setState((prev) => ({ ...prev, warning }));
   }, []);
 
-  const value = useMemo<RawMetricsContextValue>(
+  const resetMetrics = useCallback(() => {
+    setState(initialMetricsState);
+  }, []);
+
+  const value = useMemo<MetricsContextValue>(
     () => ({
       ...state,
-      setRawMetrics,
-      setOriginalStats,
+      setAggregatedMetrics,
+      setHasData,
       setEnterpriseName,
       setIsLoading,
       setError,
-      resetRawMetrics,
+      setWarning,
+      resetMetrics,
     }),
-    [state, setRawMetrics, setOriginalStats, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
+    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setIsLoading, setError, setWarning, resetMetrics]
   );
 
   return (
-    <RawMetricsContext.Provider value={value}>
+    <MetricsContext.Provider value={value}>
       {children}
-    </RawMetricsContext.Provider>
+    </MetricsContext.Provider>
   );
 };
 
-export const FilteredMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [filteredData, setFilteredData] = useState<FilteredMetricsData | null>(null);
+export const MetricsProvider = MetricsContextProvider;
 
-  const value = useMemo<FilteredMetricsContextValue>(
-    () => ({ filteredData, setFilteredData }),
-    [filteredData]
-  );
-
-  return (
-    <FilteredMetricsContext.Provider value={value}>
-      {children}
-    </FilteredMetricsContext.Provider>
-  );
-};
-
-export const MetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <RawMetricsProvider>
-      <FilteredMetricsProvider>
-        {children}
-      </FilteredMetricsProvider>
-    </RawMetricsProvider>
-  );
-};
-
-export function useMetricsData(): FilteredMetricsContextValue {
-  const ctx = useContext(FilteredMetricsContext);
+export function useMetrics(): MetricsContextValue {
+  const ctx = useContext(MetricsContext);
   if (!ctx) {
-    throw new Error('useMetricsData must be used within a FilteredMetricsProvider');
+    throw new Error('useMetrics must be used within a MetricsProvider');
   }
   return ctx;
 }
 
-export function useRawMetrics(): RawMetricsContextValue {
-  const ctx = useContext(RawMetricsContext);
-  if (!ctx) {
-    throw new Error('useRawMetrics must be used within a RawMetricsProvider');
-  }
-  return ctx;
+export function useRawMetrics(): MetricsContextValue {
+  return useMetrics();
 }

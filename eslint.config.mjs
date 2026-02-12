@@ -9,6 +9,8 @@ export default tseslint.config(
       'build/**',
       'next-env.d.ts',
       'data-utils/**',
+      'public/workers/**',
+      'scripts/**',
     ],
   },
   eslint.configs.recommended,

@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { CopilotMetrics } from '../types/metrics';
+import type { UserSummary, UserDayData } from '../types/metrics';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
 import IDEActivityChart from './charts/IDEActivityChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
-import { calculateDailyPRUAnalysis, calculateJoinedImpactData, calculateDailyModelUsage, calculateAgentImpactData, calculateAskModeImpactData, calculateCodeCompletionImpactData, calculateCliImpactData } from '../domain/calculators/metricCalculators';
-import { getModelMultiplier } from '../domain/modelConfig';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
@@ -18,21 +16,23 @@ import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler);
 
 interface UserDetailsViewProps {
-  userMetrics: CopilotMetrics[];
+  userDetails: UserDetailedMetrics;
+  userSummary: UserSummary;
   userLogin: string;
   userId: number;
   onBack: VoidCallback;
 }
 
-export default function UserDetailsView({ userMetrics, userLogin, userId, onBack }: UserDetailsViewProps) {
+export default function UserDetailsView({ userDetails, userSummary, userLogin, userId, onBack }: UserDetailsViewProps) {
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     selectedDate: string;
-    selectedMetrics?: CopilotMetrics;
+    selectedMetrics?: UserDayData;
   }>({
     isOpen: false,
     selectedDate: '',
@@ -41,11 +41,11 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
 
   const [isImpactBreakdownExpanded, setIsImpactBreakdownExpanded] = useState(false);
 
-  const handleDayClick = (date: string, dayMetrics?: CopilotMetrics) => {
+  const handleDayClick = (date: string, dayData?: UserDayData) => {
     setModalState({
       isOpen: true,
       selectedDate: date,
-      selectedMetrics: dayMetrics,
+      selectedMetrics: dayData,
     });
   };
 
@@ -57,161 +57,18 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     });
   };
 
-  const { totalInteractions, totalGeneration, totalAcceptance, totalStandardModelRequests, totalPremiumModelRequests, daysActive, usedAgent, usedChat, usedCli } = useMemo(() => {
-    let interactions = 0;
-    let generation = 0;
-    let acceptance = 0;
-    let standardRequests = 0;
-    let premiumRequests = 0;
-    let agent = false;
-    let chat = false;
-    let cli = false;
+  const totalInteractions = userSummary.total_user_initiated_interactions;
+  const totalGeneration = userSummary.total_code_generation_activities;
+  const totalAcceptance = userSummary.total_code_acceptance_activities;
+  const totalStandardModelRequests = userDetails.totalStandardModelRequests;
+  const totalPremiumModelRequests = userDetails.totalPremiumModelRequests;
+  const daysActive = userSummary.days_active;
+  const usedAgent = userSummary.used_agent;
+  const usedChat = userSummary.used_chat;
+  const usedCli = userSummary.used_cli;
 
-    for (const metric of userMetrics) {
-      interactions += metric.user_initiated_interaction_count;
-      generation += metric.code_generation_activity_count;
-      acceptance += metric.code_acceptance_activity_count;
-      agent = agent || metric.used_agent;
-      chat = chat || metric.used_chat;
-      cli = cli || metric.used_cli;
+  const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
 
-      for (const modelFeature of metric.totals_by_model_feature) {
-        const model = modelFeature.model.toLowerCase();
-        const multiplier = getModelMultiplier(model);
-        if (model !== 'unknown' && model !== '') {
-          if (multiplier === 0) {
-            standardRequests += modelFeature.user_initiated_interaction_count;
-          } else {
-            premiumRequests += modelFeature.user_initiated_interaction_count;
-          }
-        }
-      }
-    }
-
-    return {
-      totalInteractions: interactions,
-      totalGeneration: generation,
-      totalAcceptance: acceptance,
-      totalStandardModelRequests: standardRequests,
-      totalPremiumModelRequests: premiumRequests,
-      daysActive: userMetrics.length,
-      usedAgent: agent,
-      usedChat: chat,
-      usedCli: cli,
-    };
-  }, [userMetrics]);
-
-  const uniquePluginVersions = useMemo(() => {
-    return userMetrics
-      .flatMap(metric => metric.totals_by_ide)
-      .filter(ide => ide.last_known_plugin_version)
-      .map(ide => ide.last_known_plugin_version!)
-      .reduce((acc, plugin) => {
-        const key = `${plugin.plugin}-${plugin.plugin_version}`;
-        const existing = acc.find(p => `${p.plugin}-${p.plugin_version}` === key);
-        
-        if (!existing) {
-          acc.push(plugin);
-        } else {
-          if (new Date(plugin.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
-            const index = acc.indexOf(existing);
-            acc[index] = plugin;
-          }
-        }
-        
-        return acc;
-      }, [] as NonNullable<typeof userMetrics[0]['totals_by_ide'][0]['last_known_plugin_version']>[])
-      .sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
-  }, [userMetrics]);
-
-  const featureAggregates = useMemo(() => {
-    return userMetrics
-      .flatMap(metric => metric.totals_by_feature)
-      .reduce((acc, feature) => {
-        const existing = acc.find(f => f.feature === feature.feature);
-        if (existing) {
-          existing.user_initiated_interaction_count += feature.user_initiated_interaction_count;
-          existing.code_generation_activity_count += feature.code_generation_activity_count;
-          existing.code_acceptance_activity_count += feature.code_acceptance_activity_count;
-          existing.loc_added_sum += feature.loc_added_sum;
-          existing.loc_deleted_sum += feature.loc_deleted_sum;
-          existing.loc_suggested_to_add_sum += feature.loc_suggested_to_add_sum;
-          existing.loc_suggested_to_delete_sum += feature.loc_suggested_to_delete_sum;
-        } else {
-          acc.push({ ...feature });
-        }
-        return acc;
-      }, [] as typeof userMetrics[0]['totals_by_feature']);
-  }, [userMetrics]);
-
-  const ideAggregates = useMemo(() => {
-    return userMetrics
-      .flatMap(metric => metric.totals_by_ide)
-      .reduce((acc, ide) => {
-        const existing = acc.find(i => i.ide === ide.ide);
-        if (existing) {
-          existing.user_initiated_interaction_count += ide.user_initiated_interaction_count;
-          existing.code_generation_activity_count += ide.code_generation_activity_count;
-          existing.code_acceptance_activity_count += ide.code_acceptance_activity_count;
-          existing.loc_added_sum += ide.loc_added_sum;
-          existing.loc_deleted_sum += ide.loc_deleted_sum;
-          existing.loc_suggested_to_add_sum += ide.loc_suggested_to_add_sum;
-          existing.loc_suggested_to_delete_sum += ide.loc_suggested_to_delete_sum;
-        } else {
-          acc.push({ ...ide });
-        }
-        return acc;
-      }, [] as typeof userMetrics[0]['totals_by_ide']);
-  }, [userMetrics]);
-
-  const languageFeatureAggregates = useMemo(() => {
-    return userMetrics
-      .flatMap(metric => metric.totals_by_language_feature)
-      .reduce((acc, item) => {
-        const key = `${item.language}-${item.feature}`;
-        const existing = acc.find(i => `${i.language}-${i.feature}` === key);
-        if (existing) {
-          existing.code_generation_activity_count += item.code_generation_activity_count;
-          existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
-          existing.loc_added_sum += item.loc_added_sum;
-          existing.loc_deleted_sum += item.loc_deleted_sum;
-          existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
-          existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
-        } else {
-          acc.push({ ...item });
-        }
-        return acc;
-      }, [] as typeof userMetrics[0]['totals_by_language_feature']);
-  }, [userMetrics]);
-
-  const modelFeatureAggregates = useMemo(() => {
-    return userMetrics
-      .flatMap(metric => metric.totals_by_model_feature)
-      .reduce((acc, item) => {
-        const key = `${item.model}-${item.feature}`;
-        const existing = acc.find(i => `${i.model}-${i.feature}` === key);
-        if (existing) {
-          existing.user_initiated_interaction_count += item.user_initiated_interaction_count;
-          existing.code_generation_activity_count += item.code_generation_activity_count;
-          existing.code_acceptance_activity_count += item.code_acceptance_activity_count;
-          existing.loc_added_sum += item.loc_added_sum;
-          existing.loc_deleted_sum += item.loc_deleted_sum;
-          existing.loc_suggested_to_add_sum += item.loc_suggested_to_add_sum;
-          existing.loc_suggested_to_delete_sum += item.loc_suggested_to_delete_sum;
-        } else {
-          acc.push({ ...item });
-        }
-        return acc;
-      }, [] as typeof userMetrics[0]['totals_by_model_feature']);
-  }, [userMetrics]);
-
-  const userPRUAnalysisData = useMemo(() => calculateDailyPRUAnalysis(userMetrics), [userMetrics]);
-  const userCombinedImpactData = useMemo(() => calculateJoinedImpactData(userMetrics), [userMetrics]);
-  const userModelUsageData = useMemo(() => calculateDailyModelUsage(userMetrics), [userMetrics]);
-  const userAgentImpactData = useMemo(() => calculateAgentImpactData(userMetrics), [userMetrics]);
-  const userAskModeImpactData = useMemo(() => calculateAskModeImpactData(userMetrics), [userMetrics]);
-  const userCompletionImpactData = useMemo(() => calculateCodeCompletionImpactData(userMetrics), [userMetrics]);
-  const userCliImpactData = useMemo(() => calculateCliImpactData(userMetrics), [userMetrics]);
   const ideChartData = useMemo(() => ({
     labels: ideAggregates.map(ide => formatIDEName(ide.ide)),
     datasets: [{
@@ -296,12 +153,14 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       }
     }
   };
+
   const languageBarChartData = useMemo(() => {
     const allLanguages = Array.from(
-      new Set(userMetrics.flatMap(metric => metric.totals_by_language_feature.map(item => item.language)))
+      new Set(userDetails.days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
     ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
 
-    const allDays = userMetrics.map(metric => metric.day).sort();
+    const allDays = userDetails.days.map(d => d.day).sort();
+    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const languageColors: Record<string, string> = {
       'javascript': '#F7DF1E',
@@ -352,9 +211,9 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     ];
 
     const datasets = allLanguages.map((language, index) => {
-      const data = allDays.map(day => {
-        const dayMetric = userMetrics.find(m => m.day === day);
-        const languageData = dayMetric?.totals_by_language_feature
+      const data = allDays.map(dayStr => {
+        const dayData = dayMap.get(dayStr);
+        const languageData = dayData?.totals_by_language_feature
           .filter(item => item.language === language)
           .reduce((sum, item) => sum + item.code_generation_activity_count, 0) || 0;
         return languageData;
@@ -373,13 +232,15 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       labels: allDays.map(day => new Date(day).toLocaleDateString()),
       datasets: datasets,
     };
-  }, [userMetrics]);
+  }, [userDetails.days]);
+
   const modelBarChartData = useMemo(() => {
     const allModels = Array.from(
-      new Set(userMetrics.flatMap(metric => metric.totals_by_model_feature.map(item => item.model)))
+      new Set(userDetails.days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
     ).filter(model => model && model !== '' && model !== 'unknown').sort();
 
-    const allDays = userMetrics.map(metric => metric.day).sort();
+    const allDays = userDetails.days.map(d => d.day).sort();
+    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const modelColors: Record<string, string> = {
       'gpt-4': '#10A37F',
@@ -396,9 +257,9 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
     ];
 
     const datasets = allModels.map((model, index) => {
-      const data = allDays.map(day => {
-        const dayMetric = userMetrics.find(m => m.day === day);
-        const modelData = dayMetric?.totals_by_model_feature
+      const data = allDays.map(dayStr => {
+        const dayData = dayMap.get(dayStr);
+        const modelData = dayData?.totals_by_model_feature
           .filter(item => item.model === model)
           .reduce((sum, item) => sum + item.user_initiated_interaction_count, 0) || 0;
         return modelData;
@@ -417,7 +278,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       labels: allDays.map(day => new Date(day).toLocaleDateString()),
       datasets: datasets,
     };
-  }, [userMetrics]);
+  }, [userDetails.days]);
 
   const languageBarChartOptions = {
     responsive: true,
@@ -552,7 +413,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       />
 
       <ModeImpactChart
-        data={userCombinedImpactData}
+        data={userDetails.dailyCombinedImpact}
         title="Combined Copilot Impact"
         description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
         emptyStateMessage="No combined impact data available."
@@ -576,25 +437,25 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         {isImpactBreakdownExpanded && (
           <div className="space-y-8 mt-6">
             <ModeImpactChart
-              data={userAgentImpactData}
+              data={userDetails.dailyAgentImpact}
               title="Copilot Agent Mode Impact"
               description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
               emptyStateMessage="No agent mode impact data available."
             />
             <ModeImpactChart
-              data={userAskModeImpactData}
+              data={userDetails.dailyAskModeImpact}
               title="Ask Mode Impact"
               description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
               emptyStateMessage="No Ask Mode impact data available."
             />
             <ModeImpactChart
-              data={userCompletionImpactData}
+              data={userDetails.dailyCompletionImpact}
               title="Completions Impact"
               description="Daily lines of code added and deleted when developers accept Copilot code completions."
               emptyStateMessage="No code completion impact data available."
             />
             <ModeImpactChart
-              data={userCliImpactData}
+              data={userDetails.dailyCliImpact}
               title="CLI Impact"
               description="Daily lines of code added and deleted through Copilot CLI sessions."
               emptyStateMessage="No CLI impact data available."
@@ -603,7 +464,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         )}
       </div>
       
-      <ActivityCalendar userMetrics={userMetrics} onDayClick={handleDayClick} />
+      <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
 
       <UserSummaryChart
         usedChat={usedChat}
@@ -616,8 +477,9 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
       />
 
       <IDEActivityChart
-        userMetrics={userMetrics}
-        pluginVersions={uniquePluginVersions}
+        ideAggregates={ideAggregates}
+        days={userDetails.days}
+        pluginVersions={userDetails.pluginVersions}
         />
 
       {/* Totals by Feature */}
@@ -661,9 +523,9 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         languageBarChartOptions={languageBarChartOptions}
         />
 
-      <PRUCostAnalysisChart data={userPRUAnalysisData} />
+      <PRUCostAnalysisChart data={userDetails.dailyPRUAnalysis} />
 
-      <PRUModelUsageChart data={userModelUsageData} />
+      <PRUModelUsageChart data={userDetails.dailyModelUsage} />
 
       <UserActivityByModelAndFeatureChart
         modelFeatureAggregates={modelFeatureAggregates}
@@ -676,6 +538,7 @@ export default function UserDetailsView({ userMetrics, userLogin, userId, onBack
         onClose={handleCloseModal}
         date={modalState.selectedDate}
         dayMetrics={modalState.selectedMetrics}
+        userLogin={userLogin}
       />
     </ViewPanel>
   );

@@ -6,13 +6,13 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
-import { CopilotMetrics } from '../../types/metrics';
+import type { DailyLanguageChartData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();
 
 interface LanguageDailyChartProps {
-  metrics: CopilotMetrics[];
+  chartData: DailyLanguageChartData;
   variant: 'generations' | 'loc';
 }
 
@@ -29,40 +29,19 @@ const LANGUAGE_COLORS = [
   'hsl(0, 70%, 55%)',
 ];
 
-export default function LanguageDailyChart({ metrics, variant }: LanguageDailyChartProps) {
+export default function LanguageDailyChart({ chartData, variant }: LanguageDailyChartProps) {
   const isGenerations = variant === 'generations';
 
   const { labels, datasets, total } = useMemo(() => {
-    const daySet = new Set<string>();
-    const languageTotals: Record<string, number> = {};
-    const map: Record<string, Record<string, number>> = {};
-
-    for (const metric of metrics) {
-      const date = metric.day;
-      daySet.add(date);
-      if (!map[date]) map[date] = {};
-
-      for (const lf of metric.totals_by_language_feature) {
-        const language = lf.language;
-        const value = isGenerations
-          ? lf.code_generation_activity_count
-          : lf.loc_added_sum + lf.loc_deleted_sum;
-
-        map[date][language] = (map[date][language] || 0) + value;
-        languageTotals[language] = (languageTotals[language] || 0) + value;
-      }
-    }
-
-    const sortedDates = Array.from(daySet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    const sortedLanguages = Object.keys(languageTotals)
-      .sort((a, b) => (languageTotals[b] || 0) - (languageTotals[a] || 0))
+    const sortedLanguages = [...chartData.languages]
+      .sort((a, b) => (chartData.totals[b] || 0) - (chartData.totals[a] || 0))
       .slice(0, 10);
 
     const datasets = sortedLanguages.map((language, index) => {
       const color = LANGUAGE_COLORS[index % LANGUAGE_COLORS.length];
       return {
         label: language,
-        data: sortedDates.map(d => map[d]?.[language] || 0),
+        data: chartData.dates.map(d => chartData.data[d]?.[language] || 0),
         backgroundColor: color,
         borderColor: color,
         borderWidth: 1,
@@ -70,16 +49,16 @@ export default function LanguageDailyChart({ metrics, variant }: LanguageDailyCh
       };
     });
 
-    const total = sortedLanguages.reduce((sum, lang) => sum + (languageTotals[lang] || 0), 0);
+    const total = sortedLanguages.reduce((sum, lang) => sum + (chartData.totals[lang] || 0), 0);
 
     return {
-      labels: sortedDates.map(d => formatShortDate(d)),
+      labels: chartData.dates.map(d => formatShortDate(d)),
       datasets,
       total,
     };
-  }, [metrics, isGenerations]);
+  }, [chartData]);
 
-  const chartData = { labels, datasets };
+  const barData = { labels, datasets };
 
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
@@ -112,7 +91,7 @@ export default function LanguageDailyChart({ metrics, variant }: LanguageDailyCh
     <ChartContainer
       title={title}
       description={description}
-      isEmpty={!metrics || metrics.length === 0 || datasets.length === 0}
+      isEmpty={chartData.dates.length === 0 || datasets.length === 0}
       emptyState={emptyMessage}
       summaryStats={[
         { value: datasets.length, label: 'Languages', colorClass: 'text-blue-600' },
@@ -124,7 +103,7 @@ export default function LanguageDailyChart({ metrics, variant }: LanguageDailyCh
       ]}
       chartHeight="h-80"
     >
-      <Bar data={chartData} options={options} />
+      <Bar data={barData} options={options} />
     </ChartContainer>
   );
 }
