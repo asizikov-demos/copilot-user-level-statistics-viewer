@@ -36,6 +36,7 @@ const ViewRouter: React.FC = () => {
 
   useEffect(() => {
     setUserDetails(null);
+    setUserDetailsLoading(false);
     setLoadedUserId(null);
   }, [aggregatedMetrics]);
 
