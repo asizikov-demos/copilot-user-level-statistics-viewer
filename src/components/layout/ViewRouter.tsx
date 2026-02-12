@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
-import { useRawMetrics } from '../MetricsContext';
-import { useMetricsProcessing } from '../../hooks/useMetricsProcessing';
+import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
+import { terminateWorker } from '../../workers/metricsWorkerClient';
 import { FileUploadArea } from '../features/file-upload';
 import { OverviewDashboard } from '../features/overview';
 import UniqueUsersView from '../UniqueUsersView';
@@ -20,25 +20,18 @@ import ExecutiveSummaryView from '../ExecutiveSummaryView';
 
 const ViewRouter: React.FC = () => {
   const { 
-    rawMetrics, hasData, enterpriseName,
-    clearRawMetrics, resetRawMetrics
-  } = useRawMetrics();
+    hasData, enterpriseName, aggregatedMetrics,
+    isLoading, error, resetMetrics
+  } = useMetrics();
   const { 
     currentView, selectedUser, selectedModel,
     navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
   } = useNavigation();
-  const { handleFileUpload, handleSampleLoad, isLoading, error, uploadProgress } = useFileUpload();
-
-  const { aggregatedMetrics, isProcessing, processingError } = useMetricsProcessing(rawMetrics, hasData);
-
-  useEffect(() => {
-    if (aggregatedMetrics && rawMetrics.length > 0) {
-      clearRawMetrics();
-    }
-  }, [aggregatedMetrics, rawMetrics.length, clearRawMetrics]);
+  const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
 
   const resetData = () => {
-    resetRawMetrics();
+    terminateWorker();
+    resetMetrics();
     resetNavigation();
   };
 
@@ -58,12 +51,12 @@ const ViewRouter: React.FC = () => {
     );
   }
 
-  if (processingError) {
+  if (error) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-md">
           <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to process metrics</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{processingError}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
           <button
             onClick={resetData}
             className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
@@ -75,7 +68,7 @@ const ViewRouter: React.FC = () => {
     );
   }
 
-  if (isProcessing || !aggregatedMetrics) {
+  if (isLoading || !aggregatedMetrics) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">

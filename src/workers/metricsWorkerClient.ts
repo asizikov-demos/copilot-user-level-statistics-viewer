@@ -15,9 +15,16 @@ interface PendingAggregateRequest {
   reject: (error: Error) => void;
 }
 
+interface PendingParseAndAggregateRequest {
+  resolve: (value: { result: AggregatedMetrics; enterpriseName: string | null; recordCount: number }) => void;
+  reject: (error: Error) => void;
+  onProgress?: (progress: MultiFileProgress) => void;
+}
+
 type PendingRequest =
   | ({ kind: 'parse' } & PendingParseRequest)
-  | ({ kind: 'aggregate' } & PendingAggregateRequest);
+  | ({ kind: 'aggregate' } & PendingAggregateRequest)
+  | ({ kind: 'parseAndAggregate' } & PendingParseAndAggregateRequest);
 
 let worker: Worker | null = null;
 const pendingRequests = new Map<string, PendingRequest>();
@@ -35,7 +42,7 @@ function getWorker(): Worker {
 
     switch (msg.type) {
       case 'parseProgress':
-        if (pending.kind === 'parse') {
+        if (pending.kind === 'parse' || pending.kind === 'parseAndAggregate') {
           pending.onProgress?.(msg.progress);
         }
         break;
@@ -49,6 +56,12 @@ function getWorker(): Worker {
         pendingRequests.delete(msg.id);
         if (pending.kind === 'aggregate') {
           pending.resolve(msg.result);
+        }
+        break;
+      case 'parseAndAggregateResult':
+        pendingRequests.delete(msg.id);
+        if (pending.kind === 'parseAndAggregate') {
+          pending.resolve({ result: msg.result, enterpriseName: msg.enterpriseName, recordCount: msg.recordCount });
         }
         break;
       case 'error':
@@ -99,6 +112,22 @@ export function aggregateMetricsInWorker(
     pendingRequests.set(id, { kind: 'aggregate', resolve, reject });
     try {
       getWorker().postMessage({ type: 'aggregate', id, metrics });
+    } catch (err) {
+      pendingRequests.delete(id);
+      reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  });
+}
+
+export function parseAndAggregateInWorker(
+  files: File[],
+  onProgress?: (progress: MultiFileProgress) => void
+): Promise<{ result: AggregatedMetrics; enterpriseName: string | null; recordCount: number }> {
+  const id = nextId();
+  return new Promise((resolve, reject) => {
+    pendingRequests.set(id, { kind: 'parseAndAggregate', resolve, reject, onProgress });
+    try {
+      getWorker().postMessage({ type: 'parseAndAggregate', id, files });
     } catch (err) {
       pendingRequests.delete(id);
       reject(err instanceof Error ? err : new Error(String(err)));

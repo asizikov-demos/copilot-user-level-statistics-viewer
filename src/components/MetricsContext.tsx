@@ -1,46 +1,46 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { CopilotMetrics } from '../types/metrics';
+import type { AggregatedMetrics } from '../domain/metricsAggregator';
 
-interface RawMetricsState {
-  rawMetrics: CopilotMetrics[];
+interface MetricsState {
   hasData: boolean;
+  aggregatedMetrics: AggregatedMetrics | null;
   enterpriseName: string | null;
   isLoading: boolean;
   error: string | null;
 }
 
-interface RawMetricsActions {
-  setRawMetrics: (metrics: CopilotMetrics[]) => void;
-  clearRawMetrics: () => void;
+interface MetricsActions {
+  setAggregatedMetrics: (metrics: AggregatedMetrics) => void;
+  setHasData: (hasData: boolean) => void;
   setEnterpriseName: (name: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  resetRawMetrics: () => void;
+  resetMetrics: () => void;
 }
 
-interface RawMetricsContextValue extends RawMetricsState, RawMetricsActions {}
+interface MetricsContextValue extends MetricsState, MetricsActions {}
 
-const RawMetricsContext = createContext<RawMetricsContextValue | undefined>(undefined);
+const MetricsContext = createContext<MetricsContextValue | undefined>(undefined);
 
-const initialRawMetricsState: RawMetricsState = {
-  rawMetrics: [],
+const initialMetricsState: MetricsState = {
   hasData: false,
+  aggregatedMetrics: null,
   enterpriseName: null,
   isLoading: false,
   error: null,
 };
 
-export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<RawMetricsState>(initialRawMetricsState);
+export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<MetricsState>(initialMetricsState);
 
-  const setRawMetrics = useCallback((metrics: CopilotMetrics[]) => {
-    setState((prev) => ({ ...prev, rawMetrics: metrics, hasData: metrics.length > 0 }));
+  const setAggregatedMetrics = useCallback((metrics: AggregatedMetrics) => {
+    setState((prev) => ({ ...prev, aggregatedMetrics: metrics, hasData: true }));
   }, []);
 
-  const clearRawMetrics = useCallback(() => {
-    setState((prev) => ({ ...prev, rawMetrics: [] }));
+  const setHasData = useCallback((hasData: boolean) => {
+    setState((prev) => ({ ...prev, hasData }));
   }, []);
 
   const setEnterpriseName = useCallback((name: string | null) => {
@@ -55,36 +55,40 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState((prev) => ({ ...prev, error: error }));
   }, []);
 
-  const resetRawMetrics = useCallback(() => {
-    setState(initialRawMetricsState);
+  const resetMetrics = useCallback(() => {
+    setState(initialMetricsState);
   }, []);
 
-  const value = useMemo<RawMetricsContextValue>(
+  const value = useMemo<MetricsContextValue>(
     () => ({
       ...state,
-      setRawMetrics,
-      clearRawMetrics,
+      setAggregatedMetrics,
+      setHasData,
       setEnterpriseName,
       setIsLoading,
       setError,
-      resetRawMetrics,
+      resetMetrics,
     }),
-    [state, setRawMetrics, clearRawMetrics, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
+    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setIsLoading, setError, resetMetrics]
   );
 
   return (
-    <RawMetricsContext.Provider value={value}>
+    <MetricsContext.Provider value={value}>
       {children}
-    </RawMetricsContext.Provider>
+    </MetricsContext.Provider>
   );
 };
 
-export const MetricsProvider = RawMetricsProvider;
+export const MetricsProvider = MetricsContextProvider;
 
-export function useRawMetrics(): RawMetricsContextValue {
-  const ctx = useContext(RawMetricsContext);
+export function useMetrics(): MetricsContextValue {
+  const ctx = useContext(MetricsContext);
   if (!ctx) {
-    throw new Error('useRawMetrics must be used within a RawMetricsProvider');
+    throw new Error('useMetrics must be used within a MetricsProvider');
   }
   return ctx;
+}
+
+export function useRawMetrics(): MetricsContextValue {
+  return useMetrics();
 }

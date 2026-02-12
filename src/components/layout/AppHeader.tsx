@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useRawMetrics } from '../MetricsContext';
+import { useMetrics } from '../MetricsContext';
 
 const AppHeader: React.FC = () => {
-  const { hasData } = useRawMetrics();
+  const { hasData } = useMetrics();
 
   return (
     <div className="text-center mb-8">
