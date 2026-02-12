@@ -94,6 +94,8 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           id: unknown.id,
           error: `Unknown request type '${unknown.type ?? 'unknown'}'`,
         });
+      } else {
+        console.warn(`[metricsWorker] Received message with no id and unrecognised type: '${unknown.type ?? 'unknown'}'`);
       }
       break;
     }

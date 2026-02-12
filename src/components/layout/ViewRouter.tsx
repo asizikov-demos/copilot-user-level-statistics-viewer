@@ -36,7 +36,6 @@ const ViewRouter: React.FC = () => {
   const resetData = () => {
     terminateWorker();
     resetMetrics();
-    setWarning(null);
     resetNavigation();
   };
 
