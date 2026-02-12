@@ -6,50 +6,32 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
-import { CopilotMetrics } from '../../types/metrics';
-import { KNOWN_MODELS } from '../../domain/modelConfig';
+import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 import InsightsCard from '../ui/InsightsCard';
 
 registerChartJS();
 
 interface ModelsUsageChartProps {
-  metrics: CopilotMetrics[];
+  modelEntries: ModelDailyUsageEntry[];
+  dates: string[];
+  totalInteractions: number;
   variant: 'standard' | 'premium';
 }
 
-export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartProps) {
+export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isPremium = variant === 'premium';
 
-  const modelNames = useMemo(
-    () => KNOWN_MODELS.filter(m => m.isPremium === isPremium).map(m => m.name.toLowerCase()),
-    [isPremium]
-  );
-
-  const { labels, datasets, totalInteractions, modelTotals, modelOrder } = useMemo(() => {
-    const daySet = new Set<string>();
+  const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
+    const sortedModels = [...modelEntries].sort((a, b) => b.total - a.total);
+    const modelOrder = sortedModels.map(e => e.model);
     const modelTotals: Record<string, number> = {};
-    const map: Record<string, Record<string, number>> = {};
-
-    for (const metric of metrics) {
-      const date = metric.day;
-      daySet.add(date);
-      if (!map[date]) map[date] = {};
-
-      for (const mf of metric.totals_by_model_feature) {
-        const model = mf.model.toLowerCase();
-        if (!modelNames.includes(model)) continue;
-        const count = mf.user_initiated_interaction_count;
-        map[date][model] = (map[date][model] || 0) + count;
-        modelTotals[model] = (modelTotals[model] || 0) + count;
-      }
+    for (const entry of sortedModels) {
+      modelTotals[entry.model] = entry.total;
     }
 
-    const sortedDates = Array.from(daySet).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-    const sortedModels = Object.keys(modelTotals).sort((a, b) => (modelTotals[b] || 0) - (modelTotals[a] || 0));
-
     const UNKNOWN_COLOR = 'hsl(0, 70%, 50%)';
-    const modelsWithoutUnknown = sortedModels.filter(m => m !== 'unknown');
+    const modelsWithoutUnknown = modelOrder.filter(m => m !== 'unknown');
     const modelIndexMap = new Map(modelsWithoutUnknown.map((m, i) => [m, i]));
 
     const getModelColor = (model: string): string => {
@@ -66,11 +48,11 @@ export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartP
       return `hsl(${hue}, 70%, 55%)`;
     };
 
-    const datasets = sortedModels.map((model) => {
-      const color = getModelColor(model);
+    const datasets = sortedModels.map((entry) => {
+      const color = getModelColor(entry.model);
       return {
-        label: model,
-        data: sortedDates.map(d => map[d]?.[model] || 0),
+        label: entry.model,
+        data: dates.map(d => entry.dailyData[d] || 0),
         backgroundColor: color,
         borderColor: color,
         borderWidth: 1,
@@ -78,16 +60,13 @@ export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartP
       };
     });
 
-    const totalInteractions = sortedModels.reduce((sum, m) => sum + (modelTotals[m] || 0), 0);
-
     return {
-      labels: sortedDates.map(d => formatShortDate(d)),
+      labels: dates.map(d => formatShortDate(d)),
       datasets,
-      totalInteractions,
       modelTotals,
-      modelOrder: sortedModels
+      modelOrder
     };
-  }, [metrics, modelNames, isPremium]);
+  }, [modelEntries, dates, isPremium]);
 
   const insights = useMemo(() => {
     if (!totalInteractions || !modelOrder.length) return null;
@@ -161,7 +140,7 @@ export default function ModelsUsageChart({ metrics, variant }: ModelsUsageChartP
   return (
     <ChartContainer
       title={`${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`}
-      isEmpty={!metrics || metrics.length === 0 || datasets.length === 0}
+      isEmpty={dates.length === 0 || datasets.length === 0}
       emptyState={`No ${isPremium ? 'premium' : 'standard'} model usage data available`}
       summaryStats={[
         { value: datasets.length, label: 'Models', colorClass: isPremium ? 'text-purple-600' : 'text-blue-600' },

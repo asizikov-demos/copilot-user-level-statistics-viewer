@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CopilotMetrics } from '../types/metrics';
+import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
@@ -9,78 +9,16 @@ import { ViewPanel, MetricTileIcon } from './ui';
 import type { VoidCallback } from '../types/events';
 import { useSortableTable } from '../hooks/useSortableTable';
 
-interface IDEStats {
-  ide: string;
-  uniqueUsers: number;
-  totalEngagements: number;
-  totalGenerations: number;
-  totalAcceptances: number;
-  locAdded: number;
-  locDeleted: number;
-  locSuggestedToAdd: number;
-  locSuggestedToDelete: number;
-}
+type IDEStats = IDEStatsData;
 
 interface IDEViewProps {
-  metrics: CopilotMetrics[];
+  ideStats: IDEStatsData[];
+  multiIDEUsersCount: number;
+  totalUniqueIDEUsers: number;
   onBack: VoidCallback;
 }
 
-export default function IDEView({ metrics, onBack }: IDEViewProps) {
-  const ideStats = React.useMemo(() => {
-    const ideMap = new Map<string, {
-      users: Set<number>;
-      totalEngagements: number;
-      totalGenerations: number;
-      totalAcceptances: number;
-      locAdded: number;
-      locDeleted: number;
-      locSuggestedToAdd: number;
-      locSuggestedToDelete: number;
-    }>();
-
-    for (const metric of metrics) {
-      for (const ideTotal of metric.totals_by_ide) {
-        const ide = ideTotal.ide;
-        
-        if (!ideMap.has(ide)) {
-          ideMap.set(ide, {
-            users: new Set(),
-            totalEngagements: 0,
-            totalGenerations: 0,
-            totalAcceptances: 0,
-            locAdded: 0,
-            locDeleted: 0,
-            locSuggestedToAdd: 0,
-            locSuggestedToDelete: 0
-          });
-        }
-
-        const ideStats = ideMap.get(ide)!;
-        ideStats.users.add(metric.user_id);
-        ideStats.totalGenerations += ideTotal.code_generation_activity_count;
-        ideStats.totalAcceptances += ideTotal.code_acceptance_activity_count;
-        ideStats.totalEngagements += ideTotal.user_initiated_interaction_count;
-        ideStats.locAdded += ideTotal.loc_added_sum;
-        ideStats.locDeleted += ideTotal.loc_deleted_sum;
-        ideStats.locSuggestedToAdd += ideTotal.loc_suggested_to_add_sum;
-        ideStats.locSuggestedToDelete += ideTotal.loc_suggested_to_delete_sum;
-      }
-    }
-
-    return Array.from(ideMap.entries())
-      .map(([ide, stats]) => ({
-        ide,
-        uniqueUsers: stats.users.size,
-        totalEngagements: stats.totalEngagements,
-        totalGenerations: stats.totalGenerations,
-        totalAcceptances: stats.totalAcceptances,
-        locAdded: stats.locAdded,
-        locDeleted: stats.locDeleted,
-        locSuggestedToAdd: stats.locSuggestedToAdd,
-        locSuggestedToDelete: stats.locSuggestedToDelete
-      }));
-  }, [metrics]);
+export default function IDEView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, onBack }: IDEViewProps) {
 
   const {
     sortField: usersSortField,
@@ -100,19 +38,6 @@ export default function IDEView({ metrics, onBack }: IDEViewProps) {
   const sumUsersPerIDE = ideStats.reduce((sum, ide) => sum + ide.uniqueUsers, 0);
   const averageUsersPerIDE = totalIDEs > 0 ? Math.round((sumUsersPerIDE / totalIDEs) * 10) / 10 : 0;
 
-  const userIdToIDEs = new Map<number, Set<string>>();
-  for (const metric of metrics) {
-    const idesForUser = userIdToIDEs.get(metric.user_id) ?? new Set<string>();
-    for (const ideTotal of metric.totals_by_ide) {
-      idesForUser.add(ideTotal.ide);
-    }
-    if (idesForUser.size > 0) {
-      userIdToIDEs.set(metric.user_id, idesForUser);
-    }
-  }
-
-  const multiIDEUsersCount = Array.from(userIdToIDEs.values()).filter(ides => ides.size > 1).length;
-  const totalUniqueIDEUsers = userIdToIDEs.size;
   const topIDE = sortedIdesByUsers[0];
   const topIDEUserShare = topIDE && totalUniqueIDEUsers > 0
     ? Math.round((topIDE.uniqueUsers / totalUniqueIDEUsers) * 1000) / 10
