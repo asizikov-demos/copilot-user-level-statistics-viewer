@@ -160,6 +160,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
 
     const allDays = userDetails.days.map(d => d.day).sort();
+    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const languageColors: Record<string, string> = {
       'javascript': '#F7DF1E',
@@ -211,7 +212,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
     const datasets = allLanguages.map((language, index) => {
       const data = allDays.map(dayStr => {
-        const dayData = userDetails.days.find(d => d.day === dayStr);
+        const dayData = dayMap.get(dayStr);
         const languageData = dayData?.totals_by_language_feature
           .filter(item => item.language === language)
           .reduce((sum, item) => sum + item.code_generation_activity_count, 0) || 0;
@@ -239,6 +240,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     ).filter(model => model && model !== '' && model !== 'unknown').sort();
 
     const allDays = userDetails.days.map(d => d.day).sort();
+    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const modelColors: Record<string, string> = {
       'gpt-4': '#10A37F',
@@ -256,7 +258,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
     const datasets = allModels.map((model, index) => {
       const data = allDays.map(dayStr => {
-        const dayData = userDetails.days.find(d => d.day === dayStr);
+        const dayData = dayMap.get(dayStr);
         const modelData = dayData?.totals_by_model_feature
           .filter(item => item.model === model)
           .reduce((sum, item) => sum + item.user_initiated_interaction_count, 0) || 0;

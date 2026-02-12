@@ -69,10 +69,11 @@ export default function IDEActivityChart({
     ).sort();
 
     const allDays = days.map(d => d.day).sort();
+    const dayMap = new Map(days.map(d => [d.day, d]));
 
     const datasets = allIDEs.map((ide, index) => {
       const data = allDays.map(dayStr => {
-        const dayData = days.find(d => d.day === dayStr);
+        const dayData = dayMap.get(dayStr);
         const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
         return ideData?.user_initiated_interaction_count || 0;
       });
