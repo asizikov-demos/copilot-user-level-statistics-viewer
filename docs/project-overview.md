@@ -121,10 +121,11 @@ These are not the primary metrics input; instead, they are used for contextual p
 
 ### 2.3. Derived Structures
 
-Several derived data structures are computed from raw `CopilotMetrics`:
+Several derived data structures are computed from raw `CopilotMetrics` during aggregation. All computation happens inside the Web Worker; only the pre-aggregated results are returned to the main thread.
 
 - `MetricsStats` – aggregate stats for the current filtered dataset (unique users, chat/agent/completion users, top language/IDE/model, total records, date range)
 - `UserSummary` – per-user aggregates (interactions, LOC activity, days active, feature usage flags)
+- `UserDetailedMetrics` – comprehensive per-user pre-aggregated data including feature/IDE/language/model aggregates, daily PRU analysis, daily impact series, and plugin versions (defined in `src/types/aggregatedMetrics.ts`)
 - Multiple per-day time series:
 	- `DailyEngagementData` – active users and engagement percentage per day
 	- `DailyChatUsersData` / `DailyChatRequestsData` – chat usage by mode and day
@@ -133,8 +134,14 @@ Several derived data structures are computed from raw `CopilotMetrics`:
 	- `ModeImpactData` variants – LOC impact per mode (agent, completion, edit, inline, joined)
 	- `LanguageStats` – aggregates by language
 	- `ModelFeatureDistributionData` – interactions and PRUs by model and feature category
+- Global and cross-cutting aggregated types (defined in `src/types/metrics.ts`):
+	- `IDEStatsData` – global IDE statistics (name, user counts, interaction totals)
+	- `PluginVersionAnalysisData` – plugin version analysis for JetBrains/VS Code (version, user count, latest flag)
+	- `LanguageFeatureImpactData` – language × feature LOC impact matrix
+	- `DailyLanguageChartData` – pre-computed daily language chart data (date, per-language LOC breakdowns)
+	- `ModelBreakdownData` – premium/standard model usage breakdown (model name, request counts, PRU totals)
 
-All of these are defined in `src/utils/metricsParser.ts` and `src/types/metrics.ts`.
+These types are defined across `src/types/metrics.ts`, `src/types/aggregatedMetrics.ts`, and `src/domain/calculators/metricCalculators.ts`.
 
 ---
 
@@ -247,7 +254,7 @@ src/
 State is managed on the client using React hooks and multiple context providers:
 
 - **`src/components/MetricsContext.tsx`** defines `MetricsProvider` with one hook:
-	- `useRawMetrics` – access to raw metrics, enterprise name, and loading/error state
+	- `useRawMetrics` – access to `hasData` flag, enterprise name, loading/error state, and actions to set/clear metrics. After aggregation completes, raw metrics are cleared from the context (`clearRawMetrics()`), leaving only `hasData: true` to indicate that data has been loaded. Components check `hasData` to determine whether metrics are available.
 - **`src/state/NavigationContext.tsx`** manages view navigation:
 	- Current view mode (`ViewMode`)
 	- Selected user and model state
@@ -258,7 +265,7 @@ The main `page.tsx` is now slim and delegates to:
 - `OverviewDashboard` – renders the main dashboard
 - `FileUploadArea` – handles file upload UI
 
-The `useMetricsProcessing` hook offloads aggregation to a Web Worker, keeping the main thread responsive. The result is used directly by `ViewRouter`.
+The `useMetricsProcessing` hook offloads aggregation to a Web Worker, keeping the main thread responsive. Once aggregation is complete, raw metrics are cleared from React context to free memory. The pre-aggregated `AggregatedMetrics` result is used directly by `ViewRouter` and all view components.
 
 ### 3.3. Web Worker Architecture
 
@@ -286,6 +293,8 @@ The worker is pre-bundled into `public/workers/metricsWorker.js` using **esbuild
 | `aggregateResult` | `{ id, result: AggregatedMetrics }` | Computed aggregated metrics |
 | `error` | `{ id, error: string }` | Error during processing |
 
+After a successful `aggregateResult` response, the main thread clears the raw `CopilotMetrics[]` from React context (via `clearRawMetrics()`), retaining only `hasData: true`. This ensures raw metrics are transient — they exist on the main thread only during the upload-to-aggregation pipeline, then are released.
+
 ### 3.4. Computation Layer
 
 Computation is organized into focused modules:
@@ -303,6 +312,11 @@ Computation is organized into focused modules:
 - `modelUsageCalculator.ts` – model usage and PRU data
 - `featureAdoptionCalculator.ts` – feature adoption funnel
 - `impactCalculator.ts` – LOC impact by feature
+- `ideStatsCalculator.ts` – global IDE statistics (user counts, interaction totals per IDE)
+- `pluginVersionCalculator.ts` – plugin version analysis for JetBrains/VS Code
+- `languageFeatureImpactCalculator.ts` – language × feature LOC impact matrix
+- `modelBreakdownCalculator.ts` – premium/standard model usage breakdown
+- `userDetailCalculator.ts` – per-user detailed metrics (feature, IDE, language, model aggregates, daily series)
 
 **Aggregator** (`src/domain/metricsAggregator.ts`):
 - `aggregateMetrics` – orchestrates all calculators to produce `AggregatedMetrics`
@@ -326,6 +340,17 @@ Utility functions exported from this module:
 
 This domain configuration is used by the parser to compute PRUs and service value and by PRU-related visualizations.
 
+### 3.5. Memory Optimization
+
+Raw `CopilotMetrics[]` are treated as **transient data** on the main thread. They exist only during the file upload → aggregation pipeline:
+
+1. User uploads a file; the Web Worker parses it and returns `CopilotMetrics[]` to the main thread.
+2. The main thread stores the raw metrics temporarily in `MetricsContext` and immediately sends them to the Web Worker for aggregation.
+3. The worker computes `AggregatedMetrics` (which includes all pre-aggregated views such as `UserDetailedMetrics`, `IDEStatsData`, `ModelBreakdownData`, etc.).
+4. Once `AggregatedMetrics` is returned, the main thread clears the raw metrics array from React context (`clearRawMetrics()`), setting only `hasData: true`.
+
+This approach significantly reduces memory footprint for large datasets. Instead of retaining potentially hundreds of thousands of raw metric records in browser memory, only the compact pre-aggregated structures are kept. All view components consume data exclusively from `AggregatedMetrics`.
+
 ---
 
 ## 4. Data Flow
@@ -340,13 +365,15 @@ flowchart LR
 
   B -->|postMessage| W1[Web Worker: parseMultipleMetricsStreams]
 
-  W1 -->|postMessage| D[Store rawMetrics in MetricsContext]
+  W1 -->|postMessage| D[Store rawMetrics temporarily in MetricsContext]
 
   D --> E[useMetricsProcessing hook]
 
   E -->|postMessage| W2[Web Worker: aggregateMetrics]
 
   W2 -->|postMessage| F[ViewRouter renders appropriate view]
+
+  D -->|clearRawMetrics after aggregation| CLR[rawMetrics cleared, hasData: true]
 
   F --> G[Chart components using Chart.js]
 
@@ -379,7 +406,7 @@ flowchart LR
 
 4. `handleFileUpload` then:
 	 - Derives an `enterpriseName` from `user_login` suffix or `enterprise_id`.
-	 - Stores `rawMetrics` in `MetricsContext`.
+	 - Stores `rawMetrics` temporarily in `MetricsContext` (these will be cleared after aggregation).
 
 ### 4.3. Aggregation
 
@@ -395,8 +422,13 @@ Once `rawMetrics` exist, the `useMetricsProcessing` hook sends them to the Web W
 - `computeAgentModeHeatmapData` – agent mode requests, unique users, intensity (0–5), and service value.
 - `computeModelFeatureDistributionData` – model-level interactions by feature category, PRUs and service value.
 - `computeAgentImpactData`, `computeCodeCompletionImpactData`, `computeEditModeImpactData`, `computeInlineModeImpactData`, `computeJoinedImpactData` – mode-specific LOC impact series.
+- `computeIDEStats` – global IDE statistics (user counts, interaction totals per IDE).
+- `computePluginVersionAnalysis` – plugin version analysis for JetBrains and VS Code.
+- `computeLanguageFeatureImpact` – language × feature LOC impact matrix.
+- `computeModelBreakdown` – premium/standard model usage breakdown.
+- `computeUserDetailedMetrics` – per-user pre-aggregated data (feature, IDE, language, model aggregates, daily series, plugin versions).
 
-The resulting `AggregatedMetrics` object is consumed directly by `ViewRouter` and individual view components.
+After aggregation completes, the main thread clears the raw `CopilotMetrics[]` from React context. The resulting `AggregatedMetrics` object is the sole data source for all view components — no component accesses raw metrics directly.
 
 ### 4.4. Views and Navigation
 
@@ -408,7 +440,7 @@ Navigation is managed by `NavigationContext` which maintains `currentView` state
 	- Time series charts (Engagement, Chat Users, Chat Requests)
 
 - `users` – `UniqueUsersView` listing all users (`UserSummary`) and allowing click-through.
-- `userDetails` – `UserDetailsView` for a selected user (passed `CopilotMetrics[]` for that user).
+- `userDetails` – `UserDetailsView` for a selected user (consumes pre-aggregated `UserDetailedMetrics` from `AggregatedMetrics`).
 - `languages` – `LanguagesView` showing language statistics and charts.
 - `ides` – `IDEView` focusing on IDE-level usage.
 - `copilotImpact` – `CopilotImpactView`, which renders multiple `ModeImpactChart` instances using the various LOC impact series.
@@ -443,7 +475,7 @@ flowchart TB
 	end
 
 	subgraph StateAndContext
-		MC[MetricsContext rawMetrics]
+		MC[MetricsContext hasData flag]
 		NC[NavigationContext currentView]
 	end
 
@@ -506,11 +538,13 @@ flowchart TB
 - The app is a **client-side Next.js dashboard** for **GitHub Copilot User Level Metrics**.
 - Data is provided as newline-delimited JSON or JSON array exports from GitHub; only the **new LOC schema** is supported.
 - **Parsing and aggregation run in a Web Worker** to keep the UI responsive. The worker is bundled as a separate chunk, compatible with static export to GitHub Pages.
+- **Raw metrics are transient** — they exist on the main thread only during file upload, then are cleared after aggregation completes. Only pre-aggregated `AggregatedMetrics` is retained, significantly reducing memory footprint for large datasets.
 - All heavy lifting (parsing, aggregation, PRU calculations, LOC impact analysis) happens in **`metricsFileParser.ts`**, **`metricsParser.ts`**, **`metricsAggregator.ts`**, **`domain/calculators/`**, and **`modelConfig.ts`** — all executed inside the worker.
 - The worker bridge (`src/workers/`) provides a typed, Promise-based API for the main thread hooks.
-- State is managed through React contexts: **`MetricsContext`** for data and **`NavigationContext`** for view routing.
+- State is managed through React contexts: **`MetricsContext`** (with `hasData` flag) for data state and **`NavigationContext`** for view routing.
+- All view components consume pre-aggregated data from `AggregatedMetrics`; no component accesses raw `CopilotMetrics[]` directly.
 - Reusable hooks (`useFileUpload`, `useMetricsProcessing`, `usePluginVersions`, `useSortableTable`, `useExpandableList`) encapsulate common logic.
-- The UI is organized into multiple views that share the same filtered dataset, providing different perspectives on the same underlying metrics.
+- The UI is organized into multiple views that share the same pre-aggregated dataset, providing different perspectives on the same underlying metrics.
 - Type safety is enhanced through strict event handler types (`events.ts`), discriminated unions for view props (`navigation.ts`), and branded types for IDs (`branded.ts`).
 
 Use this document as the entry point when onboarding to the codebase or when extending analytics and visualizations.
