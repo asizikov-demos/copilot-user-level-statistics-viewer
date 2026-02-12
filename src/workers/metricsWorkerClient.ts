@@ -50,24 +50,36 @@ function getWorker(): Worker {
         pendingRequests.delete(msg.id);
         if (pending.kind === 'parse') {
           pending.resolve(msg.result);
+        } else {
+          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
         break;
       case 'aggregateResult':
         pendingRequests.delete(msg.id);
         if (pending.kind === 'aggregate') {
           pending.resolve(msg.result);
+        } else {
+          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
         break;
       case 'parseAndAggregateResult':
         pendingRequests.delete(msg.id);
         if (pending.kind === 'parseAndAggregate') {
           pending.resolve({ result: msg.result, enterpriseName: msg.enterpriseName, recordCount: msg.recordCount });
+        } else {
+          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
         break;
       case 'error':
         pendingRequests.delete(msg.id);
         pending.reject(new Error(msg.error));
         break;
+      default: {
+        const unexpectedMsg = msg as { id: string; type: string };
+        pendingRequests.delete(unexpectedMsg.id);
+        pending.reject(new Error(`Unknown response type '${unexpectedMsg.type}' for '${pending.kind}' request`));
+        break;
+      }
     }
   };
 
