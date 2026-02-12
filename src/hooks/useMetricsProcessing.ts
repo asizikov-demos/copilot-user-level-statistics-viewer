@@ -9,7 +9,7 @@ export interface MetricsProcessingResult {
   processingError: string | null;
 }
 
-export function useMetricsProcessing(rawMetrics: CopilotMetrics[]): MetricsProcessingResult {
+export function useMetricsProcessing(rawMetrics: CopilotMetrics[], hasData: boolean): MetricsProcessingResult {
   const [aggregatedMetrics, setAggregatedMetrics] = useState<AggregatedMetrics | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -19,9 +19,11 @@ export function useMetricsProcessing(rawMetrics: CopilotMetrics[]): MetricsProce
     const currentRequestId = ++requestIdRef.current;
 
     if (!rawMetrics.length) {
-      setAggregatedMetrics(null);
       setIsProcessing(false);
       setProcessingError(null);
+      if (!hasData) {
+        setAggregatedMetrics(null);
+      }
       return;
     }
 
@@ -43,7 +45,7 @@ export function useMetricsProcessing(rawMetrics: CopilotMetrics[]): MetricsProce
           setProcessingError(err instanceof Error ? err.message : 'Aggregation failed');
         }
       });
-  }, [rawMetrics]);
+  }, [rawMetrics, hasData]);
 
   return { aggregatedMetrics, isProcessing, processingError };
 }

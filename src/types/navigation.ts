@@ -1,4 +1,5 @@
-import type { CopilotMetrics, MetricsStats, UserSummary } from './metrics';
+import type { MetricsStats, UserSummary, IDEStatsData, PluginVersionAnalysisData, LanguageFeatureImpactData, DailyLanguageChartData, ModelBreakdownData } from './metrics';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type {
   DailyEngagementData,
   DailyChatUsersData,
@@ -77,8 +78,7 @@ export interface OverviewViewProps extends BackNavigableViewProps {
 export interface UsersViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.USERS;
   users: UserSummary[];
-  rawMetrics: CopilotMetrics[];
-  onUserClick: (userLogin: string, userId: number, userMetrics: CopilotMetrics[]) => void;
+  onUserClick: (userLogin: string, userId: number) => void;
 }
 
 export interface ExecutiveSummaryViewProps extends BackNavigableViewProps {
@@ -94,7 +94,8 @@ export interface ExecutiveSummaryViewProps extends BackNavigableViewProps {
 
 export interface UserDetailsViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.USER_DETAILS;
-  userMetrics: CopilotMetrics[];
+  userDetails: UserDetailedMetrics;
+  userSummary: UserSummary;
   userLogin: string;
   userId: number;
 }
@@ -102,11 +103,16 @@ export interface UserDetailsViewProps extends BackNavigableViewProps {
 export interface LanguagesViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.LANGUAGES;
   languages: LanguageStats[];
+  languageFeatureImpactData: LanguageFeatureImpactData;
+  dailyLanguageGenerationsData: DailyLanguageChartData;
+  dailyLanguageLocData: DailyLanguageChartData;
 }
 
 export interface IDEsViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.IDES;
-  metrics: CopilotMetrics[];
+  ideStats: IDEStatsData[];
+  multiIDEUsersCount: number;
+  totalUniqueIDEUsers: number;
 }
 
 export interface CopilotImpactViewProps extends BackNavigableViewProps {
@@ -116,6 +122,7 @@ export interface CopilotImpactViewProps extends BackNavigableViewProps {
   editModeImpactData: ModeImpactData[];
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
+  cliImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
 
@@ -131,11 +138,12 @@ export interface CopilotAdoptionViewProps extends BackNavigableViewProps {
   featureAdoptionData: FeatureAdoptionData;
   agentModeHeatmapData: AgentModeHeatmapData[];
   stats: MetricsStats;
-  metrics: CopilotMetrics[];
+  pluginVersionData: PluginVersionAnalysisData;
 }
 
 export interface ModelDetailsViewProps extends BackNavigableViewProps {
   view: typeof VIEW_MODES.MODEL_DETAILS;
+  modelBreakdownData: ModelBreakdownData;
 }
 
 /**

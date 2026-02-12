@@ -5,6 +5,7 @@ import { CopilotMetrics } from '../types/metrics';
 
 interface RawMetricsState {
   rawMetrics: CopilotMetrics[];
+  hasData: boolean;
   enterpriseName: string | null;
   isLoading: boolean;
   error: string | null;
@@ -12,6 +13,7 @@ interface RawMetricsState {
 
 interface RawMetricsActions {
   setRawMetrics: (metrics: CopilotMetrics[]) => void;
+  clearRawMetrics: () => void;
   setEnterpriseName: (name: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -24,6 +26,7 @@ const RawMetricsContext = createContext<RawMetricsContextValue | undefined>(unde
 
 const initialRawMetricsState: RawMetricsState = {
   rawMetrics: [],
+  hasData: false,
   enterpriseName: null,
   isLoading: false,
   error: null,
@@ -33,7 +36,11 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [state, setState] = useState<RawMetricsState>(initialRawMetricsState);
 
   const setRawMetrics = useCallback((metrics: CopilotMetrics[]) => {
-    setState((prev) => ({ ...prev, rawMetrics: metrics }));
+    setState((prev) => ({ ...prev, rawMetrics: metrics, hasData: metrics.length > 0 }));
+  }, []);
+
+  const clearRawMetrics = useCallback(() => {
+    setState((prev) => ({ ...prev, rawMetrics: [] }));
   }, []);
 
   const setEnterpriseName = useCallback((name: string | null) => {
@@ -56,12 +63,13 @@ export const RawMetricsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     () => ({
       ...state,
       setRawMetrics,
+      clearRawMetrics,
       setEnterpriseName,
       setIsLoading,
       setError,
       resetRawMetrics,
     }),
-    [state, setRawMetrics, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
+    [state, setRawMetrics, clearRawMetrics, setEnterpriseName, setIsLoading, setError, resetRawMetrics]
   );
 
   return (
