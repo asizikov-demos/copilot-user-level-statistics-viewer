@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { MultiFileProgress } from '../infra/metricsFileParser';
 import { parseAndAggregateInWorker } from '../workers/metricsWorkerClient';
 import { useMetrics } from '../components/MetricsContext';
@@ -16,6 +16,7 @@ interface UseFileUploadReturn {
 
 export function useFileUpload(): UseFileUploadReturn {
   const [uploadProgress, setUploadProgress] = useState<MultiFileProgress | null>(null);
+  const requestIdRef = useRef(0);
   const {
     isLoading,
     error,
@@ -25,16 +26,20 @@ export function useFileUpload(): UseFileUploadReturn {
     setError,
   } = useMetrics();
 
-  const processFiles = useCallback(async (files: File[]) => {
+  const processFiles = useCallback(async (files: File[], requestId: number) => {
     const { result, enterpriseName, recordCount } = await parseAndAggregateInWorker(files, (progress) => {
-      setUploadProgress(progress);
+      if (requestIdRef.current === requestId) {
+        setUploadProgress(progress);
+      }
     });
+    if (requestIdRef.current !== requestId) return;
     if (recordCount === 0) {
       throw new Error('No metrics found in the uploaded files');
     }
+    setError(null);
     setEnterpriseName(enterpriseName);
     setAggregatedMetrics(result);
-  }, [setAggregatedMetrics, setEnterpriseName]);
+  }, [setAggregatedMetrics, setEnterpriseName, setUploadProgress, setError]);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
@@ -50,23 +55,30 @@ export function useFileUpload(): UseFileUploadReturn {
       }
     }
 
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
     setUploadProgress(null);
 
     try {
-      await processFiles(files);
+      await processFiles(files, requestId);
     } catch (err) {
-      setError(`Failed to parse files: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      if (requestIdRef.current === requestId) {
+        setError(`Failed to parse files: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
     } finally {
-      setIsLoading(false);
-      setUploadProgress(null);
+      if (requestIdRef.current === requestId) {
+        setIsLoading(false);
+        setUploadProgress(null);
+      }
     }
-  }, [processFiles, setIsLoading, setError]);
+  }, [processFiles, setIsLoading, setError, setUploadProgress]);
 
   const handleSampleLoad = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
+    setUploadProgress(null);
 
     try {
       const response = await fetch(`${getBasePath()}/data/sample-report.ndjson`);
@@ -75,15 +87,22 @@ export function useFileUpload(): UseFileUploadReturn {
       }
       
       const blob = await response.blob();
+      if (requestIdRef.current !== requestId) return;
+
       const file = new File([blob], 'sample-report.ndjson', { type: 'application/x-ndjson' });
       
-      await processFiles([file]);
+      await processFiles([file], requestId);
     } catch (err) {
-      setError(`Failed to load sample report: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      if (requestIdRef.current === requestId) {
+        setError(`Failed to load sample report: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
     } finally {
-      setIsLoading(false);
+      if (requestIdRef.current === requestId) {
+        setIsLoading(false);
+        setUploadProgress(null);
+      }
     }
-  }, [processFiles, setIsLoading, setError]);
+  }, [processFiles, setIsLoading, setError, setUploadProgress]);
 
   return {
     handleFileUpload,
