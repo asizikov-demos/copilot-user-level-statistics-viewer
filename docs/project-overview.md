@@ -136,10 +136,10 @@ Several derived data structures are computed from raw `CopilotMetrics` during ag
 	- `ModelFeatureDistributionData` – interactions and PRUs by model and feature category
 - Global and cross-cutting aggregated types (defined in `src/types/metrics.ts`):
 	- `IDEStatsData` – global IDE statistics (name, user counts, interaction totals)
-	- `PluginVersionAnalysisData` – plugin version analysis for JetBrains/VS Code (version, user count, latest flag)
+	- `PluginVersionAnalysisData` – plugin version analysis for JetBrains/VS Code (version, user counts)
 	- `LanguageFeatureImpactData` – language × feature LOC impact matrix
 	- `DailyLanguageChartData` – pre-computed daily language chart data (date, per-language LOC breakdowns)
-	- `ModelBreakdownData` – premium/standard model usage breakdown (model name, request counts, PRU totals)
+	- `ModelBreakdownData` – premium/standard model usage breakdown
 
 These types are defined across `src/types/metrics.ts`, `src/types/aggregatedMetrics.ts`, and `src/domain/calculators/metricCalculators.ts`.
 
