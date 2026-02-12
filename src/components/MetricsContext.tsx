@@ -9,6 +9,7 @@ interface MetricsState {
   enterpriseName: string | null;
   isLoading: boolean;
   error: string | null;
+  warning: string | null;
 }
 
 interface MetricsActions {
@@ -17,6 +18,7 @@ interface MetricsActions {
   setEnterpriseName: (name: string | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setWarning: (warning: string | null) => void;
   resetMetrics: () => void;
 }
 
@@ -30,6 +32,7 @@ const initialMetricsState: MetricsState = {
   enterpriseName: null,
   isLoading: false,
   error: null,
+  warning: null,
 };
 
 export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -55,6 +58,10 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
     setState((prev) => ({ ...prev, error: error }));
   }, []);
 
+  const setWarning = useCallback((warning: string | null) => {
+    setState((prev) => ({ ...prev, warning }));
+  }, []);
+
   const resetMetrics = useCallback(() => {
     setState(initialMetricsState);
   }, []);
@@ -67,9 +74,10 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
       setEnterpriseName,
       setIsLoading,
       setError,
+      setWarning,
       resetMetrics,
     }),
-    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setIsLoading, setError, resetMetrics]
+    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setIsLoading, setError, setWarning, resetMetrics]
   );
 
   return (

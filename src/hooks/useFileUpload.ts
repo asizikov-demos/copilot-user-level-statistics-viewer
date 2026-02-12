@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MultiFileProgress } from '../infra/metricsFileParser';
-import { parseAndAggregateInWorker } from '../workers/metricsWorkerClient';
+import { parseAndAggregateInWorker, terminateWorker } from '../workers/metricsWorkerClient';
 import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
@@ -24,6 +24,7 @@ export function useFileUpload(): UseFileUploadReturn {
     setEnterpriseName,
     setIsLoading,
     setError,
+    setWarning,
   } = useMetrics();
 
   const processFiles = useCallback(async (files: File[], requestId: number) => {
@@ -32,15 +33,28 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(progress);
       }
     });
-    const { result, enterpriseName, recordCount } = response;
+    const { result, enterpriseName, recordCount, errors } = response;
     if (requestIdRef.current !== requestId) return;
     if (recordCount === 0) {
       throw new Error('No metrics found in the uploaded files');
     }
+    if (errors.length > 0) {
+      const details = errors.slice(0, 3).map(e => `${e.fileName}: ${e.error}`).join(' • ');
+      const suffix = errors.length > 3 ? ` (+${errors.length - 3} more)` : '';
+      setWarning(`Some files failed to parse (${errors.length}): ${details}${suffix}`);
+    } else {
+      setWarning(null);
+    }
     setError(null);
     setEnterpriseName(enterpriseName);
     setAggregatedMetrics(result);
-  }, [setAggregatedMetrics, setEnterpriseName, setUploadProgress, setError]);
+  }, [setAggregatedMetrics, setEnterpriseName, setUploadProgress, setError, setWarning]);
+
+  useEffect(() => {
+    return () => {
+      requestIdRef.current++;
+    };
+  }, []);
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
@@ -51,14 +65,17 @@ export function useFileUpload(): UseFileUploadReturn {
     for (const file of files) {
       const lowerName = file.name.toLowerCase();
       if (!lowerName.endsWith('.json') && !lowerName.endsWith('.ndjson')) {
+        setWarning(null);
         setError(`Unsupported file type: ${file.name}. Please upload .json or .ndjson files.`);
         return;
       }
     }
 
     const requestId = ++requestIdRef.current;
+    terminateWorker();
     setIsLoading(true);
     setError(null);
+    setWarning(null);
     setUploadProgress(null);
 
     try {
@@ -73,12 +90,14 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, setIsLoading, setError, setUploadProgress]);
+  }, [processFiles, setIsLoading, setError, setWarning, setUploadProgress]);
 
   const handleSampleLoad = useCallback(async () => {
     const requestId = ++requestIdRef.current;
+    terminateWorker();
     setIsLoading(true);
     setError(null);
+    setWarning(null);
     setUploadProgress(null);
 
     try {
@@ -103,7 +122,7 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, setIsLoading, setError, setUploadProgress]);
+  }, [processFiles, setIsLoading, setError, setWarning, setUploadProgress]);
 
   return {
     handleFileUpload,

@@ -21,7 +21,7 @@ import ExecutiveSummaryView from '../ExecutiveSummaryView';
 const ViewRouter: React.FC = () => {
   const { 
     hasData, enterpriseName, aggregatedMetrics,
-    isLoading, error, resetMetrics
+    isLoading, error, resetMetrics, setWarning
   } = useMetrics();
   const { 
     currentView, selectedUser, selectedModel,
@@ -36,6 +36,7 @@ const ViewRouter: React.FC = () => {
   const resetData = () => {
     terminateWorker();
     resetMetrics();
+    setWarning(null);
     resetNavigation();
   };
 
