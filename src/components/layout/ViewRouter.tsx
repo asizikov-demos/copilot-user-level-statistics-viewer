@@ -35,6 +35,11 @@ const ViewRouter: React.FC = () => {
   const [loadedUserId, setLoadedUserId] = useState<number | null>(null);
 
   useEffect(() => {
+    setUserDetails(null);
+    setLoadedUserId(null);
+  }, [aggregatedMetrics]);
+
+  useEffect(() => {
     if (currentView === VIEW_MODES.USER_DETAILS && selectedUser && loadedUserId !== selectedUser.id) {
       setUserDetailsLoading(true);
       setUserDetails(null);
