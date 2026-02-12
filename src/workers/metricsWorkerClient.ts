@@ -16,7 +16,7 @@ interface PendingAggregateRequest {
 }
 
 interface PendingParseAndAggregateRequest {
-  resolve: (value: { result: AggregatedMetrics; enterpriseName: string | null; recordCount: number }) => void;
+  resolve: (value: { result: AggregatedMetrics; enterpriseName: string | null; recordCount: number; errors: MultiFileResult['errors'] }) => void;
   reject: (error: Error) => void;
   onProgress?: (progress: MultiFileProgress) => void;
 }
@@ -65,7 +65,12 @@ function getWorker(): Worker {
       case 'parseAndAggregateResult':
         pendingRequests.delete(msg.id);
         if (pending.kind === 'parseAndAggregate') {
-          pending.resolve({ result: msg.result, enterpriseName: msg.enterpriseName, recordCount: msg.recordCount });
+          pending.resolve({
+            result: msg.result,
+            enterpriseName: msg.enterpriseName,
+            recordCount: msg.recordCount,
+            errors: msg.errors,
+          });
         } else {
           pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
@@ -134,7 +139,7 @@ export function aggregateMetricsInWorker(
 export function parseAndAggregateInWorker(
   files: File[],
   onProgress?: (progress: MultiFileProgress) => void
-): Promise<{ result: AggregatedMetrics; enterpriseName: string | null; recordCount: number }> {
+): Promise<{ result: AggregatedMetrics; enterpriseName: string | null; recordCount: number; errors: MultiFileResult['errors'] }> {
   const id = nextId();
   return new Promise((resolve, reject) => {
     pendingRequests.set(id, { kind: 'parseAndAggregate', resolve, reject, onProgress });

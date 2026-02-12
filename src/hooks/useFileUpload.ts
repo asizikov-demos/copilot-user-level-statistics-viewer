@@ -27,11 +27,12 @@ export function useFileUpload(): UseFileUploadReturn {
   } = useMetrics();
 
   const processFiles = useCallback(async (files: File[], requestId: number) => {
-    const { result, enterpriseName, recordCount } = await parseAndAggregateInWorker(files, (progress) => {
+    const response = await parseAndAggregateInWorker(files, (progress) => {
       if (requestIdRef.current === requestId) {
         setUploadProgress(progress);
       }
     });
+    const { result, enterpriseName, recordCount } = response;
     if (requestIdRef.current !== requestId) return;
     if (recordCount === 0) {
       throw new Error('No metrics found in the uploaded files');

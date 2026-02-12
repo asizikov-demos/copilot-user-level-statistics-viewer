@@ -11,5 +11,12 @@ export type WorkerResponse =
   | { type: 'parseProgress'; id: string; progress: MultiFileProgress }
   | { type: 'parseResult'; id: string; result: MultiFileResult }
   | { type: 'aggregateResult'; id: string; result: AggregatedMetrics }
-  | { type: 'parseAndAggregateResult'; id: string; result: AggregatedMetrics; enterpriseName: string | null; recordCount: number }
+  | {
+      type: 'parseAndAggregateResult';
+      id: string;
+      result: AggregatedMetrics;
+      enterpriseName: string | null;
+      recordCount: number;
+      errors: MultiFileResult['errors'];
+    }
   | { type: 'error'; id: string; error: string };

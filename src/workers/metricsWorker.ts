@@ -75,12 +75,24 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           result: aggregated,
           enterpriseName,
           recordCount: parseResult.metrics.length,
+          errors: parseResult.errors,
         });
       } catch (err) {
         postResponse({
           type: 'error',
           id: msg.id,
           error: err instanceof Error ? err.message : 'Parse and aggregate failed',
+        });
+      }
+      break;
+    }
+    default: {
+      const unknown = msg as unknown as { id?: string; type?: string };
+      if (unknown.id) {
+        postResponse({
+          type: 'error',
+          id: unknown.id,
+          error: `Unknown request type '${unknown.type ?? 'unknown'}'`,
         });
       }
       break;
