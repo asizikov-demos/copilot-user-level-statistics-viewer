@@ -179,6 +179,8 @@ export interface UserDayData {
   code_acceptance_activity_count: number;
   loc_added_sum: number;
   loc_deleted_sum: number;
+  loc_suggested_to_add_sum: number;
+  loc_suggested_to_delete_sum: number;
   totals_by_feature: Array<{
     feature: string;
     user_initiated_interaction_count: number;
