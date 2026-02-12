@@ -1,4 +1,14 @@
-import { CopilotMetrics, MetricsStats, UserSummary } from '../types/metrics';
+import {
+  CopilotMetrics,
+  MetricsStats,
+  UserSummary,
+  IDEStatsData,
+  PluginVersionAnalysisData,
+  LanguageFeatureImpactData,
+  DailyLanguageChartData,
+  ModelBreakdownData,
+} from '../types/metrics';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import {
   createStatsAccumulator,
   accumulateUserUsage,
@@ -54,6 +64,28 @@ import {
   computeAskModeImpactData,
   computeCliImpactData,
   computeJoinedImpactData,
+
+  createIDEStatsAccumulator,
+  accumulateIDEStats,
+  computeIDEStatsData,
+
+  createPluginVersionAccumulator,
+  accumulatePluginVersion,
+  computePluginVersionData,
+
+  createLanguageFeatureImpactAccumulator,
+  accumulateLanguageFeatureImpact,
+  accumulateDailyLanguage,
+  computeLanguageFeatureImpactData,
+  computeDailyLanguageChartData,
+
+  createModelBreakdownAccumulator,
+  accumulateModelBreakdown,
+  computeModelBreakdownData,
+
+  createUserDetailAccumulator,
+  accumulateUserDetail,
+  computeUserDetailedMetrics,
 } from './calculators';
 
 export interface AggregatedMetrics {
@@ -75,6 +107,15 @@ export interface AggregatedMetrics {
   askModeImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
+  ideStats: IDEStatsData[];
+  multiIDEUsersCount: number;
+  totalUniqueIDEUsers: number;
+  pluginVersionData: PluginVersionAnalysisData;
+  languageFeatureImpactData: LanguageFeatureImpactData;
+  dailyLanguageGenerationsData: DailyLanguageChartData;
+  dailyLanguageLocData: DailyLanguageChartData;
+  modelBreakdownData: ModelBreakdownData;
+  userDetailedMetrics: Map<number, UserDetailedMetrics>;
 }
 
 interface UserSummaryAccumulator {
@@ -151,6 +192,11 @@ export function aggregateMetrics(
   const modelUsageAccumulator = createModelUsageAccumulator();
   const featureAdoptionAccumulator = createFeatureAdoptionAccumulator();
   const impactAccumulator = createImpactAccumulator();
+  const ideStatsAccumulator = createIDEStatsAccumulator();
+  const pluginVersionAccumulator = createPluginVersionAccumulator();
+  const languageFeatureImpactAccumulator = createLanguageFeatureImpactAccumulator();
+  const modelBreakdownAccumulator = createModelBreakdownAccumulator();
+  const userDetailAccumulator = createUserDetailAccumulator();
 
   for (const metric of metrics) {
     filteredMetricsCount++;
@@ -158,12 +204,15 @@ export function aggregateMetrics(
     if (filteredMetricsCount === 1) {
       statsAccumulator.reportStartDay = metric.report_start_day;
       statsAccumulator.reportEndDay = metric.report_end_day;
+      userDetailAccumulator.reportStartDay = metric.report_start_day;
+      userDetailAccumulator.reportEndDay = metric.report_end_day;
     }
 
     const date = metric.day;
     const userId = metric.user_id;
 
     accumulateUserSummary(userSummaryAccumulator, metric);
+    accumulateUserDetail(userDetailAccumulator, metric);
 
     accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli);
 
@@ -173,6 +222,8 @@ export function aggregateMetrics(
 
     for (const ideTotal of metric.totals_by_ide) {
       accumulateIdeUser(statsAccumulator, ideTotal.ide, userId);
+      accumulateIDEStats(ideStatsAccumulator, userId, ideTotal);
+      accumulatePluginVersion(pluginVersionAccumulator, metric.user_login, ideTotal);
     }
 
     for (const langFeature of metric.totals_by_language_feature) {
@@ -190,6 +241,9 @@ export function aggregateMetrics(
         langFeature.loc_suggested_to_add_sum,
         langFeature.loc_suggested_to_delete_sum
       );
+
+      accumulateLanguageFeatureImpact(languageFeatureImpactAccumulator, langFeature);
+      accumulateDailyLanguage(languageFeatureImpactAccumulator, date, langFeature);
     }
 
     for (const modelFeature of metric.totals_by_model_feature) {
@@ -204,6 +258,8 @@ export function aggregateMetrics(
         modelFeature.feature,
         modelFeature.user_initiated_interaction_count
       );
+
+      accumulateModelBreakdown(modelBreakdownAccumulator, date, modelFeature);
     }
 
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
@@ -262,5 +318,12 @@ export function aggregateMetrics(
     askModeImpactData: computeAskModeImpactData(impactAccumulator),
     cliImpactData: computeCliImpactData(impactAccumulator),
     joinedImpactData: computeJoinedImpactData(impactAccumulator),
+    ...computeIDEStatsData(ideStatsAccumulator),
+    pluginVersionData: computePluginVersionData(pluginVersionAccumulator),
+    languageFeatureImpactData: computeLanguageFeatureImpactData(languageFeatureImpactAccumulator),
+    dailyLanguageGenerationsData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'generations'),
+    dailyLanguageLocData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'loc'),
+    modelBreakdownData: computeModelBreakdownData(modelBreakdownAccumulator),
+    userDetailedMetrics: computeUserDetailedMetrics(userDetailAccumulator),
   };
 }
