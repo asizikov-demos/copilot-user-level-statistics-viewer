@@ -169,6 +169,8 @@ export function parseAndAggregateInWorker(
 
 export function terminateWorker(): void {
   if (worker) {
+    worker.onmessage = null;
+    worker.onerror = null;
     worker.terminate();
     worker = null;
     for (const [id, pending] of pendingRequests) {
