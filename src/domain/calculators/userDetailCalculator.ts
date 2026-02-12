@@ -263,35 +263,48 @@ export function computeUserDetailedMetrics(
 ): Map<number, UserDetailedMetrics> {
   const result = new Map<number, UserDetailedMetrics>();
 
-  for (const [userId, state] of accumulator.users) {
-    const pluginVersions = Array.from(state.pluginVersionMap.values()).sort(
-      (a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()
-    );
-
-    const adaptedMetrics = adaptDaysAsMetrics(
-      state.days, userId, accumulator.reportStartDay, accumulator.reportEndDay
-    );
-
-    result.set(userId, {
-      totalStandardModelRequests: state.totalStandardModelRequests,
-      totalPremiumModelRequests: state.totalPremiumModelRequests,
-      featureAggregates: Array.from(state.featureMap.values()),
-      ideAggregates: Array.from(state.ideMap.values()),
-      languageFeatureAggregates: Array.from(state.langFeatureMap.values()),
-      modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
-      pluginVersions,
-      dailyPRUAnalysis: calculateDailyPRUAnalysis(adaptedMetrics),
-      dailyCombinedImpact: calculateJoinedImpactData(adaptedMetrics),
-      dailyModelUsage: calculateDailyModelUsage(adaptedMetrics),
-      dailyAgentImpact: calculateAgentImpactData(adaptedMetrics),
-      dailyAskModeImpact: calculateAskModeImpactData(adaptedMetrics),
-      dailyCompletionImpact: calculateCodeCompletionImpactData(adaptedMetrics),
-      dailyCliImpact: calculateCliImpactData(adaptedMetrics),
-      days: state.days,
-      reportStartDay: accumulator.reportStartDay,
-      reportEndDay: accumulator.reportEndDay,
-    });
+  for (const [userId] of accumulator.users) {
+    const details = computeSingleUserDetailedMetrics(accumulator, userId);
+    if (details) {
+      result.set(userId, details);
+    }
   }
 
   return result;
+}
+
+export function computeSingleUserDetailedMetrics(
+  accumulator: UserDetailAccumulator,
+  userId: number
+): UserDetailedMetrics | null {
+  const state = accumulator.users.get(userId);
+  if (!state) return null;
+
+  const pluginVersions = Array.from(state.pluginVersionMap.values()).sort(
+    (a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()
+  );
+
+  const adaptedMetrics = adaptDaysAsMetrics(
+    state.days, userId, accumulator.reportStartDay, accumulator.reportEndDay
+  );
+
+  return {
+    totalStandardModelRequests: state.totalStandardModelRequests,
+    totalPremiumModelRequests: state.totalPremiumModelRequests,
+    featureAggregates: Array.from(state.featureMap.values()),
+    ideAggregates: Array.from(state.ideMap.values()),
+    languageFeatureAggregates: Array.from(state.langFeatureMap.values()),
+    modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
+    pluginVersions,
+    dailyPRUAnalysis: calculateDailyPRUAnalysis(adaptedMetrics),
+    dailyCombinedImpact: calculateJoinedImpactData(adaptedMetrics),
+    dailyModelUsage: calculateDailyModelUsage(adaptedMetrics),
+    dailyAgentImpact: calculateAgentImpactData(adaptedMetrics),
+    dailyAskModeImpact: calculateAskModeImpactData(adaptedMetrics),
+    dailyCompletionImpact: calculateCodeCompletionImpactData(adaptedMetrics),
+    dailyCliImpact: calculateCliImpactData(adaptedMetrics),
+    days: state.days,
+    reportStartDay: accumulator.reportStartDay,
+    reportEndDay: accumulator.reportEndDay,
+  };
 }

@@ -8,7 +8,6 @@ import {
   DailyLanguageChartData,
   ModelBreakdownData,
 } from '../types/metrics';
-import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import {
   createStatsAccumulator,
   accumulateUserUsage,
@@ -83,9 +82,9 @@ import {
   accumulateModelBreakdown,
   computeModelBreakdownData,
 
+  UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
-  computeUserDetailedMetrics,
 } from './calculators';
 
 export interface AggregatedMetrics {
@@ -115,7 +114,6 @@ export interface AggregatedMetrics {
   dailyLanguageGenerationsData: DailyLanguageChartData;
   dailyLanguageLocData: DailyLanguageChartData;
   modelBreakdownData: ModelBreakdownData;
-  userDetailedMetrics: Map<number, UserDetailedMetrics>;
 }
 
 interface UserSummaryAccumulator {
@@ -181,7 +179,7 @@ function computeUserSummaries(accumulator: UserSummaryAccumulator): UserSummary[
 
 export function aggregateMetrics(
   metrics: CopilotMetrics[]
-): AggregatedMetrics {
+): { aggregated: AggregatedMetrics; userDetailAccumulator: UserDetailAccumulator } {
   let filteredMetricsCount = 0;
 
   const statsAccumulator = createStatsAccumulator();
@@ -300,6 +298,7 @@ export function aggregateMetrics(
   }
 
   return {
+    aggregated: {
     stats: computeStats(statsAccumulator, filteredMetricsCount),
     userSummaries: computeUserSummaries(userSummaryAccumulator),
     engagementData: computeEngagementData(engagementAccumulator),
@@ -324,6 +323,7 @@ export function aggregateMetrics(
     dailyLanguageGenerationsData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'generations'),
     dailyLanguageLocData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'loc'),
     modelBreakdownData: computeModelBreakdownData(modelBreakdownAccumulator),
-    userDetailedMetrics: computeUserDetailedMetrics(userDetailAccumulator),
+    },
+    userDetailAccumulator,
   };
 }

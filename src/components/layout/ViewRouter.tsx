@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { VIEW_MODES } from '../../types/navigation';
+import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
-import { terminateWorker } from '../../workers/metricsWorkerClient';
+import { terminateWorker, computeUserDetailsInWorker } from '../../workers/metricsWorkerClient';
 import { FileUploadArea } from '../features/file-upload';
 import { OverviewDashboard } from '../features/overview';
 import UniqueUsersView from '../UniqueUsersView';
@@ -28,6 +29,27 @@ const ViewRouter: React.FC = () => {
     navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
   } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
+
+  const [userDetails, setUserDetails] = useState<UserDetailedMetrics | null>(null);
+  const [userDetailsLoading, setUserDetailsLoading] = useState(false);
+  const [loadedUserId, setLoadedUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (currentView === VIEW_MODES.USER_DETAILS && selectedUser && loadedUserId !== selectedUser.id) {
+      setUserDetailsLoading(true);
+      setUserDetails(null);
+      computeUserDetailsInWorker(selectedUser.id)
+        .then(details => {
+          setUserDetails(details);
+          setLoadedUserId(selectedUser.id);
+          setUserDetailsLoading(false);
+        })
+        .catch(() => {
+          setUserDetailsLoading(false);
+          navigateTo(VIEW_MODES.USERS);
+        });
+    }
+  }, [currentView, selectedUser, loadedUserId, navigateTo]);
 
   useEffect(() => {
     return () => { terminateWorker(); };
@@ -110,7 +132,6 @@ const ViewRouter: React.FC = () => {
     dailyLanguageGenerationsData,
     dailyLanguageLocData,
     modelBreakdownData,
-    userDetailedMetrics,
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -199,9 +220,18 @@ const ViewRouter: React.FC = () => {
         return null;
       }
       {
-        const userDetails = userDetailedMetrics.get(selectedUser.id);
+        if (userDetailsLoading || !userDetails) {
+          return (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">Loading user details...</p>
+              </div>
+            </div>
+          );
+        }
         const userSummary = userSummaries.find(u => u.user_id === selectedUser.id);
-        if (!userDetails || !userSummary) {
+        if (!userSummary) {
           navigateTo(VIEW_MODES.USERS);
           return null;
         }

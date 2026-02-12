@@ -1,5 +1,7 @@
 import { parseMultipleMetricsStreams } from '../infra/metricsFileParser';
 import { aggregateMetrics } from '../domain/metricsAggregator';
+import { computeSingleUserDetailedMetrics } from '../domain/calculators';
+import type { UserDetailAccumulator } from '../domain/calculators';
 import type { WorkerRequest, WorkerResponse } from './types';
 
 interface WorkerContext {
@@ -8,6 +10,8 @@ interface WorkerContext {
 }
 
 const ctx = globalThis as unknown as WorkerContext;
+
+let storedUserDetailAccumulator: UserDetailAccumulator | null = null;
 
 function postResponse(response: WorkerResponse): void {
   ctx.postMessage(response);
@@ -33,8 +37,9 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     }
     case 'aggregate': {
       try {
-        const result = aggregateMetrics(msg.metrics);
-        postResponse({ type: 'aggregateResult', id: msg.id, result });
+        const { aggregated, userDetailAccumulator } = aggregateMetrics(msg.metrics);
+        storedUserDetailAccumulator = userDetailAccumulator;
+        postResponse({ type: 'aggregateResult', id: msg.id, result: aggregated });
       } catch (err) {
         postResponse({
           type: 'error',
@@ -57,7 +62,8 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           });
           break;
         }
-        const aggregated = aggregateMetrics(parseResult.metrics);
+        const { aggregated, userDetailAccumulator } = aggregateMetrics(parseResult.metrics);
+        storedUserDetailAccumulator = userDetailAccumulator;
         let enterpriseName: string | null = null;
         if (parseResult.metrics.length > 0) {
           const first = parseResult.metrics[0];
@@ -82,6 +88,23 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           type: 'error',
           id: msg.id,
           error: err instanceof Error ? err.message : 'Parse and aggregate failed',
+        });
+      }
+      break;
+    }
+    case 'computeUserDetails': {
+      try {
+        if (!storedUserDetailAccumulator) {
+          postResponse({ type: 'error', id: msg.id, error: 'No aggregation data available. Aggregate metrics first.' });
+          break;
+        }
+        const result = computeSingleUserDetailedMetrics(storedUserDetailAccumulator, msg.userId);
+        postResponse({ type: 'userDetailsResult', id: msg.id, result });
+      } catch (err) {
+        postResponse({
+          type: 'error',
+          id: msg.id,
+          error: err instanceof Error ? err.message : 'Failed to compute user details',
         });
       }
       break;

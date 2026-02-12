@@ -1,5 +1,6 @@
 import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../domain/metricsAggregator';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
 import type { WorkerResponse } from './types';
 import { getBasePath } from '../utils/basePath';
@@ -21,10 +22,16 @@ interface PendingParseAndAggregateRequest {
   onProgress?: (progress: MultiFileProgress) => void;
 }
 
+interface PendingUserDetailsRequest {
+  resolve: (value: UserDetailedMetrics | null) => void;
+  reject: (error: Error) => void;
+}
+
 type PendingRequest =
   | ({ kind: 'parse' } & PendingParseRequest)
   | ({ kind: 'aggregate' } & PendingAggregateRequest)
-  | ({ kind: 'parseAndAggregate' } & PendingParseAndAggregateRequest);
+  | ({ kind: 'parseAndAggregate' } & PendingParseAndAggregateRequest)
+  | ({ kind: 'computeUserDetails' } & PendingUserDetailsRequest);
 
 let worker: Worker | null = null;
 const pendingRequests = new Map<string, PendingRequest>();
@@ -71,6 +78,14 @@ function getWorker(): Worker {
             recordCount: msg.recordCount,
             errors: msg.errors,
           });
+        } else {
+          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
+        }
+        break;
+      case 'userDetailsResult':
+        pendingRequests.delete(msg.id);
+        if (pending.kind === 'computeUserDetails') {
+          pending.resolve(msg.result);
         } else {
           pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
@@ -161,4 +176,19 @@ export function terminateWorker(): void {
       pendingRequests.delete(id);
     }
   }
+}
+
+export function computeUserDetailsInWorker(
+  userId: number
+): Promise<UserDetailedMetrics | null> {
+  const id = nextId();
+  return new Promise((resolve, reject) => {
+    pendingRequests.set(id, { kind: 'computeUserDetails', resolve, reject });
+    try {
+      getWorker().postMessage({ type: 'computeUserDetails', id, userId });
+    } catch (err) {
+      pendingRequests.delete(id);
+      reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  });
 }

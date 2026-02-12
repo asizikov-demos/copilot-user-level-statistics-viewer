@@ -1,11 +1,13 @@
 import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../domain/metricsAggregator';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
 
 export type WorkerRequest =
   | { type: 'parseFiles'; id: string; files: File[] }
   | { type: 'aggregate'; id: string; metrics: CopilotMetrics[] }
-  | { type: 'parseAndAggregate'; id: string; files: File[] };
+  | { type: 'parseAndAggregate'; id: string; files: File[] }
+  | { type: 'computeUserDetails'; id: string; userId: number };
 
 export type WorkerResponse =
   | { type: 'parseProgress'; id: string; progress: MultiFileProgress }
@@ -19,4 +21,5 @@ export type WorkerResponse =
       recordCount: number;
       errors: MultiFileResult['errors'];
     }
+  | { type: 'userDetailsResult'; id: string; result: UserDetailedMetrics | null }
   | { type: 'error'; id: string; error: string };
