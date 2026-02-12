@@ -254,7 +254,7 @@ src/
 State is managed on the client using React hooks and multiple context providers:
 
 - **`src/components/MetricsContext.tsx`** defines `MetricsProvider` with one hook:
-	- `useRawMetrics` – access to `hasData` flag, enterprise name, loading/error state, and actions to set/clear metrics. After aggregation completes, raw metrics are cleared from the context (`clearRawMetrics()`), leaving only `hasData: true` to indicate that data has been loaded. Components check `hasData` to determine whether metrics are available.
+	- `useMetrics` – access to `hasData` flag, enterprise name, loading/error state, aggregated metrics, and actions to set/reset data. The context stores only the pre-aggregated `AggregatedMetrics` result returned by the Web Worker. Raw metrics never touch the main thread — parsing and aggregation happen entirely within the worker via `parseAndAggregateInWorker()`.
 - **`src/state/NavigationContext.tsx`** manages view navigation:
 	- Current view mode (`ViewMode`)
 	- Selected user and model state
@@ -265,14 +265,14 @@ The main `page.tsx` is now slim and delegates to:
 - `OverviewDashboard` – renders the main dashboard
 - `FileUploadArea` – handles file upload UI
 
-The `useMetricsProcessing` hook offloads aggregation to a Web Worker, keeping the main thread responsive. Once aggregation is complete, raw metrics are cleared from React context to free memory. The pre-aggregated `AggregatedMetrics` result is used directly by `ViewRouter` and all view components.
+The `useFileUpload` hook sends files to the Web Worker via `parseAndAggregateInWorker()`, which performs both parsing and aggregation in the worker. Only the compact `AggregatedMetrics` result is returned to the main thread — raw metrics never leave the worker. The pre-aggregated result is used directly by `ViewRouter` and all view components.
 
 ### 3.3. Web Worker Architecture
 
 CPU-intensive parsing and aggregation are offloaded to a dedicated Web Worker to prevent UI thread blocking:
 
-- **`src/workers/metricsWorker.ts`** – Worker entry point that handles `parseFiles` and `aggregate` messages
-- **`src/workers/metricsWorkerClient.ts`** – Promise-based client API used by hooks on the main thread
+- **`src/workers/metricsWorker.ts`** – Worker entry point that handles `parseFiles`, `aggregate`, and `parseAndAggregate` messages
+- **`src/workers/metricsWorkerClient.ts`** – Promise-based client API used by hooks on the main thread (with request ID tracking for race condition prevention)
 - **`src/workers/types.ts`** – Typed message protocol (`WorkerRequest` / `WorkerResponse`)
 
 The worker is pre-bundled into `public/workers/metricsWorker.js` using **esbuild** (via `scripts/build-worker.mjs`) as a self-contained IIFE. This approach is compatible with Next.js static export (`output: 'export'`) and avoids Turbopack/webpack worker bundling limitations. The build command runs `npm run build:worker` before `next build`.
@@ -284,6 +284,7 @@ The worker is pre-bundled into `public/workers/metricsWorker.js` using **esbuild
 |---|---|---|
 | `parseFiles` | `{ id, files: File[] }` | Stream-parse uploaded files into `CopilotMetrics[]` |
 | `aggregate` | `{ id, metrics: CopilotMetrics[] }` | Compute `AggregatedMetrics` from raw metrics |
+| `parseAndAggregate` | `{ id, files: File[] }` | Parse files and aggregate in one step (primary flow) |
 
 **Worker → Main Thread:**
 | Message Type | Payload | Purpose |
@@ -291,9 +292,10 @@ The worker is pre-bundled into `public/workers/metricsWorker.js` using **esbuild
 | `parseProgress` | `{ id, progress: MultiFileProgress }` | Incremental progress during file parsing |
 | `parseResult` | `{ id, result: MultiFileResult }` | Parsed metrics + any per-file errors |
 | `aggregateResult` | `{ id, result: AggregatedMetrics }` | Computed aggregated metrics |
+| `parseAndAggregateResult` | `{ id, result, enterpriseName, recordCount }` | Combined parse + aggregate result (primary flow) |
 | `error` | `{ id, error: string }` | Error during processing |
 
-After a successful `aggregateResult` response, the main thread clears the raw `CopilotMetrics[]` from React context (via `clearRawMetrics()`), retaining only `hasData: true`. This ensures raw metrics are transient — they exist on the main thread only during the upload-to-aggregation pipeline, then are released.
+The primary flow uses `parseAndAggregate` / `parseAndAggregateResult`, which performs parsing and aggregation entirely within the worker. Raw metrics never leave the worker — only the compact `AggregatedMetrics` result, enterprise name, and record count are returned to the main thread.
 
 ### 3.4. Computation Layer
 
@@ -342,14 +344,13 @@ This domain configuration is used by the parser to compute PRUs and service valu
 
 ### 3.5. Memory Optimization
 
-Raw `CopilotMetrics[]` are treated as **transient data** on the main thread. They exist only during the file upload → aggregation pipeline:
+Raw `CopilotMetrics[]` never leave the Web Worker. The `parseAndAggregateInWorker()` flow performs both parsing and aggregation inside the worker:
 
-1. User uploads a file; the Web Worker parses it and returns `CopilotMetrics[]` to the main thread.
-2. The main thread stores the raw metrics temporarily in `MetricsContext` and immediately sends them to the Web Worker for aggregation.
-3. The worker computes `AggregatedMetrics` (which includes all pre-aggregated views such as `UserDetailedMetrics`, `IDEStatsData`, `ModelBreakdownData`, etc.).
-4. Once `AggregatedMetrics` is returned, the main thread clears the raw metrics array from React context (`clearRawMetrics()`), setting only `hasData: true`.
+1. User uploads a file; `useFileUpload` sends the `File` objects to the Web Worker via `parseAndAggregateInWorker()`.
+2. The worker parses the files into `CopilotMetrics[]` and immediately aggregates them into `AggregatedMetrics`.
+3. Only the compact `AggregatedMetrics` result (plus enterprise name and record count) is returned to the main thread.
 
-This approach significantly reduces memory footprint for large datasets. Instead of retaining potentially hundreds of thousands of raw metric records in browser memory, only the compact pre-aggregated structures are kept. All view components consume data exclusively from `AggregatedMetrics`.
+This approach significantly reduces memory footprint for large datasets. Raw metric records are never transferred to the main thread, avoiding the cost of structured cloning large arrays. Only the compact pre-aggregated structures are kept in browser memory. All view components consume data exclusively from `AggregatedMetrics`.
 
 ---
 
@@ -363,17 +364,9 @@ This section describes the life cycle of data from file upload to visualization.
 flowchart LR
   A[User uploads JSON or NDJSON metrics file] --> B[useFileUpload hook]
 
-  B -->|postMessage| W1[Web Worker: parseMultipleMetricsStreams]
+  B -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
 
-  W1 -->|postMessage| D[Store rawMetrics temporarily in MetricsContext]
-
-  D --> E[useMetricsProcessing hook]
-
-  E -->|postMessage| W2[Web Worker: aggregateMetrics]
-
-  W2 -->|postMessage| F[ViewRouter renders appropriate view]
-
-  D -->|clearRawMetrics after aggregation| CLR[rawMetrics cleared, hasData: true]
+  W -->|postMessage: parseAndAggregateResult| F[ViewRouter renders appropriate view]
 
   F --> G[Chart components using Chart.js]
 
@@ -382,8 +375,7 @@ flowchart LR
   end
 
   subgraph WebWorker
-    W1
-    W2
+    W
   end
 ```
 
@@ -392,8 +384,9 @@ flowchart LR
 1. The `useFileUpload` hook (in `src/hooks/useFileUpload.ts`) handles file upload when a user selects a file.
 2. `handleFileUpload`:
 	 - Validates file extension (`.json` or `.ndjson`).
-	 - Sends files to the Web Worker via `parseFilesInWorker()` from `metricsWorkerClient.ts`.
-	 - The worker streams and parses files off the main thread, sending progress updates back.
+	 - Sends files to the Web Worker via `parseAndAggregateInWorker()` from `metricsWorkerClient.ts`.
+	 - The worker streams, parses, and aggregates files off the main thread, sending progress updates back.
+	 - Uses a request ID counter to prevent race conditions when multiple files are uploaded in quick succession.
 
 3. Inside the worker, `parseMultipleMetricsStreams` from `metricsFileParser.ts`:
 	 - Streams each file using `File.stream()` API with `TextDecoder`.
@@ -402,15 +395,12 @@ flowchart LR
 		 - Uses deprecated LOC fields (`generated_loc_sum`, `accepted_loc_sum`) at the root or nested level.
 		 - Is missing any of the new required LOC fields.
 	 - Uses `StringPool` for string interning to reduce memory usage.
-	 - Returns `CopilotMetrics[]` and any per-file errors to the main thread.
 
-4. `handleFileUpload` then:
-	 - Derives an `enterpriseName` from `user_login` suffix or `enterprise_id`.
-	 - Stores `rawMetrics` temporarily in `MetricsContext` (these will be cleared after aggregation).
+4. The worker then immediately runs `aggregateMetrics()` on the parsed data and returns the `AggregatedMetrics` result, enterprise name, and record count to the main thread. Raw metrics never leave the worker.
 
 ### 4.3. Aggregation
 
-Once `rawMetrics` exist, the `useMetricsProcessing` hook sends them to the Web Worker for aggregation via `aggregateMetricsInWorker()`. The worker runs `aggregateMetrics(rawMetrics)` off the main thread:
+The aggregation step happens inside the Web Worker as part of the `parseAndAggregate` flow. After parsing, the worker runs `aggregateMetrics(rawMetrics)` off the main thread:
 
 - `computeStats` – summary stats (unique users, top language/IDE/model, date range).
 - `computeUserSummaries` – user-level totals and activity flags.
