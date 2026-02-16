@@ -52,51 +52,43 @@ steps:
         raise SystemExit('Could not find multipliers table after model-multipliers heading')
       open('.cache/model-multipliers-table.html','w',encoding='utf-8').write(t.group(0))
       PY
-
-  - name: Ensure gh-models extension
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    run: |
-      set -euo pipefail
-      gh extension install https://github.com/github/gh-models || gh extension upgrade github/gh-models
-
-  - name: Extract multipliers via phi-4
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    run: |
-      set -euo pipefail
-      gh models run --file .github/prompts/extract-model-multipliers.prompt.yml \
-        --var input="$(cat .cache/model-multipliers-table.html)" \
-        > .cache/model-multipliers.json
-
-  - name: Compare against src/domain/modelConfig.ts
-    run: |
-      set -euo pipefail
-      mkdir -p /tmp/gh-aw/agent
-      rc=0
-      node data-utils/check-model-multipliers.mjs \
-        --extracted .cache/model-multipliers.json \
-        --report /tmp/gh-aw/agent/report.md || rc=$?
-
-      if [ "$rc" -eq 0 ]; then
-        echo "clean" > /tmp/gh-aw/agent/drift-status.txt
-      elif [ "$rc" -eq 2 ]; then
-        echo "drift" > /tmp/gh-aw/agent/drift-status.txt
-      else
-        exit "$rc"
-      fi
 ---
 
 # Sync Copilot model multipliers
 
-Review deterministic artifacts in `/tmp/gh-aw/agent/`.
+Use `.cache/model-multipliers-table.html` and `src/domain/modelConfig.ts`.
 
 ## Process
 
-1. Read `/tmp/gh-aw/agent/drift-status.txt`.
-2. If drift status is `clean`, do not create any issue.
-3. If drift status is `drift`, read `/tmp/gh-aw/agent/report.md` and use `create-issue` to create exactly one issue with:
+1. Parse every row in the docs table into:
+   - `displayName`
+   - `paidMultiplier` (number)
+   - `freeMultiplier` (number or null for "Not applicable")
+2. Convert `displayName` to a `KNOWN_MODELS` key using these normalization rules:
+   - trim + lowercase as base normalization
+   - `GPT-*`, `Grok *`, `Raptor *`: lowercase and replace spaces with `-`
+   - `Claude (Haiku|Sonnet|Opus) <version>`:
+     - if version is an integer, append `.0`
+     - Opus key: `claude-opus-<version>`
+     - Haiku/Sonnet keys: `claude-<version>-<family>`
+   - `Gemini <version> (Pro|Flash)`:
+     - if version is an integer, append `.0`
+     - key: `gemini-<version>-<tier>`
+   - fallback: lowercase and replace spaces with `-`
+3. Compare docs paid multipliers against `KNOWN_MODELS` in `src/domain/modelConfig.ts`:
+   - ignore rows where docs `paidMultiplier` is `0`
+   - mark missing keys
+   - mark mismatched multipliers
+4. If no missing or mismatched entries exist, call `noop` with a short success message and do not create an issue.
+5. If drift exists, use `create-issue` to create exactly one issue:
    - Title: `Copilot model multipliers out of sync`
-   - Body: the full contents of `/tmp/gh-aw/agent/report.md`
    - Assignees: `["copilot"]`
-4. Do not modify repository files.
+   - Body format:
+     - `# Copilot model multiplier drift detected`
+     - brief explanation that docs were compared to `src/domain/modelConfig.ts`
+     - `## Missing premium models (non-zero paid multiplier)` list (if any)
+     - `## Multiplier mismatches` list (if any)
+     - `## Next steps` with:
+       - update `KNOWN_MODELS` in `src/domain/modelConfig.ts`
+       - fix normalization logic if key mapping is wrong
+6. Do not modify repository files.

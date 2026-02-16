@@ -23,7 +23,7 @@
 #
 # Keep model multipliers in src/domain/modelConfig.ts aligned with GitHub Docs.
 #
-# frontmatter-hash: d8ffee2a5f06c9ddf84bed80ca721a06d5032b4bca65db7fdfef751aca7241d9
+# frontmatter-hash: da057622b6f245b46dd142da8d27d2d5a3662d304f9428ad0d19762cc7f98775
 
 name: "Sync Copilot model multipliers"
 "on":
@@ -109,19 +109,7 @@ jobs:
           mkdir -p .cache
           curl -sSL https://docs.github.com/en/copilot/reference/ai-models/supported-models -o .cache/supported-models.html
       - name: Extract model multipliers section
-        run: "set -euo pipefail\npython - <<'PY'\nimport re\nhtml=open('.cache/supported-models.html','r',encoding='utf-8',errors='ignore').read()\nh=re.search(r'<h2 id=\"model-multipliers\"[\\s\\S]*?</h2>', html)\nif not h:\n  raise SystemExit('Could not find model-multipliers section')\nafter=html[h.end():]\nt=re.search(r'<table[\\s\\S]*?</table>', after)\nif not t:\n  raise SystemExit('Could not find multipliers table after model-multipliers heading')\nopen('.cache/model-multipliers-table.html','w',encoding='utf-8').write(t.group(0))\nPY\n"
-      - env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        name: Ensure gh-models extension
-        run: |
-          set -euo pipefail
-          gh extension install https://github.com/github/gh-models || gh extension upgrade github/gh-models
-      - env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        name: Extract multipliers via phi-4
-        run: "set -euo pipefail\ngh models run --file .github/prompts/extract-model-multipliers.prompt.yml \\\n  --var input=\"$(cat .cache/model-multipliers-table.html)\" \\\n  > .cache/model-multipliers.json\n"
-      - name: Compare against src/domain/modelConfig.ts
-        run: "set -euo pipefail\nmkdir -p /tmp/gh-aw/agent\nrc=0\nnode data-utils/check-model-multipliers.mjs \\\n  --extracted .cache/model-multipliers.json \\\n  --report /tmp/gh-aw/agent/report.md || rc=$?\n\nif [ \"$rc\" -eq 0 ]; then\n  echo \"clean\" > /tmp/gh-aw/agent/drift-status.txt\nelif [ \"$rc\" -eq 2 ]; then\n  echo \"drift\" > /tmp/gh-aw/agent/drift-status.txt\nelse\n  exit \"$rc\"\nfi"
+        run: "set -euo pipefail\npython - <<'PY'\nimport re\nhtml=open('.cache/supported-models.html','r',encoding='utf-8',errors='ignore').read()\nh=re.search(r'<h2 id=\"model-multipliers\"[\\s\\S]*?</h2>', html)\nif not h:\n  raise SystemExit('Could not find model-multipliers section')\nafter=html[h.end():]\nt=re.search(r'<table[\\s\\S]*?</table>', after)\nif not t:\n  raise SystemExit('Could not find multipliers table after model-multipliers heading')\nopen('.cache/model-multipliers-table.html','w',encoding='utf-8').write(t.group(0))\nPY"
 
       - name: Configure Git credentials
         env:
