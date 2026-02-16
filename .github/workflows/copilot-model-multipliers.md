@@ -94,8 +94,8 @@ Review deterministic artifacts in `/tmp/gh-aw/agent/`.
 ## Process
 
 1. Read `/tmp/gh-aw/agent/drift-status.txt`.
-2. If the status is `clean`, do not create any issue.
-3. If the status is `drift`, read `/tmp/gh-aw/agent/report.md` and use `create-issue` to create exactly one issue with:
+2. If drift status is `clean`, do not create any issue.
+3. If drift status is `drift`, read `/tmp/gh-aw/agent/report.md` and use `create-issue` to create exactly one issue with:
    - Title: `Copilot model multipliers out of sync`
    - Body: the full contents of `/tmp/gh-aw/agent/report.md`
    - Assignees: `["copilot"]`
