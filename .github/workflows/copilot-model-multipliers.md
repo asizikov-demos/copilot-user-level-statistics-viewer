@@ -25,6 +25,7 @@ network: defaults
 safe-outputs:
   create-issue:
     max: 1
+    assignees: ["copilot"]
 
 steps:
   - name: Checkout
@@ -97,4 +98,5 @@ Review deterministic artifacts in `/tmp/gh-aw/agent/`.
 3. If the status is `drift`, read `/tmp/gh-aw/agent/report.md` and use `create-issue` to create exactly one issue with:
    - Title: `Copilot model multipliers out of sync`
    - Body: the full contents of `/tmp/gh-aw/agent/report.md`
+   - Assignees: `["copilot"]`
 4. Do not modify repository files.

@@ -23,7 +23,7 @@
 #
 # Keep model multipliers in src/domain/modelConfig.ts aligned with GitHub Docs.
 #
-# frontmatter-hash: 7f79fb709d3774e3f0577aaa8dd6145c5130faa5c5b1d811ca9bae3d99a3dfa9
+# frontmatter-hash: d8ffee2a5f06c9ddf84bed80ca721a06d5032b4bca65db7fdfef751aca7241d9
 
 name: "Sync Copilot model multipliers"
 "on":
@@ -225,7 +225,7 @@ jobs:
           cat > /opt/gh-aw/safeoutputs/tools.json << 'GH_AW_SAFE_OUTPUTS_TOOLS_EOF'
           [
             {
-              "description": "Create a new GitHub issue for tracking bugs, feature requests, or tasks. Use this for actionable work items that need assignment, labeling, and status tracking. For reports, announcements, or status updates that don't require task tracking, use create_discussion instead. CONSTRAINTS: Maximum 1 issue(s) can be created.",
+              "description": "Create a new GitHub issue for tracking bugs, feature requests, or tasks. Use this for actionable work items that need assignment, labeling, and status tracking. For reports, announcements, or status updates that don't require task tracking, use create_discussion instead. CONSTRAINTS: Maximum 1 issue(s) can be created. Assignees [copilot] will be automatically assigned.",
               "inputSchema": {
                 "additionalProperties": false,
                 "properties": {
@@ -1067,12 +1067,25 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_issue\":{\"max\":1},\"missing_data\":{},\"missing_tool\":{}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_issue\":{\"assignees\":[\"copilot\"],\"max\":1},\"missing_data\":{},\"missing_tool\":{}}"
+          GH_AW_ASSIGN_COPILOT: "true"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io);
             const { main } = require('/opt/gh-aw/actions/safe_output_handler_manager.cjs');
+            await main();
+      - name: Assign Copilot to created issues
+        if: steps.process_safe_outputs.outputs.issues_to_assign_copilot != ''
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_ISSUES_TO_ASSIGN_COPILOT: ${{ steps.process_safe_outputs.outputs.issues_to_assign_copilot }}
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/assign_copilot_to_created_issues.cjs');
             await main();
 
