@@ -1,6 +1,8 @@
 ---
 description: 'Handles git workflow: atomic commits with conventional prefixes, branch management, PR creation with structured summaries'
-tools: ['runCommands', 'changes', 'problems']
+tools: ['runCommands', 'changes', 'problems', 'agent']
+model: 'GPT-5.3 Codex (copilot)'
+agents: ['Code Review']
 ---
 
 # Git Workflow
@@ -34,6 +36,10 @@ Rules:
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
+
+## Pre-PR Review Gate
+
+Before creating a PR, invoke the **Code Review** agent as a subagent to review all staged/unstaged changes. Address any issues it flags before proceeding with commits and PR creation. A PR should not be created until code review passes clean.
 
 ## PR Creation
 

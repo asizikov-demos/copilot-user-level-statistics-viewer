@@ -1,6 +1,12 @@
 ---
 description: 'Reviews code changes for type mismatches, dead code, logic bugs, and contract violations based on patterns from past PR reviews'
 tools: ['search', 'problems', 'changes', 'usages']
+model: 'GPT-5.3 Codex (copilot)'
+handoffs:
+  - label: Commit & Create PR
+    agent: Git Workflow
+    prompt: All review issues have been addressed. Commit changes and create a PR.
+    send: false
 ---
 
 # Code Review
