@@ -1,6 +1,17 @@
 ---
 description: 'Scans and removes AI-generated artifacts (LLM slop) from the codebase'
-tools: ['runCommands', 'runTasks', 'edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'todos', 'runSubagent', 'usages', 'problems', 'changes', 'githubRepo']
+tools: ['runCommands', 'runTasks', 'edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'search', 'todos', 'agent', 'usages', 'problems', 'changes', 'githubRepo']
+model: 'GPT-5.3 Codex (copilot)'
+agents: ['Code Review', 'Git Workflow']
+handoffs:
+  - label: Review Changes
+    agent: Code Review
+    prompt: Review the cleanup changes for any issues before committing.
+    send: false
+  - label: Commit & Create PR
+    agent: Git Workflow
+    prompt: Commit the cleanup changes and create a PR.
+    send: false
 ---
 
 # AI Slop Cleaner
