@@ -21,11 +21,12 @@ handoffs:
 Scan the codebase to identify, categorize, and remove AI-generated artifacts that reduce code quality. Create atomic commits grouped by artifact type.
 
 ## Process
-1. **Scan** the entire codebase for LLM artifacts
+1. **Scan** the entire codebase for LLM artifacts (respect exclusions below)
 2. **Categorize** findings by type (see categories below)
 3. **Review** each finding—only remove if it adds no value
 4. **Clean** artifacts and create one commit per category
-5. **Report** a summary of changes made
+5. **Verify** the build and lint still pass after each commit (`npm run build`, `npm run lint`, `dotnet build`, etc.)
+6. **Report** a summary of changes made
 
 ---
 
@@ -44,10 +45,16 @@ Always skip the following paths and files:
 - `*.d.ts` (TypeScript declaration files)
 - `*.min.js`, `*.min.css`
 - Lock files: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Gemfile.lock`, `poetry.lock`
+- Agentic workflow locks: `*.lock.yml`
 - `*.pb.go`, `*_pb2.py` (protobuf generated)
 
+### Agent & Configuration Files (never modify)
+- `.github/agents/*.agent.md`
+- `AGENTS.md`, `copilot-instructions.md`
+- `.github/prompts/*.prompt.yml`
+
 ### Standard Repository Files
-- `README.md`, `LICENSE`, `LICENSE.md`, `CHANGELOG.md`
+- `LICENSE`, `LICENSE.md`, `CHANGELOG.md`
 - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
 - `.gitignore`, `.gitattributes`, `.editorconfig`
 - `CODEOWNERS`, `FUNDING.yml`
@@ -62,6 +69,8 @@ Remove comments that only describe *what* code does, not *why*:
 - ❌ `// increment counter`
 - ❌ `// loop through array`
 - ❌ `// return the result`
+- ❌ `// Import the logger module`
+- ❌ `// Define the interface`
 - ✅ Keep: meaningful rationale, e.g. `// Using binary search because the list is sorted`
 
 ---
@@ -73,6 +82,9 @@ Comments documenting the AI's internal thought process:
 - `// Refactored from previous implementation`
 - `// Updated to fix the issue`
 - `// As discussed above...`
+- `// Moved from X component`
+- `// Previously this was...`
+- `// Changed to use...`
 
 ---
 
@@ -82,16 +94,19 @@ Mechanical test-structure comments humans rarely write:
 - `// Arrange` / `// Act` / `// Assert`
 - `// Given` / `// When` / `// Then`
 - `// Setup` / `// Exercise` / `// Verify`
+- `// Test setup` / `// Test execution` / `// Test verification`
 
 ---
 
-### Category 4: AI Summary Files (High Priority)
-Remove AI-generated meta-files:
+### Category 4: AI Summary & Stale Meta-Files (High Priority)
+Remove AI-generated meta-files and stale planning artifacts:
 
 - `MIGRATION_SUMMARY.md`, `REFACTORING_PLAN.md`
 - `IMPLEMENTATION_NOTES.md`, `CHANGES.md`
 - Completed or stale `TODO.md`
 - Any `*_SUMMARY.md` or `*_PLAN.md` outside documentation folders
+- Obsolete `.prompt.md` files using deprecated formats
+- Stale feature-planning docs in `_features/` or similar directories that reference completed or abandoned work
 
 ---
 
@@ -100,6 +115,7 @@ Remove or trim documentation that adds no information:
 
 - Docstrings that simply repeat the signature
 - JSDoc params like `@param name - the name`
+- LLM-generated README bloat: sections that list every file in a directory, restate the tech stack in excessive detail, or pad content without adding actionable information
 - READMEs listing file names without context
 
 ---
@@ -114,7 +130,7 @@ Remove leftover temporary debug code and low-value logs:
 - Hot-path logs inside loops or per-request code
 
 **Action:**
-Keep only logs consistent with the project's observability patterns.
+Keep only logs consistent with the project's observability patterns. Data utility scripts (`data-utils/`, `scripts/`) may legitimately use console output.
 
 ---
 
@@ -132,9 +148,6 @@ Remove unnecessarily verbose code that LLMs often generate:
 - Redundant null/undefined checks when types already guarantee values
 
 - Defensive validations that cannot fail based on the type system
-
-- Import statement comments:
-  ❌ `// Import the logger module`
 
 ---
 
@@ -169,6 +182,33 @@ Identify overly defensive or unsafe error usage:
 
 **Action:**
 Flag; simplify only when clearly safe and tests validate behavior.
+
+---
+
+### Category 11: TypeScript/Lint Suppression Directives (Medium Priority)
+LLMs frequently add blanket suppression directives instead of fixing the underlying issue:
+
+- `@ts-nocheck` at the top of files (especially test files)
+- `@ts-ignore` without an explanation comment
+- `@ts-expect-error` without describing the expected error
+- Blanket `eslint-disable` at file level without justification
+- Inline `eslint-disable-next-line` suppressing multiple rules at once
+
+**Action:**
+Remove the directive and fix the underlying type/lint issue when possible. Flag if the fix would require significant refactoring. CLI utility scripts (`data-utils/`, `scripts/`) may legitimately use `eslint-disable no-console`—skip those.
+
+---
+
+### Category 12: Dead CSS & Unused Styles (Medium Priority)
+Remove orphaned styles that no longer have corresponding markup:
+
+- CSS classes/selectors with no matching HTML or JSX usage
+- Unused CSS custom properties (variables)
+- Entire style blocks for deleted components
+- Duplicate style declarations
+
+**Action:**
+Cross-reference selectors with template/JSX usage before removing. Keep design-token variables that may be used dynamically.
 
 ---
 
