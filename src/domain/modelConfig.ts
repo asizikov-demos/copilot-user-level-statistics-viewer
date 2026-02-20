@@ -50,10 +50,12 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4.5', 3, true),
   new Model('claude-opus-4.6', 3, true),
   new Model('claude-opus-4.6-(fast-mode)', 30, true),
+  new Model('claude-opus-4.6-(fast-mode)-(preview)', 30, true),
   new Model('claude-4.5-haiku', 0.33, true),
   new Model('gemini-2.0-flash', 0.25, true),
   new Model('gemini-2.5-pro', 1, true),
   new Model('gemini-3.0-pro', 1, true),
+  new Model('gemini-3.1-pro', 1, true),
   new Model('gemini-3.0-flash', 0.33, true),
 
   new Model('auto', 0.7, true), // a temp hack for auto premium models, we don't know the actual model behind it yet.
