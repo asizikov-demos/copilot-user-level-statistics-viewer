@@ -6,7 +6,7 @@ Next.js App Router single-page application. TypeScript, Tailwind CSS, Chart.js f
 
 ## Critical Architecture Constraint
 
-All CSV parsing and metrics aggregation runs in a **Web Worker** — raw metrics never reach the main thread. The worker is pre-bundled via esbuild (`scripts/build-worker.mjs` → `public/workers/metricsWorker.js`). The `build:worker` step runs automatically before `next build` and `next dev`.
+All parsing and metrics aggregation should run in a **Web Worker** via the `parseAndAggregate` flow — avoid persisting raw metrics on the main thread. The worker is pre-bundled via esbuild (`scripts/build-worker.mjs` → `public/workers/metricsWorker.js`). The `build:worker` step runs automatically before `next build` and `next dev`.
 
 ## Development Commands
 
@@ -25,7 +25,7 @@ All CSV parsing and metrics aggregation runs in a **Web Worker** — raw metrics
 
 ## Key Domain File
 
-`src/domain/modelConfig.ts` contains Copilot model multipliers synced with GitHub pricing docs. An automated workflow keeps them updated — see `extract-model-multipliers.prompt.yml`.
+`src/domain/modelConfig.ts` contains Copilot model multipliers synced with GitHub pricing docs. An automated workflow keeps them updated — see `.github/workflows/copilot-model-multipliers.md`.
 
 ## UX Patterns
 
@@ -39,3 +39,4 @@ All CSV parsing and metrics aggregation runs in a **Web Worker** — raw metrics
 - Verify build + lint pass before committing
 - Reference items by name/description, not by number
 - When using sub-agents, parallelize independent work
+- Run the **Code Review** agent on all changes before considering a session complete or creating a PR
