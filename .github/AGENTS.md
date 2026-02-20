@@ -35,8 +35,7 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 ## Workflow Conventions
 
 - Scan/audit tasks are **read-only** — no surprise code changes
-- Implementation commits use conventional prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `ci:`
-- Verify build + lint pass before committing
-- Reference items by name/description, not by number
+- Delegate git operations (commits, branch management, PR creation) to the **Git Workflow** agent
+- Delegate change review to the **Code Review** agent before considering a session complete or creating a PR
 - When using sub-agents, parallelize independent work
-- Run the **Code Review** agent on all changes before considering a session complete or creating a PR
+- Reference items by name/description, not by number
