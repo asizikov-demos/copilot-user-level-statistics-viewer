@@ -5,6 +5,13 @@ import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFilePar
 import type { WorkerResponse } from './types';
 import { getBasePath } from '../utils/basePath';
 
+export type ParseAndAggregateResult = {
+  result: AggregatedMetrics;
+  enterpriseName: string | null;
+  recordCount: number;
+  errors: MultiFileResult['errors'];
+};
+
 interface PendingParseRequest {
   resolve: (value: MultiFileResult) => void;
   reject: (error: Error) => void;
@@ -17,7 +24,7 @@ interface PendingAggregateRequest {
 }
 
 interface PendingParseAndAggregateRequest {
-  resolve: (value: { result: AggregatedMetrics; enterpriseName: string | null; recordCount: number; errors: MultiFileResult['errors'] }) => void;
+  resolve: (value: ParseAndAggregateResult) => void;
   reject: (error: Error) => void;
   onProgress?: (progress: MultiFileProgress) => void;
 }
@@ -154,7 +161,7 @@ export function aggregateMetricsInWorker(
 export function parseAndAggregateInWorker(
   files: File[],
   onProgress?: (progress: MultiFileProgress) => void
-): Promise<{ result: AggregatedMetrics; enterpriseName: string | null; recordCount: number; errors: MultiFileResult['errors'] }> {
+): Promise<ParseAndAggregateResult> {
   const id = nextId();
   return new Promise((resolve, reject) => {
     pendingRequests.set(id, { kind: 'parseAndAggregate', resolve, reject, onProgress });
