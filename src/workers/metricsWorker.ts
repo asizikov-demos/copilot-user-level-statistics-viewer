@@ -41,6 +41,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         const result: WorkerParseResult = {
           enterpriseName: extractEnterpriseName(multiFileResult.metrics),
           recordCount: multiFileResult.metrics.length,
+          metrics: multiFileResult.metrics,
           errors: multiFileResult.errors,
         };
         postResponse({ type: 'parseResult', id: msg.id, result });
@@ -90,6 +91,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           result: aggregated,
           enterpriseName: extractEnterpriseName(parseResult.metrics),
           recordCount: parseResult.metrics.length,
+          metrics: parseResult.metrics,
           errors: parseResult.errors,
         });
       } catch (err) {

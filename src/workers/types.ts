@@ -12,6 +12,7 @@ export type WorkerRequest =
 export type WorkerParseResult = {
   enterpriseName: string | null;
   recordCount: number;
+  metrics: MultiFileResult['metrics'];
   errors: MultiFileResult['errors'];
 };
 
