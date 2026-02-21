@@ -9,17 +9,20 @@ export type WorkerRequest =
   | { type: 'parseAndAggregate'; id: string; files: File[] }
   | { type: 'computeUserDetails'; id: string; userId: number };
 
+export type WorkerParseResult = {
+  enterpriseName: string | null;
+  recordCount: number;
+  errors: MultiFileResult['errors'];
+};
+
 export type WorkerResponse =
   | { type: 'parseProgress'; id: string; progress: MultiFileProgress }
-  | { type: 'parseResult'; id: string; result: MultiFileResult }
+  | { type: 'parseResult'; id: string; result: WorkerParseResult }
   | { type: 'aggregateResult'; id: string; result: AggregatedMetrics }
-  | {
+  | ({
       type: 'parseAndAggregateResult';
       id: string;
       result: AggregatedMetrics;
-      enterpriseName: string | null;
-      recordCount: number;
-      errors: MultiFileResult['errors'];
-    }
+    } & WorkerParseResult)
   | { type: 'userDetailsResult'; id: string; result: UserDetailedMetrics | null }
   | { type: 'error'; id: string; error: string };
