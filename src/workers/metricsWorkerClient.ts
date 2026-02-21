@@ -2,11 +2,11 @@ import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../domain/metricsAggregator';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
-import type { WorkerResponse } from './types';
+import type { WorkerResponse, WorkerParseResult } from './types';
 import { getBasePath } from '../utils/basePath';
 
 interface PendingParseRequest {
-  resolve: (value: MultiFileResult) => void;
+  resolve: (value: WorkerParseResult) => void;
   reject: (error: Error) => void;
   onProgress?: (progress: MultiFileProgress) => void;
 }
@@ -123,7 +123,7 @@ function nextId(): string {
 export function parseFilesInWorker(
   files: File[],
   onProgress?: (progress: MultiFileProgress) => void
-): Promise<MultiFileResult> {
+): Promise<WorkerParseResult> {
   const id = nextId();
   return new Promise((resolve, reject) => {
     pendingRequests.set(id, { kind: 'parse', resolve, reject, onProgress });

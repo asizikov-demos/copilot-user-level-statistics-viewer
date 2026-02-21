@@ -1,8 +1,9 @@
 import { parseMultipleMetricsStreams } from '../infra/metricsFileParser';
 import { aggregateMetrics } from '../domain/metricsAggregator';
 import { computeSingleUserDetailedMetrics } from '../domain/calculators';
+import type { CopilotMetrics } from '../types/metrics';
 import type { UserDetailAccumulator } from '../domain/calculators';
-import type { WorkerRequest, WorkerResponse } from './types';
+import type { WorkerRequest, WorkerResponse, WorkerParseResult } from './types';
 
 interface WorkerContext {
   onmessage: ((event: MessageEvent) => void) | null;
@@ -17,14 +18,32 @@ function postResponse(response: WorkerResponse): void {
   ctx.postMessage(response);
 }
 
+function extractEnterpriseName(metrics: CopilotMetrics[]): string | null {
+  if (metrics.length === 0) return null;
+  const first = metrics[0];
+  const loginSuffix = first.user_login?.includes('_')
+    ? first.user_login.split('_').pop()?.trim()
+    : undefined;
+  const enterpriseId = first.enterprise_id.trim();
+  return loginSuffix && loginSuffix.length > 0
+    ? loginSuffix
+    : (enterpriseId.length > 0 ? enterpriseId : null);
+}
+
 ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const msg = event.data;
   switch (msg.type) {
     case 'parseFiles': {
       try {
-        const result = await parseMultipleMetricsStreams(msg.files, (progress) => {
+        const multiFileResult = await parseMultipleMetricsStreams(msg.files, (progress) => {
           postResponse({ type: 'parseProgress', id: msg.id, progress });
         });
+        const result: WorkerParseResult = {
+          enterpriseName: extractEnterpriseName(multiFileResult.metrics),
+          recordCount: multiFileResult.metrics.length,
+          metrics: multiFileResult.metrics,
+          errors: multiFileResult.errors,
+        };
         postResponse({ type: 'parseResult', id: msg.id, result });
       } catch (err) {
         postResponse({
@@ -66,23 +85,13 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
         }
         const { aggregated, userDetailAccumulator } = aggregateMetrics(parseResult.metrics);
         storedUserDetailAccumulator = userDetailAccumulator;
-        let enterpriseName: string | null = null;
-        if (parseResult.metrics.length > 0) {
-          const first = parseResult.metrics[0];
-          const loginSuffix = first.user_login?.includes('_')
-            ? first.user_login.split('_').pop()?.trim()
-            : undefined;
-          const enterpriseId = first.enterprise_id.trim();
-          enterpriseName = loginSuffix && loginSuffix.length > 0
-            ? loginSuffix
-            : (enterpriseId.length > 0 ? enterpriseId : null);
-        }
         postResponse({
           type: 'parseAndAggregateResult',
           id: msg.id,
           result: aggregated,
-          enterpriseName,
+          enterpriseName: extractEnterpriseName(parseResult.metrics),
           recordCount: parseResult.metrics.length,
+          metrics: parseResult.metrics,
           errors: parseResult.errors,
         });
       } catch (err) {
