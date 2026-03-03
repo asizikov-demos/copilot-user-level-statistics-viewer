@@ -123,6 +123,7 @@ export interface CopilotImpactViewProps extends BackNavigableViewProps {
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
+  planModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
 

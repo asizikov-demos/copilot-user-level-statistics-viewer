@@ -4,6 +4,7 @@ export interface DailyChatUsersData {
   agentModeUsers: number;
   editModeUsers: number;
   inlineModeUsers: number;
+  planModeUsers: number;
 }
 
 export interface DailyChatRequestsData {
@@ -12,6 +13,7 @@ export interface DailyChatRequestsData {
   agentModeRequests: number;
   editModeRequests: number;
   inlineModeRequests: number;
+  planModeRequests: number;
 }
 
 export interface ChatAccumulator {
@@ -20,12 +22,14 @@ export interface ChatAccumulator {
     agentModeUsers: Set<number>;
     editModeUsers: Set<number>;
     inlineModeUsers: Set<number>;
+    planModeUsers: Set<number>;
   }>;
   dailyChatRequests: Map<string, {
     askModeRequests: number;
     agentModeRequests: number;
     editModeRequests: number;
     inlineModeRequests: number;
+    planModeRequests: number;
   }>;
 }
 
@@ -43,6 +47,7 @@ export function ensureChatDate(accumulator: ChatAccumulator, date: string): void
       agentModeUsers: new Set(),
       editModeUsers: new Set(),
       inlineModeUsers: new Set(),
+      planModeUsers: new Set(),
     });
   }
   if (!accumulator.dailyChatRequests.has(date)) {
@@ -51,6 +56,7 @@ export function ensureChatDate(accumulator: ChatAccumulator, date: string): void
       agentModeRequests: 0,
       editModeRequests: 0,
       inlineModeRequests: 0,
+      planModeRequests: 0,
     });
   }
 }
@@ -85,6 +91,10 @@ export function accumulateChatFeature(
       users.inlineModeUsers.add(userId);
       requests.inlineModeRequests += interactionCount;
       break;
+    case 'chat_panel_plan_mode':
+      users.planModeUsers.add(userId);
+      requests.planModeRequests += interactionCount;
+      break;
   }
 }
 
@@ -96,6 +106,7 @@ export function computeChatUsersData(accumulator: ChatAccumulator): DailyChatUse
       agentModeUsers: data.agentModeUsers.size,
       editModeUsers: data.editModeUsers.size,
       inlineModeUsers: data.inlineModeUsers.size,
+      planModeUsers: data.planModeUsers.size,
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }

@@ -129,6 +129,7 @@ const ViewRouter: React.FC = () => {
     inlineModeImpactData,
     askModeImpactData,
     cliImpactData,
+    planModeImpactData,
     joinedImpactData,
     ideStats,
     multiIDEUsersCount,
@@ -185,6 +186,7 @@ const ViewRouter: React.FC = () => {
           inlineModeImpactData={inlineModeImpactData}
           askModeImpactData={askModeImpactData}
           cliImpactData={cliImpactData}
+          planModeImpactData={planModeImpactData}
           joinedImpactData={joinedImpactData}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />

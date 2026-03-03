@@ -67,6 +67,7 @@ export const featureColors = {
   askMode: chartColors.green,
   editMode: chartColors.amber,
   inlineMode: chartColors.violet,
+  planMode: chartColors.indigo,
   codeCompletion: chartColors.green,
   codeReview: chartColors.teal,
   cli: chartColors.pink,
@@ -81,6 +82,7 @@ export const chatModeColors = {
   agent: chartColors.purple,
   edit: chartColors.amber,
   inline: chartColors.red,
+  plan: chartColors.indigo,
 } as const;
 
 /**

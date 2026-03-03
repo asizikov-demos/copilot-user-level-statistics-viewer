@@ -6,6 +6,7 @@ export const featureTranslations: Record<string, string> = {
   'chat_panel_ask_mode': 'Chat: Ask Mode',
   'chat_panel_agent_mode': 'Chat: Agent Mode',
   'chat_panel_custom_mode': 'Chat: Custom Mode',
+  'chat_panel_plan_mode': 'Chat: Plan Mode',
   'code_completion': 'Code Completion',
   'chat_panel_unknown_mode': 'Chat: Unknown Mode',
   'chat_inline': 'Chat: Inline',

@@ -62,6 +62,7 @@ import {
   computeInlineModeImpactData,
   computeAskModeImpactData,
   computeCliImpactData,
+  computePlanModeImpactData,
   computeJoinedImpactData,
 
   createIDEStatsAccumulator,
@@ -105,6 +106,7 @@ export interface AggregatedMetrics {
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
+  planModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
@@ -316,6 +318,7 @@ export function aggregateMetrics(
     inlineModeImpactData: computeInlineModeImpactData(impactAccumulator),
     askModeImpactData: computeAskModeImpactData(impactAccumulator),
     cliImpactData: computeCliImpactData(impactAccumulator),
+    planModeImpactData: computePlanModeImpactData(impactAccumulator),
     joinedImpactData: computeJoinedImpactData(impactAccumulator),
     ...computeIDEStatsData(ideStatsAccumulator),
     pluginVersionData: computePluginVersionData(pluginVersionAccumulator),

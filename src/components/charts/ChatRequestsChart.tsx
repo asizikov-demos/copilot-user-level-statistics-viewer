@@ -22,17 +22,20 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
   const totalAgentRequests = calculateTotal(data, d => d.agentModeRequests);
   const totalEditRequests = calculateTotal(data, d => d.editModeRequests);
   const totalInlineRequests = calculateTotal(data, d => d.inlineModeRequests);
-  const grandTotal = totalAskRequests + totalAgentRequests + totalEditRequests + totalInlineRequests;
+  const totalPlanRequests = calculateTotal(data, d => d.planModeRequests);
+  const grandTotal = totalAskRequests + totalAgentRequests + totalEditRequests + totalInlineRequests + totalPlanRequests;
 
   const avgAskRequests = calculateAverage(data, d => d.askModeRequests);
   const avgAgentRequests = calculateAverage(data, d => d.agentModeRequests);
   const avgEditRequests = calculateAverage(data, d => d.editModeRequests);
   const avgInlineRequests = calculateAverage(data, d => d.inlineModeRequests);
+  const avgPlanRequests = calculateAverage(data, d => d.planModeRequests);
 
   const maxAskRequests = findMaxValue(data, d => d.askModeRequests);
   const maxAgentRequests = findMaxValue(data, d => d.agentModeRequests);
   const maxEditRequests = findMaxValue(data, d => d.editModeRequests);
   const maxInlineRequests = findMaxValue(data, d => d.inlineModeRequests);
+  const maxPlanRequests = findMaxValue(data, d => d.planModeRequests);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
@@ -41,6 +44,7 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
       createLineDataset(chartColors.purple.solid, 'Agent Mode Requests', data.map(d => d.agentModeRequests)),
       createLineDataset(chartColors.amber.solid, 'Edit Mode Requests', data.map(d => d.editModeRequests)),
       createLineDataset(chartColors.red.solid, 'Inline Mode Requests', data.map(d => d.inlineModeRequests)),
+      createLineDataset(chartColors.indigo.solid, 'Plan Mode Requests', data.map(d => d.planModeRequests)),
     ],
   };
 
@@ -58,7 +62,7 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
-        const totalRequests = dayData.askModeRequests + dayData.agentModeRequests + dayData.editModeRequests + dayData.inlineModeRequests;
+        const totalRequests = dayData.askModeRequests + dayData.agentModeRequests + dayData.editModeRequests + dayData.inlineModeRequests + dayData.planModeRequests;
         return [
           '',
           `Date: ${dayData.date}`,
@@ -78,11 +82,12 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
         { label: 'Avg Agent', value: avgAgentRequests },
         { label: 'Avg Edit', value: avgEditRequests },
         { label: 'Avg Inline', value: avgInlineRequests },
+        { label: 'Avg Plan', value: avgPlanRequests },
       ]}
       isEmpty={data.length === 0}
       emptyState="No chat request data available"
       footer={
-        <div className="grid grid-cols-5 gap-4 text-xs text-gray-500">
+        <div className="grid grid-cols-6 gap-4 text-xs text-gray-500">
           <div>
             <span className="font-medium text-green-600">Ask Mode:</span> {totalAskRequests} total (max {maxAskRequests}/day)
           </div>
@@ -94,6 +99,9 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
           </div>
           <div>
             <span className="font-medium text-red-600">Inline Mode:</span> {totalInlineRequests} total (max {maxInlineRequests}/day)
+          </div>
+          <div>
+            <span className="font-medium text-indigo-600">Plan Mode:</span> {totalPlanRequests} total (max {maxPlanRequests}/day)
           </div>
           <div>
             <span className="font-medium text-gray-600">All Modes:</span> {grandTotal} total requests
