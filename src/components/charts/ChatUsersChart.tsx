@@ -55,7 +55,7 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
-        const totalChatUsers = Math.max(dayData.askModeUsers, dayData.agentModeUsers, dayData.editModeUsers, dayData.inlineModeUsers);
+        const totalChatUsers = Math.max(dayData.askModeUsers, dayData.agentModeUsers, dayData.editModeUsers, dayData.inlineModeUsers, dayData.planModeUsers);
         return [
           '',
           `Date: ${dayData.date}`,
