@@ -81,8 +81,11 @@ export function hasVsCodeDataChanged(existing: VsCodeData, incoming: VsCodeData)
   if (existing.stableMinor !== incoming.stableMinor) return true;
   if (existing.previewMinor !== incoming.previewMinor) return true;
   if (existing.stableReleases.length !== incoming.stableReleases.length) return true;
-  if (existing.stableReleases[0]?.version !== incoming.stableReleases[0]?.version) return true;
-  return false;
+  return incoming.stableReleases.some(
+    (r, i) =>
+      r.version !== existing.stableReleases[i].version ||
+      r.releaseDate !== existing.stableReleases[i].releaseDate,
+  );
 }
 
 async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {

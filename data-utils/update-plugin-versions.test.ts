@@ -196,4 +196,21 @@ describe('hasVsCodeDataChanged', () => {
   it('returns true when bootstrapping from zero', () => {
     expect(hasVsCodeDataChanged(make(0), make(38))).toBe(true);
   });
+
+  it('returns true when a later entry version changes (not the first)', () => {
+    const base = [makeStableRelease('0.38.3'), makeStableRelease('0.38.2'), makeStableRelease('0.38.1')];
+    const changed = [makeStableRelease('0.38.3'), makeStableRelease('0.38.2'), makeStableRelease('0.38.0')];
+    expect(hasVsCodeDataChanged(make(38, 39, base), make(38, 39, changed))).toBe(true);
+  });
+
+  it('returns true when a releaseDate is corrected in an existing entry', () => {
+    const existing = [makeStableRelease('0.38.2', '2026-03-06T00:00:00Z'), makeStableRelease('0.38.1', '2026-02-01T00:00:00Z')];
+    const corrected = [makeStableRelease('0.38.2', '2026-03-06T00:00:00Z'), makeStableRelease('0.38.1', '2026-02-02T00:00:00Z')];
+    expect(hasVsCodeDataChanged(make(38, 39, existing), make(38, 39, corrected))).toBe(true);
+  });
+
+  it('returns false when all entry versions and releaseDates match', () => {
+    const releases = [makeStableRelease('0.38.2', '2026-03-06T00:00:00Z'), makeStableRelease('0.38.1', '2026-02-01T00:00:00Z')];
+    expect(hasVsCodeDataChanged(make(38, 39, releases), make(38, 39, releases))).toBe(false);
+  });
 });
