@@ -449,12 +449,25 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                 },
                 {
                   title: 'VS Code Users on Outdated Versions',
-                  value: outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0),
-                  accent: outdatedVsCodePlugins.length > 0 ? 'orange' : 'emerald',
+                  value:
+                    !vsLoading && currentStableMinor !== null
+                      ? outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0)
+                      : null,
+                  accent:
+                    !vsLoading && currentStableMinor !== null
+                      ? outdatedVsCodePlugins.length > 0
+                        ? 'orange'
+                        : 'emerald'
+                      : 'amber',
                   subtitle:
-                    currentStableMinor === null
-                      ? `${outdatedVsCodePlugins.length} outdated version${outdatedVsCodePlugins.length !== 1 ? 's' : ''} detected`
-                      : `Earlier than stable 0.${currentStableMinor}`,
+                    vsLoading
+                      ? undefined
+                      : currentStableMinor === null
+                        ? vsError
+                          ? 'Release metadata unavailable'
+                          : 'No release metadata available'
+                        : `Earlier than stable 0.${currentStableMinor}`,
+                  isLoading: vsLoading,
                   icon: <MetricTileIcon name="plugin-outdated" />,
                 },
               ]}
