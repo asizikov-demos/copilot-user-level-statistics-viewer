@@ -61,6 +61,59 @@ export interface VersionLike {
   version: string;
 }
 
+export interface DatedVersionLike extends VersionLike {
+  releaseDate: string;
+}
+
+export function parseReportDayEnd(reportDay: string): Date | null {
+  const dayMatch = reportDay.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dayMatch) {
+    const parsed = new Date(reportDay);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const [, year, month, day] = dayMatch;
+  const yearNumber = Number(year);
+  const monthNumber = Number(month);
+  const dayNumber = Number(day);
+  const parsed = new Date(Date.UTC(yearNumber, monthNumber - 1, dayNumber, 23, 59, 59, 999));
+
+  if (
+    parsed.getUTCFullYear() !== yearNumber
+    || parsed.getUTCMonth() !== monthNumber - 1
+    || parsed.getUTCDate() !== dayNumber
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+export function resolveCurrentStableMinorAtDate(
+  stableReleases: DatedVersionLike[],
+  reportDay: string,
+): number | null {
+  const cutoff = parseReportDayEnd(reportDay);
+  if (cutoff === null) return null;
+
+  let effectiveStableMinor: number | null = null;
+
+  for (const release of stableReleases) {
+    const parsedVersion = parseVsCodeVersion(release.version);
+    if (parsedVersion === null || parsedVersion.isTimestampBuild) continue;
+
+    const releaseDate = new Date(release.releaseDate);
+    const releaseTime = releaseDate.getTime();
+    if (Number.isNaN(releaseTime) || releaseTime > cutoff.getTime()) continue;
+
+    if (effectiveStableMinor === null || parsedVersion.minor > effectiveStableMinor) {
+      effectiveStableMinor = parsedVersion.minor;
+    }
+  }
+
+  return effectiveStableMinor;
+}
+
 /**
  * Derives the current stable minor from a legacy rolling list of versions when
  * the data source does not provide an explicit stableMinor field.
