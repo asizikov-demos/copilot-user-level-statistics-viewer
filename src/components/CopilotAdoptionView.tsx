@@ -162,6 +162,22 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     }
   }
 
+  function formatReportDay(reportDay: string): string {
+    const reportDayEnd = parseReportDayEnd(reportDay);
+    if (reportDayEnd === null) return reportDay;
+
+    try {
+      return reportDayEnd.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      });
+    } catch {
+      return reportDay;
+    }
+  }
+
   const tableHeaderClass = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const narrowCellClass = 'px-4 py-2 text-sm text-gray-900 whitespace-nowrap';
   const usernameCellClass = 'px-4 py-2 text-sm text-gray-900';
@@ -503,7 +519,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                     hasHistoricalVsCodeMetadataGap
                       ? 'Historical release metadata is unavailable for this report window'
                       : effectiveVsCodeStableMinor === null
-                      ? 'Different extension versions detected'
+                      ? 'Unable to evaluate VS Code stable train for this report window'
                       : `Stable 0.${effectiveVsCodeStableMinor}, latest preview 0.${effectiveVsCodePreviewTrainLabel}`,
                   icon: <MetricTileIcon name="vs-versions" />,
                 },
@@ -554,7 +570,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  this report ends on {formatDate(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
+                  this report ends on {formatReportDay(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
                 </p>
                 <p>
                   Historical metadata in this build starts at {formatDate(earliestVsCodeStableReleaseDate ?? '')}, so older report windows are shown without stable or outdated classification.
@@ -574,7 +590,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  versions are compared against the stable release train available by the end of this report window ({formatDate(stats.reportEndDay)}).
+                  versions are compared against the stable release train available by the end of this report window ({formatReportDay(stats.reportEndDay)}).
                 </p>
                 <p>
                   <span className="font-medium text-gray-900">Stable release train at report end:</span>{' '}

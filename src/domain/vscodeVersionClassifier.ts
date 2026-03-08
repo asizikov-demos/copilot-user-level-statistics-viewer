@@ -67,10 +67,7 @@ export interface DatedVersionLike extends VersionLike {
 
 export function parseReportDayEnd(reportDay: string): Date | null {
   const dayMatch = reportDay.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!dayMatch) {
-    const parsed = new Date(reportDay);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
+  if (!dayMatch) return null;
 
   const [, year, month, day] = dayMatch;
   const yearNumber = Number(year);

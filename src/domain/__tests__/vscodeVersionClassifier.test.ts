@@ -52,6 +52,11 @@ describe('parseReportDayEnd', () => {
     expect(parseReportDayEnd('2026-02-30')).toBeNull();
     expect(parseReportDayEnd('2026-13-01')).toBeNull();
   });
+
+  it('rejects non-report-day inputs instead of parsing arbitrary datetimes', () => {
+    expect(parseReportDayEnd('2026-03-01T00:00:00Z')).toBeNull();
+    expect(parseReportDayEnd('not-a-day')).toBeNull();
+  });
 });
 
 describe('classifyVsCodeVersion', () => {
