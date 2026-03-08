@@ -8,6 +8,8 @@ import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
+import { classifyVsCodeVersion } from '../domain/vscodeVersionClassifier';
+import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
 import type { VoidCallback } from '../types/events';
@@ -22,7 +24,14 @@ interface CopilotAdoptionViewProps {
 
 export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, onBack }: CopilotAdoptionViewProps) {
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
-  const { versions: vscodeVersions, isLoading: vsLoading, error: vsError } = usePluginVersions('vscode');
+  const {
+    stableReleases: vsCodeStableReleases,
+    isLoading: vsLoading,
+    error: vsError,
+    currentStableMinor,
+    currentPreviewMinor,
+    updatedAt: vsUpdatedAt,
+  } = usePluginVersions('vscode');
 
   const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
   const [expandedVsUsernames, setExpandedVsUsernames] = useState<Set<string>>(new Set());
@@ -39,9 +48,16 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
 
   const latestTwentyVersions = React.useMemo(() => latestTwentyUpdates.map(u => u.version), [latestTwentyUpdates]);
 
-  const latestVsCodeVersions = React.useMemo(
-    () => vscodeVersions.map(v => v.version),
-    [vscodeVersions],
+  const classifyVsCode = React.useCallback(
+    (version: string): VsCodeVersionClassification => {
+      if (currentStableMinor === null) return 'unknown';
+      return classifyVsCodeVersion(
+        version,
+        currentStableMinor,
+        currentPreviewMinor ?? currentStableMinor + 1,
+      );
+    },
+    [currentPreviewMinor, currentStableMinor],
   );
 
   const jetbrainsVersionDateMap = React.useMemo(() => {
@@ -56,6 +72,14 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     return map;
   }, [jetbrainsUpdates]);
 
+  const vsCodeVersionDateMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    for (const { version, releaseDate } of vsCodeStableReleases) {
+      if (!map.has(version)) map.set(version, releaseDate);
+    }
+    return map;
+  }, [vsCodeStableReleases]);
+
   const outdatedPlugins = React.useMemo(() => {
     return pluginVersionAnalysis.filter(plugin => 
       !latestTwentyVersions.includes(plugin.version)
@@ -65,9 +89,9 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
   const outdatedVsCodePlugins = React.useMemo(
     () =>
       vscodeVersionAnalysis.filter(
-        (plugin) => !latestVsCodeVersions.includes(plugin.version),
+        (plugin) => classifyVsCode(plugin.version) === 'outdated',
       ),
-    [vscodeVersionAnalysis, latestVsCodeVersions],
+    [vscodeVersionAnalysis, classifyVsCode],
   );
 
   function formatDate(dateString: string): string {
@@ -167,23 +191,6 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     },
   ];
 
-  const vscodeVersionsColumns: TableColumn<(typeof vscodeVersions)[number]>[] = [
-    {
-      id: 'version',
-      header: 'Version',
-      headerClassName: tableHeaderClass,
-      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
-      renderCell: (version) => version.version,
-    },
-    {
-      id: 'releaseDate',
-      header: 'Release Date',
-      headerClassName: tableHeaderClass,
-      className: narrowCellClass,
-      renderCell: (version) => formatDate(version.releaseDate),
-    },
-  ];
-
   const vscodeVersionAnalysisColumns: TableColumn<typeof vscodeVersionAnalysis[number]>[] = [
     {
       id: 'version',
@@ -197,7 +204,25 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       header: 'Status',
       headerClassName: tableHeaderClass,
       className: narrowCellClass,
-      renderCell: (item) => (latestVsCodeVersions.includes(item.version) ? 'Latest window' : 'Outdated'),
+      renderCell: (item) => {
+        const cls = classifyVsCode(item.version);
+        if (cls === 'stable') return 'Stable';
+        if (cls === 'prerelease') return 'Pre-release';
+        if (cls === 'latest-preview') return 'Latest preview';
+        if (cls === 'outdated') return 'Outdated';
+        return vsLoading ? 'Loading\u2026' : 'Unknown';
+      },
+    },
+    {
+      id: 'releaseDate',
+      header: 'Release Date',
+      headerClassName: tableHeaderClass,
+      className: narrowCellClass,
+      renderCell: (item) => {
+        if (classifyVsCode(item.version) !== 'outdated') return '\u2014';
+        const date = vsCodeVersionDateMap.get(item.version);
+        return date ? formatDate(date) : '\u2014';
+      },
     },
     {
       id: 'userCount',
@@ -398,7 +423,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           <div>
             <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
             <p className="text-gray-600 text-xs mb-4 max-w-2xl">
-              VS Code using the GitHub Copilot extension. Version history is maintained as a rolling window of the latest 20 releases.
+              VS Code using the GitHub Copilot extension. Stable releases stay tied to the current train, while timestamp builds are treated as pre-release channels.
             </p>
           </div>
 
@@ -416,14 +441,33 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   title: 'Unique VS Code Versions',
                   value: vscodeVersionAnalysis.length,
                   accent: 'indigo',
-                  subtitle: 'Different extension versions detected',
+                  subtitle:
+                    currentStableMinor === null
+                      ? 'Different extension versions detected'
+                      : `Stable 0.${currentStableMinor}, latest preview 0.${currentPreviewMinor ?? currentStableMinor + 1}`,
                   icon: <MetricTileIcon name="vs-versions" />,
                 },
                 {
                   title: 'VS Code Users on Outdated Versions',
-                  value: outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0),
-                  accent: outdatedVsCodePlugins.length > 0 ? 'orange' : 'emerald',
-                  subtitle: `${outdatedVsCodePlugins.length} outdated version${outdatedVsCodePlugins.length !== 1 ? 's' : ''} detected`,
+                  value:
+                    !vsLoading && currentStableMinor !== null
+                      ? outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0)
+                      : null,
+                  accent:
+                    !vsLoading && currentStableMinor !== null
+                      ? outdatedVsCodePlugins.length > 0
+                        ? 'orange'
+                        : 'emerald'
+                      : 'amber',
+                  subtitle:
+                    vsLoading
+                      ? undefined
+                      : currentStableMinor === null
+                        ? vsError
+                          ? 'Release metadata unavailable'
+                          : 'No release metadata available'
+                        : `Earlier than stable 0.${currentStableMinor}`,
+                  isLoading: vsLoading,
                   icon: <MetricTileIcon name="plugin-outdated" />,
                 },
               ]}
@@ -437,38 +481,42 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             </div>
           )}
 
-          <ExpandableTableSection
-            items={vscodeVersions || []}
-            initialCount={2}
-            buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-            buttonExpandedLabel="Show Less"
-          >
-            {({ visibleItems }) => (
-              <div className="overflow-x-auto border border-gray-200 rounded-md">
-                {vsLoading ? (
-                  <div className="px-4 py-3 text-gray-500">Loading&hellip;</div>
-                ) : vsError ? (
-                  <div className="px-4 py-3 text-red-600">Failed to load VS Code versions: {vsError}</div>
-                ) : vscodeVersions.length === 0 ? (
-                  <div className="px-4 py-3 text-gray-500">No version data available.</div>
-                ) : (
-                  <MetricsTable
-                    data={visibleItems}
-                    columns={vscodeVersionsColumns}
-                    tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                    theadClassName="bg-gray-50"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                  />
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+            {vsLoading ? (
+              <div className="text-gray-500">Loading VS Code release metadata…</div>
+            ) : vsError ? (
+              <div className="text-red-600">Failed to load VS Code release metadata: {vsError}</div>
+            ) : currentStableMinor === null ? (
+              <div className="text-gray-500">No VS Code release metadata available.</div>
+            ) : (
+              <div className="space-y-1">
+                <p>
+                  <span className="font-medium text-gray-900">Current stable release train:</span>{' '}
+                  0.{currentStableMinor}
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Latest preview train:</span>{' '}
+                  0.{currentPreviewMinor ?? currentStableMinor + 1}.x
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Timestamp builds:</span>{' '}
+                  treated as pre-release versions instead of exact releases that must stay in a rolling window.
+                </p>
+                {vsUpdatedAt && (
+                  <p>
+                    <span className="font-medium text-gray-900">Metadata updated:</span>{' '}
+                    {formatDate(vsUpdatedAt)}
+                  </p>
                 )}
               </div>
             )}
-          </ExpandableTableSection>
+          </div>
 
           {vscodeVersionAnalysis.length > 0 && (
             <div className="space-y-4">
               <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code Users by Extension Version</h4>
               <p className="text-sm text-gray-600">
-                Breakdown of VS Code users by installed GitHub Copilot extension version. Versions outside the latest rolling window are considered outdated.
+                Breakdown of VS Code users by installed GitHub Copilot extension version. Stable versions like 0.38 and 0.38.2 stay current, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
               </p>
               <ExpandableTableSection
                 items={vscodeVersionAnalysis}
@@ -483,7 +531,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                       columns={vscodeVersionAnalysisColumns}
                       tableClassName="min-w-full divide-y divide-gray-200 text-sm"
                       theadClassName="bg-gray-50"
-                      rowClassName={(item, index) => `${latestVsCodeVersions.includes(item.version) ? 'hover:bg-gray-50' : 'hover:bg-red-50'} ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                      rowClassName={(item, index) => `${classifyVsCode(item.version) === 'outdated' ? 'hover:bg-red-50' : 'hover:bg-gray-50'} ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
                     />
                   </div>
                 )}
