@@ -497,7 +497,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           <div>
             <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
             <p className="text-gray-600 text-xs mb-4 max-w-2xl">
-              VS Code using the GitHub Copilot extension. Version status is evaluated against the stable train available by the end of the report window, while timestamp builds are treated as pre-release channels.
+              VS Code using the GitHub Copilot extension. When release history is available, version status is evaluated against the stable train available by the end of the report window; if not, it falls back to the currently bundled stable train. Timestamp builds are treated as pre-release channels.
             </p>
           </div>
 
