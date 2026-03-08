@@ -590,7 +590,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  versions are compared against the stable release train available by the end of this report window ({formatReportDay(stats.reportEndDay)}).
+                  Versions are compared against the stable release train available by the end of this report window ({formatReportDay(stats.reportEndDay)}).
                 </p>
                 <p>
                   <span className="font-medium text-gray-900">Stable release train at report end:</span>{' '}
