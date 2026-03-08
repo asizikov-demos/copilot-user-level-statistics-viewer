@@ -570,7 +570,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  this report ends on {formatReportDay(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
+                  This report ends on {formatReportDay(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
                 </p>
                 <p>
                   Historical metadata in this build starts at {formatDate(earliestVsCodeStableReleaseDate ?? '')}, so older report windows are shown without stable or outdated classification.
