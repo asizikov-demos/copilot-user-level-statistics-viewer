@@ -2,11 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// ---- Constants -------------------------------------------------------------
-
 export const STABLE_RELEASES_WINDOW = 20;
-
-// ---- Types ----------------------------------------------------------------
 
 interface SimpleVersionInfo {
   version: string;
@@ -37,8 +33,6 @@ export interface GitHubRelease {
   published_at: string | null;
   created_at: string;
 }
-
-// ---- Helpers ---------------------------------------------------------------
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -91,8 +85,6 @@ export function hasVsCodeDataChanged(existing: VsCodeData, incoming: VsCodeData)
   return false;
 }
 
-// ---- Fetchers --------------------------------------------------------------
-
 async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
   const MAX = 20;
   const url = `https://plugins.jetbrains.com/api/plugins/17718/updates?channel=&size=${MAX}`;
@@ -135,8 +127,6 @@ async function fetchVsCodeData(githubToken?: string): Promise<VsCodeData> {
 
   return { stableMinor, previewMinor, updatedAt, stableReleases };
 }
-
-// ---- Main ------------------------------------------------------------------
 
 async function main(): Promise<void> {
   try {
