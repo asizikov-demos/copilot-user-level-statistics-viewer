@@ -8,7 +8,7 @@ import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
-import { classifyVsCodeVersion } from '../domain/vscodeVersionClassifier';
+import { classifyVsCodeVersion, parseReportDayEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
@@ -48,16 +48,74 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
 
   const latestTwentyVersions = React.useMemo(() => latestTwentyUpdates.map(u => u.version), [latestTwentyUpdates]);
 
+  const effectiveVsCodeStableMinor = React.useMemo(() => {
+    const releaseWindowMinor = resolveCurrentStableMinorAtDate(vsCodeStableReleases, stats.reportEndDay);
+    if (releaseWindowMinor !== null) return releaseWindowMinor;
+    if (vsCodeStableReleases.length > 0) return null;
+    return currentStableMinor;
+  }, [currentStableMinor, stats.reportEndDay, vsCodeStableReleases]);
+
+  const effectiveVsCodePreviewMinor = React.useMemo(() => {
+    if (effectiveVsCodeStableMinor === null) return null;
+
+    if (
+      currentStableMinor !== null
+      && currentPreviewMinor !== null
+      && effectiveVsCodeStableMinor === currentStableMinor
+    ) {
+      return currentPreviewMinor;
+    }
+
+    return effectiveVsCodeStableMinor + 1;
+  }, [currentPreviewMinor, currentStableMinor, effectiveVsCodeStableMinor]);
+
+  const earliestVsCodeStableReleaseDate = React.useMemo(() => {
+    let earliest: string | null = null;
+
+    for (const release of vsCodeStableReleases) {
+      const releaseTime = new Date(release.releaseDate).getTime();
+      if (Number.isNaN(releaseTime)) continue;
+      if (earliest === null || releaseTime < new Date(earliest).getTime()) {
+        earliest = release.releaseDate;
+      }
+    }
+
+    return earliest;
+  }, [vsCodeStableReleases]);
+
+  const parsedReportEndDay = React.useMemo(() => parseReportDayEnd(stats.reportEndDay), [stats.reportEndDay]);
+
+  const hasHistoricalVsCodeMetadataGap = React.useMemo(
+    () => {
+      if (vsLoading || vsError || currentStableMinor === null || effectiveVsCodeStableMinor !== null) {
+        return false;
+      }
+
+      if (parsedReportEndDay === null || earliestVsCodeStableReleaseDate === null) {
+        return false;
+      }
+
+      return parsedReportEndDay.getTime() < new Date(earliestVsCodeStableReleaseDate).getTime();
+    },
+    [currentStableMinor, earliestVsCodeStableReleaseDate, effectiveVsCodeStableMinor, parsedReportEndDay, vsError, vsLoading],
+  );
+
+  const effectiveVsCodePreviewTrainLabel = React.useMemo(() => {
+    if (effectiveVsCodePreviewMinor !== null) return effectiveVsCodePreviewMinor;
+    if (effectiveVsCodeStableMinor !== null) return effectiveVsCodeStableMinor + 1;
+    return null;
+  }, [effectiveVsCodePreviewMinor, effectiveVsCodeStableMinor]);
+
   const classifyVsCode = React.useCallback(
     (version: string): VsCodeVersionClassification => {
-      if (currentStableMinor === null) return 'unknown';
+      if (effectiveVsCodeStableMinor === null) return 'unknown';
       return classifyVsCodeVersion(
         version,
-        currentStableMinor,
-        currentPreviewMinor ?? currentStableMinor + 1,
+        effectiveVsCodeStableMinor,
+        effectiveVsCodePreviewMinor ?? effectiveVsCodeStableMinor + 1,
       );
     },
-    [currentPreviewMinor, currentStableMinor],
+    [effectiveVsCodePreviewMinor, effectiveVsCodeStableMinor],
   );
 
   const jetbrainsVersionDateMap = React.useMemo(() => {
@@ -101,6 +159,22 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     } catch {
       return dateString;
+    }
+  }
+
+  function formatReportDay(reportDay: string): string {
+    const reportDayEnd = parseReportDayEnd(reportDay);
+    if (reportDayEnd === null) return reportDay;
+
+    try {
+      return reportDayEnd.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      });
+    } catch {
+      return reportDay;
     }
   }
 
@@ -423,7 +497,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           <div>
             <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
             <p className="text-gray-600 text-xs mb-4 max-w-2xl">
-              VS Code using the GitHub Copilot extension. Stable releases stay tied to the current train, while timestamp builds are treated as pre-release channels.
+              VS Code using the GitHub Copilot extension. When release history is available, version status is evaluated against the stable train available by the end of the report window; if not, it falls back to the currently bundled stable train. Timestamp builds are treated as pre-release channels.
             </p>
           </div>
 
@@ -442,19 +516,21 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   value: vscodeVersionAnalysis.length,
                   accent: 'indigo',
                   subtitle:
-                    currentStableMinor === null
-                      ? 'Different extension versions detected'
-                      : `Stable 0.${currentStableMinor}, latest preview 0.${currentPreviewMinor ?? currentStableMinor + 1}`,
+                    hasHistoricalVsCodeMetadataGap
+                      ? 'Historical release metadata is unavailable for this report window'
+                      : effectiveVsCodeStableMinor === null
+                      ? 'Unable to evaluate VS Code stable train for this report window'
+                      : `Stable 0.${effectiveVsCodeStableMinor}, latest preview 0.${effectiveVsCodePreviewTrainLabel}`,
                   icon: <MetricTileIcon name="vs-versions" />,
                 },
                 {
                   title: 'VS Code Users on Outdated Versions',
                   value:
-                    !vsLoading && currentStableMinor !== null
+                    !vsLoading && effectiveVsCodeStableMinor !== null
                       ? outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0)
                       : null,
                   accent:
-                    !vsLoading && currentStableMinor !== null
+                    !vsLoading && effectiveVsCodeStableMinor !== null
                       ? outdatedVsCodePlugins.length > 0
                         ? 'orange'
                         : 'emerald'
@@ -462,11 +538,13 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   subtitle:
                     vsLoading
                       ? undefined
-                      : currentStableMinor === null
+                      : hasHistoricalVsCodeMetadataGap
+                        ? 'Historical release metadata unavailable for this report range'
+                      : effectiveVsCodeStableMinor === null
                         ? vsError
                           ? 'Release metadata unavailable'
                           : 'No release metadata available'
-                        : `Earlier than stable 0.${currentStableMinor}`,
+                        : `Earlier than stable 0.${effectiveVsCodeStableMinor}`,
                   isLoading: vsLoading,
                   icon: <MetricTileIcon name="plugin-outdated" />,
                 },
@@ -488,15 +566,39 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="text-red-600">Failed to load VS Code release metadata: {vsError}</div>
             ) : currentStableMinor === null ? (
               <div className="text-gray-500">No VS Code release metadata available.</div>
+            ) : hasHistoricalVsCodeMetadataGap ? (
+              <div className="space-y-1">
+                <p>
+                  <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
+                  This report ends on {formatReportDay(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
+                </p>
+                <p>
+                  Historical metadata in this build starts at {formatDate(earliestVsCodeStableReleaseDate ?? '')}, so older report windows are shown without stable or outdated classification.
+                </p>
+                {vsUpdatedAt && (
+                  <p>
+                    <span className="font-medium text-gray-900">Metadata updated:</span>{' '}
+                    {formatDate(vsUpdatedAt)}
+                  </p>
+                )}
+              </div>
+            ) : effectiveVsCodeStableMinor === null ? (
+              <div className="text-gray-500">
+                Unable to evaluate VS Code extension status for this report window because the report end date or release metadata is incomplete.
+              </div>
             ) : (
               <div className="space-y-1">
                 <p>
-                  <span className="font-medium text-gray-900">Current stable release train:</span>{' '}
-                  0.{currentStableMinor}
+                  <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
+                  Versions are compared against the stable release train available by the end of this report window ({formatReportDay(stats.reportEndDay)}).
+                </p>
+                <p>
+                  <span className="font-medium text-gray-900">Stable release train at report end:</span>{' '}
+                  0.{effectiveVsCodeStableMinor}
                 </p>
                 <p>
                   <span className="font-medium text-gray-900">Latest preview train:</span>{' '}
-                  0.{currentPreviewMinor ?? currentStableMinor + 1}.x
+                  0.{effectiveVsCodePreviewTrainLabel}.x
                 </p>
                 <p>
                   <span className="font-medium text-gray-900">Timestamp builds:</span>{' '}
@@ -516,7 +618,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             <div className="space-y-4">
               <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code Users by Extension Version</h4>
               <p className="text-sm text-gray-600">
-                Breakdown of VS Code users by installed GitHub Copilot extension version. Stable versions like 0.38 and 0.38.2 stay current, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
+                Breakdown of VS Code users by installed GitHub Copilot extension version. Statuses are evaluated using the report end date, stable versions like 0.38 and 0.38.2 stay current within their release window, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
               </p>
               <ExpandableTableSection
                 items={vscodeVersionAnalysis}

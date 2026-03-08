@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   parseVsCodeVersion,
   parseVersionMinor,
+  parseReportDayEnd,
   classifyVsCodeVersion,
   deriveCurrentStableMinor,
+  resolveCurrentStableMinorAtDate,
   type VsCodeVersionClassification,
 } from '../vscodeVersionClassifier';
 
@@ -38,6 +40,22 @@ describe('parseVersionMinor', () => {
 
   it('returns null when minor segment is not a number', () => {
     expect(parseVersionMinor('0.abc.1')).toBeNull();
+  });
+});
+
+describe('parseReportDayEnd', () => {
+  it('returns the end of day in UTC for a valid report day', () => {
+    expect(parseReportDayEnd('2026-03-01')?.toISOString()).toBe('2026-03-01T23:59:59.999Z');
+  });
+
+  it('rejects impossible calendar dates', () => {
+    expect(parseReportDayEnd('2026-02-30')).toBeNull();
+    expect(parseReportDayEnd('2026-13-01')).toBeNull();
+  });
+
+  it('rejects non-report-day inputs instead of parsing arbitrary datetimes', () => {
+    expect(parseReportDayEnd('2026-03-01T00:00:00Z')).toBeNull();
+    expect(parseReportDayEnd('not-a-day')).toBeNull();
   });
 });
 
@@ -157,5 +175,40 @@ describe('deriveCurrentStableMinor', () => {
       { version: '0.39.2026030501' },
     ];
     expect(deriveCurrentStableMinor(versions)).toBe(38);
+  });
+});
+
+describe('resolveCurrentStableMinorAtDate', () => {
+  const stableReleases = [
+    { version: '0.38.2', releaseDate: '2026-03-06T23:48:26Z' },
+    { version: '0.38.1', releaseDate: '2026-03-05T16:26:00Z' },
+    { version: '0.38.0', releaseDate: '2026-03-04T18:28:00Z' },
+    { version: '0.37.9', releaseDate: '2026-02-26T23:42:00Z' },
+    { version: '0.37.8', releaseDate: '2026-02-20T22:59:00Z' },
+    { version: '0.36.2', releaseDate: '2026-01-22T21:25:00Z' },
+  ];
+
+  it('returns the stable minor effective at the end of the report day', () => {
+    expect(resolveCurrentStableMinorAtDate(stableReleases, '2026-03-01')).toBe(37);
+    expect(resolveCurrentStableMinorAtDate(stableReleases, '2026-03-04')).toBe(38);
+  });
+
+  it('treats same-day releases as active for that report day', () => {
+    expect(resolveCurrentStableMinorAtDate(stableReleases, '2026-02-26')).toBe(37);
+  });
+
+  it('keeps the newer stable train active when an older train receives a later patch', () => {
+    const releasesWithBackport = [
+      { version: '0.38.0', releaseDate: '2026-03-04T18:28:00Z' },
+      { version: '0.37.10', releaseDate: '2026-03-06T10:00:00Z' },
+      { version: '0.37.9', releaseDate: '2026-02-26T23:42:00Z' },
+    ];
+
+    expect(resolveCurrentStableMinorAtDate(releasesWithBackport, '2026-03-06')).toBe(38);
+  });
+
+  it('returns null when no stable release existed yet or the day is invalid', () => {
+    expect(resolveCurrentStableMinorAtDate(stableReleases, '2026-01-01')).toBeNull();
+    expect(resolveCurrentStableMinorAtDate(stableReleases, 'not-a-day')).toBeNull();
   });
 });
