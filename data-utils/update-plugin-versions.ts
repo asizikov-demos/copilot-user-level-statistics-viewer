@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const MAX_VERSION_HISTORY = 20;
+// ---- Constants -------------------------------------------------------------
+
+export const STABLE_RELEASES_WINDOW = 20;
+
+// ---- Types ----------------------------------------------------------------
 
 interface SimpleVersionInfo {
   version: string;
@@ -14,16 +18,27 @@ interface JetBrainsUpdate {
   cdate: string; // epoch millis as string
 }
 
-interface VsCodeExtensionQueryResult {
-  results: Array<{
-    extensions: Array<{
-      versions: Array<{
-        version: string;
-        lastUpdated: string;
-      }>;
-    }>;
-  }>;
+export interface StableRelease {
+  version: string;
+  releaseDate: string;
 }
+
+export interface VsCodeData {
+  stableMinor: number;
+  previewMinor: number;
+  updatedAt: string;
+  stableReleases: StableRelease[];
+}
+
+export interface GitHubRelease {
+  tag_name: string;
+  prerelease: boolean;
+  draft: boolean;
+  published_at: string | null;
+  created_at: string;
+}
+
+// ---- Helpers ---------------------------------------------------------------
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
@@ -33,8 +48,54 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/**
+ * Parse the minor version number from a GitHub tag like "v0.38.2" or "0.38.0".
+ * Returns null if the tag does not match the expected format.
+ */
+export function parseMinorFromTag(tag: string): number | null {
+  const match = tag.match(/^v?(\d+)\.(\d+)/);
+  if (!match) return null;
+  return parseInt(match[2], 10);
+}
+
+/**
+ * Find the most-recently published stable (non-prerelease, non-draft) release.
+ */
+export function findLatestStableRelease(releases: GitHubRelease[]): GitHubRelease | null {
+  return releases.find((r) => !r.prerelease && !r.draft) ?? null;
+}
+
+/**
+ * Collect up to `limit` stable (non-prerelease, non-draft) releases from a
+ * GitHub releases list (newest-first order) and map them to StableRelease records.
+ */
+export function collectStableReleases(releases: GitHubRelease[], limit: number): StableRelease[] {
+  return releases
+    .filter((r) => !r.prerelease && !r.draft)
+    .slice(0, limit)
+    .map((r) => ({
+      version: r.tag_name.replace(/^v/, ''),
+      releaseDate: (r.published_at ?? r.created_at).replace(/\.\d{3}Z$/, 'Z'),
+    }));
+}
+
+/**
+ * Returns true when vscode.json should be updated: the stable minor, preview
+ * minor, or the rolling stable release history has changed.
+ */
+export function hasVsCodeDataChanged(existing: VsCodeData, incoming: VsCodeData): boolean {
+  if (existing.stableMinor !== incoming.stableMinor) return true;
+  if (existing.previewMinor !== incoming.previewMinor) return true;
+  if (existing.stableReleases.length !== incoming.stableReleases.length) return true;
+  if (existing.stableReleases[0]?.version !== incoming.stableReleases[0]?.version) return true;
+  return false;
+}
+
+// ---- Fetchers --------------------------------------------------------------
+
 async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
-  const url = `https://plugins.jetbrains.com/api/plugins/17718/updates?channel=&size=${MAX_VERSION_HISTORY}`;
+  const MAX = 20;
+  const url = `https://plugins.jetbrains.com/api/plugins/17718/updates?channel=&size=${MAX}`;
   const data = await fetchJson<JetBrainsUpdate[]>(url);
 
   return data
@@ -42,128 +103,96 @@ async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
       version: item.version,
       releaseDate: new Date(Number(item.cdate)).toISOString(),
     }))
-    .slice(0, MAX_VERSION_HISTORY);
+    .slice(0, MAX);
 }
 
-async function fetchVsCodeVersions(): Promise<SimpleVersionInfo[]> {
-  const body = {
-    filters: [
-      {
-        criteria: [
-          {
-            filterType: 7,
-            value: 'github.copilot-chat',
-          },
-        ],
-        pageNumber: 1,
-        pageSize: MAX_VERSION_HISTORY,
-        sortBy: 0,
-        sortOrder: 0,
-      },
-    ],
-    flags: 914,
+async function fetchVsCodeData(githubToken?: string): Promise<VsCodeData> {
+  const url =
+    'https://api.github.com/repos/microsoft/vscode-copilot-chat/releases?per_page=100';
+
+  const headers: HeadersInit = {
+    Accept: 'application/vnd.github.v3+json',
+    'User-Agent': 'copilot-user-level-statistics-viewer',
   };
-
-  const res = await fetch(
-    'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json;api-version=7.1-preview.1;excludeUrls=true',
-      },
-      body: JSON.stringify(body),
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error(`VS Code marketplace request failed: ${res.status}`);
+  if (githubToken) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${githubToken}`;
   }
 
-  const json = (await res.json()) as VsCodeExtensionQueryResult;
-  const ext = json.results?.[0]?.extensions?.[0];
-  if (!ext) {
-    throw new Error('Extension github.copilot-chat not found in VS Code marketplace response');
+  const releases = await fetchJson<GitHubRelease[]>(url, { headers });
+
+  const stableReleases = collectStableReleases(releases, STABLE_RELEASES_WINDOW);
+  if (stableReleases.length === 0) {
+    throw new Error('No stable release found in microsoft/vscode-copilot-chat releases');
   }
 
-  const versions = ext.versions ?? [];
-  const normalized = versions.slice(0, MAX_VERSION_HISTORY).map((v) => ({
-    version: v.version,
-    releaseDate: new Date(v.lastUpdated).toISOString(),
-  }));
+  const stableMinor = parseMinorFromTag(stableReleases[0].version);
+  if (stableMinor === null) {
+    throw new Error(`Cannot parse minor version from release: ${stableReleases[0].version}`);
+  }
 
-  return normalized;
+  const updatedAt = stableReleases[0].releaseDate;
+  const previewMinor = stableMinor + 1;
+
+  return { stableMinor, previewMinor, updatedAt, stableReleases };
 }
 
-function mergeVsCodeVersions(
-  existing: SimpleVersionInfo[],
-  latest: SimpleVersionInfo[],
-  maxVersions = MAX_VERSION_HISTORY,
-): SimpleVersionInfo[] {
-  const map = new Map<string, SimpleVersionInfo>();
-
-  for (const v of existing) {
-    map.set(v.version, v);
-  }
-
-  for (const v of latest) {
-    map.set(v.version, v);
-  }
-
-  const merged = Array.from(map.values());
-
-  merged.sort((a, b) => {
-    const timeA = new Date(a.releaseDate).getTime();
-    const timeB = new Date(b.releaseDate).getTime();
-    return timeB - timeA;
-  });
-
-  return merged.slice(0, maxVersions);
-}
+// ---- Main ------------------------------------------------------------------
 
 async function main(): Promise<void> {
   try {
     const __filename = fileURLToPath(import.meta.url);
     const __dirnameLocal = path.dirname(__filename);
-    const [jbVersions, latestVsCodeVersions] = await Promise.all([
-      fetchJetBrainsVersions(),
-      fetchVsCodeVersions(),
-    ]);
-
     const outputDir = path.join(__dirnameLocal, '..', 'public', 'data');
 
-    const jetbrainsPath = path.join(outputDir, 'jetbrains.json');
-    const vscodePath = path.join(outputDir, 'vscode.json');
+    const githubToken = process.env.GITHUB_TOKEN;
 
-    let existingVsCodeVersions: SimpleVersionInfo[] = [];
+    const [jbVersions, incomingVsCode] = await Promise.all([
+      fetchJetBrainsVersions(),
+      fetchVsCodeData(githubToken),
+    ]);
+
+    // JetBrains — always update with latest rolling list
+    const jetbrainsPath = path.join(outputDir, 'jetbrains.json');
+    fs.writeFileSync(jetbrainsPath, JSON.stringify({ versions: jbVersions }, null, 2));
+    console.log(`Updated ${jetbrainsPath} with ${jbVersions.length} versions`);
+
+    // VS Code — only update when stable release history or minors change
+    const vscodePath = path.join(outputDir, 'vscode.json');
+    let existingVsCode: VsCodeData = {
+      stableMinor: 0,
+      previewMinor: 1,
+      updatedAt: '',
+      stableReleases: [],
+    };
     if (fs.existsSync(vscodePath)) {
       try {
         const raw = fs.readFileSync(vscodePath, 'utf8');
-        const parsed = JSON.parse(raw) as { versions?: SimpleVersionInfo[] };
-        if (Array.isArray(parsed.versions)) {
-          existingVsCodeVersions = parsed.versions;
+        const parsed = JSON.parse(raw) as Partial<VsCodeData>;
+        if (typeof parsed.stableMinor === 'number') {
+          existingVsCode = {
+            stableMinor: parsed.stableMinor,
+            previewMinor:
+              typeof parsed.previewMinor === 'number' ? parsed.previewMinor : parsed.stableMinor + 1,
+            updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : '',
+            stableReleases: Array.isArray(parsed.stableReleases) ? parsed.stableReleases : [],
+          };
         }
       } catch {
-        existingVsCodeVersions = [];
+        // treat as missing
       }
     }
 
-    const mergedVsCodeVersions = mergeVsCodeVersions(
-      existingVsCodeVersions,
-      latestVsCodeVersions,
-      MAX_VERSION_HISTORY,
-    );
-
-    const jetbrainsPayload = { versions: jbVersions };
-    const vscodePayload = { versions: mergedVsCodeVersions };
-
-    fs.writeFileSync(jetbrainsPath, JSON.stringify(jetbrainsPayload, null, 2));
-    fs.writeFileSync(vscodePath, JSON.stringify(vscodePayload, null, 2));
-
-    console.log(`Updated ${jetbrainsPath} with ${jbVersions.length} versions`);
-    console.log(
-      `Updated ${vscodePath} with ${mergedVsCodeVersions.length} versions (rolling history)`,
-    );
+    if (hasVsCodeDataChanged(existingVsCode, incomingVsCode)) {
+      fs.writeFileSync(vscodePath, JSON.stringify(incomingVsCode, null, 2));
+      console.log(
+        `Updated ${vscodePath}: stable minor ${existingVsCode.stableMinor} → ${incomingVsCode.stableMinor}, ` +
+          `${incomingVsCode.stableReleases.length} stable releases (latest: ${incomingVsCode.stableReleases[0]?.version ?? 'none'})`,
+      );
+    } else {
+      console.log(
+        `${vscodePath} unchanged (stable minor ${existingVsCode.stableMinor}, ${existingVsCode.stableReleases.length} releases)`,
+      );
+    }
   } catch (error) {
     console.error(error);
     process.exitCode = 1;
