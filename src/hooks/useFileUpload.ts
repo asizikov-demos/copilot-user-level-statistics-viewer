@@ -6,6 +6,8 @@ import { parseAndAggregateInWorker, terminateWorker } from '../workers/metricsWo
 import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
+const MAX_ERROR_DETAILS_TO_DISPLAY = 3;
+
 interface UseFileUploadReturn {
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   handleSampleLoad: () => Promise<void>;
@@ -40,8 +42,14 @@ export function useFileUpload(): UseFileUploadReturn {
       throw new Error('No metrics found in the uploaded files');
     }
     if (errors.length > 0) {
-      const details = errors.slice(0, 3).map(e => `${e.fileName}: ${e.error}`).join(' • ');
-      const suffix = errors.length > 3 ? ` (+${errors.length - 3} more)` : '';
+      const details = errors
+        .slice(0, MAX_ERROR_DETAILS_TO_DISPLAY)
+        .map(e => `${e.fileName}: ${e.error}`)
+        .join(' • ');
+      const suffix =
+        errors.length > MAX_ERROR_DETAILS_TO_DISPLAY
+          ? ` (+${errors.length - MAX_ERROR_DETAILS_TO_DISPLAY} more)`
+          : '';
       setWarning(`Some files failed to parse (${errors.length}): ${details}${suffix}`);
     } else {
       setWarning(null);
@@ -67,7 +75,7 @@ export function useFileUpload(): UseFileUploadReturn {
     for (const file of files) {
       const lowerName = file.name.toLowerCase();
       if (!lowerName.endsWith('.ndjson') && !lowerName.endsWith('.json')) {
-        ++requestIdRef.current;
+        requestIdRef.current++;
         terminateWorker();
         setIsLoading(false);
         setUploadProgress(null);
