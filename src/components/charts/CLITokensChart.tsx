@@ -39,6 +39,8 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
     xAxisLabel: 'Date',
     yAxisLabel: 'Tokens',
     yTicksCallback: (value: unknown) => formatTokenCount(Number(value)),
+    xMaxRotation: 45,
+    xAutoSkip: true,
   }) as ChartOptions<'bar'>;
 
   return (

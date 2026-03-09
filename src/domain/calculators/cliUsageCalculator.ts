@@ -57,23 +57,14 @@ export function accumulateCliUsage(
   const cli = metric.totals_by_cli;
   if (!cli) return;
 
-  if (!accumulator.dailySessions.has(date)) {
-    accumulator.dailySessions.set(date, {
-      sessionCount: 0,
-      requestCount: 0,
-      promptCount: 0,
-      users: new Set(),
-    });
-  }
+  ensureCliDates(accumulator, date);
+
   const ds = accumulator.dailySessions.get(date)!;
   ds.sessionCount += cli.session_count;
   ds.requestCount += cli.request_count;
   ds.promptCount += cli.prompt_count;
   ds.users.add(userId);
 
-  if (!accumulator.dailyTokens.has(date)) {
-    accumulator.dailyTokens.set(date, { outputTokens: 0, promptTokens: 0 });
-  }
   const dt = accumulator.dailyTokens.get(date)!;
   dt.outputTokens += cli.token_usage.output_tokens_sum;
   dt.promptTokens += cli.token_usage.prompt_tokens_sum;

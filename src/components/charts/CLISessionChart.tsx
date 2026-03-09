@@ -34,6 +34,8 @@ export default function CLISessionChart({ data }: CLISessionChartProps) {
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Count',
+    xMaxRotation: 45,
+    xAutoSkip: true,
   }) as ChartOptions<'bar'>;
 
   return (

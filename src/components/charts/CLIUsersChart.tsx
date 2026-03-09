@@ -32,6 +32,8 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
     yAxisLabel: 'Users',
     yStepSize: 1,
     yTicksCallback: yAxisFormatters.integer,
+    xMaxRotation: 45,
+    xAutoSkip: true,
   });
 
   return (
