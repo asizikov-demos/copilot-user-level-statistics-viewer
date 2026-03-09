@@ -10,6 +10,7 @@ import { FeatureAdoptionData } from '../../domain/calculators/metricCalculators'
 import ChartContainer from '../ui/ChartContainer';
 import ChartToggleButtons from '../ui/ChartToggleButtons';
 import InsightsCard from '../ui/InsightsCard';
+import FeatureAdoptionInsights from '../FeatureAdoptionInsights';
 
 registerChartJS();
 
@@ -106,20 +107,23 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
       ]}
       chartHeight="h-96"
       footer={
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InsightsCard title="Feature Journey" variant="green">
-            <p>
-              {completionRate > 80 ? 'Excellent' : completionRate > 60 ? 'Good' : 'Low'} code completion adoption.
-              {chatRate > 40 ? ' Strong' : chatRate > 20 ? ' Moderate' : ' Low'} chat feature engagement.
-              {agentRate > 10 ? ' Good' : agentRate > 5 ? ' Emerging' : ' Limited'} Agent Mode usage.
-            </p>
-          </InsightsCard>
-          <InsightsCard title="Advanced Features" variant="blue">
-            <p>
-              IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
-              {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
-            </p>
-          </InsightsCard>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InsightsCard title="Feature Journey" variant="green">
+              <p>
+                {completionRate > 80 ? 'Excellent' : completionRate > 60 ? 'Good' : 'Low'} code completion adoption.
+                {chatRate > 40 ? ' Strong' : chatRate > 20 ? ' Moderate' : ' Low'} chat feature engagement.
+                {agentRate > 10 ? ' Good' : agentRate > 5 ? ' Emerging' : ' Limited'} Agent Mode usage.
+              </p>
+            </InsightsCard>
+            <InsightsCard title="Advanced Features" variant="blue">
+              <p>
+                IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
+                {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
+              </p>
+            </InsightsCard>
+          </div>
+          <FeatureAdoptionInsights data={data} />
         </div>
       }
     >
