@@ -47,7 +47,6 @@ export interface ModelFeatureDistributionData {
     editMode: number;
     inlineMode: number;
     codeCompletion: number;
-    codeReview: number;
     cli: number;
     other: number;
   };
@@ -253,7 +252,6 @@ export function computeModelFeatureDistributionData(
         editMode: data.features.get('chat_panel_edit_mode') || 0,
         inlineMode: data.features.get('chat_inline') || 0,
         codeCompletion: data.features.get('code_completion') || 0,
-        codeReview: data.features.get('code_review') || 0,
         cli: data.features.get('cli_agent') || 0,
         other: 0,
       };
