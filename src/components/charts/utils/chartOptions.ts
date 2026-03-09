@@ -66,6 +66,11 @@ export function createBaseChartOptions(config: BaseChartConfig = {}) {
     responsive: true,
     maintainAspectRatio: false,
     indexAxis,
+    layout: {
+      padding: {
+        bottom: 10,
+      },
+    },
     plugins: {
       legend: {
         display: showLegend,
@@ -92,6 +97,10 @@ export function createBaseChartOptions(config: BaseChartConfig = {}) {
         },
         grid: {
           display: showGridX,
+        },
+        ticks: {
+          maxRotation: 45,
+          autoSkip: true,
         },
       },
       y: {

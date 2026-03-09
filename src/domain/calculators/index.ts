@@ -133,6 +133,7 @@ export {
   type CliUsageAccumulator,
   createCliUsageAccumulator,
   accumulateCliUsage,
+  ensureCliDates,
   computeDailyCliSessionData,
   computeDailyCliTokenData,
 } from './cliUsageCalculator';

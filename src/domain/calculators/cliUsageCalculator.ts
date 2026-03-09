@@ -34,6 +34,20 @@ export function createCliUsageAccumulator(): CliUsageAccumulator {
   };
 }
 
+export function ensureCliDates(accumulator: CliUsageAccumulator, date: string): void {
+  if (!accumulator.dailySessions.has(date)) {
+    accumulator.dailySessions.set(date, {
+      sessionCount: 0,
+      requestCount: 0,
+      promptCount: 0,
+      users: new Set(),
+    });
+  }
+  if (!accumulator.dailyTokens.has(date)) {
+    accumulator.dailyTokens.set(date, { outputTokens: 0, promptTokens: 0 });
+  }
+}
+
 export function accumulateCliUsage(
   accumulator: CliUsageAccumulator,
   date: string,

@@ -92,6 +92,7 @@ import {
   DailyCliTokenData,
   createCliUsageAccumulator,
   accumulateCliUsage,
+  ensureCliDates,
   computeDailyCliSessionData,
   computeDailyCliTokenData,
 } from './calculators';
@@ -230,6 +231,7 @@ export function aggregateMetrics(
     accumulateEngagement(engagementAccumulator, date, userId);
 
     ensureImpactDates(impactAccumulator, date);
+    ensureCliDates(cliUsageAccumulator, date);
 
     for (const ideTotal of metric.totals_by_ide) {
       accumulateIdeUser(statsAccumulator, ideTotal.ide, userId);
