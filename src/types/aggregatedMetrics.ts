@@ -56,6 +56,10 @@ export interface UserDetailedMetrics {
     plugin_version: string;
     sampled_at: string;
   }>;
+  cliVersions: Array<{
+    cli_version: string;
+    sampled_at: string;
+  }>;
   dailyPRUAnalysis: DailyPRUAnalysisData[];
   dailyCombinedImpact: ModeImpactData[];
   dailyModelUsage: DailyModelUsageData[];

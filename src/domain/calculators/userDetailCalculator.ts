@@ -62,6 +62,11 @@ interface PluginVersionEntry {
   sampled_at: string;
 }
 
+interface CliVersionEntry {
+  cli_version: string;
+  sampled_at: string;
+}
+
 interface UserAccState {
   totalStandardModelRequests: number;
   totalPremiumModelRequests: number;
@@ -70,6 +75,7 @@ interface UserAccState {
   langFeatureMap: Map<string, LangFeatureAgg>;
   modelFeatureMap: Map<string, ModelFeatureAgg>;
   pluginVersionMap: Map<string, PluginVersionEntry>;
+  cliVersionMap: Map<string, CliVersionEntry>;
   days: UserDayData[];
 }
 
@@ -98,6 +104,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
       langFeatureMap: new Map(),
       modelFeatureMap: new Map(),
       pluginVersionMap: new Map(),
+      cliVersionMap: new Map(),
       days: [],
     };
     accumulator.users.set(userId, state);
@@ -172,6 +179,15 @@ export function accumulateUserDetail(
     }
   }
 
+  if (metric.totals_by_cli?.last_known_cli_version) {
+    const cv = metric.totals_by_cli.last_known_cli_version;
+    const key = cv.cli_version;
+    const existing = state.cliVersionMap.get(key);
+    if (!existing || new Date(cv.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
+      state.cliVersionMap.set(key, { ...cv });
+    }
+  }
+
   for (const lf of metric.totals_by_language_feature) {
     const key = `${lf.language}-${lf.feature}`;
     const existing = state.langFeatureMap.get(key);
@@ -229,6 +245,15 @@ export function accumulateUserDetail(
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
     totals_by_model_feature: metric.totals_by_model_feature.map((mf) => ({ ...mf })),
+    totals_by_cli: metric.totals_by_cli ? {
+      session_count: metric.totals_by_cli.session_count,
+      request_count: metric.totals_by_cli.request_count,
+      prompt_count: metric.totals_by_cli.prompt_count,
+      token_usage: { ...metric.totals_by_cli.token_usage },
+      last_known_cli_version: metric.totals_by_cli.last_known_cli_version
+        ? { ...metric.totals_by_cli.last_known_cli_version }
+        : undefined,
+    } : undefined,
   });
 }
 
@@ -252,9 +277,10 @@ function adaptDaysAsMetrics(days: UserDayData[], userId: number, reportStartDay:
     totals_by_language_feature: day.totals_by_language_feature,
     totals_by_language_model: day.totals_by_language_model,
     totals_by_model_feature: day.totals_by_model_feature,
+    totals_by_cli: day.totals_by_cli,
     used_agent: false,
     used_chat: false,
-    used_cli: false,
+    used_cli: !!day.totals_by_cli,
   }));
 }
 
@@ -284,6 +310,10 @@ export function computeSingleUserDetailedMetrics(
     (a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()
   );
 
+  const cliVersions = Array.from(state.cliVersionMap.values()).sort(
+    (a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()
+  );
+
   const adaptedMetrics = adaptDaysAsMetrics(
     state.days, userId, accumulator.reportStartDay, accumulator.reportEndDay
   );
@@ -296,6 +326,7 @@ export function computeSingleUserDetailedMetrics(
     languageFeatureAggregates: Array.from(state.langFeatureMap.values()),
     modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
     pluginVersions,
+    cliVersions,
     dailyPRUAnalysis: calculateDailyPRUAnalysis(adaptedMetrics),
     dailyCombinedImpact: calculateJoinedImpactData(adaptedMetrics),
     dailyModelUsage: calculateDailyModelUsage(adaptedMetrics),
