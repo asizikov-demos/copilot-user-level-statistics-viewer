@@ -38,6 +38,7 @@ export type {
 export type {
   DailyCliSessionData,
   DailyCliTokenData,
+  DailyCliAdoptionTrend,
 } from './cliUsageCalculator';
 
 export const calculateStats = calculateStatsFromMetrics;

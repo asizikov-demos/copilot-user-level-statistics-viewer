@@ -130,10 +130,12 @@ export {
 export {
   type DailyCliSessionData,
   type DailyCliTokenData,
+  type DailyCliAdoptionTrend,
   type CliUsageAccumulator,
   createCliUsageAccumulator,
   accumulateCliUsage,
   ensureCliDates,
   computeDailyCliSessionData,
   computeDailyCliTokenData,
+  computeCliAdoptionTrend,
 } from './cliUsageCalculator';

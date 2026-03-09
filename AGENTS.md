@@ -35,7 +35,16 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 ## Workflow Conventions
 
 - Scan/audit tasks are **read-only** — no surprise code changes
-- Delegate git operations (commits, branch management, PR creation) to the **Git Workflow** agent
-- Delegate change review to the **Code Review** agent before considering a session complete or creating a PR
 - When using sub-agents, parallelize independent work
 - Reference items by name/description, not by number
+
+## End-of-Session Git Workflow
+
+Unless the task is explicitly read-only (scan, audit, review), always:
+
+- Create a feature branch from `main` — never commit directly to `main`
+- Create atomic, well-scoped commits with conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`)
+- Run the **Code Review** agent before considering work complete
+- Open a PR with a structured summary
+
+Delegate all git operations (branch creation, commits, PR) to the **Git Workflow** agent.

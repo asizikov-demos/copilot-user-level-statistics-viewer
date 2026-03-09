@@ -2,17 +2,20 @@
 
 import React from 'react';
 import { ViewPanel, MetricTileGroup, MetricTileIcon } from './ui';
+import CLIAdoptionTrendChart from './charts/CLIAdoptionTrendChart';
+import CLIAdoptionInsights from './CLIAdoptionInsights';
 import CLIUsersChart from './charts/CLIUsersChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import type { MetricsStats } from '../types/metrics';
-import type { DailyCliSessionData, DailyCliTokenData } from '../domain/calculators/metricCalculators';
+import type { DailyCliSessionData, DailyCliTokenData, DailyCliAdoptionTrend } from '../domain/calculators/metricCalculators';
 import type { VoidCallback } from '../types/events';
 
 interface CLIAdoptionViewProps {
   stats: MetricsStats;
   dailyCliSessionData: DailyCliSessionData[];
   dailyCliTokenData: DailyCliTokenData[];
+  dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
   onBack: VoidCallback;
 }
 
@@ -20,6 +23,7 @@ export default function CLIAdoptionView({
   stats,
   dailyCliSessionData,
   dailyCliTokenData,
+  dailyCliAdoptionTrend,
   onBack,
 }: CLIAdoptionViewProps) {
   const cliShare = stats.uniqueUsers > 0
@@ -54,6 +58,9 @@ export default function CLIAdoptionView({
         columns={{ base: 1, md: 2, lg: 2 }}
       />
 
+      <CLIAdoptionInsights stats={stats} trend={dailyCliAdoptionTrend} />
+
+      <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} />
       <CLIUsersChart data={dailyCliSessionData} />
       <CLISessionChart data={dailyCliSessionData} />
       <CLITokensChart data={dailyCliTokenData} />

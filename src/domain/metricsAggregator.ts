@@ -90,11 +90,13 @@ import {
 
   DailyCliSessionData,
   DailyCliTokenData,
+  DailyCliAdoptionTrend,
   createCliUsageAccumulator,
   accumulateCliUsage,
   ensureCliDates,
   computeDailyCliSessionData,
   computeDailyCliTokenData,
+  computeCliAdoptionTrend,
 } from './calculators';
 
 export interface AggregatedMetrics {
@@ -127,6 +129,7 @@ export interface AggregatedMetrics {
   modelBreakdownData: ModelBreakdownData;
   dailyCliSessionData: DailyCliSessionData[];
   dailyCliTokenData: DailyCliTokenData[];
+  dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
 }
 
 interface UserSummaryAccumulator {
@@ -344,6 +347,7 @@ export function aggregateMetrics(
     modelBreakdownData: computeModelBreakdownData(modelBreakdownAccumulator),
     dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
     dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
+    dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
     },
     userDetailAccumulator,
   };
