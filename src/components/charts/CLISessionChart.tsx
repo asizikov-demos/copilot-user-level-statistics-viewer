@@ -3,7 +3,7 @@
 import { Bar } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
-import { createStackedBarChartOptions } from './utils/chartOptions';
+import { createBaseChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
@@ -31,7 +31,7 @@ export default function CLISessionChart({ data }: CLISessionChartProps) {
     ],
   };
 
-  const options = createStackedBarChartOptions({
+  const options = createBaseChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Count',
     xMaxRotation: 45,
