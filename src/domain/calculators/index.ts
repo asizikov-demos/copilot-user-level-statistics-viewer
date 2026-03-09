@@ -59,6 +59,7 @@ export {
   type FeatureAdoptionAccumulator,
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
+  accumulateCliAdoption,
   computeFeatureAdoptionData,
 } from './featureAdoptionCalculator';
 

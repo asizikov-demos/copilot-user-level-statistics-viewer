@@ -15,11 +15,13 @@ export interface FeatureAdoptionData {
 
 export interface FeatureAdoptionAccumulator {
   userFeatures: Map<number, Set<string>>;
+  cliUsers: Set<number>;
 }
 
 export function createFeatureAdoptionAccumulator(): FeatureAdoptionAccumulator {
   return {
     userFeatures: new Map(),
+    cliUsers: new Set(),
   };
 }
 
@@ -36,6 +38,16 @@ export function accumulateFeatureAdoption(
     accumulator.userFeatures.set(userId, new Set());
   }
   accumulator.userFeatures.get(userId)!.add(feature);
+}
+
+export function accumulateCliAdoption(
+  accumulator: FeatureAdoptionAccumulator,
+  userId: number,
+  usedCli: boolean
+): void {
+  if (!usedCli) return;
+
+  accumulator.cliUsers.add(userId);
 }
 
 export function computeFeatureAdoptionData(
@@ -64,10 +76,15 @@ export function computeFeatureAdoptionData(
   const isAgentUser = (features: Set<string>) =>
     features.has('chat_panel_agent_mode') || features.has('agent_edit');
 
-  const isCliUser = (features: Set<string>) =>
-    features.has('cli_agent');
+  const userIds = new Set<number>([
+    ...accumulator.userFeatures.keys(),
+    ...accumulator.cliUsers.values(),
+  ]);
 
-  for (const features of accumulator.userFeatures.values()) {
+  for (const userId of userIds) {
+    const features = accumulator.userFeatures.get(userId) || new Set<string>();
+    const isCliUser = accumulator.cliUsers.has(userId);
+
     if (features.has('code_completion')) completionUsers++;
     if (isChatUser(features)) chatUsers++;
     if (isAgentUser(features)) agentModeUsers++;
@@ -76,16 +93,16 @@ export function computeFeatureAdoptionData(
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('chat_panel_plan_mode')) planModeUsers++;
     if (features.has('code_review')) codeReviewUsers++;
-    if (isCliUser(features)) cliUsers++;
-    if (isAgentUser(features) || isCliUser(features)) advancedUsers++;
+    if (isCliUser) cliUsers++;
+    if (isAgentUser(features) || isCliUser) advancedUsers++;
 
-    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser(features)) {
+    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser) {
       completionOnlyUsers++;
     }
   }
 
   return {
-    totalUsers: accumulator.userFeatures.size,
+    totalUsers: userIds.size,
     completionUsers,
     completionOnlyUsers,
     chatUsers,

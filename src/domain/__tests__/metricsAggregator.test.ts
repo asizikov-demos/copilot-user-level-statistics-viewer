@@ -266,6 +266,44 @@ describe('metricsAggregator', () => {
       expect(aggregated.featureAdoptionData.totalUsers).toBeGreaterThan(0);
     });
 
+    it('should count CLI adoption from used_cli without relying on feature rows', () => {
+      const metric = createBasicMetric({
+        used_cli: true,
+        totals_by_feature: [],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.featureAdoptionData.totalUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.cliUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
+    });
+
+    it('should exclude CLI users from completion-only counts when only used_cli marks CLI usage', () => {
+      const metric = createBasicMetric({
+        used_cli: true,
+        used_chat: false,
+        used_agent: false,
+        totals_by_feature: [
+          {
+            feature: 'code_completion',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 5,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 5,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.featureAdoptionData.cliUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.completionOnlyUsers).toBe(0);
+    });
+
     it('should process impact data when features have LOC', () => {
       const metric = createBasicMetric({
         totals_by_feature: [

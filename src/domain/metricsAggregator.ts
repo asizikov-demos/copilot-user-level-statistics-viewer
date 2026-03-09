@@ -48,6 +48,7 @@ import {
   FeatureAdoptionData,
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
+  accumulateCliAdoption,
   computeFeatureAdoptionData,
 
   AgentImpactData,
@@ -263,6 +264,8 @@ export function aggregateMetrics(
     }
 
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
+
+    accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
 
     for (const feature of metric.totals_by_feature) {
       accumulateFeatureAdoption(
