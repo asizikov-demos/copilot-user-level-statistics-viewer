@@ -21,13 +21,17 @@ interface IDEAggregateItem {
   loc_suggested_to_delete_sum: number;
 }
 
-interface IDEActivityChartProps {
+interface ClientActivityChartProps {
   ideAggregates: IDEAggregateItem[];
   days: UserDayData[];
   title?: string;
   pluginVersions?: {
     plugin: string;
     plugin_version: string;
+    sampled_at: string;
+  }[];
+  cliVersions?: {
+    cli_version: string;
     sampled_at: string;
   }[];
 }
@@ -43,6 +47,7 @@ const IDE_COLORS: Record<string, string> = {
   'sublime_text': '#FF9800',
   'xcode': '#1575F9',
   'intellij': '#FE315D',
+  'copilot_cli': '#6E40C9',
 };
 
 const FALLBACK_COLORS = [
@@ -51,16 +56,17 @@ const FALLBACK_COLORS = [
 ];
 
 /**
- * IDEActivityChart
- * Reusable section displaying a daily interactions stacked bar chart (by IDE) plus
- * a table summarizing aggregate metrics per IDE.
+ * ClientActivityChart
+ * Reusable section displaying a daily interactions stacked bar chart (by IDE/CLI) plus
+ * a table summarizing aggregate metrics per client.
  */
-export default function IDEActivityChart({
+export default function ClientActivityChart({
   ideAggregates,
   days,
-  title = 'Activity by IDE',
-  pluginVersions
-}: IDEActivityChartProps) {
+  title = 'Activity by Client',
+  pluginVersions,
+  cliVersions,
+}: ClientActivityChartProps) {
   const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
 
   const barChartData = useMemo(() => {
@@ -86,6 +92,22 @@ export default function IDEActivityChart({
         borderWidth: 1,
       };
     }).filter(dataset => dataset.data.some(value => value > 0));
+
+    // Add CLI dataset if any day has CLI data
+    const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+    if (hasCliData) {
+      const cliData = allDays.map(dayStr => {
+        const dayData = dayMap.get(dayStr);
+        return dayData?.totals_by_cli?.prompt_count || 0;
+      });
+      datasets.push({
+        label: 'Copilot CLI',
+        data: cliData,
+        backgroundColor: IDE_COLORS['copilot_cli'],
+        borderColor: IDE_COLORS['copilot_cli'],
+        borderWidth: 1,
+      });
+    }
 
     return {
       labels: allDays.map(day => formatShortDate(day)),
@@ -131,7 +153,9 @@ export default function IDEActivityChart({
     }
   }), []);
 
-  const isEmpty = ideAggregates.length === 0;
+  const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+  const hasCliVersions = cliVersions && cliVersions.length > 0;
+  const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
 
   const footer = (
     <>
@@ -167,54 +191,102 @@ export default function IDEActivityChart({
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.loc_suggested_to_delete_sum.toLocaleString()}</td>
               </tr>
             ))}
+            {(() => {
+              const cliTotals = days.reduce((acc, day) => {
+                if (day.totals_by_cli) {
+                  acc.request_count += day.totals_by_cli.request_count;
+                  acc.session_count += day.totals_by_cli.session_count;
+                  acc.prompt_count += day.totals_by_cli.prompt_count;
+                }
+                return acc;
+              }, { request_count: 0, session_count: 0, prompt_count: 0 });
+
+              if (cliTotals.prompt_count === 0) return null;
+              return (
+                <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">⌨️</span>
+                      <span>Copilot CLI</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cliTotals.prompt_count.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                </tr>
+              );
+            })()}
           </tbody>
         </table>
       </div>
 
-      {pluginVersions && pluginVersions.length > 0 && (
+      {((pluginVersions && pluginVersions.length > 0) || (cliVersions && cliVersions.length > 0)) && (
         <div className="mt-8">
-          <h4 className="text-md font-semibold text-gray-900 mb-4">Plugin Versions</h4>
-          <div className="overflow-x-auto">
-            <table className="w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {(isPluginTableExpanded ? pluginVersions : pluginVersions.slice(0, 1)).map((plugin, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{plugin.plugin}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{plugin.plugin_version}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatShortDate(plugin.sampled_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {pluginVersions.length > 1 && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setIsPluginTableExpanded(!isPluginTableExpanded)}
-                className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-              >
-                {isPluginTableExpanded ? 'Show Less' : `Show All ${pluginVersions.length} Plugin Versions`}
-              </button>
-            </div>
-          )}
+          <h4 className="text-md font-semibold text-gray-900 mb-4">Client Versions</h4>
+          {(() => {
+            const allVersions = [
+              ...(pluginVersions || []).map(p => ({
+                name: p.plugin,
+                version: p.plugin_version,
+                sampled_at: p.sampled_at,
+              })),
+              ...(cliVersions || []).map(c => ({
+                name: 'Copilot CLI',
+                version: c.cli_version,
+                sampled_at: c.sampled_at,
+              })),
+            ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
+
+            return (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {(isPluginTableExpanded ? allVersions : allVersions.slice(0, 1)).map((entry, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.version}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatShortDate(entry.sampled_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {allVersions.length > 1 && (
+                  <div className="mt-4 text-center">
+                    <button
+                      onClick={() => setIsPluginTableExpanded(!isPluginTableExpanded)}
+                      className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+                    >
+                      {isPluginTableExpanded ? 'Show Less' : `Show All ${allVersions.length} Client Versions`}
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
     </>
   );
 
   return (
-    <ChartContainer title={title} footer={!isEmpty ? footer : undefined} isEmpty={isEmpty} emptyState="No IDE activity data available.">
+    <ChartContainer title={title} footer={!isEmpty ? footer : undefined} isEmpty={isEmpty} emptyState="No client activity data available.">
       {barChartData.datasets && barChartData.datasets.length > 0 && (
         <div className="mb-6">
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-4 text-center">Daily IDE Interactions</h4>
+            <h4 className="text-sm font-medium text-gray-800 mb-4 text-center">Daily Client Interactions</h4>
             <div className="h-64">
               <Bar data={barChartData} options={barChartOptions} />
             </div>
