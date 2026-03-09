@@ -64,7 +64,7 @@ export default function UserSummaryChart({
         {/* IDEs Chart */}
         {ideChartData && ideChartData.labels && ideChartData.labels.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">IDEs (Interactions)</h4>
+            <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">Client Interactions</h4>
             <div className="h-48">
               <Pie data={ideChartData} options={chartOptions} />
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserDayData } from '../../types/metrics';
+import { formatShortDate } from '../../utils/formatters';
 
 interface ActivityCalendarProps {
   days: UserDayData[];
@@ -73,7 +74,8 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
     
     const totalActivity = metrics.user_initiated_interaction_count + 
                          metrics.code_generation_activity_count + 
-                         metrics.code_acceptance_activity_count;
+                         metrics.code_acceptance_activity_count +
+                         (metrics.totals_by_cli?.prompt_count ?? 0);
     
     if (totalActivity === 0) return 0;
     if (totalActivity <= 5) return 1;
@@ -140,9 +142,9 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
                     onClick={() => !isPlaceholder && handleDayClick(date)}
                     title={
                       !isPlaceholder && hasData 
-                        ? `${date.toLocaleDateString()} - Click to view details`
+                        ? `${formatShortDate(formatDateKey(date))} - Click to view details`
                         : !isPlaceholder 
-                        ? `${date.toLocaleDateString()} - No activity`
+                        ? `${formatShortDate(formatDateKey(date))} - No activity`
                         : undefined
                     }
                   >
