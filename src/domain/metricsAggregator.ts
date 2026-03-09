@@ -87,6 +87,13 @@ import {
   UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
+
+  DailyCliSessionData,
+  DailyCliTokenData,
+  createCliUsageAccumulator,
+  accumulateCliUsage,
+  computeDailyCliSessionData,
+  computeDailyCliTokenData,
 } from './calculators';
 
 export interface AggregatedMetrics {
@@ -117,6 +124,8 @@ export interface AggregatedMetrics {
   dailyLanguageGenerationsData: DailyLanguageChartData;
   dailyLanguageLocData: DailyLanguageChartData;
   modelBreakdownData: ModelBreakdownData;
+  dailyCliSessionData: DailyCliSessionData[];
+  dailyCliTokenData: DailyCliTokenData[];
 }
 
 interface UserSummaryAccumulator {
@@ -197,6 +206,7 @@ export function aggregateMetrics(
   const pluginVersionAccumulator = createPluginVersionAccumulator();
   const languageFeatureImpactAccumulator = createLanguageFeatureImpactAccumulator();
   const modelBreakdownAccumulator = createModelBreakdownAccumulator();
+  const cliUsageAccumulator = createCliUsageAccumulator();
   const userDetailAccumulator = createUserDetailAccumulator();
 
   for (const metric of metrics) {
@@ -266,6 +276,7 @@ export function aggregateMetrics(
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
 
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
+    accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
 
     for (const feature of metric.totals_by_feature) {
       accumulateFeatureAdoption(
@@ -329,6 +340,8 @@ export function aggregateMetrics(
     dailyLanguageGenerationsData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'generations'),
     dailyLanguageLocData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'loc'),
     modelBreakdownData: computeModelBreakdownData(modelBreakdownAccumulator),
+    dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
+    dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
     },
     userDetailAccumulator,
   };
