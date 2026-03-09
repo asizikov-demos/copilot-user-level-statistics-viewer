@@ -121,13 +121,13 @@ export function computeCliInsights(
     insights.push({
       title: 'Strong Retention',
       variant: 'green',
-      message: `${retentionRate.toFixed(0)}% of daily CLI sessions come from returning users — developers who try CLI tend to keep using it.`,
+      message: `${retentionRate.toFixed(0)}% of daily CLI users are returning — developers who try CLI tend to keep using it.`,
     });
   } else if (retentionRate < 30 && totalActive > 0 && trend.length >= 7) {
     insights.push({
       title: 'Low Retention',
       variant: 'orange',
-      message: `Only ${retentionRate.toFixed(0)}% of CLI activity comes from returning users. Many try it once and don\u2019t come back. Consider improving onboarding or sharing best practices.`,
+      message: `Only ${retentionRate.toFixed(0)}% of daily CLI users are returning. Many try it once and don\u2019t come back. Consider improving onboarding or sharing best practices.`,
     });
   }
 
