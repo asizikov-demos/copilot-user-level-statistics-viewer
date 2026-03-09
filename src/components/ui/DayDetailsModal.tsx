@@ -70,7 +70,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="text-2xl font-bold text-blue-600">
-                    {dayMetrics.user_initiated_interaction_count.toLocaleString()}
+                    {(dayMetrics.user_initiated_interaction_count + (dayMetrics.totals_by_cli?.prompt_count ?? 0)).toLocaleString()}
                   </div>
                   <div className="text-sm font-medium text-blue-800">Interactions</div>
                 </div>
@@ -134,7 +134,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* IDEs Section */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by IDE</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_ide}
                   initialCount={5}
@@ -144,7 +144,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                       <table className="w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IDE</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
@@ -168,6 +168,21 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                               </td>
                             </tr>
                           ))}
+                          {dayMetrics.totals_by_cli && dayMetrics.totals_by_cli.prompt_count > 0 && (
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm font-medium text-gray-900">Copilot CLI</td>
+                              <td className="px-4 py-3 text-sm text-gray-900">{dayMetrics.totals_by_cli.prompt_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-900">
+                                {dayMetrics.totals_by_cli.last_known_cli_version ?
+                                  `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}` :
+                                  'Unknown'
+                                }
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
