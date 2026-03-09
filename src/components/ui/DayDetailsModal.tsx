@@ -132,7 +132,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                 </ExpandableTableSection>
               </div>
 
-              {/* IDEs Section */}
+              {/* Activity by Client section (includes IDE & CLI clients) */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
                 <ExpandableTableSection
