@@ -142,6 +142,7 @@ const ViewRouter: React.FC = () => {
     modelBreakdownData,
     dailyCliSessionData,
     dailyCliTokenData,
+    dailyCliAdoptionTrend,
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -222,6 +223,7 @@ const ViewRouter: React.FC = () => {
           stats={stats}
           dailyCliSessionData={dailyCliSessionData}
           dailyCliTokenData={dailyCliTokenData}
+          dailyCliAdoptionTrend={dailyCliAdoptionTrend}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
