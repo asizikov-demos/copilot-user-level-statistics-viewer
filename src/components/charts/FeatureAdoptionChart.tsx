@@ -35,7 +35,6 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     { name: 'Plan Mode', count: data?.planModeUsers || 0, color: chartColors.indigo.solid, description: 'Users who used Plan Mode' },
     { name: 'Copilot CLI', count: data?.cliUsers || 0, color: chartColors.pink.solid, description: 'Users who used Copilot CLI' },
     { name: 'Inline Chat', count: data?.inlineModeUsers || 0, color: chartColors.violet.solid, description: 'Users who used inline chat' },
-    { name: 'Code Review', count: data?.codeReviewUsers || 0, color: chartColors.teal.solid, description: 'Users who used code review features' },
   ];
 
   const totalUsers = data?.totalUsers || 0;

@@ -8,7 +8,6 @@ export interface FeatureAdoptionData {
   editModeUsers: number;
   inlineModeUsers: number;
   planModeUsers: number;
-  codeReviewUsers: number;
   cliUsers: number;
   advancedUsers: number;
 }
@@ -61,7 +60,6 @@ export function computeFeatureAdoptionData(
   let editModeUsers = 0;
   let inlineModeUsers = 0;
   let planModeUsers = 0;
-  let codeReviewUsers = 0;
   let cliUsers = 0;
   let advancedUsers = 0;
 
@@ -92,7 +90,6 @@ export function computeFeatureAdoptionData(
     if (features.has('chat_panel_edit_mode')) editModeUsers++;
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('chat_panel_plan_mode')) planModeUsers++;
-    if (features.has('code_review')) codeReviewUsers++;
     if (isCliUser) cliUsers++;
     if (isAgentUser(features) || isCliUser) advancedUsers++;
 
@@ -111,7 +108,6 @@ export function computeFeatureAdoptionData(
     editModeUsers,
     inlineModeUsers,
     planModeUsers,
-    codeReviewUsers,
     cliUsers,
     advancedUsers,
   };
