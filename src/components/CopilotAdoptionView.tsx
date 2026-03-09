@@ -7,6 +7,7 @@ import { MetricTileGroup, MetricTileIcon, StatsGrid, ViewPanel } from './ui';
 import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
+import CopilotAdoptionInsights from './CopilotAdoptionInsights';
 import { usePluginVersions } from '../hooks/usePluginVersions';
 import { classifyVsCodeVersion, parseReportDayEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
@@ -374,6 +375,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           }
         }
       />
+      <CopilotAdoptionInsights featureAdoptionData={featureAdoptionData} stats={stats} />
       <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
 
       <section className="space-y-6">
