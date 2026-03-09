@@ -5,7 +5,8 @@ import type { UserSummary, UserDayData } from '../types/metrics';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
-import IDEActivityChart from './charts/IDEActivityChart';
+import { formatShortDate } from '../utils/formatters';
+import ClientActivityChart from './charts/ClientActivityChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
@@ -57,7 +58,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     });
   };
 
-  const totalInteractions = userSummary.total_user_initiated_interactions;
+  const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
+  const totalInteractions = userSummary.total_user_initiated_interactions + totalCliPrompts;
   const totalGeneration = userSummary.total_code_generation_activities;
   const totalAcceptance = userSummary.total_code_acceptance_activities;
   const totalStandardModelRequests = userDetails.totalStandardModelRequests;
@@ -69,17 +71,28 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
 
-  const ideChartData = useMemo(() => ({
-    labels: ideAggregates.map(ide => formatIDEName(ide.ide)),
-    datasets: [{
-      data: ideAggregates.map(ide => ide.user_initiated_interaction_count),
-      backgroundColor: [
-        '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316',
-      ],
-      borderWidth: 2,
-      borderColor: '#fff',
-    }]
-  }), [ideAggregates]);
+  const ideChartData = useMemo(() => {
+    const labels = ideAggregates.map(ide => formatIDEName(ide.ide));
+    const data = ideAggregates.map(ide => ide.user_initiated_interaction_count);
+
+    if (totalCliPrompts > 0) {
+      labels.push('Copilot CLI');
+      data.push(totalCliPrompts);
+    }
+
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316',
+          '#6E40C9', '#06B6D4', '#84CC16', '#EC4899',
+        ],
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    };
+  }, [ideAggregates, totalCliPrompts]);
 
   const { languageGenerations, languageChartData } = useMemo(() => {
     const generations = languageFeatureAggregates.reduce((acc, item) => {
@@ -229,7 +242,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
-      labels: allDays.map(day => new Date(day).toLocaleDateString()),
+      labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
   }, [userDetails.days]);
@@ -275,7 +288,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
-      labels: allDays.map(day => new Date(day).toLocaleDateString()),
+      labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
   }, [userDetails.days]);
@@ -470,16 +483,17 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         usedChat={usedChat}
         usedAgent={usedAgent}
         usedCli={usedCli}
-        ideChartData={ideAggregates.length > 0 ? ideChartData : undefined}
+        ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
         languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
         modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
         chartOptions={chartOptions}
       />
 
-      <IDEActivityChart
+      <ClientActivityChart
         ideAggregates={ideAggregates}
         days={userDetails.days}
         pluginVersions={userDetails.pluginVersions}
+        cliVersions={userDetails.cliVersions}
         />
 
       {/* Totals by Feature */}
