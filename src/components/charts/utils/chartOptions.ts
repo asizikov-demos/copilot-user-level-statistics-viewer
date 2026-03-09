@@ -22,6 +22,8 @@ export interface BaseChartConfig {
   stacked?: boolean;
   indexAxis?: 'x' | 'y';
   yStepSize?: number;
+  xMaxRotation?: number;
+  xAutoSkip?: boolean;
 }
 
 /**
@@ -60,6 +62,8 @@ export function createBaseChartOptions(config: BaseChartConfig = {}) {
     stacked = false,
     indexAxis = 'x',
     yStepSize,
+    xMaxRotation,
+    xAutoSkip,
   } = config;
 
   return {
@@ -93,6 +97,12 @@ export function createBaseChartOptions(config: BaseChartConfig = {}) {
         grid: {
           display: showGridX,
         },
+        ...(xMaxRotation !== undefined || xAutoSkip !== undefined ? {
+          ticks: {
+            ...(xMaxRotation !== undefined && { maxRotation: xMaxRotation }),
+            ...(xAutoSkip !== undefined && { autoSkip: xAutoSkip }),
+          },
+        } : {}),
       },
       y: {
         stacked,

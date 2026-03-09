@@ -69,12 +69,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <MetricTileGroup
         items={[
           {
-            title: 'Total Records',
-            value: stats.totalRecords,
-            accent: 'green',
-            icon: <MetricTileIcon name="records" />,
-          },
-          {
             title: 'Unique Users',
             value: stats.uniqueUsers,
             accent: 'blue',
@@ -101,6 +95,15 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             onClick: () => onNavigate(VIEW_MODES.IDES),
             size: 'md',
             icon: <MetricTileIcon name="top-ide" />,
+          },
+          {
+            title: 'CLI Adoption Analysis',
+            value: stats.cliUsers,
+            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
+            accent: 'indigo',
+            interactive: true,
+            onClick: () => onNavigate(VIEW_MODES.CLI_ADOPTION),
+            icon: <MetricTileIcon name="cli-users" />,
           },
         ]}
         columns={{ base: 1, md: 2, lg: 4 }}

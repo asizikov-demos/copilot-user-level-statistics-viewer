@@ -74,6 +74,20 @@ export interface CopilotMetrics {
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;
+  totals_by_cli?: {
+    session_count: number;
+    request_count: number;
+    prompt_count: number;
+    token_usage: {
+      output_tokens_sum: number;
+      prompt_tokens_sum: number;
+      avg_tokens_per_request: number;
+    };
+    last_known_cli_version?: {
+      sampled_at: string;
+      cli_version: string;
+    };
+  };
 }
 
 export interface MetricsStats {

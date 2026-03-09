@@ -16,6 +16,7 @@ import IDEView from '../IDEView';
 import CopilotImpactView from '../CopilotImpactView';
 import PRUUsageAnalysisView from '../PRUUsageAnalysisView';
 import CopilotAdoptionView from '../CopilotAdoptionView';
+import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
 
@@ -139,6 +140,8 @@ const ViewRouter: React.FC = () => {
     dailyLanguageGenerationsData,
     dailyLanguageLocData,
     modelBreakdownData,
+    dailyCliSessionData,
+    dailyCliTokenData,
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -209,6 +212,16 @@ const ViewRouter: React.FC = () => {
           agentModeHeatmapData={agentModeHeatmapData}
           stats={stats}
           pluginVersionData={pluginVersionData}
+          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
+        />
+      );
+
+    case VIEW_MODES.CLI_ADOPTION:
+      return (
+        <CLIAdoptionView
+          stats={stats}
+          dailyCliSessionData={dailyCliSessionData}
+          dailyCliTokenData={dailyCliTokenData}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );

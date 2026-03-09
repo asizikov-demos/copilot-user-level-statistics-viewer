@@ -13,6 +13,8 @@ import type {
   AgentImpactData,
   CodeCompletionImpactData,
   ModeImpactData,
+  DailyCliSessionData,
+  DailyCliTokenData,
 } from '../domain/calculators/metricCalculators';
 import type { VoidCallback, ValueCallback } from './events';
 
@@ -27,6 +29,7 @@ export const VIEW_MODES = {
   PRU_USAGE: 'pruUsage',
   COPILOT_ADOPTION: 'copilotAdoption',
   MODEL_DETAILS: 'modelDetails',
+  CLI_ADOPTION: 'cliAdoption',
 } as const;
 
 export type ViewMode = typeof VIEW_MODES[keyof typeof VIEW_MODES];
@@ -147,6 +150,13 @@ export interface ModelDetailsViewProps extends BackNavigableViewProps {
   modelBreakdownData: ModelBreakdownData;
 }
 
+export interface CLIAdoptionViewProps extends BackNavigableViewProps {
+  view: typeof VIEW_MODES.CLI_ADOPTION;
+  stats: MetricsStats;
+  dailyCliSessionData: DailyCliSessionData[];
+  dailyCliTokenData: DailyCliTokenData[];
+}
+
 /**
  * Discriminated union of all view props.
  * Use this type when you need to pass props to a dynamic view router.
@@ -161,7 +171,8 @@ export type ViewProps =
   | CopilotImpactViewProps
   | PRUUsageViewProps
   | CopilotAdoptionViewProps
-  | ModelDetailsViewProps;
+  | ModelDetailsViewProps
+  | CLIAdoptionViewProps;
 
 /**
  * Type guard to check if props are for a specific view

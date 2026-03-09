@@ -126,3 +126,14 @@ export {
   computeUserDetailedMetrics,
   computeSingleUserDetailedMetrics,
 } from './userDetailCalculator';
+
+export {
+  type DailyCliSessionData,
+  type DailyCliTokenData,
+  type CliUsageAccumulator,
+  createCliUsageAccumulator,
+  accumulateCliUsage,
+  ensureCliDates,
+  computeDailyCliSessionData,
+  computeDailyCliTokenData,
+} from './cliUsageCalculator';

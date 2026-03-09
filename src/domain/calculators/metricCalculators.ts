@@ -35,6 +35,11 @@ export type {
   ModeImpactData,
 } from './impactCalculator';
 
+export type {
+  DailyCliSessionData,
+  DailyCliTokenData,
+} from './cliUsageCalculator';
+
 export const calculateStats = calculateStatsFromMetrics;
 
 export const calculateDailyPRUAnalysis = calculateDailyPRUAnalysisFromMetrics;
