@@ -152,10 +152,9 @@ describe('computeCliAdoptionTrend', () => {
     expect(result[2]).toMatchObject({ newUsers: 1, returningUsers: 2, cumulativeUsers: 4 });
   });
 
-  it('should handle a day with no users (gap day via ensureCliDates)', () => {
+  it('should omit dates with no CLI activity and still track returning users', () => {
     const acc = createCliUsageAccumulator();
     accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    // day 16 has no CLI users (no entries in dailySessions)
     accumulateCliUsage(acc, '2024-01-17', 1, makeCliMetric(1, '2024-01-17'));
 
     const result = computeCliAdoptionTrend(acc);
