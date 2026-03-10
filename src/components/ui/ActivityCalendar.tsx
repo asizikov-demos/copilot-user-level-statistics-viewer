@@ -32,25 +32,25 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
   };
 
   const allDates = generateDateGrid();
+  const mondayIndex = (date: Date) => (date.getDay() + 6) % 7;
+
   const groupDatesByWeek = (dates: Date[]) => {
     const weeks: Date[][] = [];
     let currentWeek: Date[] = [];
     
     dates.forEach((date, index) => {
       if (index === 0) {
-        // Fill the first week with empty slots if it doesn't start on Sunday
-        const dayOfWeek = date.getDay();
+        const dayOfWeek = mondayIndex(date);
         for (let i = 0; i < dayOfWeek; i++) {
-          currentWeek.push(new Date(0)); // Use epoch as placeholder
+          currentWeek.push(new Date(0));
         }
       }
       
       currentWeek.push(date);
       
       if (currentWeek.length === 7 || index === dates.length - 1) {
-        // Fill the last week with empty slots if needed
         while (currentWeek.length < 7) {
-          currentWeek.push(new Date(0)); // Use epoch as placeholder
+          currentWeek.push(new Date(0));
         }
         weeks.push(currentWeek);
         currentWeek = [];
@@ -61,7 +61,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
   };
 
   const weeks = groupDatesByWeek(allDates);
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
   const formatDateKey = (date: Date) => {
     if (date.getTime() === 0) return ''; // Placeholder date
@@ -118,9 +118,9 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
         </div>
         
         {/* Calendar grid */}
-        <div className="space-y-1">
+        <div className="border-t border-gray-300">
           {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="grid grid-cols-7 gap-1">
+            <div key={weekIndex} className="grid grid-cols-7 gap-1 border-b border-gray-300 py-0.5">
               {week.map((date, dayIndex) => {
                 const dateKey = formatDateKey(date);
                 const activityLevel = getActivityLevel(dateKey);

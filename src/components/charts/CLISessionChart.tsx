@@ -50,7 +50,7 @@ export default function CLISessionChart({ data }: CLISessionChartProps) {
         { value: totalPrompts.toLocaleString(), label: 'Total Prompts' },
       ]}
     >
-      <div style={{ height: 350 }}>
+      <div className="h-full">
         <Bar data={chartData} options={options} />
       </div>
     </ChartContainer>

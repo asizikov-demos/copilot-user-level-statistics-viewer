@@ -7,6 +7,9 @@ import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
 import { formatShortDate } from '../utils/formatters';
 import ClientActivityChart from './charts/ClientActivityChart';
+import CLISessionChart from './charts/CLISessionChart';
+import CLITokensChart from './charts/CLITokensChart';
+import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
@@ -16,6 +19,7 @@ import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndF
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
+import type { ModeImpactData } from '../domain/calculators/metricCalculators';
 import type { VoidCallback } from '../types/events';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
 
@@ -29,7 +33,54 @@ interface UserDetailsViewProps {
   onBack: VoidCallback;
 }
 
+function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
+  if (data.length === 0) return [];
+  const dataMap = new Map(data.map(d => [d.date, d]));
+  const start = new Date(startDay);
+  const end = new Date(endDay);
+  const result: ModeImpactData[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+    const date = cur.toISOString().split('T')[0];
+    result.push(dataMap.get(date) ?? {
+      date,
+      locAdded: 0,
+      locDeleted: 0,
+      netChange: 0,
+      userCount: 0,
+      totalUniqueUsers: data[0]?.totalUniqueUsers ?? 0,
+    });
+  }
+  return result;
+}
+
+function buildDailyCliSeries<T>(
+  days: UserDayData[],
+  startDay: string,
+  endDay: string,
+  buildItem: (date: string, cli: NonNullable<UserDayData['totals_by_cli']> | undefined) => T,
+): T[] {
+  const cliMap = new Map<string, NonNullable<UserDayData['totals_by_cli']>>(
+    days
+      .filter(d => d.totals_by_cli)
+      .map(d => [d.day, d.totals_by_cli as NonNullable<UserDayData['totals_by_cli']>]),
+  );
+  const start = new Date(startDay);
+  const end = new Date(endDay);
+  const result: T[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+    const date = cur.toISOString().split('T')[0];
+    result.push(buildItem(date, cliMap.get(date)));
+  }
+  return result;
+}
+
 export default function UserDetailsView({ userDetails, userSummary, userLogin, userId, onBack }: UserDetailsViewProps) {
+  const filledCombinedImpact = useMemo(() => fillDateRange(userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledAgentImpact = useMemo(() => fillDateRange(userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
     selectedDate: string;
@@ -70,6 +121,20 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const usedCli = userSummary.used_cli;
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
+
+  const agentInteractions = featureAggregates
+    .filter(f => f.feature === 'chat_panel_agent_mode')
+    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
+  const planInteractions = featureAggregates
+    .filter(f => f.feature === 'chat_panel_plan_mode')
+    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
+  const askModeInteractions = featureAggregates
+    .filter(f => f.feature === 'chat_panel_ask_mode')
+    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
+  const editModeInteractions = featureAggregates
+    .filter(f => f.feature === 'chat_panel_edit_mode')
+    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
+  const cliInteractions = totalCliPrompts;
 
   const ideChartData = useMemo(() => {
     const labels = ideAggregates.map(ide => formatIDEName(ide.ide));
@@ -372,6 +437,28 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       }
     }
   };
+  const dailyCliTokenData = useMemo(
+    () => buildDailyCliSeries(userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay, (date, cli) => ({
+      date,
+      outputTokens: cli?.token_usage.output_tokens_sum ?? 0,
+      promptTokens: cli?.token_usage.prompt_tokens_sum ?? 0,
+    })),
+    [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay],
+  );
+
+  const dailyCliSessionData = useMemo(
+    () => buildDailyCliSeries(userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay, (date, cli) => ({
+      date,
+      sessionCount: cli?.session_count ?? 0,
+      requestCount: cli?.request_count ?? 0,
+      promptCount: cli?.prompt_count ?? 0,
+      uniqueUsers: cli ? 1 : 0,
+    })),
+    [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay],
+  );
+
+  const hasCliActivity = userDetails.days.some(d => d.totals_by_cli);
+
   const summaryCards = [
     {
       value: totalInteractions,
@@ -426,11 +513,22 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       />
 
       <ModeImpactChart
-        data={userDetails.dailyCombinedImpact}
+        data={filledCombinedImpact}
         title="Combined Copilot Impact"
         description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
         emptyStateMessage="No combined impact data available."
       />
+
+      {/* Copilot CLI Adoption */}
+      {hasCliActivity && (
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Adoption</h3>
+          <div className="space-y-8">
+            <CLITokensChart data={dailyCliTokenData} />
+            <CLISessionChart data={dailyCliSessionData} />
+          </div>
+        </div>
+      )}
 
       {/* Impact Breakdown Section */}
       <div className="border-t border-gray-200 pt-6">
@@ -450,25 +548,25 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         {isImpactBreakdownExpanded && (
           <div className="space-y-8 mt-6">
             <ModeImpactChart
-              data={userDetails.dailyAgentImpact}
+              data={filledAgentImpact}
               title="Copilot Agent Mode Impact"
               description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
               emptyStateMessage="No agent mode impact data available."
             />
             <ModeImpactChart
-              data={userDetails.dailyAskModeImpact}
+              data={filledAskModeImpact}
               title="Ask Mode Impact"
               description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
               emptyStateMessage="No Ask Mode impact data available."
             />
             <ModeImpactChart
-              data={userDetails.dailyCompletionImpact}
+              data={filledCompletionImpact}
               title="Completions Impact"
               description="Daily lines of code added and deleted when developers accept Copilot code completions."
               emptyStateMessage="No code completion impact data available."
             />
             <ModeImpactChart
-              data={userDetails.dailyCliImpact}
+              data={filledCliImpact}
               title="CLI Impact"
               description="Daily lines of code added and deleted through Copilot CLI sessions."
               emptyStateMessage="No CLI impact data available."
@@ -477,7 +575,20 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         )}
       </div>
       
-      <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
+        </div>
+        <div className="lg:col-span-1">
+          <FeatureAdoptionRadarChart
+            agentInteractions={agentInteractions}
+            planInteractions={planInteractions}
+            cliInteractions={cliInteractions}
+            askModeInteractions={askModeInteractions}
+            editModeInteractions={editModeInteractions}
+          />
+        </div>
+      </div>
 
       <UserSummaryChart
         usedChat={usedChat}
