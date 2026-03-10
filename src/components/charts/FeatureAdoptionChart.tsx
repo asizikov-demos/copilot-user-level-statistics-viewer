@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
 import { FeatureAdoptionData } from '../../domain/calculators/metricCalculators';
+import { computeFeatureAdoptionInsights } from '../../domain/featureAdoptionInsights';
 import ChartContainer from '../ui/ChartContainer';
 import ChartToggleButtons from '../ui/ChartToggleButtons';
 import InsightsCard from '../ui/InsightsCard';
@@ -44,6 +45,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
   const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
   const advancedUsersCount = data?.advancedUsers || 0;
   const advancedRate = totalUsers > 0 ? (advancedUsersCount / totalUsers) * 100 : 0;
+  const adoptionInsights = computeFeatureAdoptionInsights(data);
 
   const chartData = {
     labels: features.map(f => f.name),
@@ -106,20 +108,41 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
       ]}
       chartHeight="h-96"
       footer={
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InsightsCard title="Feature Journey" variant="green">
-            <p>
-              {completionRate > 80 ? 'Excellent' : completionRate > 60 ? 'Good' : 'Low'} code completion adoption.
-              {chatRate > 40 ? ' Strong' : chatRate > 20 ? ' Moderate' : ' Low'} chat feature engagement.
-              {agentRate > 10 ? ' Good' : agentRate > 5 ? ' Emerging' : ' Limited'} Agent Mode usage.
-            </p>
-          </InsightsCard>
-          <InsightsCard title="Advanced Features" variant="blue">
-            <p>
-              IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
-              {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
-            </p>
-          </InsightsCard>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InsightsCard title="Feature Journey" variant="green">
+              <p>
+                {completionRate > 80 ? 'Excellent' : completionRate > 60 ? 'Good' : 'Low'} code completion adoption.
+                {chatRate > 40 ? ' Strong' : chatRate > 20 ? ' Moderate' : ' Low'} chat feature engagement.
+                {agentRate > 10 ? ' Good' : agentRate > 5 ? ' Emerging' : ' Limited'} Agent Mode usage.
+              </p>
+            </InsightsCard>
+            <InsightsCard title="Advanced Features" variant="blue">
+              <p>
+                IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
+                {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
+              </p>
+            </InsightsCard>
+          </div>
+          {adoptionInsights.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {adoptionInsights.map((insight) => (
+                <InsightsCard key={insight.title} title={insight.title} variant={insight.variant}>
+                  <p>{insight.message}</p>
+                  {insight.ctaHref && insight.ctaLabel && (
+                    <a
+                      href={insight.ctaHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex text-sm font-medium text-blue-700 underline hover:text-blue-900"
+                    >
+                      {insight.ctaLabel}
+                    </a>
+                  )}
+                </InsightsCard>
+              ))}
+            </div>
+          )}
         </div>
       }
     >
