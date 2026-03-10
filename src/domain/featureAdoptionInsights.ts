@@ -1,4 +1,4 @@
-import { FeatureAdoptionData } from './calculators/featureAdoptionCalculator';
+import type { FeatureAdoptionData } from './calculators/featureAdoptionCalculator';
 
 export const PLANNING_MODE_DOCS_URL = 'https://code.visualstudio.com/docs/copilot/agents/planning';
 export const CLI_DOCS_URL = 'https://docs.github.com/en/enterprise-cloud@latest/copilot/how-tos/copilot-cli/administer-copilot-cli-for-your-enterprise';

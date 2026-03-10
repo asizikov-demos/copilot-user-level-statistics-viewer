@@ -108,49 +108,41 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
       ]}
       chartHeight="h-96"
       footer={
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...adoptionInsights.map(insight => ({
-            title: insight.title,
-            variant: insight.variant,
-            content: (
-              <>
-                <p>{insight.message}</p>
-                {insight.ctaHref && insight.ctaLabel && (
-                  <a
-                    href={insight.ctaHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex text-sm font-medium text-blue-700 underline hover:text-blue-900"
-                  >
-                    {insight.ctaLabel}
-                  </a>
-                )}
-              </>
-            ),
-          })), {
-            title: 'Feature Journey',
-            variant: 'green' as const,
-            content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InsightsCard title="Feature Journey" variant="green">
               <p>
                 {completionRate > 80 ? 'Excellent' : completionRate > 60 ? 'Good' : 'Low'} code completion adoption.
                 {chatRate > 40 ? ' Strong' : chatRate > 20 ? ' Moderate' : ' Low'} chat feature engagement.
                 {agentRate > 10 ? ' Good' : agentRate > 5 ? ' Emerging' : ' Limited'} Agent Mode usage.
               </p>
-            ),
-          }, {
-            title: 'Advanced Features',
-            variant: 'blue' as const,
-            content: (
+            </InsightsCard>
+            <InsightsCard title="Advanced Features" variant="blue">
               <p>
                 IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
                 {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
               </p>
-            ),
-          }].map((insight, index) => (
-            <InsightsCard key={`${insight.title}-${index}`} title={insight.title} variant={insight.variant}>
-              {insight.content}
             </InsightsCard>
-          ))}
+          </div>
+          {adoptionInsights.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {adoptionInsights.map((insight) => (
+                <InsightsCard key={insight.title} title={insight.title} variant={insight.variant}>
+                  <p>{insight.message}</p>
+                  {insight.ctaHref && insight.ctaLabel && (
+                    <a
+                      href={insight.ctaHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex text-sm font-medium text-blue-700 underline hover:text-blue-900"
+                    >
+                      {insight.ctaLabel}
+                    </a>
+                  )}
+                </InsightsCard>
+              ))}
+            </div>
+          )}
         </div>
       }
     >
