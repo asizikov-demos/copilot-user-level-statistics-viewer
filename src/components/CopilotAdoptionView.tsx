@@ -153,7 +153,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
   );
 
   const outdatedJetBrainsUserCount = React.useMemo(
-    () => outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0),
+    () => new Set(outdatedPlugins.flatMap((p) => p.usernames)).size,
     [outdatedPlugins],
   );
 
