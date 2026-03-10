@@ -54,6 +54,34 @@
     {
       "version": "0.37.0",
       "releaseDate": "2026-02-04T18:34:22Z"
+    },
+    {
+      "version": "0.36.2",
+      "releaseDate": "2026-01-22T21:25:27Z"
+    },
+    {
+      "version": "0.36.1",
+      "releaseDate": "2026-01-14T20:35:01Z"
+    },
+    {
+      "version": "0.36.0",
+      "releaseDate": "2026-01-09T09:09:23Z"
+    },
+    {
+      "version": "0.35.3",
+      "releaseDate": "2026-01-06T20:15:30Z"
+    },
+    {
+      "version": "0.35.2",
+      "releaseDate": "2025-12-18T19:06:34Z"
+    },
+    {
+      "version": "0.35.1",
+      "releaseDate": "2025-12-17T19:10:05Z"
+    },
+    {
+      "version": "0.35.0",
+      "releaseDate": "2025-12-10T17:23:51Z"
     }
   ]
 }
