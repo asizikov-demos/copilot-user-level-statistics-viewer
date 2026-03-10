@@ -65,7 +65,7 @@ export interface DatedVersionLike extends VersionLike {
   releaseDate: string;
 }
 
-export function parseReportDayEnd(reportDay: string): Date | null {
+export function parseReportDayInclusiveEnd(reportDay: string): Date | null {
   const dayMatch = reportDay.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!dayMatch) return null;
 
@@ -90,7 +90,7 @@ export function resolveCurrentStableMinorAtDate(
   stableReleases: DatedVersionLike[],
   reportDay: string,
 ): number | null {
-  const cutoff = parseReportDayEnd(reportDay);
+  const cutoff = parseReportDayInclusiveEnd(reportDay);
   if (cutoff === null) return null;
 
   let effectiveStableMinor: number | null = null;
