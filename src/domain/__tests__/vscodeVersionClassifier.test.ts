@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   parseVsCodeVersion,
   parseVersionMinor,
-  parseReportDayEnd,
+  parseReportDayInclusiveEnd,
   classifyVsCodeVersion,
   deriveCurrentStableMinor,
   resolveCurrentStableMinorAtDate,
@@ -43,19 +43,19 @@ describe('parseVersionMinor', () => {
   });
 });
 
-describe('parseReportDayEnd', () => {
+describe('parseReportDayInclusiveEnd', () => {
   it('returns the end of day in UTC for a valid report day', () => {
-    expect(parseReportDayEnd('2026-03-01')?.toISOString()).toBe('2026-03-01T23:59:59.999Z');
+    expect(parseReportDayInclusiveEnd('2026-03-01')?.toISOString()).toBe('2026-03-01T23:59:59.999Z');
   });
 
   it('rejects impossible calendar dates', () => {
-    expect(parseReportDayEnd('2026-02-30')).toBeNull();
-    expect(parseReportDayEnd('2026-13-01')).toBeNull();
+    expect(parseReportDayInclusiveEnd('2026-02-30')).toBeNull();
+    expect(parseReportDayInclusiveEnd('2026-13-01')).toBeNull();
   });
 
   it('rejects non-report-day inputs instead of parsing arbitrary datetimes', () => {
-    expect(parseReportDayEnd('2026-03-01T00:00:00Z')).toBeNull();
-    expect(parseReportDayEnd('not-a-day')).toBeNull();
+    expect(parseReportDayInclusiveEnd('2026-03-01T00:00:00Z')).toBeNull();
+    expect(parseReportDayInclusiveEnd('not-a-day')).toBeNull();
   });
 });
 
@@ -210,5 +210,23 @@ describe('resolveCurrentStableMinorAtDate', () => {
   it('returns null when no stable release existed yet or the day is invalid', () => {
     expect(resolveCurrentStableMinorAtDate(stableReleases, '2026-01-01')).toBeNull();
     expect(resolveCurrentStableMinorAtDate(stableReleases, 'not-a-day')).toBeNull();
+  });
+
+  it('anchors to report start date so a release that shipped mid-window does not affect outdated classification at window open', () => {
+    // Scenario: report window Feb 1–Feb 28. Stable 0.38 shipped Feb 25.
+    // At report start (Feb 1), 0.37 was the current stable train.
+    // Versions on the 0.37 train should NOT be classified as outdated when anchored to Feb 1.
+    const releases = [
+      { version: '0.38.0', releaseDate: '2026-02-25T10:00:00Z' },
+      { version: '0.37.9', releaseDate: '2026-01-15T10:00:00Z' },
+    ];
+
+    const stableAtStart = resolveCurrentStableMinorAtDate(releases, '2026-02-01');
+    const stableAtEnd = resolveCurrentStableMinorAtDate(releases, '2026-02-28');
+
+    // At report start, only 0.37 had shipped → should not mark 0.37 train as outdated
+    expect(stableAtStart).toBe(37);
+    // At report end, 0.38 has shipped
+    expect(stableAtEnd).toBe(38);
   });
 });

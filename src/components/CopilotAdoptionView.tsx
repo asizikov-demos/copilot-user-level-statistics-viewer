@@ -8,7 +8,7 @@ import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
-import { classifyVsCodeVersion, parseReportDayEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
+import { classifyVsCodeVersion, parseReportDayInclusiveEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
@@ -49,11 +49,11 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
   const latestTwentyVersions = React.useMemo(() => latestTwentyUpdates.map(u => u.version), [latestTwentyUpdates]);
 
   const effectiveVsCodeStableMinor = React.useMemo(() => {
-    const releaseWindowMinor = resolveCurrentStableMinorAtDate(vsCodeStableReleases, stats.reportEndDay);
+    const releaseWindowMinor = resolveCurrentStableMinorAtDate(vsCodeStableReleases, stats.reportStartDay);
     if (releaseWindowMinor !== null) return releaseWindowMinor;
     if (vsCodeStableReleases.length > 0) return null;
     return currentStableMinor;
-  }, [currentStableMinor, stats.reportEndDay, vsCodeStableReleases]);
+  }, [currentStableMinor, stats.reportStartDay, vsCodeStableReleases]);
 
   const effectiveVsCodePreviewMinor = React.useMemo(() => {
     if (effectiveVsCodeStableMinor === null) return null;
@@ -83,7 +83,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     return earliest;
   }, [vsCodeStableReleases]);
 
-  const parsedReportEndDay = React.useMemo(() => parseReportDayEnd(stats.reportEndDay), [stats.reportEndDay]);
+  const parsedReportStartDay = React.useMemo(() => parseReportDayInclusiveEnd(stats.reportStartDay), [stats.reportStartDay]);
 
   const hasHistoricalVsCodeMetadataGap = React.useMemo(
     () => {
@@ -91,13 +91,13 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
         return false;
       }
 
-      if (parsedReportEndDay === null || earliestVsCodeStableReleaseDate === null) {
+      if (parsedReportStartDay === null || earliestVsCodeStableReleaseDate === null) {
         return false;
       }
 
-      return parsedReportEndDay.getTime() < new Date(earliestVsCodeStableReleaseDate).getTime();
+      return parsedReportStartDay.getTime() < new Date(earliestVsCodeStableReleaseDate).getTime();
     },
-    [currentStableMinor, earliestVsCodeStableReleaseDate, effectiveVsCodeStableMinor, parsedReportEndDay, vsError, vsLoading],
+    [currentStableMinor, earliestVsCodeStableReleaseDate, effectiveVsCodeStableMinor, parsedReportStartDay, vsError, vsLoading],
   );
 
   const effectiveVsCodePreviewTrainLabel = React.useMemo(() => {
@@ -163,11 +163,11 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
   }
 
   function formatReportDay(reportDay: string): string {
-    const reportDayEnd = parseReportDayEnd(reportDay);
-    if (reportDayEnd === null) return reportDay;
+    const parsedReportDay = parseReportDayInclusiveEnd(reportDay);
+    if (parsedReportDay === null) return reportDay;
 
     try {
-      return reportDayEnd.toLocaleDateString(undefined, {
+      return parsedReportDay.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -569,7 +569,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  This report ends on {formatReportDay(stats.reportEndDay)}, which predates the bundled VS Code stable release history.
+                  This report starts on {formatReportDay(stats.reportStartDay)}, which predates the bundled VS Code stable release history.
                 </p>
                 <p>
                   Historical metadata in this build starts at {formatDate(earliestVsCodeStableReleaseDate ?? '')}, so older report windows are shown without stable or outdated classification.
@@ -583,16 +583,16 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
               </div>
             ) : effectiveVsCodeStableMinor === null ? (
               <div className="text-gray-500">
-                Unable to evaluate VS Code extension status for this report window because the report end date or release metadata is incomplete.
+                Unable to evaluate VS Code extension status for this report window because the report start date or release metadata is incomplete.
               </div>
             ) : (
               <div className="space-y-1">
                 <p>
                   <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                  Versions are compared against the stable release train available by the end of this report window ({formatReportDay(stats.reportEndDay)}).
+                  Versions are compared against the stable release train available at the start of this report window ({formatReportDay(stats.reportStartDay)}).
                 </p>
                 <p>
-                  <span className="font-medium text-gray-900">Stable release train at report end:</span>{' '}
+                  <span className="font-medium text-gray-900">Stable release train at report start:</span>{' '}
                   0.{effectiveVsCodeStableMinor}
                 </p>
                 <p>
@@ -617,7 +617,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             <div className="space-y-4">
               <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code Users by Extension Version</h4>
               <p className="text-sm text-gray-600">
-                Breakdown of VS Code users by installed GitHub Copilot extension version. Statuses are evaluated using the report end date, stable versions like 0.38 and 0.38.2 stay current within their release window, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
+                Breakdown of VS Code users by installed GitHub Copilot extension version. Statuses are evaluated using the report start date, stable versions like 0.38 and 0.38.2 stay current within their release window, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
               </p>
               <ExpandableTableSection
                 items={vscodeVersionAnalysis}
