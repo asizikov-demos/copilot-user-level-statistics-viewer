@@ -102,7 +102,7 @@ async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
 }
 
 async function fetchVsCodeData(githubToken?: string): Promise<VsCodeData> {
-  const url =
+  const baseUrl =
     'https://api.github.com/repos/microsoft/vscode-copilot-chat/releases?per_page=100';
 
   const headers: HeadersInit = {
@@ -113,9 +113,18 @@ async function fetchVsCodeData(githubToken?: string): Promise<VsCodeData> {
     (headers as Record<string, string>)['Authorization'] = `Bearer ${githubToken}`;
   }
 
-  const releases = await fetchJson<GitHubRelease[]>(url, { headers });
+  const allReleases: GitHubRelease[] = [];
+  const maxPages = 5;
+  for (let page = 1; page <= maxPages; page++) {
+    const url = `${baseUrl}&page=${page}`;
+    const batch = await fetchJson<GitHubRelease[]>(url, { headers });
+    allReleases.push(...batch);
 
-  const stableReleases = collectStableReleases(releases, STABLE_RELEASES_WINDOW);
+    const stableCount = allReleases.filter((r) => !r.prerelease && !r.draft).length;
+    if (stableCount >= STABLE_RELEASES_WINDOW || batch.length < 100) break;
+  }
+
+  const stableReleases = collectStableReleases(allReleases, STABLE_RELEASES_WINDOW);
   if (stableReleases.length === 0) {
     throw new Error('No stable release found in microsoft/vscode-copilot-chat releases');
   }

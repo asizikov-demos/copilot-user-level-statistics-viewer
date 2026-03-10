@@ -152,6 +152,21 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     [vscodeVersionAnalysis, classifyVsCode],
   );
 
+  const outdatedJetBrainsUserCount = React.useMemo(
+    () => new Set(outdatedPlugins.flatMap((p) => p.usernames)).size,
+    [outdatedPlugins],
+  );
+
+  const outdatedVsCodeUserCount = React.useMemo(
+    () => new Set(outdatedVsCodePlugins.flatMap((p) => p.usernames)).size,
+    [outdatedVsCodePlugins],
+  );
+
+  const latestTwentyVsCodeReleases = React.useMemo(
+    () => vsCodeStableReleases.slice(0, 20),
+    [vsCodeStableReleases],
+  );
+
   function formatDate(dateString: string): string {
     const d = new Date(dateString);
     if (Number.isNaN(d.getTime())) return dateString;
@@ -285,7 +300,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     },
     {
       id: 'userCount',
-      header: 'Users Observed',
+      header: 'Number of Users',
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: `${narrowCellClass} text-center`,
       accessor: 'userCount',
@@ -296,6 +311,23 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
       renderCell: (item) => renderUsernames(item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
+    },
+  ];
+
+  const vsCodeVersionsColumns: TableColumn<typeof vsCodeStableReleases[number]>[] = [
+    {
+      id: 'version',
+      header: 'Version',
+      headerClassName: tableHeaderClass,
+      className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
+      renderCell: (release) => release.version,
+    },
+    {
+      id: 'releaseDate',
+      header: 'Release Date',
+      headerClassName: tableHeaderClass,
+      className: narrowCellClass,
+      renderCell: (release) => formatDate(release.releaseDate),
     },
   ];
 
@@ -396,7 +428,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                 },
                 {
                   title: 'Users on Outdated Versions',
-                  value: outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0),
+                  value: outdatedJetBrainsUserCount,
                   accent: outdatedPlugins.length > 0 ? 'orange' : 'emerald',
                   subtitle: `${outdatedPlugins.length} outdated version${outdatedPlugins.length !== 1 ? 's' : ''} detected`,
                   icon: <MetricTileIcon name="plugin-outdated" />,
@@ -414,6 +446,27 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
 
           {pluginVersionAnalysis.length > 0 && (
             <div className="space-y-8">
+              <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+                {jbLoading ? (
+                  <div className="text-gray-500">Loading JetBrains release metadata…</div>
+                ) : jbError ? (
+                  <div className="text-red-600">Failed to load JetBrains release metadata: {jbError}</div>
+                ) : jetbrainsUpdates.length === 0 ? (
+                  <div className="text-gray-500">No JetBrains release metadata available.</div>
+                ) : (
+                  <div className="space-y-1">
+                    <p>
+                      <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
+                      Versions are compared against the latest 20 stable releases from the JetBrains Marketplace.
+                    </p>
+                    <p>
+                      <span className="font-medium text-gray-900">Outdated threshold:</span>{' '}
+                      Any version not in the latest 20 stable releases is considered outdated.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <h4 className="text-md font-semibold text-gray-800 mb-3">Outdated Plugins</h4>
                 <p className="text-sm text-gray-600 mb-3">
@@ -475,6 +528,23 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   )}
                 </ExpandableTableSection>
               </div>
+
+              <StatsGrid columns={{ base: 1, md: 2 }} gapClassName="gap-4">
+                <InsightsCard title="Plugin Health Status" variant="orange">
+                  <p>
+                    {outdatedPlugins.length === 0
+                      ? 'Excellent! All IntelliJ users are on recent plugin versions with latest features and security updates.'
+                      : `${outdatedJetBrainsUserCount} user${outdatedJetBrainsUserCount !== 1 ? 's' : ''} ${outdatedJetBrainsUserCount !== 1 ? 'are' : 'is'} using outdated plugins which can result in incomplete telemetry and skewed statistics. Consider upgrading for better performance, feature completeness, and accurate reporting.`}
+                  </p>
+                </InsightsCard>
+                <InsightsCard title="Upgrade Recommendations" variant="blue">
+                  <p>
+                    {outdatedPlugins.length > 0
+                      ? 'Contact users with outdated plugins to upgrade. Latest versions include improved Agent Mode, better code review features, and enhanced MCP support.'
+                      : 'Keep monitoring plugin versions regularly. New releases often include performance improvements and advanced AI features.'}
+                  </p>
+                </InsightsCard>
+              </StatsGrid>
             </div>
           )}
 
@@ -511,7 +581,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   title: 'VS Code Users on Outdated Versions',
                   value:
                     !vsLoading && effectiveVsCodeStableMinor !== null
-                      ? new Set(outdatedVsCodePlugins.flatMap((p) => p.usernames)).size
+                      ? outdatedVsCodeUserCount
                       : null,
                   accent:
                     !vsLoading && effectiveVsCodeStableMinor !== null
@@ -599,7 +669,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
           </div>
 
           {vscodeVersionAnalysis.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-8">
               <h4 className="text-md font-semibold text-gray-800 mb-3">Outdated VS Code Extensions</h4>
               <p className="text-sm text-gray-600 mb-3">
                 Extension versions earlier than the stable release train available at the start of this report window. Users on outdated extensions may be missing important features and bug fixes. The tile above counts unique users across all outdated versions, while users can appear in multiple rows below if they upgraded during the report window.
@@ -635,25 +705,63 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   <div className="text-green-700 text-sm mt-1">No outdated VS Code extensions detected among your users.</div>
                 </div>
               )}
+
+              <div>
+                <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code &mdash; Latest Stable Releases</h4>
+                <ExpandableTableSection
+                  items={latestTwentyVsCodeReleases}
+                  initialCount={2}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                >
+                  {({ visibleItems }) => (
+                    <div className="overflow-x-auto border border-gray-200 rounded-md">
+                      {vsLoading ? (
+                        <div className="px-4 py-3 text-gray-500">Loading…</div>
+                      ) : vsError ? (
+                        <div className="px-4 py-3 text-red-600">Failed to load VS Code releases: {vsError}</div>
+                      ) : vsCodeStableReleases.length === 0 ? (
+                        <div className="px-4 py-3 text-gray-500">No version data available.</div>
+                      ) : (
+                        <MetricsTable
+                          data={visibleItems}
+                          columns={vsCodeVersionsColumns}
+                          tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                          theadClassName="bg-gray-50"
+                          rowClassName={() => 'hover:bg-gray-50'}
+                        />
+                      )}
+                    </div>
+                  )}
+                </ExpandableTableSection>
+              </div>
+
+              <StatsGrid columns={{ base: 1, md: 2 }} gapClassName="gap-4">
+                <InsightsCard title="Extension Health Status" variant="orange">
+                  <p>
+                    {vsLoading
+                      ? 'Loading extension version analysis…'
+                      : effectiveVsCodeStableMinor === null
+                        ? 'Unable to evaluate extension health — release metadata is unavailable for this report window.'
+                        : outdatedVsCodePlugins.length === 0
+                          ? 'Excellent! All VS Code users are on recent extension versions with latest features and security updates.'
+                          : `${outdatedVsCodeUserCount} user${outdatedVsCodeUserCount !== 1 ? 's' : ''} ${outdatedVsCodeUserCount !== 1 ? 'are' : 'is'} using outdated extensions which can result in incomplete telemetry and skewed statistics. Consider upgrading for better performance, feature completeness, and accurate reporting.`}
+                  </p>
+                </InsightsCard>
+                <InsightsCard title="Upgrade Recommendations" variant="blue">
+                  <p>
+                    {vsLoading
+                      ? 'Waiting for release metadata…'
+                      : effectiveVsCodeStableMinor === null
+                        ? 'Once release metadata is available, outdated extensions will be identified here with upgrade recommendations.'
+                        : outdatedVsCodePlugins.length > 0
+                          ? 'Contact users with outdated extensions to upgrade. Latest versions include improved Agent Mode, better code review features, and enhanced MCP support.'
+                          : 'Keep monitoring extension versions regularly. New releases often include performance improvements and advanced AI features.'}
+                  </p>
+                </InsightsCard>
+              </StatsGrid>
             </div>
           )}
-
-          <StatsGrid columns={{ base: 1, md: 2 }} gapClassName="gap-4">
-            <InsightsCard title="Plugin Health Status" variant="orange">
-              <p>
-                {outdatedPlugins.length === 0
-                  ? 'Excellent! All IntelliJ users are on recent plugin versions with latest features and security updates.'
-                  : `${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0)} user${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 's' : ''} ${outdatedPlugins.reduce((sum, p) => sum + p.userCount, 0) !== 1 ? 'are' : 'is'} using outdated plugins which can result in incomplete telemetry and skewed statistics. Consider upgrading for better performance, feature completeness, and accurate reporting.`}
-              </p>
-            </InsightsCard>
-            <InsightsCard title="Upgrade Recommendations" variant="blue">
-              <p>
-                {outdatedPlugins.length > 0
-                  ? 'Contact users with outdated plugins to upgrade. Latest versions include improved Agent Mode, better code review features, and enhanced MCP support.'
-                  : 'Keep monitoring plugin versions regularly. New releases often include performance improvements and advanced AI features.'}
-              </p>
-            </InsightsCard>
-          </StatsGrid>
         </div>
       </section>
     </ViewPanel>
