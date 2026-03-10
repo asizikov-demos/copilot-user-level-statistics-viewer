@@ -265,50 +265,35 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
     },
   ];
 
-  const vscodeVersionAnalysisColumns: TableColumn<typeof vscodeVersionAnalysis[number]>[] = [
+  const outdatedVsCodePluginsColumns: TableColumn<typeof outdatedVsCodePlugins[number]>[] = [
     {
       id: 'version',
       header: 'Extension Version',
-      headerClassName: tableHeaderClass,
+      headerClassName: `${tableHeaderClass} text-red-600`,
       className: 'px-4 py-2 font-mono text-gray-900 whitespace-nowrap',
       renderCell: (item) => item.version,
     },
     {
-      id: 'status',
-      header: 'Status',
-      headerClassName: tableHeaderClass,
-      className: narrowCellClass,
-      renderCell: (item) => {
-        const cls = classifyVsCode(item.version);
-        if (cls === 'stable') return 'Stable';
-        if (cls === 'prerelease') return 'Pre-release';
-        if (cls === 'latest-preview') return 'Latest preview';
-        if (cls === 'outdated') return 'Outdated';
-        return vsLoading ? 'Loading\u2026' : 'Unknown';
-      },
-    },
-    {
       id: 'releaseDate',
       header: 'Release Date',
-      headerClassName: tableHeaderClass,
+      headerClassName: `${tableHeaderClass} text-red-600`,
       className: narrowCellClass,
       renderCell: (item) => {
-        if (classifyVsCode(item.version) !== 'outdated') return '\u2014';
         const date = vsCodeVersionDateMap.get(item.version);
         return date ? formatDate(date) : '\u2014';
       },
     },
     {
       id: 'userCount',
-      header: 'Number of Users',
-      headerClassName: tableHeaderClass,
+      header: 'Users Observed',
+      headerClassName: `${tableHeaderClass} text-red-600`,
       className: `${narrowCellClass} text-center`,
       accessor: 'userCount',
     },
     {
       id: 'usernames',
       header: 'Usernames',
-      headerClassName: tableHeaderClass,
+      headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
       renderCell: (item) => renderUsernames(item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
     },
@@ -526,7 +511,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   title: 'VS Code Users on Outdated Versions',
                   value:
                     !vsLoading && effectiveVsCodeStableMinor !== null
-                      ? outdatedVsCodePlugins.reduce((sum, p) => sum + p.userCount, 0)
+                      ? new Set(outdatedVsCodePlugins.flatMap((p) => p.usernames)).size
                       : null,
                   accent:
                     !vsLoading && effectiveVsCodeStableMinor !== null
@@ -615,28 +600,41 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
 
           {vscodeVersionAnalysis.length > 0 && (
             <div className="space-y-4">
-              <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code Users by Extension Version</h4>
-              <p className="text-sm text-gray-600">
-                Breakdown of VS Code users by installed GitHub Copilot extension version. Statuses are evaluated using the report start date, stable versions like 0.38 and 0.38.2 stay current within their release window, timestamp builds are treated as pre-release, and only earlier release trains are considered outdated.
+              <h4 className="text-md font-semibold text-gray-800 mb-3">Outdated VS Code Extensions</h4>
+              <p className="text-sm text-gray-600 mb-3">
+                Extension versions earlier than the stable release train available at the start of this report window. Users on outdated extensions may be missing important features and bug fixes. The tile above counts unique users across all outdated versions, while users can appear in multiple rows below if they upgraded during the report window.
               </p>
-              <ExpandableTableSection
-                items={vscodeVersionAnalysis}
-                initialCount={5}
-                buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                buttonExpandedLabel="Show Less"
-              >
-                {({ visibleItems }) => (
-                  <div className="overflow-x-auto border border-gray-200 rounded-md">
-                    <MetricsTable
-                      data={visibleItems}
-                      columns={vscodeVersionAnalysisColumns}
-                      tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                      theadClassName="bg-gray-50"
-                      rowClassName={(item, index) => `${classifyVsCode(item.version) === 'outdated' ? 'hover:bg-red-50' : 'hover:bg-gray-50'} ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
-                    />
-                  </div>
-                )}
-              </ExpandableTableSection>
+              {vsLoading ? (
+                <div className="px-4 py-3 text-gray-500">Loading release metadata…</div>
+              ) : effectiveVsCodeStableMinor === null ? (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-gray-600 text-sm">
+                  Unable to classify versions — release metadata unavailable for this report window.
+                </div>
+              ) : outdatedVsCodePlugins.length > 0 ? (
+                <ExpandableTableSection
+                  items={outdatedVsCodePlugins}
+                  initialCount={5}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                >
+                  {({ visibleItems }) => (
+                    <div className="overflow-x-auto border border-gray-200 rounded-md">
+                      <MetricsTable
+                        data={visibleItems}
+                        columns={outdatedVsCodePluginsColumns}
+                        tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                        theadClassName="bg-red-50"
+                        rowClassName={() => 'hover:bg-gray-50'}
+                      />
+                    </div>
+                  )}
+                </ExpandableTableSection>
+              ) : (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                  <div className="text-green-800 font-medium">✓ All users are on recent extension versions!</div>
+                  <div className="text-green-700 text-sm mt-1">No outdated VS Code extensions detected among your users.</div>
+                </div>
+              )}
             </div>
           )}
 
