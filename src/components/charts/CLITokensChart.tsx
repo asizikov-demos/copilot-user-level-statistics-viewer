@@ -55,7 +55,7 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
         { value: formatTokenCount(totalPrompt + totalOutput), label: 'Total Tokens' },
       ]}
     >
-      <div style={{ height: 350 }}>
+      <div className="h-full">
         <Bar data={chartData} options={options} />
       </div>
     </ChartContainer>
