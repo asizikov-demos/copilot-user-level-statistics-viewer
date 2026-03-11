@@ -57,7 +57,7 @@ npm run test:run  # Run tests
 
 ## Data Format
 
-The application expects GitHub Copilot user-level metrics NDJSON files as provided by the [GitHub Copilot Metrics API](https://docs.github.com/en/rest/copilot/copilot-metrics). See [`src/types/metrics.ts`](src/types/metrics.ts) for the full `CopilotMetrics` interface.
+The application expects GitHub Copilot user-level metrics NDJSON files as provided by the GitHub Copilot Metrics Dashboard Export. See [`src/types/metrics.ts`](src/types/metrics.ts) for the full `CopilotMetrics` interface.
 
 ## Contributing
 
