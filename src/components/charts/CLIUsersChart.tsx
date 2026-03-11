@@ -47,7 +47,7 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
         { value: maxUsers.toLocaleString(), label: 'Peak Daily Users' },
       ]}
     >
-      <div style={{ height: 350 }}>
+      <div className="h-full">
         <Bar data={chartData} options={options} />
       </div>
     </ChartContainer>

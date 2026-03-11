@@ -118,7 +118,7 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
         { value: peakUsers, label: 'Peak Daily Users', colorClass: 'text-indigo-600' },
       ]}
     >
-      <div style={{ height: 350 }}>
+      <div className="h-full">
         <Chart type="bar" data={chartData} options={options} />
       </div>
     </ChartContainer>
