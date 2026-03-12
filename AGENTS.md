@@ -40,13 +40,11 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 
 ## Git Workflow Delegation
 
-Always delegate to the **Git Workflow** agent (as a sub-agent) for:
+Delegate all git operations to the **Git Workflow** agent (as a sub-agent). Never handle git operations inline.
 
-- Post-merge cleanup (user says "merged", "pr merged", or similar)
-- Branch creation, commits, and PR creation
-- Branch cleanup and rebasing
-
-Never handle git operations inline — always invoke the Git Workflow agent.
+- **Post-merge cleanup** (user says "merged", "pr merged", or similar) — delegate immediately, no confirmation needed
+- **Branch cleanup and rebasing** — delegate immediately
+- **Branch creation, commits, and PR creation** — delegate only after the Commit Gate below is satisfied
 
 ### Commit Gate
 
