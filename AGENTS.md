@@ -38,13 +38,18 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 - When using sub-agents, parallelize independent work
 - Reference items by name/description, not by number
 
-## End-of-Session Git Workflow
+## Git Workflow Delegation
 
-Unless the task is explicitly read-only (scan, audit, review), always:
+Always delegate to the **Git Workflow** agent (as a sub-agent) for:
 
-- Create a feature branch from `main` — never commit directly to `main`
-- Create atomic, well-scoped commits with conventional prefixes (`feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`)
-- Run the **Code Review** agent before considering work complete
-- Open a PR with a structured summary
+- Post-merge cleanup (user says "merged", "pr merged", or similar)
+- Branch creation, commits, and PR creation
+- Branch cleanup and rebasing
 
-Delegate all git operations (branch creation, commits, PR) to the **Git Workflow** agent.
+Never handle git operations inline — always invoke the Git Workflow agent.
+
+### Commit Gate
+
+Do NOT create branches, commits, or PRs automatically after completing code changes. When the implementation work is done, use the `ask_user` tool to ask whether the user wants to proceed with commits and PR creation. Only delegate to the Git Workflow agent if they confirm.
+
+Exception: if the user's original prompt explicitly requests commits/PR (e.g., "…create atomic commits and PR"), skip the confirmation and delegate directly.
