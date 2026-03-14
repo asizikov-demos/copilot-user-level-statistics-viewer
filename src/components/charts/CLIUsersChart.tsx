@@ -53,7 +53,7 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
       isEmpty={data.length === 0}
       emptyState="No CLI user data available"
       summaryStats={[
-        { value: avg.toLocaleString(undefined, { maximumFractionDigits: 1 }), label: 'Avg Daily Users' },
+        { value: avg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), label: 'Avg Daily Users' },
         { value: max.toLocaleString(), label: 'Peak Daily Users' },
       ]}
     >
