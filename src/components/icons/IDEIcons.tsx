@@ -99,22 +99,4 @@ export const getIDEIcon = (ideName: string): React.ComponentType => {
   return ideIconMap[normalizedName] || DefaultIDEIcon;
 };
 
-export const formatIDEName = (ideName: string): string => {
-  const formatMap: Record<string, string> = {
-    vscode: 'VS Code',
-    jetbrains: 'JetBrains',
-    intellij: 'JetBrains',
-    visualstudio: 'Visual Studio',
-    emacs: 'Emacs',
-    neovim: 'Neovim',
-    vim: 'Vim',
-    eclipse: 'Eclipse',
-    xcode: 'Xcode',
-    zed: 'Zed',
-    'zed:zed-copilot': 'Zed',
-    copilot_cli: 'Copilot CLI',
-  };
-  
-  const normalizedName = ideName.toLowerCase().trim();
-  return formatMap[normalizedName] || ideName;
-};
+export { formatIDEName } from '../../utils/ideNames';

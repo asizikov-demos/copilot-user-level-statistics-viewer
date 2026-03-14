@@ -1,5 +1,5 @@
 import type { IDEStatsData } from '../types/metrics';
-import { formatIDEName } from '../components/icons/IDEIcons';
+import { formatIDEName } from '../utils/ideNames';
 
 const CLI_DOCS_URL = 'https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/agents/copilot-cli/about-copilot-cli';
 
