@@ -32,7 +32,7 @@ Prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `ci:`, `docs:`, `test:`
 Use `feat!:` or `fix!:` for breaking changes.
 
 Rules:
-- Run `npm run build` once before starting commits to verify no TypeScript or ESLint errors
+- Run `npm run build` and `npm run lint` once before starting commits to verify no TypeScript or ESLint errors
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
