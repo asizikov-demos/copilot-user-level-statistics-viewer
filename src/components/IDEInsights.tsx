@@ -19,8 +19,8 @@ export default function IDEInsights({ ideStats, multiIDEUsersCount, totalUniqueI
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {insights.map((insight, i) => (
-        <InsightsCard key={i} title={insight.title} variant={insight.variant}>
+      {insights.map((insight) => (
+        <InsightsCard key={insight.title} title={insight.title} variant={insight.variant}>
           <p>{insight.message}</p>
           {insight.ctaUrl && insight.ctaLabel && (
             <a
