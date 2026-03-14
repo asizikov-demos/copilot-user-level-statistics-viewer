@@ -93,6 +93,7 @@ export {
   type IDEStatsAccumulator,
   createIDEStatsAccumulator,
   accumulateIDEStats,
+  markCliUser,
   computeIDEStatsData,
 } from './ideStatsCalculator';
 
