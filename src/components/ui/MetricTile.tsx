@@ -3,11 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { VoidCallback } from '../../types/events';
-
-// Simple className combiner (avoids adding a dependency like clsx/twMerge)
-function cn(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(' ');
-}
+import { cn } from '../../utils/cn';
 
 // Accent colors that currently exist in the overview dashboard.
 export type AccentColor =

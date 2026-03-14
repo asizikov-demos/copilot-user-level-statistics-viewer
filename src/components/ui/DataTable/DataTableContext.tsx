@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
+import type { SortDirection } from '../../../types/sort';
 
-export type SortDirection = 'asc' | 'desc';
+export type { SortDirection };
 
 export interface DataTableContextValue {
   data: unknown[];

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { DataTableProvider, SortDirection } from './DataTableContext';
+import { sortByField, toggleSortDirection } from '../../../utils/sorting';
 
 export interface DataTableProps<T> {
   data: T[];
@@ -30,32 +31,17 @@ export function DataTable<T>({
 
   const handleSort = (field: keyof T) => {
     if (sortField === field) {
-      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      setSortDirection(toggleSortDirection);
     } else {
       setSortField(field);
       setSortDirection('desc');
     }
   };
 
-  const sortedData = useMemo(() => {
-    if (!sortField) return data;
-
-    return [...data].sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
-
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        aVal = aVal.toLowerCase() as T[keyof T];
-        bVal = bVal.toLowerCase() as T[keyof T];
-      }
-
-      if (sortDirection === 'asc') {
-        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-      } else {
-        return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-      }
-    });
-  }, [data, sortField, sortDirection]);
+  const sortedData = useMemo(
+    () => sortByField(data, sortField, sortDirection),
+    [data, sortField, sortDirection]
+  );
 
   const canExpand = data.length > initialCount;
   const visibleData = useMemo(() => {

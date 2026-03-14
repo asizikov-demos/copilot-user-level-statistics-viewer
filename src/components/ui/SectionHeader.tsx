@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { VoidCallback } from '../../types/events';
+import { cn } from '../../utils/cn';
 
 type Description = string | React.ReactNode;
 
@@ -16,10 +17,6 @@ interface SectionHeaderProps {
   backButtonClassName?: string;
 }
 
-function mergeClassNames(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(' ');
-}
-
 export default function SectionHeader({
   title,
   description,
@@ -30,10 +27,10 @@ export default function SectionHeader({
   backButtonLabel = '← Back to Overview',
   backButtonClassName
 }: SectionHeaderProps) {
-  const containerClassName = mergeClassNames('flex items-center justify-between', className);
-  const headingClassName = mergeClassNames('text-xl font-semibold text-gray-900', titleClassName);
-  const paragraphClassName = mergeClassNames('text-gray-600 text-sm mt-1 max-w-2xl', descriptionClassName);
-  const buttonClassName = mergeClassNames(
+  const containerClassName = cn('flex items-center justify-between', className);
+  const headingClassName = cn('text-xl font-semibold text-gray-900', titleClassName);
+  const paragraphClassName = cn('text-gray-600 text-sm mt-1 max-w-2xl', descriptionClassName);
+  const buttonClassName = cn(
     'px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md transition-colors',
     backButtonClassName
   );
