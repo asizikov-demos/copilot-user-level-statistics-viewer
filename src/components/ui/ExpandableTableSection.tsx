@@ -2,10 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import type { ToggleCallback, VoidCallback } from '../../types/events';
-
-function cn(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(' ');
-}
+import { cn } from '../../utils/cn';
 
 type LabelResolver = string | ((totalItems: number) => string);
 

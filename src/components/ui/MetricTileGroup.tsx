@@ -3,10 +3,7 @@
 import React from "react";
 import MetricTile, { type MetricTileProps } from "./MetricTile";
 import StatsGrid, { type StatsGridColumns } from "./StatsGrid";
-
-function mergeClassNames(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(" ");
-}
+import { cn } from '../../utils/cn';
 
 export interface MetricTileGroupProps {
   title?: string;
@@ -48,9 +45,9 @@ export default function MetricTileGroup({
   const Heading = headingTag;
 
   return (
-    <section className={mergeClassNames("space-y-4", className)}>
+    <section className={cn("space-y-4", className)}>
       {(title || description || actions) && (
-        <div className={mergeClassNames("flex flex-wrap items-start justify-between gap-3", headerClassName)}>
+        <div className={cn("flex flex-wrap items-start justify-between gap-3", headerClassName)}>
           <div className="space-y-1">
             {title && <Heading className="text-lg font-medium text-gray-900">{title}</Heading>}
             {description && (

@@ -2,6 +2,7 @@
 
 import React from "react";
 import SectionHeader from "./SectionHeader";
+import { cn } from '../../utils/cn';
 
 const BASE_CLASS = "bg-white rounded-lg shadow-sm border border-gray-200 p-6";
 
@@ -30,10 +31,6 @@ export interface ViewPanelProps {
   containerClassName?: string;
 }
 
-function mergeClassNames(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function ViewPanel({
   children,
   className,
@@ -45,8 +42,8 @@ export default function ViewPanel({
 }: ViewPanelProps) {
   const hasHeader = Boolean(header || headerProps);
   const resolvedContainerClass = containerClassName ?? BASE_CLASS;
-  const resolvedClassName = mergeClassNames(resolvedContainerClass, className);
-  const resolvedContentClassName = mergeClassNames(hasHeader ? "mt-6" : undefined, contentClassName);
+  const resolvedClassName = cn(resolvedContainerClass, className);
+  const resolvedContentClassName = cn(hasHeader ? "mt-6" : undefined, contentClassName);
 
   return (
     <div className={resolvedClassName}>

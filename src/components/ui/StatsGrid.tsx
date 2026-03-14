@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { ElementType, ReactNode } from "react";
+import { cn } from '../../utils/cn';
 
 type ColumnCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
@@ -155,10 +156,6 @@ function buildColumnClasses(columns: StatsGridColumns | undefined): string {
   return classes.join(" ");
 }
 
-function mergeClassNames(...classes: Array<string | false | null | undefined>): string {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function StatsGrid<T>({
   items,
   renderItem,
@@ -171,7 +168,7 @@ export default function StatsGrid<T>({
   wrapChildren = true,
 }: StatsGridProps<T>) {
   const gridClassName = buildColumnClasses(columns);
-  const mergedClassName = mergeClassNames(gridClassName, gapClassName, className);
+  const mergedClassName = cn(gridClassName, gapClassName, className);
 
   let content: ReactNode;
 
