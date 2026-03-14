@@ -1,23 +1,23 @@
 import React from 'react';
+import { COLOR_PALETTE, type AccentColor } from './colorSchemes';
+import type { ColorTokens } from './colorSchemes';
+
+type InsightsCardVariant = Extract<AccentColor, 'green' | 'blue' | 'red' | 'orange' | 'purple'>;
 
 interface InsightsCardProps {
   title: string;
-  variant?: 'green' | 'blue' | 'red' | 'orange' | 'purple';
+  variant?: InsightsCardVariant;
   children: React.ReactNode;
   className?: string;
   icon?: React.ReactNode;
 }
 
-const variantClasses: Record<string, { bg: string; heading: string; body: string; icon: string; }> = {
-  green:  { bg: 'bg-green-50',  heading: 'text-green-800',  body: 'text-green-700',  icon: 'text-green-600' },
-  blue:   { bg: 'bg-blue-50',   heading: 'text-blue-800',   body: 'text-blue-700',   icon: 'text-blue-600' },
-  red:    { bg: 'bg-red-50',    heading: 'text-red-800',    body: 'text-red-700',    icon: 'text-red-600' },
-  orange: { bg: 'bg-orange-50', heading: 'text-orange-800', body: 'text-orange-700', icon: 'text-orange-600' },
-  purple: { bg: 'bg-purple-50', heading: 'text-purple-800', body: 'text-purple-700', icon: 'text-purple-600' }
-};
+function deriveInsightColors(tokens: ColorTokens) {
+  return { bg: tokens.bg50, heading: tokens.text800, body: tokens.text700, icon: tokens.text600 };
+}
 
 export default function InsightsCard({ title, variant = 'blue', children, className = '', icon }: InsightsCardProps) {
-  const colors = variantClasses[variant] || variantClasses.blue;
+  const colors = deriveInsightColors(COLOR_PALETTE[variant]);
 
   const defaultIcon = (
     <svg
