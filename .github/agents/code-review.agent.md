@@ -44,7 +44,18 @@ Review the current changes and report only issues that genuinely matter: bugs, t
 - Entries in `src/domain/modelConfig.ts` not following the stated ordering convention (check comments in that file).
 - React context provider value shape vs. consumer destructuring.
 
-### 5. Chart.js / react-chartjs-2
+### 5. React Hooks
+
+- `useMemo` or `useCallback` referencing variables/functions not listed in the dependency array — stale closure risk.
+- Functions defined inside the component body and used inside `useMemo`/`useCallback` but not wrapped in `useCallback` themselves and not included as dependencies.
+- `useMemo` with an empty dependency array (`[]`) that references props or state — will never recompute.
+
+### 6. Test Correctness
+
+- Tests that assert the **wrong** expected value (not missing tests — tests that validate buggy behavior). Flag when a test description contradicts its assertion.
+- Guard conditions in production code that make a test's "should not trigger" assertion trivially true for the wrong reason (e.g., `> 0` guard preventing a 0% case the test claims to cover).
+
+### 7. Chart.js / react-chartjs-2
 
 - Tooltip callbacks using `any` instead of `TooltipItem<'bar' | 'pie' | 'line'>`.
 - Missing chart cleanup (charts should be destroyed or handled via react-chartjs-2 component lifecycle).
@@ -66,5 +77,5 @@ If no issues are found, say so explicitly. Do not invent problems.
 - Style and formatting (ESLint and Prettier handle this).
 - Architectural suggestions or refactoring ideas.
 - TODOs unless they indicate broken or missing functionality.
-- Test coverage gaps.
+- Test coverage gaps (missing tests are fine — wrong assertions are not, see section 6).
 - Performance suggestions unless there is a clear bug (e.g., infinite re-render).
