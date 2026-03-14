@@ -12,6 +12,7 @@ export { default as CLIUsersChart } from './CLIUsersChart';
 export { default as CLITokensChart } from './CLITokensChart';
 export { default as EngagementChart } from './EngagementChart';
 export { default as FeatureAdoptionChart } from './FeatureAdoptionChart';
+export { default as CLIOverlapChart } from './CLIOverlapChart';
 export { default as ClientActivityChart } from './ClientActivityChart';
 export { default as ModeImpactChart } from './ModeImpactChart';
 export { default as ModelFeatureDistributionChart } from './ModelFeatureDistributionChart';
