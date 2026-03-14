@@ -171,7 +171,7 @@ const ViewRouter: React.FC = () => {
         />
       );
 
-    case VIEW_MODES.IDES:
+    case VIEW_MODES.CLIENT_ANALYSIS:
       return (
         <ClientsView 
           ideStats={ideStats}

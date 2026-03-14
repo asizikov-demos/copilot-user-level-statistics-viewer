@@ -24,7 +24,7 @@ export const VIEW_MODES = {
   USERS: 'users',
   USER_DETAILS: 'userDetails',
   LANGUAGES: 'languages',
-  IDES: 'ides',
+  CLIENT_ANALYSIS: 'ides',
   COPILOT_IMPACT: 'copilotImpact',
   PRU_USAGE: 'pruUsage',
   COPILOT_ADOPTION: 'copilotAdoption',
@@ -111,8 +111,8 @@ export interface LanguagesViewProps extends BackNavigableViewProps {
   dailyLanguageLocData: DailyLanguageChartData;
 }
 
-export interface IDEsViewProps extends BackNavigableViewProps {
-  view: typeof VIEW_MODES.IDES;
+export interface ClientAnalysisViewProps extends BackNavigableViewProps {
+  view: typeof VIEW_MODES.CLIENT_ANALYSIS;
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
@@ -169,7 +169,7 @@ export type ViewProps =
   | UsersViewProps
   | UserDetailsViewProps
   | LanguagesViewProps
-  | IDEsViewProps
+  | ClientAnalysisViewProps
   | CopilotImpactViewProps
   | PRUUsageViewProps
   | CopilotAdoptionViewProps
