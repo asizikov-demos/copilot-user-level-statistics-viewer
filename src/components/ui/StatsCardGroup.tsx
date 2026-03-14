@@ -31,7 +31,7 @@ export default function StatsCardGroup<T>({
   headingTag = "h3",
   renderItem,
 }: StatsCardGroupProps<T>) {
-  if (!items || items.length === 0) {
+  if (items.length === 0) {
     return null;
   }
 
