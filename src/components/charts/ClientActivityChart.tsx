@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
-import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
+import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
 import { formatShortDate } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import type { UserDayData } from '../../types/metrics';
@@ -206,7 +206,7 @@ export default function ClientActivityChart({
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">⌨️</span>
+                      <span className="text-base"><CopilotIcon /></span>
                       <span>Copilot CLI</span>
                     </div>
                   </td>

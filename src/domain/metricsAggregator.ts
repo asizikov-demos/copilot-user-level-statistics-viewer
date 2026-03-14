@@ -68,6 +68,7 @@ import {
 
   createIDEStatsAccumulator,
   accumulateIDEStats,
+  markCliUser,
   computeIDEStatsData,
 
   createPluginVersionAccumulator,
@@ -240,6 +241,10 @@ export function aggregateMetrics(
       accumulateIdeUser(statsAccumulator, ideTotal.ide, userId);
       accumulateIDEStats(ideStatsAccumulator, userId, ideTotal);
       accumulatePluginVersion(pluginVersionAccumulator, metric.user_login, ideTotal);
+    }
+
+    if (metric.used_cli) {
+      markCliUser(ideStatsAccumulator, userId);
     }
 
     for (const langFeature of metric.totals_by_language_feature) {

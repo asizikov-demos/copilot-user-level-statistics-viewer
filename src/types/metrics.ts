@@ -127,6 +127,7 @@ export interface UserSummary {
 export interface IDEStatsData {
   ide: string;
   uniqueUsers: number;
+  cliOverlapUsers: number;
   totalEngagements: number;
   totalGenerations: number;
   totalAcceptances: number;

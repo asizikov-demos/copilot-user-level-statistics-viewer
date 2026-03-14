@@ -12,7 +12,7 @@ import { OverviewDashboard } from '../features/overview';
 import UniqueUsersView from '../UniqueUsersView';
 import UserDetailsView from '../UserDetailsView';
 import LanguagesView from '../LanguagesView';
-import IDEView from '../IDEView';
+import ClientsView from '../ClientsView';
 import CopilotImpactView from '../CopilotImpactView';
 import PRUUsageAnalysisView from '../PRUUsageAnalysisView';
 import CopilotAdoptionView from '../CopilotAdoptionView';
@@ -171,12 +171,14 @@ const ViewRouter: React.FC = () => {
         />
       );
 
-    case VIEW_MODES.IDES:
+    case VIEW_MODES.CLIENT_ANALYSIS:
       return (
-        <IDEView 
+        <ClientsView 
           ideStats={ideStats}
           multiIDEUsersCount={multiIDEUsersCount}
           totalUniqueIDEUsers={totalUniqueIDEUsers}
+          cliUsers={stats.cliUsers}
+          cliSessions={dailyCliSessionData.reduce((sum, d) => sum + d.sessionCount, 0)}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
         />
       );

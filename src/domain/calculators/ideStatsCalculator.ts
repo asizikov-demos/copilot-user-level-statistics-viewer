@@ -14,12 +14,14 @@ interface IDEAccumulatorEntry {
 export interface IDEStatsAccumulator {
   ideMap: Map<string, IDEAccumulatorEntry>;
   userIDEs: Map<number, Set<string>>;
+  cliUserIds: Set<number>;
 }
 
 export function createIDEStatsAccumulator(): IDEStatsAccumulator {
   return {
     ideMap: new Map(),
     userIDEs: new Map(),
+    cliUserIds: new Set(),
   };
 }
 
@@ -68,21 +70,32 @@ export function accumulateIDEStats(
   accumulator.userIDEs.get(userId)!.add(ide);
 }
 
+export function markCliUser(accumulator: IDEStatsAccumulator, userId: number): void {
+  accumulator.cliUserIds.add(userId);
+}
+
 export function computeIDEStatsData(
   accumulator: IDEStatsAccumulator
 ): { ideStats: IDEStatsData[]; multiIDEUsersCount: number; totalUniqueIDEUsers: number } {
   const ideStats: IDEStatsData[] = Array.from(accumulator.ideMap.entries()).map(
-    ([ide, entry]) => ({
-      ide,
-      uniqueUsers: entry.users.size,
-      totalEngagements: entry.totalEngagements,
-      totalGenerations: entry.totalGenerations,
-      totalAcceptances: entry.totalAcceptances,
-      locAdded: entry.locAdded,
-      locDeleted: entry.locDeleted,
-      locSuggestedToAdd: entry.locSuggestedToAdd,
-      locSuggestedToDelete: entry.locSuggestedToDelete,
-    })
+    ([ide, entry]) => {
+      let cliOverlapUsers = 0;
+      for (const uid of entry.users) {
+        if (accumulator.cliUserIds.has(uid)) cliOverlapUsers++;
+      }
+      return {
+        ide,
+        uniqueUsers: entry.users.size,
+        cliOverlapUsers,
+        totalEngagements: entry.totalEngagements,
+        totalGenerations: entry.totalGenerations,
+        totalAcceptances: entry.totalAcceptances,
+        locAdded: entry.locAdded,
+        locDeleted: entry.locDeleted,
+        locSuggestedToAdd: entry.locSuggestedToAdd,
+        locSuggestedToDelete: entry.locSuggestedToDelete,
+      };
+    }
   );
 
   const multiIDEUsersCount = Array.from(accumulator.userIDEs.values()).filter(
