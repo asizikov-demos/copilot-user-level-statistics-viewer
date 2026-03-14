@@ -89,7 +89,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           {
             title: 'Client Analysis',
             value: stats.topIde?.name || 'N/A',
-            subtitle: `${stats.topIde?.entries?.toLocaleString() || '0'} users · top client`,
+            subtitle: `${stats.topIde?.entries?.toLocaleString() || '0'} users · top IDE`,
             accent: 'orange',
             interactive: true,
             onClick: () => onNavigate(VIEW_MODES.IDES),
