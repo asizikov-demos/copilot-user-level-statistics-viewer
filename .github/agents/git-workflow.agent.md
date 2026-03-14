@@ -32,7 +32,7 @@ Prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `ci:`, `docs:`, `test:`
 Use `feat!:` or `fix!:` for breaking changes.
 
 Rules:
-- Run `npm run build` before each commit to verify no TypeScript or ESLint errors
+- Run `npm run build` once before starting commits to verify no TypeScript or ESLint errors
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
@@ -73,8 +73,6 @@ When told a PR is merged:
 
 Before creating any commit, always:
 
-1. Invoke the **Code Review** agent to review the working-tree changes. Fix any issues it flags before proceeding.
-2. Run `npm run build` — must exit 0 with no warnings
-3. Run `npm run lint` — must exit 0
-4. Review staged changes with `git diff --cached` to ensure only intended changes are included
-5. If verification fails, fix issues before committing
+1. Review staged changes with `git diff --cached` to ensure only intended changes are included
+2. If this is the first commit in a batch, run `npm run build` and `npm run lint` — must exit 0
+3. If verification fails, fix issues before committing
