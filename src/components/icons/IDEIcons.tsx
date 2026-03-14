@@ -84,6 +84,7 @@ const ideIconMap: Record<string, React.ComponentType> = {
   jetbrains: JetBrainsIcon,
   intellij: JetBrainsIcon,
   visualstudio: VisualStudioIcon,
+  visual_studio: VisualStudioIcon,
   emacs: EmacsIcon,
   neovim: NeovimIcon,
   vim: VimIcon,

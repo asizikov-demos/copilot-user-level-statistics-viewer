@@ -50,7 +50,7 @@ export function computeIDEInsights(
     }
 
     // 3. CLI Penetration — users on non-VS Code/Visual Studio IDEs without CLI
-    const bestAgenticIDEs = new Set(['vscode', 'visualstudio']);
+    const bestAgenticIDEs = new Set(['vscode', 'visualstudio', 'visual_studio']);
     const nonVSIDEs = ideStats.filter((s) => !bestAgenticIDEs.has(s.ide) && s.uniqueUsers > 0);
     if (nonVSIDEs.length > 0) {
       const nonVSUsers = nonVSIDEs.reduce((sum, s) => sum + s.uniqueUsers, 0);
