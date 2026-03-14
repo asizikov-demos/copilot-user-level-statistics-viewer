@@ -38,6 +38,10 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 - When using sub-agents, parallelize independent work
 - Reference items by name/description, not by number
 
+## Code Navigation
+
+Prefer the **TypeScript LSP** for code navigation and analysis — use `goToDefinition`, `findReferences`, `incomingCalls`, `hover`, and `documentSymbol` before falling back to grep/glob.
+
 ## Git Workflow Delegation
 
 Delegate all git operations to the **Git Workflow** agent (as a sub-agent). Never handle git operations inline.

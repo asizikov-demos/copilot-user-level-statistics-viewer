@@ -36,6 +36,8 @@ Rules:
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
+- Always include this trailer at the end of every commit message:
+  `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
 
 ## Pre-PR Review Gate
 
@@ -71,7 +73,8 @@ When told a PR is merged:
 
 Before creating any commit, always:
 
-1. Run `npm run build` — must exit 0 with no warnings
-2. Run `npm run lint` — must exit 0
-3. Review staged changes with `git diff --cached` to ensure only intended changes are included
-4. If verification fails, fix issues before committing
+1. Invoke the **Code Review** agent to review the working-tree changes. Fix any issues it flags before proceeding.
+2. Run `npm run build` — must exit 0 with no warnings
+3. Run `npm run lint` — must exit 0
+4. Review staged changes with `git diff --cached` to ensure only intended changes are included
+5. If verification fails, fix issues before committing

@@ -6,7 +6,6 @@ import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import type { DailyCliSessionData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 
@@ -17,13 +16,24 @@ interface CLIUsersChartProps {
 }
 
 export default function CLIUsersChart({ data }: CLIUsersChartProps) {
-  const avgUsers = calculateAverage(data, d => d.uniqueUsers);
-  const maxUsers = findMaxValue(data, d => d.uniqueUsers);
+  const labels: string[] = [];
+  const values: number[] = [];
+  let sum = 0;
+  let max = 0;
+
+  for (const d of data) {
+    labels.push(formatShortDate(d.date));
+    values.push(d.uniqueUsers);
+    sum += d.uniqueUsers;
+    if (d.uniqueUsers > max) max = d.uniqueUsers;
+  }
+
+  const avg = data.length > 0 ? sum / data.length : 0;
 
   const chartData = {
-    labels: data.map(d => formatShortDate(d.date)),
+    labels,
     datasets: [
-      createBarDataset(chartColors.indigo.solid, 'CLI Users', data.map(d => d.uniqueUsers)),
+      createBarDataset(chartColors.indigo.solid, 'CLI Users', values),
     ],
   };
 
@@ -43,8 +53,8 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
       isEmpty={data.length === 0}
       emptyState="No CLI user data available"
       summaryStats={[
-        { value: avgUsers.toFixed(1), label: 'Avg Daily Users' },
-        { value: maxUsers.toLocaleString(), label: 'Peak Daily Users' },
+        { value: avg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), label: 'Avg Daily Users' },
+        { value: max.toLocaleString(), label: 'Peak Daily Users' },
       ]}
     >
       <div className="h-full">
