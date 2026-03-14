@@ -87,9 +87,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             icon: <MetricTileIcon name="top-language" />,
           },
           {
-            title: 'Top IDE',
+            title: 'Client Analysis',
             value: stats.topIde?.name || 'N/A',
-            subtitle: `${stats.topIde?.entries?.toLocaleString() || '0'} users`,
+            subtitle: `${stats.topIde?.entries?.toLocaleString() || '0'} users · top client`,
             accent: 'orange',
             interactive: true,
             onClick: () => onNavigate(VIEW_MODES.IDES),

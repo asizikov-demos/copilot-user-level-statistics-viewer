@@ -116,6 +116,8 @@ export interface IDEsViewProps extends BackNavigableViewProps {
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
+  cliUsers: number;
+  cliSessions: number;
 }
 
 export interface CopilotImpactViewProps extends BackNavigableViewProps {

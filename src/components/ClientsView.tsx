@@ -3,11 +3,13 @@
 import React from 'react';
 import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
-import DashboardStatsCard from './ui/DashboardStatsCard';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
-import { ViewPanel, MetricTileIcon } from './ui';
+import { ViewPanel } from './ui';
 import type { VoidCallback } from '../types/events';
 import { useSortableTable } from '../hooks/useSortableTable';
+import IDEDistributionChart from './charts/IDEDistributionChart';
+import CLIOverlapChart from './charts/CLIOverlapChart';
+import IDEInsights from './IDEInsights';
 
 type IDEStats = IDEStatsData;
 
@@ -15,33 +17,43 @@ interface IDEViewProps {
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
+  cliUsers: number;
+  cliSessions: number;
   onBack: VoidCallback;
 }
 
-export default function IDEView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, onBack }: IDEViewProps) {
+export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, cliUsers, cliSessions, onBack }: IDEViewProps) {
+
+  const allClients: IDEStats[] = React.useMemo(() => {
+    if (cliUsers <= 0) return ideStats;
+    const cliEntry: IDEStats = {
+      ide: 'copilot_cli',
+      uniqueUsers: cliUsers,
+      cliOverlapUsers: 0,
+      totalEngagements: cliSessions,
+      totalGenerations: 0,
+      totalAcceptances: 0,
+      locAdded: 0,
+      locDeleted: 0,
+      locSuggestedToAdd: 0,
+      locSuggestedToDelete: 0,
+    };
+    return [...ideStats, cliEntry];
+  }, [ideStats, cliUsers, cliSessions]);
 
   const {
     sortField: usersSortField,
     sortDirection: usersSortDirection,
     sortedItems: sortedIdesByUsers,
     handleSort: handleUsersSort,
-  } = useSortableTable<IDEStats, keyof IDEStats>(ideStats, 'uniqueUsers', 'desc');
+  } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'uniqueUsers', 'desc');
 
   const {
     sortField: engagementsSortField,
     sortDirection: engagementsSortDirection,
     sortedItems: sortedIdesByEngagements,
     handleSort: handleEngagementsSort,
-  } = useSortableTable<IDEStats, keyof IDEStats>(ideStats, 'totalEngagements', 'desc');
-
-  const totalIDEs = ideStats.length;
-  const sumUsersPerIDE = ideStats.reduce((sum, ide) => sum + ide.uniqueUsers, 0);
-  const averageUsersPerIDE = totalIDEs > 0 ? Math.round((sumUsersPerIDE / totalIDEs) * 10) / 10 : 0;
-
-  const topIDE = sortedIdesByUsers[0];
-  const topIDEUserShare = topIDE && totalUniqueIDEUsers > 0
-    ? Math.round((topIDE.uniqueUsers / totalUniqueIDEUsers) * 1000) / 10
-    : 0;
+  } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
   const headerClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
@@ -152,52 +164,28 @@ export default function IDEView({ ideStats, multiIDEUsersCount, totalUniqueIDEUs
   return (
     <ViewPanel
       headerProps={{
-        title: 'IDE Statistics',
-        description: 'Overview of IDE usage across your organization.',
+        title: 'Client Analysis',
+        description: 'Overview of IDE and CLI usage across your organization.',
         onBack,
       }}
       contentClassName="space-y-8"
     >
       <div className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <DashboardStatsCard
-            value={totalIDEs}
-            label="Total IDEs"
-            accent="blue"
-            tone="tint"
-            icon={<MetricTileIcon name="top-ide" />}
-          />
-
-          <DashboardStatsCard
-            value={averageUsersPerIDE}
-            label="Avg Users per IDE"
-            accent="green"
-            tone="tint"
-            icon={<MetricTileIcon name="average-users" />}
-          />
-
-          <DashboardStatsCard
-            value={multiIDEUsersCount}
-            label="Multi-IDE Users"
-            accent="purple"
-            tone="tint"
-            icon={<MetricTileIcon name="multi-ide" />}
-          />
-
-          {topIDE && (
-            <DashboardStatsCard
-              value={`${topIDEUserShare.toLocaleString()}%`}
-              label={`${formatIDEName(topIDE.ide)} User Share`}
-              accent="teal"
-              tone="tint"
-              icon={<MetricTileIcon name="share" />}
-            />
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <IDEDistributionChart ideStats={ideStats} cliUsers={cliUsers} />
+          <CLIOverlapChart ideStats={ideStats} />
         </div>
+
+        <IDEInsights
+          ideStats={ideStats}
+          multiIDEUsersCount={multiIDEUsersCount}
+          totalUniqueIDEUsers={totalUniqueIDEUsers}
+          cliUsers={cliUsers}
+        />
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">IDEs Ordered by Number of Users</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Users</h3>
           </div>
           <MetricsTable<IDEStats>
             data={sortedIdesByUsers}
@@ -212,7 +200,7 @@ export default function IDEView({ ideStats, multiIDEUsersCount, totalUniqueIDEUs
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">IDEs Ordered by Number of Engagements</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Engagements</h3>
           </div>
           <MetricsTable<IDEStats>
             data={sortedIdesByEngagements}
