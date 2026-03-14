@@ -24,8 +24,21 @@ function makeIDE(
 }
 
 describe('computeIDEInsights', () => {
-  it('returns empty array for empty ideStats', () => {
+  it('returns empty array when no IDE data and no CLI users', () => {
     expect(computeIDEInsights([], 0, 0, 0)).toEqual([]);
+  });
+
+  it('returns CLI Not Yet Adopted when ideStats is empty but totalUniqueIDEUsers > 0', () => {
+    const insights = computeIDEInsights([], 0, 50, 0);
+    const match = insights.find((i) => i.title === 'CLI Not Yet Adopted');
+    expect(match).toBeDefined();
+    expect(match!.variant).toBe('blue');
+  });
+
+  it('returns Strong CLI Adoption when ideStats is empty but CLI users exist', () => {
+    const insights = computeIDEInsights([], 0, 100, 15);
+    const match = insights.find((i) => i.title === 'Strong CLI Adoption');
+    expect(match).toBeDefined();
   });
 
   describe('IDE Concentration', () => {
