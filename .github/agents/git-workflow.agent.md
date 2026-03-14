@@ -71,7 +71,7 @@ When told a PR is merged:
 
 ## Pre-Commit Verification
 
-Before creating any commit, always:
+Before creating any commit, perform these checks (some only apply to the first commit in a batch):
 
 1. Review staged changes with `git diff --cached` to ensure only intended changes are included
 2. If this is the first commit in a batch, run `npm run build` and `npm run lint` — must exit 0
