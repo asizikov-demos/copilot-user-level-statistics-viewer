@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
+import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
 import InsightsCard from './ui/InsightsCard';
 import type { ModelBreakdownData } from '../types/metrics';
 import type { VoidCallback } from '../types/events';
@@ -157,6 +158,7 @@ export default function ModelDetailsView({ modelBreakdownData, onBack }: ModelDe
             )}
           </InsightsCard>
         )}
+        <DailyPremiumBaseChart modelBreakdownData={modelBreakdownData} />
         <ModelsUsageChart modelEntries={modelBreakdownData.standardModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.standardTotal} variant="standard" />
         <ModelsUsageChart modelEntries={modelBreakdownData.premiumModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.premiumTotal} variant="premium" />
       </div>
