@@ -2,8 +2,8 @@
 
 import React from "react";
 import DashboardStatsCard, { type DashboardStatsCardProps } from "./DashboardStatsCard";
-import StatsGrid, { type StatsGridColumns } from "./StatsGrid";
-import { cn } from '../../utils/cn';
+import type { StatsGridColumns } from "./StatsGrid";
+import StatsCardGroup from "./StatsCardGroup";
 
 export interface DashboardStatsCardGroupProps {
   title?: string;
@@ -25,43 +25,14 @@ const DEFAULT_COLUMNS: StatsGridColumns = {
 };
 
 export default function DashboardStatsCardGroup({
-  title,
-  description,
-  actions,
-  items,
   columns = DEFAULT_COLUMNS,
-  gapClassName = "gap-6",
-  className,
-  headerClassName,
-  getKey,
-  headingTag = "h3",
+  ...rest
 }: DashboardStatsCardGroupProps) {
-  if (!items || items.length === 0) {
-    return null;
-  }
-
-  const Heading = headingTag;
-
   return (
-    <section className={cn("space-y-4", className)}>
-      {(title || description || actions) && (
-        <div className={cn("flex flex-wrap items-start justify-between gap-3", headerClassName)}>
-          <div className="space-y-1">
-            {title && <Heading className="text-lg font-medium text-gray-900">{title}</Heading>}
-            {description && (typeof description === "string" ? (
-              <p className="text-sm text-gray-600 max-w-2xl">{description}</p>
-            ) : (
-              description
-            ))}
-          </div>
-          {actions && <div className="flex-shrink-0">{actions}</div>}
-        </div>
-      )}
-      <StatsGrid columns={columns} gapClassName={gapClassName}>
-        {items.map((item, index) => (
-          <DashboardStatsCard key={getKey ? getKey(item, index) : index} {...item} />
-        ))}
-      </StatsGrid>
-    </section>
+    <StatsCardGroup<DashboardStatsCardProps>
+      columns={columns}
+      renderItem={(item) => <DashboardStatsCard {...item} />}
+      {...rest}
+    />
   );
 }

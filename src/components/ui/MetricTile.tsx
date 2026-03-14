@@ -4,17 +4,10 @@ import React from 'react';
 import Link from 'next/link';
 import type { VoidCallback } from '../../types/events';
 import { cn } from '../../utils/cn';
+import { COLOR_PALETTE, type AccentColor } from './colorSchemes';
+import type { ColorTokens } from './colorSchemes';
 
-// Accent colors that currently exist in the overview dashboard.
-export type AccentColor =
-  | 'green'
-  | 'emerald'
-  | 'violet'
-  | 'amber'
-  | 'blue'
-  | 'purple'
-  | 'orange'
-  | 'indigo';
+export type { AccentColor };
 
 interface VariantClasses {
   container: string;
@@ -22,103 +15,25 @@ interface VariantClasses {
   value: string;
   subtitle: string;
   icon: string;
-  hover?: string; // only applied for interactive variant
-  ring: string; // focus ring color
-  arrow: string; // arrow base color
-  arrowHover: string; // arrow hover color
+  hover?: string;
+  ring: string;
+  arrow: string;
+  arrowHover: string;
 }
 
-// Explicit class maps (no string construction) so Tailwind never purges needed classes.
-const COLOR_VARIANTS: Record<AccentColor, VariantClasses> = {
-  green: {
-    container: 'bg-green-50 border-green-200',
-    title: 'text-green-600 group-hover:text-green-700',
-    value: 'text-green-900',
-    subtitle: 'text-green-700',
-    icon: 'text-green-600',
-    hover: 'hover:bg-green-100',
-    ring: 'focus-visible:ring-green-500',
-    arrow: 'text-green-500',
-    arrowHover: 'group-hover:text-green-600'
-  },
-  emerald: {
-    container: 'bg-emerald-50 border-emerald-200',
-    title: 'text-emerald-600 group-hover:text-emerald-700',
-    value: 'text-emerald-900',
-    subtitle: 'text-emerald-700',
-    icon: 'text-emerald-600',
-    hover: 'hover:bg-emerald-100',
-    ring: 'focus-visible:ring-emerald-500',
-    arrow: 'text-emerald-500',
-    arrowHover: 'group-hover:text-emerald-600'
-  },
-  violet: {
-    container: 'bg-violet-50 border-violet-200',
-    title: 'text-violet-600 group-hover:text-violet-700',
-    value: 'text-violet-900',
-    subtitle: 'text-violet-700',
-    icon: 'text-violet-600',
-    hover: 'hover:bg-violet-100',
-    ring: 'focus-visible:ring-violet-500',
-    arrow: 'text-violet-500',
-    arrowHover: 'group-hover:text-violet-600'
-  },
-  amber: {
-    container: 'bg-amber-50 border-amber-200',
-    title: 'text-amber-600 group-hover:text-amber-700',
-    value: 'text-amber-900',
-    subtitle: 'text-amber-700',
-    icon: 'text-amber-600',
-    hover: 'hover:bg-amber-100',
-    ring: 'focus-visible:ring-amber-500',
-    arrow: 'text-amber-500',
-    arrowHover: 'group-hover:text-amber-600'
-  },
-  blue: {
-    container: 'bg-blue-50 border-blue-200',
-    title: 'text-blue-600 group-hover:text-blue-700',
-    value: 'text-blue-900',
-    subtitle: 'text-blue-700',
-    icon: 'text-blue-600',
-    hover: 'hover:bg-blue-100',
-    ring: 'focus-visible:ring-blue-500',
-    arrow: 'text-blue-500',
-    arrowHover: 'group-hover:text-blue-600'
-  },
-  purple: {
-    container: 'bg-purple-50 border-purple-200',
-    title: 'text-purple-600 group-hover:text-purple-700',
-    value: 'text-purple-900',
-    subtitle: 'text-purple-700',
-    icon: 'text-purple-600',
-    hover: 'hover:bg-purple-100',
-    ring: 'focus-visible:ring-purple-500',
-    arrow: 'text-purple-500',
-    arrowHover: 'group-hover:text-purple-600'
-  },
-  orange: {
-    container: 'bg-orange-50 border-orange-200',
-    title: 'text-orange-600 group-hover:text-orange-700',
-    value: 'text-orange-900',
-    subtitle: 'text-orange-700',
-    icon: 'text-orange-600',
-    hover: 'hover:bg-orange-100',
-    ring: 'focus-visible:ring-orange-500',
-    arrow: 'text-orange-500',
-    arrowHover: 'group-hover:text-orange-600'
-  },
-  indigo: {
-    container: 'bg-indigo-50 border-indigo-200',
-    title: 'text-indigo-600 group-hover:text-indigo-700',
-    value: 'text-indigo-900',
-    subtitle: 'text-indigo-700',
-    icon: 'text-indigo-600',
-    hover: 'hover:bg-indigo-100',
-    ring: 'focus-visible:ring-indigo-500',
-    arrow: 'text-indigo-500',
-    arrowHover: 'group-hover:text-indigo-600'
-  }
-};
+function deriveVariantClasses(tokens: ColorTokens): VariantClasses {
+  return {
+    container: `${tokens.bg50} ${tokens.border200}`,
+    title: `${tokens.text600} ${tokens.groupHoverText700}`,
+    value: tokens.text900,
+    subtitle: tokens.text700,
+    icon: tokens.text600,
+    hover: tokens.hoverBg100,
+    ring: tokens.ring500,
+    arrow: tokens.text500,
+    arrowHover: tokens.groupHoverText600,
+  };
+}
 
 export interface MetricTileProps {
   title: string;
@@ -157,7 +72,7 @@ export const MetricTile: React.FC<MetricTileProps> = ({
   className,
   dataTestId
 }) => {
-  const variant = COLOR_VARIANTS[accent];
+  const variant = deriveVariantClasses(COLOR_PALETTE[accent]);
   const isLink = typeof href === 'string' && href.length > 0;
   const isButton = !isLink && (interactive || !!onClick);
   const arrow = showArrow ?? interactive;

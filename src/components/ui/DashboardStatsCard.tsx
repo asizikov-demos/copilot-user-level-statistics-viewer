@@ -2,18 +2,10 @@
 
 import React from 'react';
 import { cn } from '../../utils/cn';
+import { COLOR_PALETTE, type AccentColor } from './colorSchemes';
+import type { ColorTokens } from './colorSchemes';
 
-export type DashboardStatsCardAccent =
-  | 'blue'
-  | 'green'
-  | 'purple'
-  | 'orange'
-  | 'teal'
-  | 'indigo'
-  | 'amber'
-  | 'rose'
-  | 'emerald'
-  | 'violet';
+export type DashboardStatsCardAccent = Exclude<AccentColor, 'red'>;
 
 interface AccentStyles {
   neutralValue: string;
@@ -27,118 +19,19 @@ interface AccentStyles {
   };
 }
 
-const ACCENT_STYLES: Record<DashboardStatsCardAccent, AccentStyles> = {
-  blue: {
-    neutralValue: 'text-blue-600',
-    neutralIcon: 'text-blue-600',
+function deriveAccentStyles(tokens: ColorTokens): AccentStyles {
+  return {
+    neutralValue: tokens.text600,
+    neutralIcon: tokens.text600,
     tint: {
-      container: 'bg-blue-50 border-blue-200',
-      value: 'text-blue-900',
-      label: 'text-sm font-medium text-blue-600',
-      helper: 'text-xs text-blue-700',
-      icon: 'text-blue-600'
-    }
-  },
-  green: {
-    neutralValue: 'text-green-600',
-    neutralIcon: 'text-green-600',
-    tint: {
-      container: 'bg-green-50 border-green-200',
-      value: 'text-green-900',
-      label: 'text-sm font-medium text-green-600',
-      helper: 'text-xs text-green-700',
-      icon: 'text-green-600'
-    }
-  },
-  purple: {
-    neutralValue: 'text-purple-600',
-    neutralIcon: 'text-purple-600',
-    tint: {
-      container: 'bg-purple-50 border-purple-200',
-      value: 'text-purple-900',
-      label: 'text-sm font-medium text-purple-600',
-      helper: 'text-xs text-purple-700',
-      icon: 'text-purple-600'
-    }
-  },
-  orange: {
-    neutralValue: 'text-orange-600',
-    neutralIcon: 'text-orange-600',
-    tint: {
-      container: 'bg-orange-50 border-orange-200',
-      value: 'text-orange-900',
-      label: 'text-sm font-medium text-orange-600',
-      helper: 'text-xs text-orange-700',
-      icon: 'text-orange-600'
-    }
-  },
-  teal: {
-    neutralValue: 'text-teal-600',
-    neutralIcon: 'text-teal-600',
-    tint: {
-      container: 'bg-teal-50 border-teal-200',
-      value: 'text-teal-900',
-      label: 'text-sm font-medium text-teal-600',
-      helper: 'text-xs text-teal-700',
-      icon: 'text-teal-600'
-    }
-  },
-  indigo: {
-    neutralValue: 'text-indigo-600',
-    neutralIcon: 'text-indigo-600',
-    tint: {
-      container: 'bg-indigo-50 border-indigo-200',
-      value: 'text-indigo-900',
-      label: 'text-sm font-medium text-indigo-600',
-      helper: 'text-xs text-indigo-700',
-      icon: 'text-indigo-600'
-    }
-  },
-  amber: {
-    neutralValue: 'text-amber-600',
-    neutralIcon: 'text-amber-600',
-    tint: {
-      container: 'bg-amber-50 border-amber-200',
-      value: 'text-amber-900',
-      label: 'text-sm font-medium text-amber-600',
-      helper: 'text-xs text-amber-700',
-      icon: 'text-amber-600'
-    }
-  },
-  rose: {
-    neutralValue: 'text-rose-600',
-    neutralIcon: 'text-rose-600',
-    tint: {
-      container: 'bg-rose-50 border-rose-200',
-      value: 'text-rose-900',
-      label: 'text-sm font-medium text-rose-600',
-      helper: 'text-xs text-rose-700',
-      icon: 'text-rose-600'
-    }
-  },
-  emerald: {
-    neutralValue: 'text-emerald-600',
-    neutralIcon: 'text-emerald-600',
-    tint: {
-      container: 'bg-emerald-50 border-emerald-200',
-      value: 'text-emerald-900',
-      label: 'text-sm font-medium text-emerald-600',
-      helper: 'text-xs text-emerald-700',
-      icon: 'text-emerald-600'
-    }
-  },
-  violet: {
-    neutralValue: 'text-violet-600',
-    neutralIcon: 'text-violet-600',
-    tint: {
-      container: 'bg-violet-50 border-violet-200',
-      value: 'text-violet-900',
-      label: 'text-sm font-medium text-violet-600',
-      helper: 'text-xs text-violet-700',
-      icon: 'text-violet-600'
-    }
-  }
-};
+      container: `${tokens.bg50} ${tokens.border200}`,
+      value: tokens.text900,
+      label: `text-sm font-medium ${tokens.text600}`,
+      helper: `text-xs ${tokens.text700}`,
+      icon: tokens.text600,
+    },
+  };
+}
 
 const SIZE_CLASSES: Record<'lg' | 'md', string> = {
   lg: 'text-2xl',
@@ -180,7 +73,7 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
   className,
   dataTestId
 }) => {
-  const accentStyles = ACCENT_STYLES[accent];
+  const accentStyles = deriveAccentStyles(COLOR_PALETTE[accent]);
 
   const containerClasses = cn(
     'rounded-lg shadow-sm border p-4 transition-colors',
