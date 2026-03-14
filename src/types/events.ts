@@ -53,9 +53,11 @@ export type MultiSelectionCallback<T> = ValueCallback<T[]>;
 export type FilterCallback<T> = ValueCallback<T>;
 export type BooleanFilterCallback = ValueCallback<boolean>;
 
+import type { SortDirection } from './sort';
+
 // Sort callbacks
 export type SortCallback<T extends string> = ValueCallback<T>;
-export type SortDirectionCallback = ValueCallback<'asc' | 'desc'>;
+export type SortDirectionCallback = ValueCallback<SortDirection>;
 
 // Toggle callbacks
 export type ToggleCallback = (expanded: boolean) => void;

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import type { SortDirection } from '../types/sort';
+import { sortByField, toggleSortDirection } from '../utils/sorting';
 
-export type SortDirection = 'asc' | 'desc';
+export type { SortDirection };
 
 export interface SortableTableResult<T, K extends keyof T> {
   sortField: K;
@@ -21,30 +23,17 @@ export function useSortableTable<T, K extends keyof T>(
 
   const handleSort = (field: K) => {
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(toggleSortDirection);
     } else {
       setSortField(field);
       setSortDirection('desc');
     }
   };
 
-  const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
-
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        aVal = aVal.toLowerCase() as T[K];
-        bVal = bVal.toLowerCase() as T[K];
-      }
-
-      if (sortDirection === 'asc') {
-        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-      } else {
-        return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-      }
-    });
-  }, [items, sortField, sortDirection]);
+  const sortedItems = useMemo(
+    () => sortByField(items, sortField, sortDirection),
+    [items, sortField, sortDirection]
+  );
 
   return { sortField, sortDirection, sortedItems, handleSort };
 }
