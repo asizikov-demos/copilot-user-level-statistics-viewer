@@ -21,9 +21,10 @@ import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { ModeImpactData } from '../domain/calculators/metricCalculators';
 import type { VoidCallback } from '../types/events';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler, TooltipItem } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
+import { registerChartJS } from './charts/utils/chartSetup';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Filler);
+registerChartJS();
 
 interface UserDetailsViewProps {
   userDetails: UserDetailedMetrics;
