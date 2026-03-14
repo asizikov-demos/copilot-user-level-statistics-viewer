@@ -9,7 +9,7 @@ export function sortByField<T, K extends keyof T>(
   sortField: K | null,
   sortDirection: SortDirection,
 ): T[] {
-  if (!sortField) return [...items];
+  if (sortField == null) return [...items];
 
   return [...items].sort((a, b) => {
     let aVal = a[sortField];
