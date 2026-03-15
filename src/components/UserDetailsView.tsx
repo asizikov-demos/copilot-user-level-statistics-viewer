@@ -495,6 +495,21 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         items={summaryCards}
       />
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
+        </div>
+        <div className="lg:col-span-1">
+          <FeatureAdoptionRadarChart
+            agentInteractions={agentInteractions}
+            planInteractions={planInteractions}
+            cliInteractions={cliInteractions}
+            askModeInteractions={askModeInteractions}
+            editModeInteractions={editModeInteractions}
+          />
+        </div>
+      </div>
+
       <ModeImpactChart
         data={filledCombinedImpact}
         title="Combined Copilot Impact"
@@ -558,21 +573,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         )}
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
-        </div>
-        <div className="lg:col-span-1">
-          <FeatureAdoptionRadarChart
-            agentInteractions={agentInteractions}
-            planInteractions={planInteractions}
-            cliInteractions={cliInteractions}
-            askModeInteractions={askModeInteractions}
-            editModeInteractions={editModeInteractions}
-          />
-        </div>
-      </div>
-
       <UserSummaryChart
         usedChat={usedChat}
         usedAgent={usedAgent}
