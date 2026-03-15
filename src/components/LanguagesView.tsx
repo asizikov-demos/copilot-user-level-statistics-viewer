@@ -85,9 +85,6 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
   };
 
   const totalLanguages = languages.length;
-  const totalGenerations = languages.reduce((sum, lang) => sum + lang.totalGenerations, 0);
-  const totalAcceptances = languages.reduce((sum, lang) => sum + lang.totalAcceptances, 0);
-  const totalEngagements = languages.reduce((sum, lang) => sum + lang.totalEngagements, 0);
   const totalUsers = Math.max(...languages.map(lang => lang.uniqueUsers), 0);
   const totalLocAdded = languages.reduce((sum, lang) => sum + lang.locAdded, 0);
   const totalLocDeleted = languages.reduce((sum, lang) => sum + lang.locDeleted, 0);
@@ -101,21 +98,6 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       value: totalLanguages,
       label: 'Total Languages',
       accent: 'blue' as const,
-    },
-    {
-      value: totalEngagements,
-      label: 'Total Engagements',
-      accent: 'purple' as const,
-    },
-    {
-      value: totalGenerations,
-      label: 'Code Generations',
-      accent: 'green' as const,
-    },
-    {
-      value: totalAcceptances,
-      label: 'Code Acceptances',
-      accent: 'orange' as const,
     },
     {
       value: totalUsers,
@@ -418,7 +400,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 2, md: 4, lg: 9 }}
+        columns={{ base: 2, md: 5 }}
         gapClassName="gap-4"
         items={summaryCards}
       />
