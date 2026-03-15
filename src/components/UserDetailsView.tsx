@@ -19,12 +19,36 @@ import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndF
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
-import type { ModeImpactData } from '../domain/calculators/metricCalculators';
+import type { ModeImpactData, DailyPRUAnalysisData, DailyModelUsageData } from '../domain/calculators/metricCalculators';
 import type { VoidCallback } from '../types/events';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 
 registerChartJS();
+
+function generateDateRange(startDay: string, endDay: string): string[] {
+  const start = new Date(startDay);
+  const end = new Date(endDay);
+  const dates: string[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+    dates.push(cur.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
+function fillPRUAnalysis(data: DailyPRUAnalysisData[], startDay: string, endDay: string): DailyPRUAnalysisData[] {
+  const dataMap = new Map(data.map(d => [d.date, d]));
+  return generateDateRange(startDay, endDay).map(date =>
+    dataMap.get(date) ?? { date, pruRequests: 0, standardRequests: 0, pruPercentage: 0, totalPRUs: 0, serviceValue: 0, topModel: '', topModelPRUs: 0, topModelIsPremium: false, models: [] }
+  );
+}
+
+function fillModelUsage(data: DailyModelUsageData[], startDay: string, endDay: string): DailyModelUsageData[] {
+  const dataMap = new Map(data.map(d => [d.date, d]));
+  return generateDateRange(startDay, endDay).map(date =>
+    dataMap.get(date) ?? { date, pruModels: 0, standardModels: 0, unknownModels: 0, totalPRUs: 0, serviceValue: 0 }
+  );
+}
 
 interface UserDetailsViewProps {
   userDetails: UserDetailedMetrics;
@@ -235,7 +259,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       new Set(userDetails.days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
     ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
 
-    const allDays = userDetails.days.map(d => d.day).sort();
+    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
     const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const languageColors: Record<string, string> = {
@@ -308,14 +332,14 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [userDetails.days]);
+  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const modelBarChartData = useMemo(() => {
     const allModels = Array.from(
       new Set(userDetails.days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
     ).filter(model => model && model !== '' && model !== 'unknown').sort();
 
-    const allDays = userDetails.days.map(d => d.day).sort();
+    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
     const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const modelColors: Record<string, string> = {
@@ -354,7 +378,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [userDetails.days]);
+  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const languageBarChartOptions = {
     responsive: true,
@@ -586,6 +610,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       <ClientActivityChart
         ideAggregates={ideAggregates}
         days={userDetails.days}
+        reportStartDay={userDetails.reportStartDay}
+        reportEndDay={userDetails.reportEndDay}
         pluginVersions={userDetails.pluginVersions}
         cliVersions={userDetails.cliVersions}
         />
@@ -631,9 +657,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         languageBarChartOptions={languageBarChartOptions}
         />
 
-      <PRUCostAnalysisChart data={userDetails.dailyPRUAnalysis} />
+      <PRUCostAnalysisChart data={fillPRUAnalysis(userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay)} />
 
-      <PRUModelUsageChart data={userDetails.dailyModelUsage} />
+      <PRUModelUsageChart data={fillModelUsage(userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay)} />
 
       <UserActivityByModelAndFeatureChart
         modelFeatureAggregates={modelFeatureAggregates}

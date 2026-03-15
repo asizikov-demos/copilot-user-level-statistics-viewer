@@ -10,6 +10,16 @@ import type { UserDayData } from '../../types/metrics';
 
 registerChartJS();
 
+function generateAllDays(startDay: string, endDay: string): string[] {
+  const start = new Date(startDay);
+  const end = new Date(endDay);
+  const dates: string[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+    dates.push(cur.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
 interface IDEAggregateItem {
   ide: string;
   user_initiated_interaction_count: number;
@@ -25,6 +35,8 @@ interface ClientActivityChartProps {
   ideAggregates: IDEAggregateItem[];
   days: UserDayData[];
   title?: string;
+  reportStartDay: string;
+  reportEndDay: string;
   pluginVersions?: {
     plugin: string;
     plugin_version: string;
@@ -64,6 +76,8 @@ export default function ClientActivityChart({
   ideAggregates,
   days,
   title = 'Activity by Client',
+  reportStartDay,
+  reportEndDay,
   pluginVersions,
   cliVersions,
 }: ClientActivityChartProps) {
@@ -74,7 +88,7 @@ export default function ClientActivityChart({
       new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
-    const allDays = days.map(d => d.day).sort();
+    const allDays = generateAllDays(reportStartDay, reportEndDay);
     const dayMap = new Map(days.map(d => [d.day, d]));
 
     const datasets = allIDEs.map((ide, index) => {
@@ -113,7 +127,7 @@ export default function ClientActivityChart({
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [days]);
+  }, [days, reportStartDay, reportEndDay]);
 
   const barChartOptions: ChartOptions<'bar'> = useMemo(() => ({
     responsive: true,
