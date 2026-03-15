@@ -212,20 +212,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
       ]}
       chartHeight="h-96"
       footer={
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <InsightsCard title="PRU Efficiency" variant="purple">
-            <p>
-              Average cost per PRU request: ${totalPRURequests > 0 ? Math.round((totalCost / totalPRURequests) * 100) / 100 : 0}.
-              {avgPRUPercentage > 30 ? ' High premium model usage.' : avgPRUPercentage > 15 ? ' Moderate premium usage.' : ' Primarily standard models.'}
-            </p>
-          </InsightsCard>
-          <InsightsCard title="Cost Optimization" variant="green">
-            <p>
-              {avgPRUPercentage > 50 ? 'Consider reviewing premium model usage for optimization opportunities.' : 
-               avgPRUPercentage > 25 ? 'Balanced usage of premium and standard models.' :
-               'Efficient use of included models minimizes additional costs.'}
-            </p>
-          </InsightsCard>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
           <InsightsCard title="Model Insights" variant="blue">
             <p>
               Top premium models used: {topModels.length > 0 ? topModels.slice(0, 3).join(', ') : 'None'}

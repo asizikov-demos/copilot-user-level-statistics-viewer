@@ -12,6 +12,7 @@ import { DailyModelUsageData } from '../../domain/calculators/metricCalculators'
 import ChartContainer from '../ui/ChartContainer';
 import ChartToggleButtons from '../ui/ChartToggleButtons';
 import InsightsCard from '../ui/InsightsCard';
+import { computePruAdoptionInsight, computeBillingCycleInsight } from '../../domain/pruAdoptionInsights';
 
 registerChartJS();
 
@@ -34,6 +35,8 @@ export default function PRUModelUsageChart({ data, hideInsights = false }: PRUMo
   const totalPRUs = calculateTotal(data, d => d.totalPRUs);
   const totalCost = calculateTotal(data, d => d.serviceValue);
   const grandTotal = totalPRURequests + totalStandardRequests + totalUnknownRequests;
+  const pruAdoptionInsight = computePruAdoptionInsight(totalPRURequests, totalStandardRequests, totalUnknownRequests);
+  const billingCycleInsight = computeBillingCycleInsight(data);
   const avgPRUs = calculateAverage(data, d => d.totalPRUs);
   const avgCost = calculateAverage(data, d => d.serviceValue);
 
@@ -105,6 +108,46 @@ export default function PRUModelUsageChart({ data, hideInsights = false }: PRUMo
                 <strong className="ml-1">Standard Models:</strong> GPT-4.1 and GPT-4o included with paid plans at no additional cost.
               </p>
             </InsightsCard>
+
+            <InsightsCard title={pruAdoptionInsight.title} variant={pruAdoptionInsight.variant}>
+              <p>
+                {pruAdoptionInsight.message}
+                {pruAdoptionInsight.ctaHref && (
+                  <>
+                    {' '}
+                    <a
+                      href={pruAdoptionInsight.ctaHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {pruAdoptionInsight.ctaLabel}
+                    </a>
+                  </>
+                )}
+              </p>
+            </InsightsCard>
+
+            {billingCycleInsight && (
+              <InsightsCard title={billingCycleInsight.title} variant={billingCycleInsight.variant}>
+                <p>
+                  {billingCycleInsight.message}
+                  {billingCycleInsight.ctaHref && (
+                    <>
+                      {' '}
+                      <a
+                        href={billingCycleInsight.ctaHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {billingCycleInsight.ctaLabel}
+                      </a>
+                    </>
+                  )}
+                </p>
+              </InsightsCard>
+            )}
 
             {totalUnknownRequests > 0 && (
               <InsightsCard title="Unknown Requests Detected" variant="orange">
