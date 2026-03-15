@@ -111,9 +111,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   };
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
-  const totalInteractions = userSummary.total_user_initiated_interactions + totalCliPrompts;
-  const totalGeneration = userSummary.total_code_generation_activities;
-  const totalAcceptance = userSummary.total_code_acceptance_activities;
   const totalStandardModelRequests = userDetails.totalStandardModelRequests;
   const totalPremiumModelRequests = userDetails.totalPremiumModelRequests;
   const daysActive = userSummary.days_active;
@@ -462,21 +459,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const summaryCards = [
     {
-      value: totalInteractions,
-      label: 'Total Interactions',
-      accent: 'blue' as const,
-    },
-    {
-      value: totalGeneration,
-      label: 'Code Generation',
-      accent: 'green' as const,
-    },
-    {
-      value: totalAcceptance,
-      label: 'Code Acceptance',
-      accent: 'purple' as const,
-    },
-    {
       value: totalStandardModelRequests,
       label: 'Standard Model Requests',
       accent: 'amber' as const,
@@ -508,7 +490,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 2, md: 6 }}
+        columns={{ base: 1, md: 3 }}
         gapClassName="gap-4"
         items={summaryCards}
       />
