@@ -5,7 +5,7 @@ import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { createLineDataset } from './utils/chartStyles';
-import { chartColors } from './utils/chartColors';
+import { chatModeColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import { calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import { DailyChatUsersData } from '../../domain/calculators/metricCalculators';
@@ -23,21 +23,24 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
   const avgEditMode = calculateAverage(data, d => d.editModeUsers);
   const avgInlineMode = calculateAverage(data, d => d.inlineModeUsers);
   const avgPlanMode = calculateAverage(data, d => d.planModeUsers);
+  const avgCliUsers = calculateAverage(data, d => d.cliUsers);
 
   const maxAskMode = findMaxValue(data, d => d.askModeUsers);
   const maxAgentMode = findMaxValue(data, d => d.agentModeUsers);
   const maxEditMode = findMaxValue(data, d => d.editModeUsers);
   const maxInlineMode = findMaxValue(data, d => d.inlineModeUsers);
   const maxPlanMode = findMaxValue(data, d => d.planModeUsers);
+  const maxCliUsers = findMaxValue(data, d => d.cliUsers);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
     datasets: [
-      createLineDataset(chartColors.green.solid, 'Chat: Ask Mode', data.map(d => d.askModeUsers)),
-      createLineDataset(chartColors.purple.solid, 'Chat: Agent Mode', data.map(d => d.agentModeUsers)),
-      createLineDataset(chartColors.amber.solid, 'Chat: Edit Mode', data.map(d => d.editModeUsers)),
-      createLineDataset(chartColors.red.solid, 'Chat: Inline Mode', data.map(d => d.inlineModeUsers)),
-      createLineDataset(chartColors.indigo.solid, 'Chat: Plan Mode', data.map(d => d.planModeUsers)),
+      createLineDataset(chatModeColors.ask.solid, 'Chat: Ask Mode', data.map(d => d.askModeUsers)),
+      createLineDataset(chatModeColors.agent.solid, 'Chat: Agent Mode', data.map(d => d.agentModeUsers)),
+      createLineDataset(chatModeColors.edit.solid, 'Chat: Edit Mode', data.map(d => d.editModeUsers)),
+      createLineDataset(chatModeColors.inline.solid, 'Chat: Inline Mode', data.map(d => d.inlineModeUsers)),
+      createLineDataset(chatModeColors.plan.solid, 'Chat: Plan Mode', data.map(d => d.planModeUsers)),
+      createLineDataset(chatModeColors.cli.solid, 'Copilot CLI', data.map(d => d.cliUsers)),
     ],
   };
 
@@ -76,25 +79,29 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
         { label: 'Avg Edit', value: avgEditMode },
         { label: 'Avg Inline', value: avgInlineMode },
         { label: 'Avg Plan', value: avgPlanMode },
+        { label: 'Avg CLI', value: avgCliUsers },
       ]}
       isEmpty={data.length === 0}
       emptyState="No chat user data available"
       footer={
-        <div className="grid grid-cols-5 gap-4 text-xs text-gray-500">
+        <div className="grid grid-cols-6 gap-4 text-xs text-gray-500">
           <div>
             <span className="font-medium text-green-600">Ask Mode:</span> Max {maxAskMode} users
           </div>
           <div>
-            <span className="font-medium text-purple-600">Agent Mode:</span> Max {maxAgentMode} users
+            <span className="font-medium text-blue-600">Agent Mode:</span> Max {maxAgentMode} users
           </div>
           <div>
-            <span className="font-medium text-amber-600">Edit Mode:</span> Max {maxEditMode} users
+            <span className="font-medium text-gray-900">Edit Mode:</span> Max {maxEditMode} users
           </div>
           <div>
-            <span className="font-medium text-red-600">Inline Mode:</span> Max {maxInlineMode} users
+            <span className="font-medium text-amber-600">Inline Mode:</span> Max {maxInlineMode} users
           </div>
           <div>
-            <span className="font-medium text-indigo-600">Plan Mode:</span> Max {maxPlanMode} users
+            <span className="font-medium text-purple-600">Plan Mode:</span> Max {maxPlanMode} users
+          </div>
+          <div>
+            <span className="font-medium text-rose-600">CLI:</span> Max {maxCliUsers} users
           </div>
         </div>
       }

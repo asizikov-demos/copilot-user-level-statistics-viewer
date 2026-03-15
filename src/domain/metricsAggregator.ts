@@ -327,9 +327,9 @@ export function aggregateMetrics(
     aggregated: {
     stats: computeStats(statsAccumulator, filteredMetricsCount),
     userSummaries: computeUserSummaries(userSummaryAccumulator),
-    engagementData: computeEngagementData(engagementAccumulator),
-    chatUsersData: computeChatUsersData(chatAccumulator),
-    chatRequestsData: computeChatRequestsData(chatAccumulator),
+    engagementData: computeEngagementData(engagementAccumulator, cliUsageAccumulator),
+    chatUsersData: computeChatUsersData(chatAccumulator, cliUsageAccumulator),
+    chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsageAccumulator),
     languageStats: computeLanguageStats(languageAccumulator),
     modelUsageData: computeDailyModelUsageData(modelUsageAccumulator),
     featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),

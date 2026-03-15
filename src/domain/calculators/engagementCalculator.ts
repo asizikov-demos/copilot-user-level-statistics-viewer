@@ -1,3 +1,5 @@
+import { CliUsageAccumulator } from './cliUsageCalculator';
+
 export interface DailyEngagementData {
   date: string;
   activeUsers: number;
@@ -31,18 +33,48 @@ export function accumulateEngagement(
 }
 
 export function computeEngagementData(
-  accumulator: EngagementAccumulator
+  accumulator: EngagementAccumulator,
+  cliAccumulator?: CliUsageAccumulator
 ): DailyEngagementData[] {
-  const totalUsers = accumulator.allUniqueUsers.size;
+  const cliAllUsers = new Set<number>();
+  if (cliAccumulator) {
+    for (const data of cliAccumulator.dailySessions.values()) {
+      for (const userId of data.users) {
+        cliAllUsers.add(userId);
+      }
+    }
+  }
 
-  return Array.from(accumulator.dailyEngagement.entries())
-    .map(([date, activeUsersSet]) => ({
-      date,
-      activeUsers: activeUsersSet.size,
-      totalUsers,
-      engagementPercentage: totalUsers > 0
-        ? Math.round((activeUsersSet.size / totalUsers) * 100 * 100) / 100
-        : 0
-    }))
+  const allUniqueUsers = new Set(accumulator.allUniqueUsers);
+  for (const userId of cliAllUsers) {
+    allUniqueUsers.add(userId);
+  }
+  const totalUsers = allUniqueUsers.size;
+
+  const allDates = new Set(accumulator.dailyEngagement.keys());
+  if (cliAccumulator) {
+    for (const date of cliAccumulator.dailySessions.keys()) {
+      allDates.add(date);
+    }
+  }
+
+  return Array.from(allDates)
+    .map(date => {
+      const activeUsersSet = new Set(accumulator.dailyEngagement.get(date) ?? []);
+      const cliData = cliAccumulator?.dailySessions.get(date);
+      if (cliData) {
+        for (const userId of cliData.users) {
+          activeUsersSet.add(userId);
+        }
+      }
+      return {
+        date,
+        activeUsers: activeUsersSet.size,
+        totalUsers,
+        engagementPercentage: totalUsers > 0
+          ? Math.round((activeUsersSet.size / totalUsers) * 100 * 100) / 100
+          : 0,
+      };
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
