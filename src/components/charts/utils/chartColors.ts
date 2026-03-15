@@ -57,19 +57,39 @@ export const chartColors = {
     alpha: 'rgba(168, 85, 247, 0.1)',
     alpha60: 'rgba(168, 85, 247, 0.6)',
   },
+  cyan: {
+    solid: 'rgb(6, 182, 212)',
+    alpha: 'rgba(6, 182, 212, 0.1)',
+    alpha60: 'rgba(6, 182, 212, 0.6)',
+  },
+  rose: {
+    solid: 'rgb(244, 63, 94)',
+    alpha: 'rgba(244, 63, 94, 0.1)',
+    alpha60: 'rgba(244, 63, 94, 0.6)',
+  },
+  orange: {
+    solid: 'rgb(249, 115, 22)',
+    alpha: 'rgba(249, 115, 22, 0.1)',
+    alpha60: 'rgba(249, 115, 22, 0.6)',
+  },
+  black: {
+    solid: 'rgb(23, 23, 23)',
+    alpha: 'rgba(23, 23, 23, 0.1)',
+    alpha60: 'rgba(23, 23, 23, 0.6)',
+  },
 } as const;
 
 /**
  * Feature-specific colors for consistent representation
  */
 export const featureColors = {
-  agentMode: chartColors.red,
   askMode: chartColors.green,
-  editMode: chartColors.amber,
-  inlineMode: chartColors.violet,
-  planMode: chartColors.indigo,
+  agentMode: chartColors.blue,
+  editMode: chartColors.black,
+  inlineMode: chartColors.amber,
+  planMode: chartColors.purple,
   codeCompletion: chartColors.green,
-  cli: chartColors.pink,
+  cli: chartColors.rose,
   other: chartColors.gray,
 } as const;
 
@@ -78,10 +98,11 @@ export const featureColors = {
  */
 export const chatModeColors = {
   ask: chartColors.green,
-  agent: chartColors.purple,
-  edit: chartColors.amber,
-  inline: chartColors.red,
-  plan: chartColors.indigo,
+  agent: chartColors.blue,
+  edit: chartColors.black,
+  inline: chartColors.amber,
+  plan: chartColors.purple,
+  cli: chartColors.rose,
 } as const;
 
 /**

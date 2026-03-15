@@ -1,3 +1,5 @@
+import { CliUsageAccumulator } from './cliUsageCalculator';
+
 export interface DailyChatUsersData {
   date: string;
   askModeUsers: number;
@@ -5,6 +7,7 @@ export interface DailyChatUsersData {
   editModeUsers: number;
   inlineModeUsers: number;
   planModeUsers: number;
+  cliUsers: number;
 }
 
 export interface DailyChatRequestsData {
@@ -14,6 +17,7 @@ export interface DailyChatRequestsData {
   editModeRequests: number;
   inlineModeRequests: number;
   planModeRequests: number;
+  cliSessions: number;
 }
 
 export interface ChatAccumulator {
@@ -98,24 +102,52 @@ export function accumulateChatFeature(
   }
 }
 
-export function computeChatUsersData(accumulator: ChatAccumulator): DailyChatUsersData[] {
-  return Array.from(accumulator.dailyChatUsers.entries())
-    .map(([date, data]) => ({
-      date,
-      askModeUsers: data.askModeUsers.size,
-      agentModeUsers: data.agentModeUsers.size,
-      editModeUsers: data.editModeUsers.size,
-      inlineModeUsers: data.inlineModeUsers.size,
-      planModeUsers: data.planModeUsers.size,
-    }))
+export function computeChatUsersData(accumulator: ChatAccumulator, cliAccumulator?: CliUsageAccumulator): DailyChatUsersData[] {
+  const allDates = new Set<string>(accumulator.dailyChatUsers.keys());
+  if (cliAccumulator) {
+    for (const date of cliAccumulator.dailySessions.keys()) {
+      allDates.add(date);
+    }
+  }
+
+  return Array.from(allDates)
+    .map(date => {
+      const chatData = accumulator.dailyChatUsers.get(date);
+      const cliData = cliAccumulator?.dailySessions.get(date);
+      return {
+        date,
+        askModeUsers: chatData?.askModeUsers.size ?? 0,
+        agentModeUsers: chatData?.agentModeUsers.size ?? 0,
+        editModeUsers: chatData?.editModeUsers.size ?? 0,
+        inlineModeUsers: chatData?.inlineModeUsers.size ?? 0,
+        planModeUsers: chatData?.planModeUsers.size ?? 0,
+        cliUsers: cliData?.users.size ?? 0,
+      };
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-export function computeChatRequestsData(accumulator: ChatAccumulator): DailyChatRequestsData[] {
-  return Array.from(accumulator.dailyChatRequests.entries())
-    .map(([date, data]) => ({
-      date,
-      ...data,
-    }))
+export function computeChatRequestsData(accumulator: ChatAccumulator, cliAccumulator?: CliUsageAccumulator): DailyChatRequestsData[] {
+  const allDates = new Set<string>(accumulator.dailyChatRequests.keys());
+  if (cliAccumulator) {
+    for (const date of cliAccumulator.dailySessions.keys()) {
+      allDates.add(date);
+    }
+  }
+
+  return Array.from(allDates)
+    .map(date => {
+      const chatData = accumulator.dailyChatRequests.get(date);
+      const cliData = cliAccumulator?.dailySessions.get(date);
+      return {
+        date,
+        askModeRequests: chatData?.askModeRequests ?? 0,
+        agentModeRequests: chatData?.agentModeRequests ?? 0,
+        editModeRequests: chatData?.editModeRequests ?? 0,
+        inlineModeRequests: chatData?.inlineModeRequests ?? 0,
+        planModeRequests: chatData?.planModeRequests ?? 0,
+        cliSessions: cliData?.sessionCount ?? 0,
+      };
+    })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }

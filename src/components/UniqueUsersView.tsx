@@ -13,7 +13,7 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_code_acceptance_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
 
 export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
@@ -72,14 +72,6 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
       className: valueCellClass,
     },
     {
-      id: 'total_code_acceptance_activities',
-      header: 'Code Acceptance',
-      sortable: true,
-      accessor: 'total_code_acceptance_activities',
-      headerClassName: `${headerBaseClass} w-1/8`,
-      className: valueCellClass,
-    },
-    {
       id: 'total_loc_added',
       header: 'LOC Added',
       sortable: true,
@@ -114,8 +106,8 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
     {
       id: 'features_used',
       header: 'Features Used',
-      headerClassName: `${headerBaseClass} w-1/8`,
-      className: 'px-6 py-4 whitespace-nowrap',
+      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider w-1/4',
+      className: 'px-6 py-4 whitespace-nowrap min-w-[280px]',
       renderCell: (user) => (
         <div className="flex flex-wrap gap-1">
           {user.used_chat && (
@@ -133,43 +125,25 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
               CLI
             </span>
           )}
-          {!user.used_chat && !user.used_agent && !user.used_cli && (
+          {user.total_code_generation_activities > 0 && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              Completion Only
+              Completions
             </span>
           )}
         </div>
       ),
     },
   ];
-  const totalInteractions = users.reduce((sum, user) => sum + user.total_user_initiated_interactions, 0);
-  const totalGeneration = users.reduce((sum, user) => sum + user.total_code_generation_activities, 0);
-  const totalAcceptance = users.reduce((sum, user) => sum + user.total_code_acceptance_activities, 0);
   const chatUsers = users.filter(user => user.used_chat).length;
   const agentUsers = users.filter(user => user.used_agent).length;
   const cliUsers = users.filter(user => user.used_cli).length;
-  const completionOnlyUsers = users.filter(user => !user.used_chat && !user.used_agent && !user.used_cli).length;
+  const completionUsers = users.filter(user => user.total_code_generation_activities > 0).length;
 
   const summaryCards = [
     {
       value: users.length,
       label: 'Total Users',
       accent: 'blue' as const,
-    },
-    {
-      value: totalInteractions,
-      label: 'Total Interactions',
-      accent: 'green' as const,
-    },
-    {
-      value: totalGeneration,
-      label: 'Code Generation',
-      accent: 'purple' as const,
-    },
-    {
-      value: totalAcceptance,
-      label: 'Code Acceptance',
-      accent: 'orange' as const,
     },
     {
       value: chatUsers,
@@ -187,8 +161,8 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
       accent: 'rose' as const,
     },
     {
-      value: completionOnlyUsers,
-      label: 'Completion Only Users',
+      value: completionUsers,
+      label: 'Completion Users',
       accent: 'amber' as const,
     },
   ];
@@ -204,7 +178,7 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 2, md: 4 }}
+        columns={{ base: 2, md: 5 }}
         gapClassName="gap-4"
         items={summaryCards}
       />
