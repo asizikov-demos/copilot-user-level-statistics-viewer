@@ -64,4 +64,4 @@ Before delegating to the Git Workflow agent for commits/PR, run the **Code Revie
 2. **User approval** — Commit Gate (above)
 3. **Git Workflow** — handles branch, commits, push, PR. Runs build/lint/test once as a gate. Aborts on failure — does NOT fix code.
 
-The Git Workflow agent is pure mechanics — it never invokes Code Review and never fixes code. If its build gate fails, it aborts and returns the error. Fix the issue and re-run the pipeline from step 1. Code Review does not need to re-run for build/lint/test-only fixes unless the fix involved logic changes.
+The Git Workflow agent is pure mechanics — it never invokes Code Review and never fixes code. If its build gate fails, it aborts and returns the error. After fixing the issue, re-run the pipeline as follows: if the fix is build/lint/test-only and does not change application logic or behavior, restart from step 3 (Git Workflow); if the fix involves logic/behavior changes, restart from step 1 so Code Review runs again.

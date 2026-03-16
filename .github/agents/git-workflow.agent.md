@@ -1,6 +1,6 @@
 ---
 description: 'Handles git workflow: atomic commits with conventional prefixes, branch management, PR creation with structured summaries'
-tools: ['runCommands', 'changes', 'problems', 'agent']
+tools: ['runCommands', 'changes', 'problems']
 model: 'GPT-5.3 Codex (copilot)'
 ---
 
