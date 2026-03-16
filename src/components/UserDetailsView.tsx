@@ -19,12 +19,36 @@ import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndF
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
-import type { ModeImpactData } from '../domain/calculators/metricCalculators';
+import type { ModeImpactData, DailyPRUAnalysisData, DailyModelUsageData } from '../domain/calculators/metricCalculators';
 import type { VoidCallback } from '../types/events';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 
 registerChartJS();
+
+function generateDateRange(startDay: string, endDay: string): string[] {
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
+  const dates: string[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
+    dates.push(cur.toISOString().split('T')[0]);
+  }
+  return dates;
+}
+
+function fillPRUAnalysis(data: DailyPRUAnalysisData[], startDay: string, endDay: string): DailyPRUAnalysisData[] {
+  const dataMap = new Map(data.map(d => [d.date, d]));
+  return generateDateRange(startDay, endDay).map(date =>
+    dataMap.get(date) ?? { date, pruRequests: 0, standardRequests: 0, pruPercentage: 0, totalPRUs: 0, serviceValue: 0, topModel: 'unknown', topModelPRUs: 0, topModelIsPremium: false, models: [] }
+  );
+}
+
+function fillModelUsage(data: DailyModelUsageData[], startDay: string, endDay: string): DailyModelUsageData[] {
+  const dataMap = new Map(data.map(d => [d.date, d]));
+  return generateDateRange(startDay, endDay).map(date =>
+    dataMap.get(date) ?? { date, pruModels: 0, standardModels: 0, unknownModels: 0, totalPRUs: 0, serviceValue: 0 }
+  );
+}
 
 interface UserDetailsViewProps {
   userDetails: UserDetailedMetrics;
@@ -37,10 +61,10 @@ interface UserDetailsViewProps {
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
   if (data.length === 0) return [];
   const dataMap = new Map(data.map(d => [d.date, d]));
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const result: ModeImpactData[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const date = cur.toISOString().split('T')[0];
     result.push(dataMap.get(date) ?? {
       date,
@@ -65,10 +89,10 @@ function buildDailyCliSeries<T>(
       .filter(d => d.totals_by_cli)
       .map(d => [d.day, d.totals_by_cli as NonNullable<UserDayData['totals_by_cli']>]),
   );
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const result: T[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const date = cur.toISOString().split('T')[0];
     result.push(buildItem(date, cliMap.get(date)));
   }
@@ -81,6 +105,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledPRUAnalysis = useMemo(() => fillPRUAnalysis(userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledModelUsage = useMemo(() => fillModelUsage(userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -235,7 +261,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       new Set(userDetails.days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
     ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
 
-    const allDays = userDetails.days.map(d => d.day).sort();
+    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
     const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const languageColors: Record<string, string> = {
@@ -308,14 +334,14 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [userDetails.days]);
+  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const modelBarChartData = useMemo(() => {
     const allModels = Array.from(
       new Set(userDetails.days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
     ).filter(model => model && model !== '' && model !== 'unknown').sort();
 
-    const allDays = userDetails.days.map(d => d.day).sort();
+    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
     const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
 
     const modelColors: Record<string, string> = {
@@ -354,7 +380,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [userDetails.days]);
+  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const languageBarChartOptions = {
     responsive: true,
@@ -495,6 +521,21 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         items={summaryCards}
       />
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
+        </div>
+        <div className="lg:col-span-1">
+          <FeatureAdoptionRadarChart
+            agentInteractions={agentInteractions}
+            planInteractions={planInteractions}
+            cliInteractions={cliInteractions}
+            askModeInteractions={askModeInteractions}
+            editModeInteractions={editModeInteractions}
+          />
+        </div>
+      </div>
+
       <ModeImpactChart
         data={filledCombinedImpact}
         title="Combined Copilot Impact"
@@ -558,21 +599,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         )}
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
-        </div>
-        <div className="lg:col-span-1">
-          <FeatureAdoptionRadarChart
-            agentInteractions={agentInteractions}
-            planInteractions={planInteractions}
-            cliInteractions={cliInteractions}
-            askModeInteractions={askModeInteractions}
-            editModeInteractions={editModeInteractions}
-          />
-        </div>
-      </div>
-
       <UserSummaryChart
         usedChat={usedChat}
         usedAgent={usedAgent}
@@ -586,6 +612,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       <ClientActivityChart
         ideAggregates={ideAggregates}
         days={userDetails.days}
+        reportStartDay={userDetails.reportStartDay}
+        reportEndDay={userDetails.reportEndDay}
         pluginVersions={userDetails.pluginVersions}
         cliVersions={userDetails.cliVersions}
         />
@@ -631,9 +659,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         languageBarChartOptions={languageBarChartOptions}
         />
 
-      <PRUCostAnalysisChart data={userDetails.dailyPRUAnalysis} />
+      <PRUCostAnalysisChart data={filledPRUAnalysis} />
 
-      <PRUModelUsageChart data={userDetails.dailyModelUsage} />
+      <PRUModelUsageChart data={filledModelUsage} />
 
       <UserActivityByModelAndFeatureChart
         modelFeatureAggregates={modelFeatureAggregates}
