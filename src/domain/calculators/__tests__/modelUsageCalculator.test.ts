@@ -7,6 +7,7 @@ import {
   computeModelFeatureDistributionData,
 } from '../modelUsageCalculator';
 import { SERVICE_VALUE_RATE } from '../../modelConfig';
+import { calculateTotal, calculateAverage, calculatePercentage } from '../statsCalculators';
 
 describe('modelUsageCalculator', () => {
   describe('PRU calculation (interactions × multiplier)', () => {
@@ -148,20 +149,14 @@ describe('modelUsageCalculator', () => {
       expect(results[0].pruPercentage).toBe(100); // Day 1: 50/50
       expect(results[1].pruPercentage).toBe(0);   // Day 2: 0/2
 
-      // Overall ratio: 50 premium out of 52 total = 96.15%
-      const totalPRU = results.reduce((sum, d) => sum + d.pruRequests, 0);
-      const totalStandard = results.reduce((sum, d) => sum + d.standardRequests, 0);
-      const totalRequests = totalPRU + totalStandard;
-      const overallPercentage = Math.round((totalPRU / totalRequests) * 100 * 100) / 100;
-
-      expect(overallPercentage).toBeCloseTo(96.15, 1);
+      // calculatePercentage gives the correct overall ratio: 50/52 = 96.15%
+      const totalPRU = calculateTotal(results, d => d.pruRequests);
+      const totalStandard = calculateTotal(results, d => d.standardRequests);
+      expect(calculatePercentage(totalPRU, totalPRU + totalStandard)).toBeCloseTo(96.15, 1);
 
       // Averaging daily percentages would give (100 + 0) / 2 = 50% — misleading
-      const avgDailyPercentage = results.reduce((sum, d) => sum + d.pruPercentage, 0) / results.length;
-      expect(avgDailyPercentage).toBe(50);
-
-      // The overall ratio is the correct metric for aggregate display
-      expect(overallPercentage).not.toBeCloseTo(avgDailyPercentage, 0);
+      const avgDaily = calculateAverage(results, d => d.pruPercentage);
+      expect(avgDaily).toBe(50);
     });
   });
 

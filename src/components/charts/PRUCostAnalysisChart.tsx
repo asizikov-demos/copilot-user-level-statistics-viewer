@@ -206,7 +206,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
       summaryStats={[
         { value: Math.round(totalPRUs * 100) / 100, label: 'Total PRUs', sublabel: `${data.length > 0 ? Math.round((totalPRUs / data.length) * 100) / 100 : 0}/day avg`, colorClass: 'text-purple-600' },
         { value: `$${Math.round(totalCost * 100) / 100}`, label: 'Service Value', sublabel: `$${data.length > 0 ? Math.round((totalCost / data.length) * 100) / 100 : 0}/day avg`, colorClass: 'text-green-600' },
-        { value: `${overallPRUPercentage}%`, label: 'Avg PRU Usage', sublabel: `${totalPRURequests}/${totalRequests} requests`, colorClass: 'text-red-600' },
+        { value: `${overallPRUPercentage}%`, label: 'Overall PRU Usage', sublabel: `${totalPRURequests}/${totalRequests} requests`, colorClass: 'text-red-600' },
         { value: `$${Math.round(maxCostDay.serviceValue * 100) / 100}`, label: 'Peak Service Value Day', sublabel: maxCostDay.date ? formatShortDate(maxCostDay.date) : 'N/A', colorClass: 'text-orange-600' },
         { value: topModels.length, label: 'Premium Models', sublabel: 'Used in period', colorClass: 'text-blue-600' },
       ]}
