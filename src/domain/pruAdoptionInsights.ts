@@ -18,10 +18,11 @@ interface DailyModelUsageEntry {
 }
 
 /**
- * Detects whether a user's premium request usage drops sharply in the last week
- * of a billing period (month), which signals they may be exhausting their quota.
- * Returns an insight if the data range crosses a month boundary and standard
- * models dominate (≥50%) in the last week of the preceding month.
+ * Detects whether standard models dominate usage in the last week of a billing
+ * period (month), which may signal the user is exhausting their premium request
+ * allowance. Returns an insight if the data range crosses a month boundary and
+ * standard models account for ≥50% of requests in the last 7 days of the
+ * preceding month.
  */
 export function computeBillingCycleInsight(
   data: DailyModelUsageEntry[],

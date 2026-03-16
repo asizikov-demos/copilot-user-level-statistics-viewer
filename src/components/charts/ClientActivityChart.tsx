@@ -11,10 +11,10 @@ import type { UserDayData } from '../../types/metrics';
 registerChartJS();
 
 function generateAllDays(startDay: string, endDay: string): string[] {
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const dates: string[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     dates.push(cur.toISOString().split('T')[0]);
   }
   return dates;

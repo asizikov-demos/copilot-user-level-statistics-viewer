@@ -27,10 +27,10 @@ import { registerChartJS } from './charts/utils/chartSetup';
 registerChartJS();
 
 function generateDateRange(startDay: string, endDay: string): string[] {
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const dates: string[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     dates.push(cur.toISOString().split('T')[0]);
   }
   return dates;
@@ -39,7 +39,7 @@ function generateDateRange(startDay: string, endDay: string): string[] {
 function fillPRUAnalysis(data: DailyPRUAnalysisData[], startDay: string, endDay: string): DailyPRUAnalysisData[] {
   const dataMap = new Map(data.map(d => [d.date, d]));
   return generateDateRange(startDay, endDay).map(date =>
-    dataMap.get(date) ?? { date, pruRequests: 0, standardRequests: 0, pruPercentage: 0, totalPRUs: 0, serviceValue: 0, topModel: '', topModelPRUs: 0, topModelIsPremium: false, models: [] }
+    dataMap.get(date) ?? { date, pruRequests: 0, standardRequests: 0, pruPercentage: 0, totalPRUs: 0, serviceValue: 0, topModel: 'unknown', topModelPRUs: 0, topModelIsPremium: false, models: [] }
   );
 }
 
@@ -61,10 +61,10 @@ interface UserDetailsViewProps {
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
   if (data.length === 0) return [];
   const dataMap = new Map(data.map(d => [d.date, d]));
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const result: ModeImpactData[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const date = cur.toISOString().split('T')[0];
     result.push(dataMap.get(date) ?? {
       date,
@@ -89,10 +89,10 @@ function buildDailyCliSeries<T>(
       .filter(d => d.totals_by_cli)
       .map(d => [d.day, d.totals_by_cli as NonNullable<UserDayData['totals_by_cli']>]),
   );
-  const start = new Date(startDay);
-  const end = new Date(endDay);
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
   const result: T[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
     const date = cur.toISOString().split('T')[0];
     result.push(buildItem(date, cliMap.get(date)));
   }
@@ -105,6 +105,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledPRUAnalysis = useMemo(() => fillPRUAnalysis(userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledModelUsage = useMemo(() => fillModelUsage(userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -657,9 +659,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         languageBarChartOptions={languageBarChartOptions}
         />
 
-      <PRUCostAnalysisChart data={fillPRUAnalysis(userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay)} />
+      <PRUCostAnalysisChart data={filledPRUAnalysis} />
 
-      <PRUModelUsageChart data={fillModelUsage(userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay)} />
+      <PRUModelUsageChart data={filledModelUsage} />
 
       <UserActivityByModelAndFeatureChart
         modelFeatureAggregates={modelFeatureAggregates}
