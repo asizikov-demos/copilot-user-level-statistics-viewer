@@ -13,6 +13,7 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 - `npm run dev` — start dev server
 - `npm run build` — production build (runs worker build automatically)
 - `npm run lint` — ESLint
+- `npm run test:run` — run the test suite
 
 > **VS Code note**: avoid running `npm run build` while the "Next.js Development Server" task is active — they conflict.
 
@@ -60,7 +61,7 @@ Exception: if the user's original prompt explicitly requests commits/PR (e.g., "
 
 Before delegating to the Git Workflow agent for commits/PR, run the **Code Review** agent first. The flow is strictly linear:
 
-1. **Code Review** — run as a sub-agent on all changes. If issues are found, fix them before proceeding.
+1. **Code Review** — run as a sub-agent on all changes. If issues are found, the caller updates the code to address them before proceeding; the Code Review agent itself never modifies code.
 2. **User approval** — Commit Gate (above)
 3. **Git Workflow** — handles branch, commits, push, PR. Runs build/lint/test once as a gate. Aborts on failure — does NOT fix code.
 
