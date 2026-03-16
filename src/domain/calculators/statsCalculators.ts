@@ -96,6 +96,23 @@ export function findMinItem<T>(
 }
 
 /**
+ * Calculate a percentage from a numerator and denominator.
+ * Returns 0 if the denominator is 0.
+ * @param numerator - The part value
+ * @param denominator - The whole value
+ * @param decimals - Number of decimal places (default: 2)
+ */
+export function calculatePercentage(
+  numerator: number,
+  denominator: number,
+  decimals: number = 2
+): number {
+  if (denominator === 0) return 0;
+  const factor = Math.pow(10, decimals);
+  return Math.round((numerator / denominator) * 100 * factor) / factor;
+}
+
+/**
  * Calculate multiple statistics at once for efficiency.
  * @param data - Array of items
  * @param accessor - Function to extract numeric value from each item

@@ -6,7 +6,7 @@ import { Chart } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createDualAxisChartOptions } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateTotal, findMaxItem } from '../../domain/calculators/statsCalculators';
+import { calculateTotal, calculatePercentage, findMaxItem } from '../../domain/calculators/statsCalculators';
 import { chartColors } from './utils/chartColors';
 import { DailyPRUAnalysisData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
@@ -33,7 +33,7 @@ export default function PRUCostAnalysisChart({ data }: PRUCostAnalysisChartProps
   const totalPRURequests = calculateTotal(data, d => d.pruRequests);
   const totalStandardRequests = calculateTotal(data, d => d.standardRequests);
   const totalRequests = totalPRURequests + totalStandardRequests;
-  const overallPRUPercentage = totalRequests > 0 ? Math.round((totalPRURequests / totalRequests) * 100 * 100) / 100 : 0;
+  const overallPRUPercentage = calculatePercentage(totalPRURequests, totalRequests);
 
   const maxCostDay = findMaxItem(data, d => d.serviceValue) ?? { serviceValue: 0, date: '' };
 
