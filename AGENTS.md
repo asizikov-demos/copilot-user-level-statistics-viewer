@@ -55,3 +55,13 @@ Delegate all git operations to the **Git Workflow** agent (as a sub-agent). Neve
 Do NOT create branches, commits, or PRs automatically after completing code changes. When the implementation work is done, use the `ask_user` tool to ask whether the user wants to proceed with commits and PR creation. Only delegate to the Git Workflow agent if they confirm.
 
 Exception: if the user's original prompt explicitly requests commits/PR (e.g., "…create atomic commits and PR"), skip the confirmation and delegate directly.
+
+### Pre-Commit Pipeline
+
+Before delegating to the Git Workflow agent for commits/PR, run the **Code Review** agent first. The flow is strictly linear:
+
+1. **Code Review** — run as a sub-agent on all changes. If issues are found, fix them before proceeding.
+2. **User approval** — Commit Gate (above)
+3. **Git Workflow** — handles branch, commits, push, PR. Runs build/lint/test once as a gate. Aborts on failure — does NOT fix code.
+
+The Git Workflow agent is pure mechanics — it never invokes Code Review and never fixes code. If its build gate fails, it aborts and returns the error. Fix the issue and re-run the pipeline from step 1. Code Review does not need to re-run for build/lint/test-only fixes unless the fix involved logic changes.
