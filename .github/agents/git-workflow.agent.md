@@ -2,7 +2,6 @@
 description: 'Handles git workflow: atomic commits with conventional prefixes, branch management, PR creation with structured summaries'
 tools: ['runCommands', 'changes', 'problems', 'agent']
 model: 'GPT-5.3 Codex (copilot)'
-agents: ['Code Review']
 ---
 
 # Git Workflow
@@ -32,16 +31,12 @@ Prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `ci:`, `docs:`, `test:`
 Use `feat!:` or `fix!:` for breaking changes.
 
 Rules:
-- Run `npm run build` and `npm run lint` once before starting commits to verify no TypeScript or ESLint errors
+- Run `npm run build`, `npm run lint`, and `npm run test:run` once before starting commits to verify no TypeScript, ESLint, or test errors — if any command fails, **abort immediately** and return the error to the caller (do NOT attempt to fix anything)
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
 - Always include this trailer at the end of every commit message:
   `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
-
-## Pre-PR Review Gate
-
-Before creating a PR, invoke the **Code Review** agent as a subagent to review all staged/unstaged changes. Address any issues it flags before proceeding with commits and PR creation. A PR should not be created until code review passes clean.
 
 ## PR Creation
 
@@ -58,8 +53,6 @@ After all commits are ready and pushed:
 | `feat:` description | What was added |
 ```
 
-4. Add test/build status: e.g., "Build: ✅ clean, Lint: ✅ clean"
-
 ## Post-Merge Cleanup
 
 When told a PR is merged:
@@ -71,8 +64,7 @@ When told a PR is merged:
 
 ## Pre-Commit Verification
 
-Before creating any commit, perform these checks (some only apply to the first commit in a batch):
+Before creating any commit:
 
 1. Review staged changes with `git diff --cached` to ensure only intended changes are included
-2. If this is the first commit in a batch, run `npm run build` and `npm run lint` — must exit 0
-3. If verification fails, fix issues before committing
+2. If this is the first commit in a batch, run the build/lint/test gate: `npm run build && npm run lint && npm run test:run` — if any step fails, abort and report the failure back (do NOT fix issues)
