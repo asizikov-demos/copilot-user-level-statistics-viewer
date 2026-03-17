@@ -122,12 +122,10 @@ export function accumulateUserDetail(
   for (const mf of metric.totals_by_model_feature) {
     const model = mf.model.toLowerCase();
     const multiplier = getModelMultiplier(model);
-    if (model !== 'unknown' && model !== '') {
-      if (multiplier === 0) {
-        state.totalStandardModelRequests += mf.user_initiated_interaction_count;
-      } else {
-        state.totalPremiumModelRequests += mf.user_initiated_interaction_count;
-      }
+    if (multiplier === 0) {
+      state.totalStandardModelRequests += mf.user_initiated_interaction_count;
+    } else {
+      state.totalPremiumModelRequests += mf.user_initiated_interaction_count;
     }
   }
 
