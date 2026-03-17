@@ -125,5 +125,15 @@ describe('userFlagScanner', () => {
 
       expect(summaries[0].flags).toHaveLength(0);
     });
+
+    it('should not duplicate flags when called multiple times', () => {
+      const accumulator = makeAccumulator([[1, { totalPremiumModelRequests: 0, totalStandardModelRequests: 50 }]]);
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+      scanAllUserFlags(accumulator, summaries);
+
+      expect(summaries[0].flags).toHaveLength(1);
+    });
   });
 });

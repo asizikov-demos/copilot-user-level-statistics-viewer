@@ -29,6 +29,7 @@ export function scanAllUserFlags(
     const state = userDetailAccumulator.users.get(summary.user_id);
     if (!state) continue;
 
+    summary.flags = [];
     for (const scanner of scanners) {
       const flag = scanner(state);
       if (flag) {
