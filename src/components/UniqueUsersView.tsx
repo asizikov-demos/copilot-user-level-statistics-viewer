@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserSummary } from '../types/metrics';
+import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { ViewPanel } from './ui';
