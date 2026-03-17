@@ -43,26 +43,23 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 
 Prefer the **TypeScript LSP** for code navigation and analysis — use `goToDefinition`, `findReferences`, `incomingCalls`, `hover`, and `documentSymbol` before falling back to grep/glob.
 
-## Git Workflow Delegation
+## Git Workflow
 
-Delegate all git operations to the **Git Workflow** agent (as a sub-agent). Never handle git operations inline.
-
-- **Post-merge cleanup** (user says "merged", "pr merged", or similar) — delegate immediately, no confirmation needed
-- **Branch cleanup and rebasing** — delegate immediately
-- **Branch creation, commits, and PR creation** — delegate only after the Commit Gate below is satisfied
+- **Post-merge cleanup** (user says "merged", "pr merged", or similar) — execute immediately, no confirmation needed
+- **Branch cleanup and rebasing** — execute immediately
+- **Branch creation, commits, and PR creation** — only after the Commit Gate below is satisfied
 
 ### Commit Gate
 
-Do NOT create branches, commits, or PRs automatically after completing code changes. When the implementation work is done, use the `ask_user` tool to ask whether the user wants to proceed with commits and PR creation. Only delegate to the Git Workflow agent if they confirm.
+Do NOT create branches, commits, or PRs automatically after completing code changes. When the implementation work is done, use the `ask_user` tool to ask whether the user wants to proceed with commits and PR creation. Only proceed if they confirm.
 
-Exception: if the user's original prompt explicitly requests commits/PR (e.g., "…create atomic commits and PR"), skip the confirmation and delegate directly.
+Exception: if the user's original prompt explicitly requests commits/PR (e.g., "…create atomic commits and PR"), skip the confirmation and proceed directly.
 
 ### Pre-Commit Pipeline
 
-Before delegating to the Git Workflow agent for commits/PR, run the **Code Review** agent first. The flow is strictly linear:
+The flow is strictly linear — do not skip or reorder steps:
 
-1. **Code Review** — run as a sub-agent on all changes. If issues are found, the caller updates the code to address them before proceeding; the Code Review agent itself never modifies code.
-2. **User approval** — Commit Gate (above)
-3. **Git Workflow** — handles branch, commits, push, PR. Runs build/lint/test once as a gate. Aborts on failure — does NOT fix code.
-
-The Git Workflow agent is pure mechanics — it never invokes Code Review and never fixes code. If its build gate fails, it aborts and returns the error. After fixing the issue, re-run the pipeline as follows: if the fix is build/lint/test-only and does not change application logic or behavior, restart from step 3 (Git Workflow); if the fix involves logic/behavior changes, restart from step 1 so Code Review runs again.
+1. **Code Review** — run as a sub-agent on all changes. If issues are found, fix them before proceeding. The Code Review agent itself never modifies code.
+2. **Build gate** — run `npm run build && npm run lint && npm run test:run` (build + lint + test). If it fails, fix the issue and re-run. If the fix changes application logic, go back to step 1.
+3. **User approval** — Commit Gate (above)
+4. **Git Workflow** — create branch, atomic commits, push, PR. The build is already verified — just do the git mechanics.
