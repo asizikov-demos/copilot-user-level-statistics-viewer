@@ -20,6 +20,17 @@ function toConfigKey(displayName) {
     return normalize(s).replace(/\s+/g, '-');
   }
 
+  const claudeFastMode = s.match(/^Claude\s+(Haiku|Sonnet|Opus)\s+([0-9]+(?:\.[0-9]+)?)\s*\(fast mode\)/i);
+  if (claudeFastMode) {
+    const family = claudeFastMode[1].toLowerCase();
+    let version = claudeFastMode[2];
+    if (/^[0-9]+$/.test(version)) version = `${version}.0`;
+    const isPreview = /\(preview\)/i.test(s);
+    const suffix = `-fast-mode${isPreview ? '-preview' : ''}`;
+    if (family === 'opus') return `claude-opus-${version}${suffix}`;
+    return `claude-${version}-${family}${suffix}`;
+  }
+
   const claude = s.match(/^Claude\s+(Haiku|Sonnet|Opus)\s+([0-9]+(?:\.[0-9]+)?)$/i);
   if (claude) {
     const family = claude[1].toLowerCase();

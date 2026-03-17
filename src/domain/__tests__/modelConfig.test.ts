@@ -9,6 +9,7 @@ describe('modelConfig', () => {
         { model: 'gpt-5', expected: 1 },
         { model: 'claude-3.5-sonnet', expected: 1 },
         { model: 'claude-opus-4.6-fast-mode', expected: 30 },
+        { model: 'claude-opus-4.6-fast-mode-preview', expected: 30 },
         { model: 'o3-mini', expected: 0.33 },
         { model: 'gemini-2.0-flash', expected: 0.25 },
       ];
