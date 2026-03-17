@@ -99,6 +99,7 @@ import {
   computeDailyCliTokenData,
   computeCliAdoptionTrend,
 } from './calculators';
+import { scanAllUserFlags } from './calculators/userFlagScanner';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;
@@ -167,6 +168,7 @@ function accumulateUserSummary(
       used_agent: false,
       used_chat: false,
       used_cli: false,
+      flags: [],
     });
     accumulator.userActiveDays.set(userId, new Set());
   }
@@ -323,10 +325,13 @@ export function aggregateMetrics(
     accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);
   }
 
+  const userSummaries = computeUserSummaries(userSummaryAccumulator);
+  scanAllUserFlags(userDetailAccumulator, userSummaries);
+
   return {
     aggregated: {
     stats: computeStats(statsAccumulator, filteredMetricsCount),
-    userSummaries: computeUserSummaries(userSummaryAccumulator),
+    userSummaries,
     engagementData: computeEngagementData(engagementAccumulator, cliUsageAccumulator),
     chatUsersData: computeChatUsersData(chatAccumulator, cliUsageAccumulator),
     chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsageAccumulator),

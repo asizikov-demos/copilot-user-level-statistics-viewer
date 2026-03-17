@@ -1,3 +1,5 @@
+import type { UserFlag } from './userFlags';
+
 export interface CopilotMetrics {
   report_start_day: string;
   report_end_day: string;
@@ -118,6 +120,7 @@ export interface UserSummary {
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;
+  flags: UserFlag[];
 }
 
 // ==========================================
