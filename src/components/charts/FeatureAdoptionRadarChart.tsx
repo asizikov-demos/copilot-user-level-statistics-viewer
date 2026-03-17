@@ -12,6 +12,7 @@ interface FeatureAdoptionRadarChartProps {
   cliInteractions: number;
   askModeInteractions: number;
   editModeInteractions: number;
+  completionInteractions: number;
 }
 
 export default function FeatureAdoptionRadarChart({
@@ -20,13 +21,14 @@ export default function FeatureAdoptionRadarChart({
   cliInteractions,
   askModeInteractions,
   editModeInteractions,
+  completionInteractions,
 }: FeatureAdoptionRadarChartProps) {
   const chartData = {
-    labels: ['Agent Mode', 'Plan Mode', 'CLI', 'Ask Mode', 'Edit Mode'],
+    labels: ['Agent Mode', 'Plan Mode', 'CLI', 'Ask Mode', 'Edit Mode', 'Completions'],
     datasets: [
       {
         label: 'Interactions',
-        data: [agentInteractions, planInteractions, cliInteractions, askModeInteractions, editModeInteractions],
+        data: [agentInteractions, planInteractions, cliInteractions, askModeInteractions, editModeInteractions, completionInteractions],
         backgroundColor: 'rgba(99, 102, 241, 0.2)',
         borderColor: 'rgba(99, 102, 241, 1)',
         borderWidth: 2,
@@ -45,7 +47,10 @@ export default function FeatureAdoptionRadarChart({
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (context) => `${context.label}: ${context.parsed.r.toLocaleString()} interactions`,
+          label: (context) => {
+            const unit = context.label === 'Completions' ? 'acceptances' : 'interactions';
+            return `${context.label}: ${context.parsed.r.toLocaleString()} ${unit}`;
+          },
         },
       },
     },
@@ -66,7 +71,7 @@ export default function FeatureAdoptionRadarChart({
     },
   };
 
-  const total = agentInteractions + planInteractions + cliInteractions + askModeInteractions + editModeInteractions;
+  const total = agentInteractions + planInteractions + cliInteractions + askModeInteractions + editModeInteractions + completionInteractions;
 
   if (total === 0) {
     return (
@@ -89,6 +94,7 @@ export default function FeatureAdoptionRadarChart({
         <span>CLI: <strong>{cliInteractions.toLocaleString()}</strong></span>
         <span>Ask: <strong>{askModeInteractions.toLocaleString()}</strong></span>
         <span>Edit: <strong>{editModeInteractions.toLocaleString()}</strong></span>
+        <span>Completions: <strong>{completionInteractions.toLocaleString()}</strong></span>
       </div>
     </div>
   );
