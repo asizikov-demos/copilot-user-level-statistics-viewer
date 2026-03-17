@@ -158,6 +158,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const editModeInteractions = featureAggregates
     .filter(f => f.feature === 'chat_panel_edit_mode')
     .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
+  const completionInteractions = featureAggregates
+    .filter(f => f.feature === 'code_completion')
+    .reduce((sum, f) => sum + f.code_acceptance_activity_count, 0);
   const cliInteractions = totalCliPrompts;
 
   const ideChartData = useMemo(() => {
@@ -532,6 +535,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
             cliInteractions={cliInteractions}
             askModeInteractions={askModeInteractions}
             editModeInteractions={editModeInteractions}
+            completionInteractions={completionInteractions}
           />
         </div>
       </div>
