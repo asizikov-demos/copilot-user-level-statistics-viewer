@@ -10,9 +10,9 @@ Call `registerChartJS()` from `./utils/chartSetup` at **module scope** (top of f
 
 ## Date Ranges
 
-Time-series charts must show the **full report date range** from `reportStartDay` to `reportEndDay`, filling inactive days with zeros. Accept these as string props.
+When `reportStartDay` / `reportEndDay` props are available, time-series charts should prefer to show the **full report date range**, filling inactive days with zeros as appropriate. Accept these as string props when the chart uses them.
 
-When zero-filling for display, do **not** let padded zeros dilute aggregate statistics. Compute averages and percentages from actual-activity-days only, then fill the display series separately.
+When you do zero-fill for display, do **not** let padded zeros dilute aggregate statistics. Compute averages and percentages from actual-activity-days only, then fill the display series separately.
 
 ## Chart Type Selection
 
