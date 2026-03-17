@@ -1,7 +1,9 @@
 ---
-description: 'Handles git workflow: atomic commits with conventional prefixes, branch management, PR creation with structured summaries'
-tools: ['runCommands', 'changes', 'problems']
-model: 'GPT-5.3 Codex (copilot)'
+name: git-workflow
+description: >
+  Handles git workflow: creating branches, atomic commits with conventional prefixes,
+  PR creation with structured summaries, and post-merge cleanup.
+  Use when the user asks to commit, create a PR, push changes, or says a PR was merged.
 ---
 
 # Git Workflow
@@ -31,12 +33,13 @@ Prefixes: `fix:`, `feat:`, `refactor:`, `chore:`, `ci:`, `docs:`, `test:`
 Use `feat!:` or `fix!:` for breaking changes.
 
 Rules:
-- Run `npm run build`, `npm run lint`, and `npm run test:run` once before starting commits to verify no TypeScript, ESLint, or test errors — if any command fails, **abort immediately** and return the error to the caller (do NOT attempt to fix anything)
 - One logical change per commit — do not bundle unrelated changes
 - Keep the subject line under 72 characters
 - No period at the end of the subject line
 - Always include this trailer at the end of every commit message:
   `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+
+Before creating any commit, review staged changes with `git diff --cached` to ensure only intended changes are included.
 
 ## PR Creation
 
@@ -61,10 +64,3 @@ When told a PR is merged:
 2. `git pull origin main`
 3. Delete the merged branch locally: `git branch -d <branch-name>`
 4. Confirm the local main is up to date
-
-## Pre-Commit Verification
-
-Before creating any commit:
-
-1. Review staged changes with `git diff --cached` to ensure only intended changes are included
-2. If this is the first commit in a batch, run the build/lint/test gate: `npm run build && npm run lint && npm run test:run` — if any step fails, abort and report the failure back (do NOT fix issues)
