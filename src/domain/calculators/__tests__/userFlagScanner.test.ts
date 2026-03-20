@@ -253,5 +253,29 @@ describe('userFlagScanner', () => {
       const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
       expect(quotaFlag).toBeUndefined();
     });
+
+    it('should detect quota exhaustion even when user has no activity on report end date', () => {
+      // Report range ends on Feb 2, but user has no activity after Jan 31.
+      // The scanner must pad the end date so the month boundary is detected.
+      const days = [
+        makeDay('2024-01-10', [{ model: 'claude-3.5-sonnet', interactions: 20 }]),
+        makeDay('2024-01-25', [{ model: 'gpt-4o', interactions: 30 }]),
+        makeDay('2024-01-26', [{ model: 'gpt-4o', interactions: 25 }]),
+        makeDay('2024-01-27', [{ model: 'gpt-4o', interactions: 20 }]),
+        makeDay('2024-01-28', [{ model: 'gpt-4o', interactions: 15 }]),
+        makeDay('2024-01-29', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-30', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-31', [{ model: 'gpt-4o', interactions: 10 }]),
+      ];
+      const users = new Map([[1, makeUserState(20, 120, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-10', reportEndDay: '2024-02-02' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeDefined();
+      expect(quotaFlag!.label).toBe('Possible premium quota exhaustion');
+    });
   });
 });
