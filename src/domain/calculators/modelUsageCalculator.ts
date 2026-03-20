@@ -1,4 +1,4 @@
-import { SERVICE_VALUE_RATE, getModelMultiplier, isPremiumModel } from '../modelConfig';
+import { SERVICE_VALUE_RATE, getModelMultiplier, isPremiumModel, classifyModelBucket } from '../modelConfig';
 import { CopilotMetrics } from '../../types/metrics';
 
 export interface DailyModelUsageData {
@@ -111,9 +111,10 @@ export function accumulateModelFeature(
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
   dmu.totalPRUs += prus;
-  if (modelLower === 'unknown' || modelLower === '') {
+  const bucket = classifyModelBucket(modelLower);
+  if (bucket === 'unknown') {
     dmu.unknownModels += interactions;
-  } else if (multiplier === 0) {
+  } else if (bucket === 'standard') {
     dmu.standardModels += interactions;
   } else {
     dmu.pruModels += interactions;

@@ -35,7 +35,7 @@ export default function PRUModelUsageChart({ data, hideInsights = false }: PRUMo
   const totalPRUs = calculateTotal(data, d => d.totalPRUs);
   const grandTotal = totalPRURequests + totalStandardRequests + totalUnknownRequests;
   const pruAdoptionInsight = computePruAdoptionInsight(totalPRURequests, totalStandardRequests, totalUnknownRequests);
-  const billingCycleInsight = computeBillingCycleInsight(data);
+  const billingCycleInsight = totalPRURequests > 0 ? computeBillingCycleInsight(data) : null;
   const avgPRUs = calculateAverage(data, d => d.totalPRUs);
 
   const chartData = {

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { scanAllUserFlags } from '../userFlagScanner';
 import type { UserDetailAccumulator } from '../userDetailCalculator';
-import type { UserSummary } from '../../../types/metrics';
-import { FLAG_NO_PREMIUM_MODELS } from '../../../types/userFlags';
+import type { UserSummary, UserDayData } from '../../../types/metrics';
+import { FLAG_NO_PREMIUM_MODELS, FLAG_QUOTA_EXHAUSTION } from '../../../types/userFlags';
 
 function makeUserSummary(overrides: Partial<UserSummary> & { user_id: number }): UserSummary {
   return {
@@ -23,7 +23,7 @@ function makeUserSummary(overrides: Partial<UserSummary> & { user_id: number }):
   };
 }
 
-function makeUserState(premium: number, standard: number) {
+function makeUserState(premium: number, standard: number, days: UserDayData[] = []) {
   return {
     totalPremiumModelRequests: premium,
     totalStandardModelRequests: standard,
@@ -33,13 +33,44 @@ function makeUserState(premium: number, standard: number) {
     modelFeatureMap: new Map(),
     pluginVersionMap: new Map(),
     cliVersionMap: new Map(),
-    days: [],
+    days,
   };
 }
 
 function makeAccumulator(entries: Array<[number, { totalPremiumModelRequests: number; totalStandardModelRequests: number }]>): UserDetailAccumulator {
   const users = new Map(entries.map(([id, counts]) => [id, makeUserState(counts.totalPremiumModelRequests, counts.totalStandardModelRequests)]));
   return { users, reportStartDay: '2024-01-01', reportEndDay: '2024-01-31' } as UserDetailAccumulator;
+}
+
+function makeDay(day: string, models: Array<{ model: string; interactions: number }>): UserDayData {
+  return {
+    day,
+    user_initiated_interaction_count: models.reduce((s, m) => s + m.interactions, 0),
+    code_generation_activity_count: 0,
+    code_acceptance_activity_count: 0,
+    loc_added_sum: 0,
+    loc_deleted_sum: 0,
+    loc_suggested_to_add_sum: 0,
+    loc_suggested_to_delete_sum: 0,
+    totals_by_feature: [],
+    totals_by_ide: [],
+    totals_by_language_feature: [],
+    totals_by_language_model: [],
+    totals_by_model_feature: models.map(m => ({
+      model: m.model,
+      feature: 'chat_panel_agent_mode',
+      user_initiated_interaction_count: m.interactions,
+      code_generation_activity_count: 0,
+      code_acceptance_activity_count: 0,
+      loc_added_sum: 0,
+      loc_deleted_sum: 0,
+      loc_suggested_to_add_sum: 0,
+      loc_suggested_to_delete_sum: 0,
+    })),
+    used_agent: false,
+    used_chat: false,
+    used_cli: false,
+  };
 }
 
 describe('userFlagScanner', () => {
@@ -134,6 +165,117 @@ describe('userFlagScanner', () => {
       scanAllUserFlags(accumulator, summaries);
 
       expect(summaries[0].flags).toHaveLength(1);
+    });
+  });
+
+  describe('quota-exhaustion scanner', () => {
+    it('should flag a user whose standard models dominate the last week of the month', () => {
+      // User has premium usage overall, but in last week of Jan standard dominates
+      const days = [
+        // Early/mid January: premium usage
+        makeDay('2024-01-10', [{ model: 'claude-3.5-sonnet', interactions: 20 }]),
+        makeDay('2024-01-15', [{ model: 'claude-3.5-sonnet', interactions: 15 }]),
+        // Last week of January: mostly standard (gpt-4o has multiplier 0)
+        makeDay('2024-01-25', [{ model: 'gpt-4o', interactions: 30 }]),
+        makeDay('2024-01-26', [{ model: 'gpt-4o', interactions: 25 }]),
+        makeDay('2024-01-27', [{ model: 'gpt-4o', interactions: 20 }]),
+        makeDay('2024-01-28', [{ model: 'gpt-4o', interactions: 15 }]),
+        makeDay('2024-01-29', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-30', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-31', [{ model: 'gpt-4o', interactions: 10 }]),
+        // February (needed so range crosses month boundary)
+        makeDay('2024-02-01', [{ model: 'gpt-4o', interactions: 5 }]),
+      ];
+      const users = new Map([[1, makeUserState(35, 125, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-10', reportEndDay: '2024-02-01' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeDefined();
+      expect(quotaFlag!.label).toBe('Possible premium quota exhaustion');
+      expect(quotaFlag!.severity).toBe('warning');
+    });
+
+    it('should not flag a user who only uses base models', () => {
+      // Standard-only user with same end-of-month pattern — should NOT trigger quota flag
+      const days = [
+        makeDay('2024-01-25', [{ model: 'gpt-4o', interactions: 30 }]),
+        makeDay('2024-01-31', [{ model: 'gpt-4o', interactions: 20 }]),
+        makeDay('2024-02-01', [{ model: 'gpt-4o', interactions: 5 }]),
+      ];
+      const users = new Map([[1, makeUserState(0, 55, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-25', reportEndDay: '2024-02-01' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeUndefined();
+      // Should still get the no-premium flag though
+      expect(summaries[0].flags.find(f => f.kind === FLAG_NO_PREMIUM_MODELS)).toBeDefined();
+    });
+
+    it('should not flag a user whose premium usage is consistent through month end', () => {
+      // Premium usage doesn't drop at end of month
+      const days = [
+        makeDay('2024-01-25', [{ model: 'claude-3.5-sonnet', interactions: 30 }]),
+        makeDay('2024-01-26', [{ model: 'claude-3.5-sonnet', interactions: 25 }]),
+        makeDay('2024-01-27', [{ model: 'claude-3.5-sonnet', interactions: 20 }]),
+        makeDay('2024-01-28', [{ model: 'claude-3.5-sonnet', interactions: 15 }]),
+        makeDay('2024-01-29', [{ model: 'claude-3.5-sonnet', interactions: 20 }]),
+        makeDay('2024-01-30', [{ model: 'claude-3.5-sonnet', interactions: 18 }]),
+        makeDay('2024-01-31', [{ model: 'claude-3.5-sonnet', interactions: 22 }]),
+        makeDay('2024-02-01', [{ model: 'claude-3.5-sonnet', interactions: 10 }]),
+      ];
+      const users = new Map([[1, makeUserState(160, 0, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-25', reportEndDay: '2024-02-01' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeUndefined();
+    });
+
+    it('should not flag a user when data does not cross a month boundary', () => {
+      const days = [
+        makeDay('2024-01-10', [{ model: 'claude-3.5-sonnet', interactions: 10 }]),
+        makeDay('2024-01-25', [{ model: 'gpt-4o', interactions: 30 }]),
+      ];
+      const users = new Map([[1, makeUserState(10, 30, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-10', reportEndDay: '2024-01-25' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeUndefined();
+    });
+
+    it('should detect quota exhaustion even when user has no activity on report end date', () => {
+      // Report range ends on Feb 2, but user has no activity after Jan 31.
+      // The scanner must pad the end date so the month boundary is detected.
+      const days = [
+        makeDay('2024-01-10', [{ model: 'claude-3.5-sonnet', interactions: 20 }]),
+        makeDay('2024-01-25', [{ model: 'gpt-4o', interactions: 30 }]),
+        makeDay('2024-01-26', [{ model: 'gpt-4o', interactions: 25 }]),
+        makeDay('2024-01-27', [{ model: 'gpt-4o', interactions: 20 }]),
+        makeDay('2024-01-28', [{ model: 'gpt-4o', interactions: 15 }]),
+        makeDay('2024-01-29', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-30', [{ model: 'gpt-4o', interactions: 10 }]),
+        makeDay('2024-01-31', [{ model: 'gpt-4o', interactions: 10 }]),
+      ];
+      const users = new Map([[1, makeUserState(20, 120, days)]]);
+      const accumulator = { users, reportStartDay: '2024-01-10', reportEndDay: '2024-02-02' } as UserDetailAccumulator;
+      const summaries = [makeUserSummary({ user_id: 1 })];
+
+      scanAllUserFlags(accumulator, summaries);
+
+      const quotaFlag = summaries[0].flags.find(f => f.kind === FLAG_QUOTA_EXHAUSTION);
+      expect(quotaFlag).toBeDefined();
+      expect(quotaFlag!.label).toBe('Possible premium quota exhaustion');
     });
   });
 });
