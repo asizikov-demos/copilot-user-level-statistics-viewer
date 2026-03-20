@@ -113,6 +113,14 @@ export function getModelMultiplier(modelName: string): number {
  * Determine if a model should be treated as premium (incurs PRU consumption beyond included tier).
  * Uses the canonical KNOWN_MODELS list. Unknown models inherit the flag from the 'unknown' entry.
  */
+export type ModelBucket = 'premium' | 'standard' | 'unknown';
+
+export function classifyModelBucket(modelName: string): ModelBucket {
+  const normalized = normalizeModelName(modelName);
+  if (normalized === 'unknown' || normalized === '') return 'unknown';
+  return getModelMultiplier(normalized) === 0 ? 'standard' : 'premium';
+}
+
 export function isPremiumModel(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
   // Exact match first

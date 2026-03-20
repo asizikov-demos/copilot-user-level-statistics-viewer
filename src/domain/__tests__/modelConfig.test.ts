@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getModelMultiplier, isPremiumModel, MODEL_MULTIPLIERS, KNOWN_MODELS } from '../modelConfig';
+import { getModelMultiplier, isPremiumModel, classifyModelBucket, MODEL_MULTIPLIERS, KNOWN_MODELS } from '../modelConfig';
 
 describe('modelConfig', () => {
   describe('getModelMultiplier', () => {
@@ -133,6 +133,26 @@ describe('modelConfig', () => {
       const unknownModel = KNOWN_MODELS.find(m => m.name === 'unknown');
       expect(unknownModel).toBeDefined();
       expect(unknownModel?.multiplier).toBeDefined();
+    });
+  });
+
+  describe('classifyModelBucket', () => {
+    it('should classify standard models', () => {
+      expect(classifyModelBucket('gpt-4o')).toBe('standard');
+    });
+
+    it('should classify premium models', () => {
+      expect(classifyModelBucket('claude-3.5-sonnet')).toBe('premium');
+      expect(classifyModelBucket('gpt-5')).toBe('premium');
+    });
+
+    it('should classify unknown models', () => {
+      expect(classifyModelBucket('unknown')).toBe('unknown');
+      expect(classifyModelBucket('')).toBe('unknown');
+    });
+
+    it('should treat unrecognized models as premium', () => {
+      expect(classifyModelBucket('totally-made-up')).toBe('premium');
     });
   });
 });
