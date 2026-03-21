@@ -16,6 +16,7 @@ import {
 
 export type {
   DailyEngagementData,
+  DailyAdoptionTrend,
   DailyChatUsersData,
   DailyChatRequestsData,
   LanguageStats,

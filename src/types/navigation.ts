@@ -15,6 +15,7 @@ import type {
   ModeImpactData,
   DailyCliSessionData,
   DailyCliTokenData,
+  DailyAdoptionTrend,
 } from '../domain/calculators/metricCalculators';
 import type { VoidCallback, ValueCallback } from './events';
 
@@ -145,6 +146,7 @@ export interface CopilotAdoptionViewProps extends BackNavigableViewProps {
   agentModeHeatmapData: AgentModeHeatmapData[];
   stats: MetricsStats;
   pluginVersionData: PluginVersionAnalysisData;
+  dailyAdoptionTrend: DailyAdoptionTrend[];
 }
 
 export interface ModelDetailsViewProps extends BackNavigableViewProps {

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import AgentModeHeatmapChart from './charts/AgentModeHeatmapChart';
+import AdoptionTrendChart from './charts/AdoptionTrendChart';
 import { MetricTileGroup, MetricTileIcon, StatsGrid, ViewPanel } from './ui';
 import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
@@ -11,6 +12,7 @@ import { usePluginVersions } from '../hooks/usePluginVersions';
 import { classifyVsCodeVersion, parseReportDayInclusiveEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
+import type { DailyAdoptionTrend } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
 import type { VoidCallback } from '../types/events';
 
@@ -19,10 +21,11 @@ interface CopilotAdoptionViewProps {
   agentModeHeatmapData: AgentModeHeatmapData[];
   stats: MetricsStats;
   pluginVersionData: PluginVersionAnalysisData;
+  dailyAdoptionTrend: DailyAdoptionTrend[];
   onBack: VoidCallback;
 }
 
-export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, onBack }: CopilotAdoptionViewProps) {
+export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, dailyAdoptionTrend, onBack }: CopilotAdoptionViewProps) {
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
   const {
     stableReleases: vsCodeStableReleases,
@@ -392,6 +395,11 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
         }
       />
       <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
+      <AdoptionTrendChart
+        data={dailyAdoptionTrend}
+        reportStartDay={stats.reportStartDay}
+        reportEndDay={stats.reportEndDay}
+      />
 
       <section className="space-y-6">
         <div>

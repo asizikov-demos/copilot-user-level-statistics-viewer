@@ -326,5 +326,51 @@ describe('metricsAggregator', () => {
       expect(aggregated.agentImpactData).toBeDefined();
       expect(aggregated.editModeImpactData).toBeDefined();
     });
+
+    it('should compute daily adoption trend with new and returning users across surfaces', () => {
+      const user1Day1 = createBasicMetric({
+        user_id: 1,
+        user_login: 'alice',
+        day: '2024-01-15',
+      });
+      const user2Day1 = createBasicMetric({
+        user_id: 2,
+        user_login: 'bob',
+        day: '2024-01-15',
+      });
+      const user1Day2 = createBasicMetric({
+        user_id: 1,
+        user_login: 'alice',
+        day: '2024-01-16',
+      });
+      const user3Day2 = createBasicMetric({
+        user_id: 3,
+        user_login: 'charlie',
+        day: '2024-01-16',
+        used_cli: true,
+        totals_by_cli: {
+          session_count: 1,
+          request_count: 2,
+          prompt_count: 1,
+          token_usage: { output_tokens_sum: 100, prompt_tokens_sum: 50, avg_tokens_per_request: 75 },
+        },
+      });
+
+      const { aggregated } = aggregateMetrics([user1Day1, user2Day1, user1Day2, user3Day2]);
+
+      expect(aggregated.dailyAdoptionTrend).toHaveLength(2);
+
+      const day1 = aggregated.dailyAdoptionTrend.find(d => d.date === '2024-01-15')!;
+      expect(day1.newUsers).toBe(2);
+      expect(day1.returningUsers).toBe(0);
+      expect(day1.totalActiveUsers).toBe(2);
+      expect(day1.cumulativeUsers).toBe(2);
+
+      const day2 = aggregated.dailyAdoptionTrend.find(d => d.date === '2024-01-16')!;
+      expect(day2.newUsers).toBe(1); // charlie is new
+      expect(day2.returningUsers).toBe(1); // alice is returning
+      expect(day2.totalActiveUsers).toBe(2);
+      expect(day2.cumulativeUsers).toBe(3);
+    });
   });
 });
