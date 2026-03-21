@@ -1,12 +1,13 @@
 'use client';
 
-import { TooltipItem } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createDualAxisChartOptions } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
 import { calculateTotal, calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import { chartColors } from './utils/chartColors';
+import { computeRetentionRates, computeAverageRetention } from './utils/chartStyles';
 import type { DailyCliAdoptionTrend } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 
@@ -21,6 +22,9 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
   const avgDailyActive = calculateAverage(data, d => d.totalActiveUsers);
   const peakUsers = findMaxValue(data, d => d.totalActiveUsers);
   const cumulativeTotal = data.length > 0 ? data[data.length - 1].cumulativeUsers : 0;
+
+  const retentionRates = computeRetentionRates(data);
+  const avgRetention = computeAverageRetention(retentionRates);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
@@ -58,6 +62,21 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
         pointHoverRadius: 5,
         yAxisID: 'y1',
       },
+      {
+        type: 'line' as const,
+        label: 'Retention Rate',
+        data: retentionRates,
+        backgroundColor: chartColors.amber.alpha,
+        borderColor: chartColors.amber.solid,
+        borderWidth: 2,
+        borderDash: [5, 3],
+        fill: false,
+        tension: 0.4,
+        pointRadius: 2,
+        pointHoverRadius: 4,
+        spanGaps: true,
+        yAxisID: 'y2',
+      },
     ],
   };
 
@@ -69,12 +88,14 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
       tooltipAfterBodyCallback: (context: TooltipItem<'line' | 'bar'>[]) => {
         const dataIndex = context[0].dataIndex;
         const day = data[dataIndex];
+        const retention = retentionRates[dataIndex];
         return [
           '',
           `Total Active: ${day.totalActiveUsers}`,
           `New: ${day.newUsers}`,
           `Returning: ${day.returningUsers}`,
           `Cumulative: ${day.cumulativeUsers}`,
+          `Retention: ${retention !== null ? `${retention}%` : 'N/A'}`,
         ];
       },
     }),
@@ -102,13 +123,19 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
         beginAtZero: true,
         grid: { drawOnChartArea: false },
       },
+      y2: {
+        type: 'linear' as const,
+        display: false,
+        min: 0,
+        max: 100,
+      },
     },
   };
 
   return (
     <ChartContainer
       title="CLI Adoption Trend"
-      description="New vs returning CLI users per day, with cumulative growth."
+      description="New vs returning CLI users per day, with cumulative growth and retention rate."
       isEmpty={data.length === 0}
       emptyState="No CLI adoption data available"
       summaryStats={[
@@ -116,6 +143,7 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
         { value: totalNewUsers, label: 'New Users (period)', colorClass: 'text-blue-600' },
         { value: avgDailyActive.toFixed(1), label: 'Avg Daily Active', colorClass: 'text-green-600' },
         { value: peakUsers, label: 'Peak Daily Users', colorClass: 'text-indigo-600' },
+        { value: `${avgRetention}%`, label: 'Avg Retention', colorClass: 'text-amber-600' },
       ]}
     >
       <div className="h-full">

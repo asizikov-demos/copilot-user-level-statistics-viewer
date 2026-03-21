@@ -43,7 +43,7 @@ export const barDatasetDefaults = {
 export function createLineDataset(
   color: string,
   label: string,
-  data: number[],
+  data: (number | null)[],
   options: Partial<typeof lineDatasetDefaults & { fill: boolean }> = {}
 ) {
   const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.1)');
@@ -69,7 +69,7 @@ export function createLineDataset(
 export function createFilledLineDataset(
   color: string,
   label: string,
-  data: number[],
+  data: (number | null)[],
   options: Partial<typeof filledLineDatasetDefaults> = {}
 ) {
   return createLineDataset(color, label, data, { fill: true, ...options });
@@ -96,4 +96,18 @@ export function createBarDataset(
     borderColor: color,
     ...options,
   };
+}
+
+export function computeRetentionRates(
+  data: Array<{ returningUsers: number; totalActiveUsers: number }>
+): (number | null)[] {
+  return data.map(d =>
+    d.totalActiveUsers > 0 ? Math.round((d.returningUsers / d.totalActiveUsers) * 1000) / 10 : null
+  );
+}
+
+export function computeAverageRetention(retentionRates: (number | null)[]): number {
+  const valid = retentionRates.filter((r): r is number => r !== null);
+  if (valid.length === 0) return 0;
+  return Math.round(valid.reduce((sum, r) => sum + r, 0) / valid.length * 10) / 10;
 }
