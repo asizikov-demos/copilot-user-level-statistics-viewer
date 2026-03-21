@@ -143,6 +143,7 @@ const ViewRouter: React.FC = () => {
     dailyCliSessionData,
     dailyCliTokenData,
     dailyCliAdoptionTrend,
+    dailyAdoptionTrend,
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -215,6 +216,7 @@ const ViewRouter: React.FC = () => {
           agentModeHeatmapData={agentModeHeatmapData}
           stats={stats}
           pluginVersionData={pluginVersionData}
+          dailyAdoptionTrend={dailyAdoptionTrend}
           onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );

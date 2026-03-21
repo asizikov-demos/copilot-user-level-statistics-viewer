@@ -17,9 +17,11 @@ import {
   computeStats,
 
   DailyEngagementData,
+  DailyAdoptionTrend,
   createEngagementAccumulator,
   accumulateEngagement,
   computeEngagementData,
+  computeAdoptionTrend,
 
   DailyChatUsersData,
   DailyChatRequestsData,
@@ -132,6 +134,7 @@ export interface AggregatedMetrics {
   dailyCliSessionData: DailyCliSessionData[];
   dailyCliTokenData: DailyCliTokenData[];
   dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
+  dailyAdoptionTrend: DailyAdoptionTrend[];
 }
 
 interface UserSummaryAccumulator {
@@ -358,6 +361,7 @@ export function aggregateMetrics(
     dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
     dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
     dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
+    dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
     },
     userDetailAccumulator,
   };

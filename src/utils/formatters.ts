@@ -160,3 +160,13 @@ export function formatModelDisplayName(modelName: string): string {
   if (!modelName || modelName === 'unknown') return 'Unknown Model';
   return modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/-/g, ' ');
 }
+
+export function generateDateRange(startDay: string, endDay: string): string[] {
+  const start = new Date(startDay + 'T00:00:00Z');
+  const end = new Date(endDay + 'T00:00:00Z');
+  const dates: string[] = [];
+  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
+    dates.push(cur.toISOString().split('T')[0]);
+  }
+  return dates;
+}

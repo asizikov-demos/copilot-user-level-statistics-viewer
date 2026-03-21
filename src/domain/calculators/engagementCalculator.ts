@@ -78,3 +78,56 @@ export function computeEngagementData(
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
+
+export interface DailyAdoptionTrend {
+  date: string;
+  newUsers: number;
+  returningUsers: number;
+  totalActiveUsers: number;
+  cumulativeUsers: number;
+}
+
+export function computeAdoptionTrend(
+  accumulator: EngagementAccumulator,
+  cliAccumulator?: CliUsageAccumulator
+): DailyAdoptionTrend[] {
+  const allDates = new Set(accumulator.dailyEngagement.keys());
+  if (cliAccumulator) {
+    for (const date of cliAccumulator.dailySessions.keys()) {
+      allDates.add(date);
+    }
+  }
+
+  const sortedDates = Array.from(allDates)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  const seenBefore = new Set<number>();
+  return sortedDates.map(date => {
+    const activeUsersSet = new Set(accumulator.dailyEngagement.get(date) ?? []);
+    const cliData = cliAccumulator?.dailySessions.get(date);
+    if (cliData) {
+      for (const userId of cliData.users) {
+        activeUsersSet.add(userId);
+      }
+    }
+
+    let newUsers = 0;
+    let returningUsers = 0;
+    for (const userId of activeUsersSet) {
+      if (seenBefore.has(userId)) {
+        returningUsers++;
+      } else {
+        newUsers++;
+        seenBefore.add(userId);
+      }
+    }
+
+    return {
+      date,
+      newUsers,
+      returningUsers,
+      totalActiveUsers: newUsers + returningUsers,
+      cumulativeUsers: seenBefore.size,
+    };
+  });
+}

@@ -12,10 +12,12 @@ export {
 
 export {
   type DailyEngagementData,
+  type DailyAdoptionTrend,
   type EngagementAccumulator,
   createEngagementAccumulator,
   accumulateEngagement,
   computeEngagementData,
+  computeAdoptionTrend,
 } from './engagementCalculator';
 
 export {
