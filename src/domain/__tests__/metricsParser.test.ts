@@ -236,6 +236,36 @@ describe('metricsParser', () => {
       expect(result?.totals_by_language_model[0]?.language).toBe('PlantUML');
     });
 
+    it('should ignore missing or malformed language totals during normalization', () => {
+      const line = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [null, { language: 42 }, { language: 'ts' }],
+        totals_by_language_model: 'not-an-array',
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      const result = parseMetricsLine(line);
+
+      expect(result).not.toBeNull();
+      expect(result?.totals_by_language_feature[2]?.language).toBe('TypeScript');
+    });
+
     it('should apply string interning when pool is provided', () => {
       const pool = new StringPool();
       const firstLine = JSON.stringify({

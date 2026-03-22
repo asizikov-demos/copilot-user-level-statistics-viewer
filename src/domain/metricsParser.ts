@@ -3,12 +3,22 @@ import { StringPool, internMetricStrings } from '../utils/stringPool';
 import { normalizeLanguage } from './languageNormalizer';
 
 function normalizeMetricLanguages(metric: CopilotMetrics): void {
-  for (const entry of metric.totals_by_language_feature) {
-    entry.language = normalizeLanguage(entry.language);
+  const featureTotals = Array.isArray(metric.totals_by_language_feature)
+    ? metric.totals_by_language_feature
+    : [];
+  for (const entry of featureTotals) {
+    if (typeof entry === 'object' && entry !== null && typeof entry.language === 'string') {
+      entry.language = normalizeLanguage(entry.language);
+    }
   }
 
-  for (const entry of metric.totals_by_language_model) {
-    entry.language = normalizeLanguage(entry.language);
+  const modelTotals = Array.isArray(metric.totals_by_language_model)
+    ? metric.totals_by_language_model
+    : [];
+  for (const entry of modelTotals) {
+    if (typeof entry === 'object' && entry !== null && typeof entry.language === 'string') {
+      entry.language = normalizeLanguage(entry.language);
+    }
   }
 }
 

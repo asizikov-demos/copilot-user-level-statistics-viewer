@@ -1,6 +1,6 @@
 /**
  * Maps raw language strings from the API to canonical display names.
- * Lookup is case-insensitive and trims whitespace. Unknown languages pass through unchanged.
+ * Lookup is case-insensitive and trims whitespace. Unknown languages are returned trimmed.
  */
 
 // Maps lowercase alias → canonical name
