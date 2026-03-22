@@ -106,8 +106,11 @@ export function computeRetentionRates(
   );
 }
 
-export function computeAverageRetention(retentionRates: (number | null)[]): number {
-  const valid = retentionRates.filter((r): r is number => r !== null);
-  if (valid.length === 0) return 0;
-  return Math.round(valid.reduce((sum, r) => sum + r, 0) / valid.length * 10) / 10;
+export function computeAverageRetention(
+  data: Array<{ returningUsers: number; totalActiveUsers: number }>
+): number {
+  const totalReturning = data.reduce((sum, d) => sum + d.returningUsers, 0);
+  const totalActive = data.reduce((sum, d) => sum + d.totalActiveUsers, 0);
+  if (totalActive === 0) return 0;
+  return Math.round((totalReturning / totalActive) * 1000) / 10;
 }
