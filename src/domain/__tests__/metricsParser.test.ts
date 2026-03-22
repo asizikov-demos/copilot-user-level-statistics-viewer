@@ -183,9 +183,92 @@ describe('metricsParser', () => {
       expect(result?.used_cli).toBe(false);
     });
 
+    it('should normalize language names in parsed language arrays', () => {
+      const line = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [
+          {
+            language: 'ts',
+            feature: 'code_completion',
+            code_generation_activity_count: 2,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 10,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 12,
+            loc_suggested_to_delete_sum: 3,
+          },
+        ],
+        totals_by_language_model: [
+          {
+            language: 'puml',
+            model: 'gpt-4.1',
+            code_generation_activity_count: 3,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 11,
+            loc_deleted_sum: 4,
+            loc_suggested_to_add_sum: 14,
+            loc_suggested_to_delete_sum: 5,
+          },
+        ],
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      const result = parseMetricsLine(line);
+
+      expect(result).not.toBeNull();
+      expect(result?.totals_by_language_feature[0]?.language).toBe('TypeScript');
+      expect(result?.totals_by_language_model[0]?.language).toBe('PlantUML');
+    });
+
+    it('should ignore missing or malformed language totals during normalization', () => {
+      const line = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [null, { language: 42 }, { language: 'ts' }],
+        totals_by_language_model: 'not-an-array',
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      const result = parseMetricsLine(line);
+
+      expect(result).not.toBeNull();
+      expect(result?.totals_by_language_feature[2]?.language).toBe('TypeScript');
+    });
+
     it('should apply string interning when pool is provided', () => {
       const pool = new StringPool();
-      const line = JSON.stringify({
+      const firstLine = JSON.stringify({
         report_start_day: '2024-01-01',
         report_end_day: '2024-01-31',
         day: '2024-01-15',
@@ -205,18 +288,96 @@ describe('metricsParser', () => {
         totals_by_feature: [
           { feature: 'code_completion', user_initiated_interaction_count: 3 },
         ],
-        totals_by_language_feature: [],
-        totals_by_language_model: [],
+        totals_by_language_feature: [
+          {
+            language: 'typescript',
+            feature: 'code_completion',
+            code_generation_activity_count: 2,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 10,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 12,
+            loc_suggested_to_delete_sum: 3,
+          },
+        ],
+        totals_by_language_model: [
+          {
+            language: 'typescript',
+            model: 'gpt-4.1',
+            code_generation_activity_count: 2,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 10,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 12,
+            loc_suggested_to_delete_sum: 3,
+          },
+        ],
         totals_by_model_feature: [],
         used_agent: false,
         used_chat: true,
       });
 
-      const result = parseMetricsLine(line, pool);
+      const firstResult = parseMetricsLine(firstLine, pool);
+      const poolSizeAfterFirstParse = pool.size;
 
-      expect(result).not.toBeNull();
+      const secondLine = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 456,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        totals_by_ide: [
+          { ide: 'vscode', user_initiated_interaction_count: 5 },
+        ],
+        totals_by_feature: [
+          { feature: 'code_completion', user_initiated_interaction_count: 3 },
+        ],
+        totals_by_language_feature: [
+          {
+            language: 'ts',
+            feature: 'code_completion',
+            code_generation_activity_count: 2,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 10,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 12,
+            loc_suggested_to_delete_sum: 3,
+          },
+        ],
+        totals_by_language_model: [
+          {
+            language: 'ts',
+            model: 'gpt-4.1',
+            code_generation_activity_count: 2,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 10,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 12,
+            loc_suggested_to_delete_sum: 3,
+          },
+        ],
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      const secondResult = parseMetricsLine(secondLine, pool);
+
+      expect(firstResult).not.toBeNull();
+      expect(secondResult).not.toBeNull();
+      expect(firstResult?.totals_by_language_feature[0]?.language).toBe('TypeScript');
+      expect(secondResult?.totals_by_language_feature[0]?.language).toBe('TypeScript');
       // After interning, pool should have these strings
       expect(pool.size).toBeGreaterThan(0);
+      expect(pool.size).toBe(poolSizeAfterFirstParse);
     });
   });
 
