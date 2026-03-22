@@ -2,7 +2,8 @@
 name: git-workflow
 description: >
   Handles git workflow: creating branches, atomic commits with conventional prefixes,
-  PR creation with structured summaries, and post-merge cleanup.
+  PR creation with structured summaries, keeping PR descriptions updated on follow-up pushes,
+  and post-merge cleanup.
   Use when the user asks to commit, create a PR, push changes, or says a PR was merged.
 ---
 
@@ -41,7 +42,7 @@ Rules:
 
 Before creating any commit, review staged changes with `git diff --cached` to ensure only intended changes are included.
 
-## PR Creation
+## PR Creation and Updates
 
 After all commits are ready and pushed:
 
@@ -55,6 +56,23 @@ After all commits are ready and pushed:
 | `fix:` description | What was fixed and why |
 | `feat:` description | What was added |
 ```
+
+## PR Follow-Up Pushes
+
+When a branch already has an open PR and you push additional commits:
+
+1. Read the current PR body with `gh pr view --json body -q .body` and use that exact content as the base for your update. Do not generate a fresh PR description from scratch.
+2. Push the branch updates.
+3. Refresh the PR description with `gh pr edit` so it reflects the latest state of the branch.
+4. Treat the PR body as a surgical update, not a full rewrite:
+   - preserve existing sections such as summary prose, validation steps, and other reviewer context
+   - update the **summary table** to include new commits
+   - remove or rewrite outdated entries when the implementation changed
+   - mention review feedback fixes in the description when the new commits address PR comments
+5. If the PR body does not already contain a summary table, add one without removing the rest of the description.
+6. Before running `gh pr edit`, verify the updated body still contains the important sections from the original PR description.
+
+Never leave the PR description stale after pushing fixes to an existing PR.
 
 ## Post-Merge Cleanup
 
