@@ -3,13 +3,12 @@ import type { UserFlag } from '../../types/userFlags';
 import { FLAG_NO_PREMIUM_MODELS, FLAG_QUOTA_EXHAUSTION } from '../../types/userFlags';
 import type { UserDetailAccumulator } from './userDetailCalculator';
 import { classifyModelBucket } from '../modelConfig';
-import { computeBillingCycleInsight } from '../pruAdoptionInsights';
+import { detectsEndOfMonthStandardDominance } from '../pruAdoptionInsights';
 
 type UserAccState = UserDetailAccumulator['users'] extends Map<number, infer V> ? V : never;
 
 interface ScanContext {
   state: UserAccState;
-  reportStartDay: string;
   reportEndDay: string;
 }
 
@@ -58,7 +57,7 @@ function scanQuotaExhaustion({ state, reportEndDay }: ScanContext): UserFlag | n
     dailyUsage.push({ date: reportEndDay, pruModels: 0, standardModels: 0, unknownModels: 0 });
   }
 
-  const insight = computeBillingCycleInsight(dailyUsage);
+  const insight = detectsEndOfMonthStandardDominance(dailyUsage);
   if (!insight) return null;
 
   return {
@@ -77,14 +76,14 @@ export function scanAllUserFlags(
   userDetailAccumulator: UserDetailAccumulator,
   userSummaries: UserSummary[],
 ): void {
-  const { reportStartDay, reportEndDay } = userDetailAccumulator;
+  const { reportEndDay } = userDetailAccumulator;
   for (const summary of userSummaries) {
     const state = userDetailAccumulator.users.get(summary.user_id);
     if (!state) continue;
 
     summary.flags = [];
     for (const scanner of scanners) {
-      const flag = scanner({ state, reportStartDay, reportEndDay });
+      const flag = scanner({ state, reportEndDay });
       if (flag) {
         summary.flags.push(flag);
       }
