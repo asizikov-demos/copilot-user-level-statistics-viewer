@@ -1,5 +1,16 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
+import { normalizeLanguage } from './languageNormalizer';
+
+function normalizeMetricLanguages(metric: CopilotMetrics): void {
+  for (const entry of metric.totals_by_language_feature) {
+    entry.language = normalizeLanguage(entry.language);
+  }
+
+  for (const entry of metric.totals_by_language_model) {
+    entry.language = normalizeLanguage(entry.language);
+  }
+}
 
 export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetrics | null {
   try {
@@ -38,12 +49,15 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
     // We rely on upstream schema conformity; at runtime we only soft-validated key fields
     const metric = parsedRaw as unknown as CopilotMetrics;
     metric.used_cli = metric.used_cli ?? false;
-    
+
+    // Normalize language names to canonical form
+    normalizeMetricLanguages(metric);
+
     // Apply string interning if pool is provided
     if (pool) {
       internMetricStrings(metric, pool);
     }
-    
+
     return metric;
   } catch (error) {
     console.warn('Failed to parse line:', line, error);
