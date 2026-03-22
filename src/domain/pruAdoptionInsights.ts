@@ -18,32 +18,44 @@ interface DailyModelUsageEntry {
 }
 
 /**
+ * Internal helper that computes end-of-month last-week window statistics.
+ * Returns null when the range does not cross a month boundary or when there is
+ * no meaningful usage data in that window.
+ */
+function computeEndOfMonthStandardDominanceStats(
+  data: DailyModelUsageEntry[],
+): { billingBoundary: string; standardPct: number } | null {
+  if (data.length === 0) return null;
+
+  const dates = data.map(d => d.date).sort();
+  const firstOfMonths = findFirstOfMonthsInRange(dates[0], dates[dates.length - 1]);
+  if (firstOfMonths.length === 0) return null;
+
+  const billingBoundary = firstOfMonths[firstOfMonths.length - 1];
+  const lastWeek = getLastWeekOfPreviousMonth(billingBoundary);
+
+  const windowData = data.filter(d => d.date >= lastWeek.start && d.date <= lastWeek.end);
+  if (windowData.length === 0) return null;
+
+  const totalStandard = windowData.reduce((s, d) => s + d.standardModels, 0);
+  const totalAll = windowData.reduce(
+    (s, d) => s + d.pruModels + d.standardModels + d.unknownModels,
+    0,
+  );
+  if (totalAll === 0) return null;
+
+  return { billingBoundary, standardPct: (totalStandard / totalAll) * 100 };
+}
+
+/**
  * Pure predicate: returns true when standard models account for ≥50% of
  * requests in the last 7 days of the most recent billing-period boundary
  * contained in the data range. Returns false if the range does not cross a
  * month boundary or if there is no usage in that window.
  */
 export function detectsEndOfMonthStandardDominance(data: DailyModelUsageEntry[]): boolean {
-  if (data.length === 0) return false;
-
-  const dates = data.map(d => d.date).sort();
-  const rangeStart = dates[0];
-  const rangeEnd = dates[dates.length - 1];
-
-  const firstOfMonths = findFirstOfMonthsInRange(rangeStart, rangeEnd);
-  if (firstOfMonths.length === 0) return false;
-
-  const billingBoundary = firstOfMonths[firstOfMonths.length - 1];
-  const lastWeek = getLastWeekOfPreviousMonth(billingBoundary);
-
-  const windowData = data.filter(d => d.date >= lastWeek.start && d.date <= lastWeek.end);
-  if (windowData.length === 0) return false;
-
-  const totalStandard = windowData.reduce((s, d) => s + d.standardModels, 0);
-  const totalAll = windowData.reduce((s, d) => s + d.pruModels + d.standardModels + d.unknownModels, 0);
-  if (totalAll === 0) return false;
-
-  return (totalStandard / totalAll) * 100 >= 50;
+  const stats = computeEndOfMonthStandardDominanceStats(data);
+  return stats !== null && stats.standardPct >= 50;
 }
 
 /**
@@ -53,21 +65,13 @@ export function detectsEndOfMonthStandardDominance(data: DailyModelUsageEntry[])
 export function computeBillingCycleInsight(
   data: DailyModelUsageEntry[],
 ): PruAdoptionInsight | null {
-  if (!detectsEndOfMonthStandardDominance(data)) return null;
-
-  const dates = data.map(d => d.date).sort();
-  const firstOfMonths = findFirstOfMonthsInRange(dates[0], dates[dates.length - 1]);
-  const billingBoundary = firstOfMonths[firstOfMonths.length - 1];
-  const lastWeek = getLastWeekOfPreviousMonth(billingBoundary);
-  const windowData = data.filter(d => d.date >= lastWeek.start && d.date <= lastWeek.end);
-  const totalStandard = windowData.reduce((s, d) => s + d.standardModels, 0);
-  const totalAll = windowData.reduce((s, d) => s + d.pruModels + d.standardModels + d.unknownModels, 0);
-  const standardPct = Math.round((totalStandard / totalAll) * 100);
+  const stats = computeEndOfMonthStandardDominanceStats(data);
+  if (!stats || stats.standardPct < 50) return null;
 
   return {
     title: 'End-of-Month Premium Quota',
     variant: 'orange',
-    message: `Standard models dominated (${standardPct}%) in the last week of the billing period, suggesting the user may be exhausting their premium request allowance. Consider upgrading to Copilot Enterprise or enabling per-request billing.`,
+    message: `Standard models dominated (${Math.round(stats.standardPct)}%) in the last week of the billing period, suggesting the user may be exhausting their premium request allowance. Consider upgrading to Copilot Enterprise or enabling per-request billing.`,
     ctaLabel: 'Learn about premium request billing →',
     ctaHref: PREMIUM_REQUESTS_URL,
   };

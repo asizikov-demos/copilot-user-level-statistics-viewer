@@ -57,8 +57,8 @@ function scanQuotaExhaustion({ state, reportEndDay }: ScanContext): UserFlag | n
     dailyUsage.push({ date: reportEndDay, pruModels: 0, standardModels: 0, unknownModels: 0 });
   }
 
-  const insight = detectsEndOfMonthStandardDominance(dailyUsage);
-  if (!insight) return null;
+  const hasEndOfMonthStandardDominance = detectsEndOfMonthStandardDominance(dailyUsage);
+  if (!hasEndOfMonthStandardDominance) return null;
 
   return {
     kind: FLAG_QUOTA_EXHAUSTION,
