@@ -24,7 +24,7 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
   const cumulativeTotal = data.length > 0 ? data[data.length - 1].cumulativeUsers : 0;
 
   const retentionRates = computeRetentionRates(data);
-  const avgRetention = computeAverageRetention(retentionRates);
+  const avgRetention = computeAverageRetention(data);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),

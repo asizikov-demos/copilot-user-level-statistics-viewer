@@ -26,8 +26,7 @@ export default function AdoptionTrendChart({ data, reportStartDay, reportEndDay 
   const peakUsers = findMaxValue(data, d => d.totalActiveUsers);
   const cumulativeTotal = data.length > 0 ? data[data.length - 1].cumulativeUsers : 0;
 
-  const retentionRates = computeRetentionRates(data);
-  const avgRetention = computeAverageRetention(retentionRates);
+  const avgRetention = computeAverageRetention(data);
 
   const paddedData = useMemo(() => {
     const allDays = generateDateRange(reportStartDay, reportEndDay);

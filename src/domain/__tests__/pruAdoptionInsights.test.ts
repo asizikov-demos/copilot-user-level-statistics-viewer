@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computePruAdoptionInsight,
   computeBillingCycleInsight,
+  detectsEndOfMonthStandardDominance,
   findFirstOfMonthsInRange,
   getLastWeekOfPreviousMonth,
   MODEL_COMPARISON_URL,
@@ -314,5 +315,40 @@ describe('computeBillingCycleInsight', () => {
     const result = computeBillingCycleInsight(data);
     expect(result).not.toBeNull();
     expect(result!.message).toContain('Standard models dominated');
+  });
+});
+
+describe('detectsEndOfMonthStandardDominance', () => {
+  it('returns true when standard models dominate last week of month', () => {
+    const data = [
+      makeEntry('2024-01-25', 5, 50),
+      makeEntry('2024-01-26', 5, 50),
+      makeEntry('2024-01-27', 5, 50),
+      makeEntry('2024-01-28', 5, 50),
+      makeEntry('2024-01-31', 5, 50),
+      makeEntry('2024-02-01', 50, 5),
+    ];
+    expect(detectsEndOfMonthStandardDominance(data)).toBe(true);
+  });
+
+  it('returns false when data does not cross a month boundary', () => {
+    const data = [
+      makeEntry('2024-01-10', 5, 50),
+      makeEntry('2024-01-25', 5, 50),
+    ];
+    expect(detectsEndOfMonthStandardDominance(data)).toBe(false);
+  });
+
+  it('returns false when premium usage is consistent through month end', () => {
+    const data = [
+      makeEntry('2024-01-25', 50, 5),
+      makeEntry('2024-01-31', 50, 5),
+      makeEntry('2024-02-01', 50, 5),
+    ];
+    expect(detectsEndOfMonthStandardDominance(data)).toBe(false);
+  });
+
+  it('returns false for empty data', () => {
+    expect(detectsEndOfMonthStandardDominance([])).toBe(false);
   });
 });
