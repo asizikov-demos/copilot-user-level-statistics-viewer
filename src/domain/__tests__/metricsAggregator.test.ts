@@ -25,6 +25,7 @@ describe('metricsAggregator', () => {
     used_agent: false,
     used_chat: true,
     used_cli: false,
+    used_copilot_coding_agent: false,
     ...overrides,
   });
 
@@ -279,6 +280,23 @@ describe('metricsAggregator', () => {
       expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
     });
 
+    it('should count coding-agent-only users in feature adoption totals', () => {
+      const metric = createBasicMetric({
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: true,
+        totals_by_feature: [],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.stats.codingAgentUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.totalUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.codingAgentUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
+    });
+
     it('should exclude CLI users from completion-only counts when only used_cli marks CLI usage', () => {
       const metric = createBasicMetric({
         used_cli: true,
@@ -302,6 +320,55 @@ describe('metricsAggregator', () => {
 
       expect(aggregated.featureAdoptionData.cliUsers).toBe(1);
       expect(aggregated.featureAdoptionData.completionOnlyUsers).toBe(0);
+    });
+
+    it('should exclude coding-agent users from completion-only counts', () => {
+      const metric = createBasicMetric({
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: true,
+        totals_by_feature: [
+          {
+            feature: 'code_completion',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 5,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 5,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.stats.codingAgentUsers).toBe(1);
+      expect(aggregated.stats.completionOnlyUsers).toBe(0);
+      expect(aggregated.featureAdoptionData.codingAgentUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.completionOnlyUsers).toBe(0);
+    });
+
+    it('should accumulate coding-agent usage across multiple days using OR logic', () => {
+      const day1 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-15',
+        used_copilot_coding_agent: false,
+      });
+
+      const day2 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-16',
+        used_chat: false,
+        used_copilot_coding_agent: true,
+      });
+
+      const { aggregated } = aggregateMetrics([day1, day2]);
+
+      const userSummary = aggregated.userSummaries[0];
+      expect(userSummary.used_copilot_coding_agent).toBe(true);
+      expect(aggregated.stats.codingAgentUsers).toBe(1);
     });
 
     it('should process impact data when features have LOC', () => {

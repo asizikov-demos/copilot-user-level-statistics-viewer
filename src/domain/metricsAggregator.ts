@@ -51,6 +51,7 @@ import {
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
   accumulateCliAdoption,
+  accumulateCodingAgentAdoption,
   computeFeatureAdoptionData,
 
   AgentImpactData,
@@ -171,6 +172,7 @@ function accumulateUserSummary(
       used_agent: false,
       used_chat: false,
       used_cli: false,
+      used_copilot_coding_agent: false,
       flags: [],
     });
     accumulator.userActiveDays.set(userId, new Set());
@@ -187,6 +189,7 @@ function accumulateUserSummary(
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
+  userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || metric.used_copilot_coding_agent;
   accumulator.userActiveDays.get(userId)!.add(date);
 }
 
@@ -235,7 +238,7 @@ export function aggregateMetrics(
     accumulateUserSummary(userSummaryAccumulator, metric);
     accumulateUserDetail(userDetailAccumulator, metric);
 
-    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli);
+    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, metric.used_copilot_coding_agent);
 
     accumulateEngagement(engagementAccumulator, date, userId);
 
@@ -291,6 +294,7 @@ export function aggregateMetrics(
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
 
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
+    accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, metric.used_copilot_coding_agent);
     accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
 
     for (const feature of metric.totals_by_feature) {

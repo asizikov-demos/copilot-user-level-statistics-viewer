@@ -11,6 +11,7 @@ interface UserSummaryChartProps {
   usedChat: boolean;
   usedAgent: boolean;
   usedCli: boolean;
+  usedCodingAgent: boolean;
   ideChartData?: ChartData<'pie'>;
   languageChartData?: ChartData<'pie'>;
   modelChartData?: ChartData<'pie'>;
@@ -25,6 +26,7 @@ export default function UserSummaryChart({
   usedChat,
   usedAgent,
   usedCli,
+  usedCodingAgent,
   ideChartData,
   languageChartData,
   modelChartData,
@@ -43,7 +45,7 @@ export default function UserSummaryChart({
           )}
           {usedAgent && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              Agent
+              IDE Agent Mode
             </span>
           )}
           {usedCli && (
@@ -51,7 +53,12 @@ export default function UserSummaryChart({
               CLI
             </span>
           )}
-          {!usedChat && !usedAgent && !usedCli && (
+          {usedCodingAgent && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+              Coding Agent
+            </span>
+          )}
+          {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
               Completion Only
             </span>

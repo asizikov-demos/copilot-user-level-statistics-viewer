@@ -143,6 +143,11 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
               CLI
             </span>
           )}
+          {user.used_copilot_coding_agent && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+              Coding Agent
+            </span>
+          )}
           {user.total_code_generation_activities > 0 && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Completions
