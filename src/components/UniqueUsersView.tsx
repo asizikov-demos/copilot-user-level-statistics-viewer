@@ -14,7 +14,7 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_delete';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted';
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const [filterByAttention, setFilterByAttention] = useState(false);
