@@ -60,6 +60,7 @@ const StickyHeader: React.FC = () => {
 
         {hasData && (
           <button
+            type="button"
             onClick={resetAppState}
             className="rounded-md border border-[#57606a] bg-transparent px-3 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-white/[0.08] sm:px-4"
           >

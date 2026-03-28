@@ -19,6 +19,7 @@ const SideNav: React.FC = () => {
             return (
               <li key={view}>
                 <button
+                  type="button"
                   onClick={() => navigateTo(view)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 ${

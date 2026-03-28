@@ -45,7 +45,7 @@ export default function SectionHeader({
         ))}
       </div>
       {onBack && (
-        <button onClick={onBack} className={buttonClassName}>
+        <button type="button" onClick={onBack} className={buttonClassName}>
           {backButtonLabel}
         </button>
       )}

@@ -71,12 +71,24 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
                 ? 'border-[#0969da] bg-[#ddf4ff]'
                 : 'border-[#d0d7de] hover:border-[#0969da] hover:bg-[#f6f8fa]'
             }`}
+            role="button"
+            tabIndex={0}
+            aria-label="Upload metrics files by dragging and dropping or browsing your device"
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
           >
+            <label htmlFor="file-upload" className="sr-only">
+              Upload metrics file
+            </label>
             <input
               ref={fileInputRef}
               type="file"
