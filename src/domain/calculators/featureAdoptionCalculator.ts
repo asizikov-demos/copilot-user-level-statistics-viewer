@@ -9,18 +9,21 @@ export interface FeatureAdoptionData {
   inlineModeUsers: number;
   planModeUsers: number;
   cliUsers: number;
+  codingAgentUsers: number;
   advancedUsers: number;
 }
 
 export interface FeatureAdoptionAccumulator {
   userFeatures: Map<number, Set<string>>;
   cliUsers: Set<number>;
+  codingAgentUsers: Set<number>;
 }
 
 export function createFeatureAdoptionAccumulator(): FeatureAdoptionAccumulator {
   return {
     userFeatures: new Map(),
     cliUsers: new Set(),
+    codingAgentUsers: new Set(),
   };
 }
 
@@ -49,6 +52,16 @@ export function accumulateCliAdoption(
   accumulator.cliUsers.add(userId);
 }
 
+export function accumulateCodingAgentAdoption(
+  accumulator: FeatureAdoptionAccumulator,
+  userId: number,
+  usedCodingAgent: boolean
+): void {
+  if (!usedCodingAgent) return;
+
+  accumulator.codingAgentUsers.add(userId);
+}
+
 export function computeFeatureAdoptionData(
   accumulator: FeatureAdoptionAccumulator
 ): FeatureAdoptionData {
@@ -61,6 +74,7 @@ export function computeFeatureAdoptionData(
   let inlineModeUsers = 0;
   let planModeUsers = 0;
   let cliUsers = 0;
+  let codingAgentUsers = 0;
   let advancedUsers = 0;
 
   const isChatUser = (features: Set<string>) =>
@@ -77,11 +91,13 @@ export function computeFeatureAdoptionData(
   const userIds = new Set<number>([
     ...accumulator.userFeatures.keys(),
     ...accumulator.cliUsers.values(),
+    ...accumulator.codingAgentUsers.values(),
   ]);
 
   for (const userId of userIds) {
     const features = accumulator.userFeatures.get(userId) || new Set<string>();
     const isCliUser = accumulator.cliUsers.has(userId);
+    const isCodingAgentUser = accumulator.codingAgentUsers.has(userId);
 
     if (features.has('code_completion')) completionUsers++;
     if (isChatUser(features)) chatUsers++;
@@ -91,9 +107,10 @@ export function computeFeatureAdoptionData(
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('chat_panel_plan_mode')) planModeUsers++;
     if (isCliUser) cliUsers++;
-    if (isAgentUser(features) || isCliUser) advancedUsers++;
+    if (isCodingAgentUser) codingAgentUsers++;
+    if (isAgentUser(features) || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser) {
+    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser && !isCodingAgentUser) {
       completionOnlyUsers++;
     }
   }
@@ -109,6 +126,7 @@ export function computeFeatureAdoptionData(
     inlineModeUsers,
     planModeUsers,
     cliUsers,
+    codingAgentUsers,
     advancedUsers,
   };
 }

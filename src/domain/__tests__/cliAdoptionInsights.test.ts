@@ -9,6 +9,7 @@ function makeStats(overrides: Partial<MetricsStats> = {}): MetricsStats {
     cliUsers: 0,
     chatUsers: 50,
     agentUsers: 30,
+    codingAgentUsers: 0,
     completionOnlyUsers: 20,
     reportStartDay: '2024-01-01',
     reportEndDay: '2024-01-15',

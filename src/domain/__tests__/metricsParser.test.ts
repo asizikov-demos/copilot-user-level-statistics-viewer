@@ -183,6 +183,37 @@ describe('metricsParser', () => {
       expect(result?.used_cli).toBe(false);
     });
 
+    it('should default used_copilot_coding_agent to false when missing', () => {
+      const lineWithoutCodingAgent = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [],
+        totals_by_language_model: [],
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+        used_cli: false,
+      });
+
+      const result = parseMetricsLine(lineWithoutCodingAgent);
+
+      expect(result).not.toBeNull();
+      expect(result?.used_copilot_coding_agent).toBe(false);
+    });
+
     it('should normalize language names in parsed language arrays', () => {
       const line = JSON.stringify({
         report_start_day: '2024-01-01',
