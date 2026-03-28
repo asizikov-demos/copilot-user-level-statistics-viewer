@@ -134,6 +134,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
   const usedCli = userSummary.used_cli;
+  const usedCodingAgent = userSummary.used_copilot_coding_agent;
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
 
@@ -612,6 +613,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         usedChat={usedChat}
         usedAgent={usedAgent}
         usedCli={usedCli}
+        usedCodingAgent={usedCodingAgent}
         ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
         languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
         modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}

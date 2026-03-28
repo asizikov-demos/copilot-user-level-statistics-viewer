@@ -279,6 +279,7 @@ function adaptDaysAsMetrics(days: UserDayData[], userId: number, reportStartDay:
     used_agent: false,
     used_chat: false,
     used_cli: !!day.totals_by_cli,
+    used_copilot_coding_agent: false,
   }));
 }
 

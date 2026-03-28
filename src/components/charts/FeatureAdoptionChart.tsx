@@ -36,6 +36,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     { name: 'Plan Mode', count: data?.planModeUsers || 0, color: chartColors.indigo.solid, description: 'Users who used Plan Mode' },
     { name: 'Copilot CLI', count: data?.cliUsers || 0, color: chartColors.pink.solid, description: 'Users who used Copilot CLI' },
     { name: 'Inline Chat', count: data?.inlineModeUsers || 0, color: chartColors.violet.solid, description: 'Users who used inline chat' },
+    { name: 'Coding Agent', count: data?.codingAgentUsers || 0, color: chartColors.teal.solid, description: 'Users who used Copilot Coding Agent' },
   ];
 
   const totalUsers = data?.totalUsers || 0;
@@ -43,6 +44,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
   const chatRate = totalUsers > 0 ? (data.chatUsers / totalUsers) * 100 : 0;
   const agentRate = totalUsers > 0 ? (data.agentModeUsers / totalUsers) * 100 : 0;
   const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
+  const codingAgentRate = totalUsers > 0 ? ((data.codingAgentUsers || 0) / totalUsers) * 100 : 0;
   const advancedUsersCount = data?.advancedUsers || 0;
   const advancedRate = totalUsers > 0 ? (advancedUsersCount / totalUsers) * 100 : 0;
   const adoptionInsights = computeFeatureAdoptionInsights(data);
@@ -104,7 +106,8 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         { value: `${Math.round(chatRate)}%`, label: 'Chat Adoption', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
         { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode Adoption', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
         { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI Adoption', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
-        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + Copilot CLI)`, colorClass: 'text-purple-600' },
+        { value: `${Math.round(codingAgentRate)}%`, label: 'Coding Agent Adoption', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
+        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + CLI + Coding Agent)`, colorClass: 'text-purple-600' },
       ]}
       chartHeight="h-96"
       footer={
@@ -119,7 +122,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
             </InsightsCard>
             <InsightsCard title="Advanced Features" variant="blue">
               <p>
-                IDE Agent Mode and Copilot CLI are advanced features that drive significant productivity gains and are typically used by power users.
+                IDE Agent Mode, Copilot CLI, and Coding Agent are advanced features that drive significant productivity gains and are typically used by power users.
                 {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
               </p>
             </InsightsCard>
