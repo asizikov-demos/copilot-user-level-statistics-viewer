@@ -88,12 +88,17 @@ export function MetricsTable<T>({
 
             const nextDirection: SortDirection = isActive && sortState?.direction === 'asc' ? 'desc' : 'asc';
 
+            const isRightAligned = headerClassName.includes('text-right');
+            const buttonClassName = isRightAligned
+              ? 'flex items-center w-full justify-end hover:text-gray-700 focus:outline-none uppercase tracking-wider'
+              : 'flex items-center hover:text-gray-700 focus:outline-none uppercase tracking-wider';
+
             return (
               <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
                 <button
                   type="button"
                   onClick={() => onSortChange?.({ field: column.id, direction: nextDirection })}
-                  className="flex items-center hover:text-gray-700 focus:outline-none"
+                  className={buttonClassName}
                 >
                   {column.header}
                   <SortIndicator active={isActive} direction={sortState?.direction ?? 'asc'} />

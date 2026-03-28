@@ -492,7 +492,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                     buttonExpandedLabel="Show Less"
                   >
                     {({ visibleItems }) => (
-                      <div className="overflow-x-auto border border-gray-200 rounded-md">
+                      <div className="overflow-x-auto border border-gray-200">
                         <MetricsTable
                           data={visibleItems}
                           columns={outdatedPluginsColumns}
@@ -520,7 +520,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   buttonExpandedLabel="Show Less"
                 >
                   {({ visibleItems }) => (
-                    <div className="overflow-x-auto border border-gray-200 rounded-md">
+                    <div className="overflow-x-auto border border-gray-200">
                       {jbLoading ? (
                         <div className="px-4 py-3 text-gray-500">Loading…</div>
                       ) : jbError ? (
@@ -700,7 +700,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   buttonExpandedLabel="Show Less"
                 >
                   {({ visibleItems }) => (
-                    <div className="overflow-x-auto border border-gray-200 rounded-md">
+                    <div className="overflow-x-auto border border-gray-200">
                       <MetricsTable
                         data={visibleItems}
                         columns={outdatedVsCodePluginsColumns}
@@ -727,7 +727,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
                   buttonExpandedLabel="Show Less"
                 >
                   {({ visibleItems }) => (
-                    <div className="overflow-x-auto border border-gray-200 rounded-md">
+                    <div className="overflow-x-auto border border-gray-200">
                       {vsLoading ? (
                         <div className="px-4 py-3 text-gray-500">Loading…</div>
                       ) : vsError ? (

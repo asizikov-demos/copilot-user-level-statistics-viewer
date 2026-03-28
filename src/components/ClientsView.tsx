@@ -54,7 +54,8 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
   } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
   const headerClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
 
   const renderIDEInfo = (ide: IDEStats) => {
     const IDEIcon = getIDEIcon(ide.ide);
@@ -79,13 +80,13 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
     const acceptanceRate = ide.totalGenerations > 0
       ? (ide.totalAcceptances / ide.totalGenerations * 100).toFixed(1)
       : '0.0';
-    return <div className="text-sm text-gray-900">{acceptanceRate}%</div>;
+    return <div className="text-sm text-gray-900 text-right">{acceptanceRate}%</div>;
   };
 
   const createColumns = (primary: { field: keyof IDEStats; label: string }): TableColumn<IDEStats>[] => [
     {
       id: 'ide',
-      header: 'IDE',
+      header: 'CLIENT',
       sortable: true,
       headerClassName: headerClass,
       className: 'px-6 py-4 whitespace-nowrap',
@@ -96,68 +97,68 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
       header: primary.label,
       sortable: true,
       accessor: primary.field,
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: `${cellClass} font-medium`,
     },
     {
       id: 'totalGenerations',
-      header: 'Generations',
+      header: 'GENERATIONS',
       sortable: true,
       accessor: 'totalGenerations',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'totalAcceptances',
-      header: 'Acceptances',
+      header: 'ACCEPTANCES',
       sortable: true,
       accessor: 'totalAcceptances',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'locAdded',
-      header: 'LOC Added',
+      header: 'LOC ADDED',
       sortable: true,
       accessor: 'locAdded',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'locDeleted',
-      header: 'LOC Deleted',
+      header: 'LOC DELETED',
       sortable: true,
       accessor: 'locDeleted',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'locSuggestedToAdd',
-      header: 'Suggested Add',
+      header: 'SUGGESTED ADD',
       sortable: true,
       accessor: 'locSuggestedToAdd',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'locSuggestedToDelete',
-      header: 'Suggested Delete',
+      header: 'SUGGESTED DELETE',
       sortable: true,
       accessor: 'locSuggestedToDelete',
-      headerClassName: headerClass,
+      headerClassName: headerRightClass,
       className: cellClass,
     },
     {
       id: 'acceptanceRate',
-      header: 'Acceptance Rate',
-      headerClassName: headerClass,
+      header: 'ACCEPTANCE RATE',
+      headerClassName: headerRightClass,
       className: cellClass,
       renderCell: (ide) => renderAcceptanceRate(ide),
     },
   ];
 
-  const usersColumns = createColumns({ field: 'uniqueUsers', label: 'Unique Users' });
-  const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'Total Engagements' });
+  const usersColumns = createColumns({ field: 'uniqueUsers', label: 'UNIQUE USERS' });
+  const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'ENGAGEMENTS' });
 
   return (
     <ViewPanel
@@ -173,12 +174,19 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
           <CLIOverlapChart ideStats={ideStats} />
         </div>
 
-        <IDEInsights
-          ideStats={ideStats}
-          multiIDEUsersCount={multiIDEUsersCount}
-          totalUniqueIDEUsers={totalUniqueIDEUsers}
-          cliUsers={cliUsers}
-        />
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Insights</h3>
+          </div>
+          <div className="px-6 py-4">
+            <IDEInsights
+              ideStats={ideStats}
+              multiIDEUsersCount={multiIDEUsersCount}
+              totalUniqueIDEUsers={totalUniqueIDEUsers}
+              cliUsers={cliUsers}
+            />
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">

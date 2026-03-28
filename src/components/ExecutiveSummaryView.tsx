@@ -101,7 +101,7 @@ export default function ExecutiveSummaryView({
         ),
       }}
       contentClassName="space-y-8"
-      containerClassName="bg-white rounded-lg shadow-sm border border-gray-200 p-6 print:shadow-none print:border-0 print:rounded-none print:p-0"
+      containerClassName="print:p-0"
     >
       <ModeImpactChart
         data={joinedImpactData || []}

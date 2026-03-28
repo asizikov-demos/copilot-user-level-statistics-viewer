@@ -4,7 +4,7 @@ import React from "react";
 import SectionHeader from "./SectionHeader";
 import { cn } from '../../utils/cn';
 
-const BASE_CLASS = "bg-white rounded-lg shadow-sm border border-gray-200 p-6";
+const BASE_CLASS = "";
 
 export type ViewPanelSectionHeaderProps = React.ComponentProps<typeof SectionHeader>;
 
