@@ -24,6 +24,8 @@ export function useFileUpload(): UseFileUploadReturn {
     error,
     setAggregatedMetrics,
     setEnterpriseName,
+    setFilename,
+    setRecordCount,
     setIsLoading,
     setError,
     setWarning,
@@ -56,8 +58,10 @@ export function useFileUpload(): UseFileUploadReturn {
     }
     setError(null);
     setEnterpriseName(enterpriseName);
+    setFilename(files.length === 1 ? files[0].name : `${files.length} files`);
+    setRecordCount(recordCount);
     setAggregatedMetrics(result);
-  }, [setAggregatedMetrics, setEnterpriseName, setUploadProgress, setError, setWarning]);
+  }, [setAggregatedMetrics, setEnterpriseName, setFilename, setRecordCount, setUploadProgress, setError, setWarning]);
 
   useEffect(() => {
     return () => {

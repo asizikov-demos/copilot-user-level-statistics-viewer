@@ -19,8 +19,9 @@ import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndF
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
+import { VIEW_MODES } from '../types/navigation';
+import { useNavigation } from '../state/NavigationContext';
 import type { ModeImpactData, DailyPRUAnalysisData, DailyModelUsageData } from '../domain/calculators/metricCalculators';
-import type { VoidCallback } from '../types/events';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 
@@ -46,7 +47,6 @@ interface UserDetailsViewProps {
   userSummary: UserSummary;
   userLogin: string;
   userId: number;
-  onBack: VoidCallback;
 }
 
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
@@ -90,7 +90,8 @@ function buildDailyCliSeries<T>(
   return result;
 }
 
-export default function UserDetailsView({ userDetails, userSummary, userLogin, userId, onBack }: UserDetailsViewProps) {
+export default function UserDetailsView({ userDetails, userSummary, userLogin, userId }: UserDetailsViewProps) {
+  const { navigateTo } = useNavigation();
   const filledCombinedImpact = useMemo(() => fillDateRange(userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledAgentImpact = useMemo(() => fillDateRange(userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
@@ -516,8 +517,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       headerProps={{
         title: userLogin,
         description: <p className="text-gray-600">User ID: {userId}</p>,
-        onBack,
         titleClassName: 'text-2xl font-bold text-gray-900',
+        onBack: () => navigateTo(VIEW_MODES.USERS),
         backButtonLabel: '← Back to Users',
       }}
       contentClassName="space-y-8"

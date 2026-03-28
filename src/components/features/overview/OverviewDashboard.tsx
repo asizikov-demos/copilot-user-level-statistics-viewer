@@ -3,12 +3,9 @@
 import React from 'react';
 import { MetricsStats } from '../../../types/metrics';
 import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData } from '../../../domain/calculators/metricCalculators';
-import { MetricTileGroup, MetricTileIcon } from '../../ui';
 import EngagementChart from '../../charts/EngagementChart';
 import ChatUsersChart from '../../charts/ChatUsersChart';
 import ChatRequestsChart from '../../charts/ChatRequestsChart';
-import { ViewMode, VIEW_MODES } from '../../../types/navigation';
-import type { VoidCallback, ValueCallback } from '../../../types/events';
 
 interface OverviewDashboardProps {
   stats: MetricsStats;
@@ -16,9 +13,6 @@ interface OverviewDashboardProps {
   engagementData: DailyEngagementData[];
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
-  onNavigate: ValueCallback<ViewMode>;
-  onModelSelect: ValueCallback<string>;
-  onReset: VoidCallback;
 }
 
 const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
@@ -27,9 +21,6 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   engagementData,
   chatUsersData,
   chatRequestsData,
-  onNavigate,
-  onModelSelect,
-  onReset,
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -50,115 +41,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </>
           )}
         </h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onNavigate(VIEW_MODES.EXECUTIVE_SUMMARY)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 rounded-md transition-colors"
-          >
-            Executive Summary
-          </button>
-          <button
-            onClick={onReset}
-            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors"
-          >
-            Upload New File
-          </button>
-        </div>
       </div>
-    
-      <MetricTileGroup
-        items={[
-          {
-            title: 'Unique Users',
-            value: stats.uniqueUsers,
-            accent: 'blue',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.USERS),
-            icon: <MetricTileIcon name="unique-users" />,
-          },
-          {
-            title: 'Top Language',
-            value: stats.topLanguage?.name || 'N/A',
-            subtitle: `${stats.topLanguage?.engagements?.toLocaleString() || '0'} engagements`,
-            accent: 'purple',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.LANGUAGES),
-            size: 'md',
-            icon: <MetricTileIcon name="top-language" />,
-          },
-          {
-            title: 'Client Analysis',
-            value: stats.topIde?.name || 'N/A',
-            subtitle: `${stats.topIde?.entries?.toLocaleString() || '0'} users · top IDE`,
-            accent: 'orange',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.CLIENT_ANALYSIS),
-            size: 'md',
-            icon: <MetricTileIcon name="top-ide" />,
-          },
-          {
-            title: 'CLI Adoption Analysis',
-            value: stats.cliUsers,
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            accent: 'indigo',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.CLI_ADOPTION),
-            icon: <MetricTileIcon name="cli-users" />,
-          },
-        ]}
-        columns={{ base: 1, md: 2, lg: 4 }}
-      />
 
-      <MetricTileGroup
-        className="mt-6"
-        items={[
-          {
-            title: 'Copilot Impact',
-            value: 'Insights',
-            subtitle: 'Understand Impact for your organization',
-            accent: 'indigo',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.COPILOT_IMPACT),
-            icon: <MetricTileIcon name="impact" />,
-          },
-          {
-            title: 'PRU Usage Analysis',
-            value: 'Insights',
-            subtitle: 'Understand Premium Model utilization',
-            accent: 'purple',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.PRU_USAGE),
-            icon: <MetricTileIcon name="pru-usage" />,
-          },
-          {
-            title: 'Copilot Adoption Analysis',
-            value: 'Insights',
-            subtitle: 'Understand Copilot Adoption in your organization',
-            accent: 'violet',
-            interactive: true,
-            onClick: () => onNavigate(VIEW_MODES.COPILOT_ADOPTION),
-            icon: <MetricTileIcon name="copilot-adoption" />,
-          },
-          {
-            title: 'Top Model',
-            value: stats.topModel?.name || 'N/A',
-            subtitle: `${stats.topModel?.engagements?.toLocaleString() || '0'} engagements`,
-            accent: 'indigo',
-            size: 'md',
-            interactive: !!stats.topModel && stats.topModel.name !== 'N/A',
-            disabled: !stats.topModel || stats.topModel.name === 'N/A',
-            onClick: () => {
-              if (stats.topModel && stats.topModel.name !== 'N/A') {
-                onModelSelect(stats.topModel.name);
-              }
-            },
-            icon: <MetricTileIcon name="top-model" />,
-          },
-        ]}
-        columns={{ base: 1, md: 2, lg: 4 }}
-      />
-
-      <div className="mt-8 w-full">
+      <div className="w-full">
         <EngagementChart data={engagementData} />
       </div>
 

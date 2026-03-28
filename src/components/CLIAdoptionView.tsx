@@ -9,14 +9,11 @@ import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import type { MetricsStats } from '../types/metrics';
 import type { DailyCliSessionData, DailyCliTokenData, DailyCliAdoptionTrend } from '../domain/calculators/metricCalculators';
-import type { VoidCallback } from '../types/events';
-
 interface CLIAdoptionViewProps {
   stats: MetricsStats;
   dailyCliSessionData: DailyCliSessionData[];
   dailyCliTokenData: DailyCliTokenData[];
   dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
-  onBack: VoidCallback;
 }
 
 export default function CLIAdoptionView({
@@ -24,7 +21,6 @@ export default function CLIAdoptionView({
   dailyCliSessionData,
   dailyCliTokenData,
   dailyCliAdoptionTrend,
-  onBack,
 }: CLIAdoptionViewProps) {
   const cliShare = stats.uniqueUsers > 0
     ? Math.round((stats.cliUsers / stats.uniqueUsers) * 1000) / 10
@@ -34,8 +30,6 @@ export default function CLIAdoptionView({
     <ViewPanel
       headerProps={{
         title: 'CLI Adoption',
-        onBack,
-        backButtonLabel: '← Back to Overview',
       }}
       contentClassName="space-y-8"
     >

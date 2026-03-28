@@ -13,8 +13,6 @@ import type {
 } from '../domain/calculators/metricCalculators';
 import type { DailyModelUsageData } from '../domain/calculators/metricCalculators';
 import type { MetricsStats } from '../types/metrics';
-import type { VoidCallback } from '../types/events';
-
 interface ExecutiveSummaryViewProps {
   stats: MetricsStats;
   enterpriseName: string | null;
@@ -23,7 +21,6 @@ interface ExecutiveSummaryViewProps {
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
   featureAdoptionData: FeatureAdoptionData;
-  onBack: VoidCallback;
 }
 
 function formatLongDate(dateString: string) {
@@ -57,7 +54,6 @@ export default function ExecutiveSummaryView({
   agentImpactData,
   codeCompletionImpactData,
   featureAdoptionData,
-  onBack,
 }: ExecutiveSummaryViewProps) {
   const reportRange = `${formatLongDate(stats.reportStartDay)} – ${formatLongDate(stats.reportEndDay)}`;
   const generatedOn = new Date().toLocaleDateString('en-US', {
@@ -86,9 +82,6 @@ export default function ExecutiveSummaryView({
     <ViewPanel
       headerProps={{
         title: 'Executive Summary',
-        onBack,
-        backButtonLabel: '← Back',
-        backButtonClassName: 'print:hidden',
         description: (
           <div className="mt-2 space-y-1 text-sm text-gray-700 print:text-black">
             <div className="flex flex-wrap gap-x-6 gap-y-1">

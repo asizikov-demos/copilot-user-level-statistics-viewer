@@ -9,28 +9,24 @@ import type {
   DailyPRUAnalysisData,
   ModelFeatureDistributionData
 } from '../domain/calculators/metricCalculators';
-import type { VoidCallback } from '../types/events';
 import { ViewPanel } from './ui';
 
 interface PRUUsageAnalysisViewProps {
   modelUsageData: DailyModelUsageData[];
   pruAnalysisData: DailyPRUAnalysisData[];
   modelFeatureDistributionData: ModelFeatureDistributionData[];
-  onBack: VoidCallback;
 }
 
 export default function PRUUsageAnalysisView({
   modelUsageData,
   pruAnalysisData,
   modelFeatureDistributionData,
-  onBack
 }: PRUUsageAnalysisViewProps) {
   return (
     <ViewPanel
       headerProps={{
         title: 'PRU Usage Analysis',
         description: 'Understand premium model utilization, service value consumption, and feature distribution across PRU-consuming activities.',
-        onBack,
       }}
       contentClassName="space-y-12"
     >

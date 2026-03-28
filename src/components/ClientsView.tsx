@@ -5,7 +5,6 @@ import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel } from './ui';
-import type { VoidCallback } from '../types/events';
 import { useSortableTable } from '../hooks/useSortableTable';
 import IDEDistributionChart from './charts/IDEDistributionChart';
 import CLIOverlapChart from './charts/CLIOverlapChart';
@@ -19,10 +18,9 @@ interface IDEViewProps {
   totalUniqueIDEUsers: number;
   cliUsers: number;
   cliSessions: number;
-  onBack: VoidCallback;
 }
 
-export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, cliUsers, cliSessions, onBack }: IDEViewProps) {
+export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, cliUsers, cliSessions }: IDEViewProps) {
 
   const allClients: IDEStats[] = React.useMemo(() => {
     if (cliUsers <= 0) return ideStats;
@@ -166,7 +164,6 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
       headerProps={{
         title: 'Client Analysis',
         description: 'Overview of IDE and CLI usage across your organization.',
-        onBack,
       }}
       contentClassName="space-y-8"
     >

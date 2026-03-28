@@ -16,7 +16,6 @@ const NavigationContext = createContext<NavigationContextValue | undefined>(unde
 const initialNavigationState: NavigationState = {
   currentView: VIEW_MODES.OVERVIEW,
   selectedUser: null,
-  selectedModel: null,
 };
 
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -37,28 +36,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }));
   }, []);
 
-  const selectModel = useCallback((model: string) => {
-    setState((prev) => ({
-      ...prev,
-      selectedModel: model,
-      currentView: VIEW_MODES.MODEL_DETAILS,
-    }));
-  }, []);
-
-  const clearSelectedUser = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      selectedUser: null,
-    }));
-  }, []);
-
-  const clearSelectedModel = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      selectedModel: null,
-    }));
-  }, []);
-
   const resetNavigation = useCallback(() => {
     setState(initialNavigationState);
   }, []);
@@ -68,12 +45,9 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ...state,
       navigateTo,
       selectUser,
-      selectModel,
-      clearSelectedUser,
-      clearSelectedModel,
       resetNavigation,
     }),
-    [state, navigateTo, selectUser, selectModel, clearSelectedUser, clearSelectedModel, resetNavigation]
+    [state, navigateTo, selectUser, resetNavigation]
   );
 
   return (
