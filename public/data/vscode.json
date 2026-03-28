@@ -1,8 +1,12 @@
 {
   "stableMinor": 41,
   "previewMinor": 42,
-  "updatedAt": "2026-03-24T22:53:45Z",
+  "updatedAt": "2026-03-27T09:00:24Z",
   "stableReleases": [
+    {
+      "version": "0.41.2",
+      "releaseDate": "2026-03-27T09:00:24Z"
+    },
     {
       "version": "0.41.1",
       "releaseDate": "2026-03-24T22:53:45Z"
@@ -78,10 +82,6 @@
     {
       "version": "0.37.0",
       "releaseDate": "2026-02-04T18:34:22Z"
-    },
-    {
-      "version": "0.36.2",
-      "releaseDate": "2026-01-22T21:25:27Z"
     }
   ]
 }
