@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeCliInsights } from '../../components/CLIAdoptionInsights';
+import { computeCliInsights } from '../cliAdoptionInsights';
 import type { MetricsStats } from '../../types/metrics';
 import type { DailyCliAdoptionTrend } from '../calculators/metricCalculators';
 

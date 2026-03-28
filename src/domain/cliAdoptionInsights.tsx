@@ -1,13 +1,10 @@
-'use client';
-
-import React from 'react';
-import InsightsCard from './ui/InsightsCard';
-import type { DailyCliAdoptionTrend } from '../domain/calculators/metricCalculators';
+import type { ReactNode } from 'react';
+import type { DailyCliAdoptionTrend } from './calculators/metricCalculators';
 import type { MetricsStats } from '../types/metrics';
 
 export interface CliInsight {
   title: string;
-  message: React.ReactNode;
+  message: ReactNode;
   variant: 'green' | 'blue' | 'red' | 'orange' | 'purple';
 }
 
@@ -26,7 +23,7 @@ export function computeCliInsights(
       message: (
         <>
           No users have adopted Copilot CLI yet. Copilot CLI is now generally available and can
-          significantly boost developer productivity in the terminal.{' '}
+          significantly boost developer productivity in the terminal.{" "}
           <a
             href={CLI_DOCS_URL}
             target="_blank"
@@ -77,7 +74,7 @@ export function computeCliInsights(
       message: (
         <>
           Only {adoptionPct.toFixed(1)}% of Copilot users have tried the CLI.
-          Consider promoting it through internal demos, Slack channels, or developer onboarding.{' '}
+          Consider promoting it through internal demos, Slack channels, or developer onboarding.{" "}
           <a
             href={CLI_DOCS_URL}
             target="_blank"
@@ -127,7 +124,7 @@ export function computeCliInsights(
     insights.push({
       title: 'Low Retention',
       variant: 'orange',
-      message: `Only ${retentionRate.toFixed(0)}% of daily CLI users are returning. Many try it once and don\u2019t come back. Consider improving onboarding or sharing best practices.`,
+      message: `Only ${retentionRate.toFixed(0)}% of daily CLI users are returning. Many try it once and don’t come back. Consider improving onboarding or sharing best practices.`,
     });
   }
 
@@ -140,25 +137,4 @@ export function computeCliInsights(
   }
 
   return insights;
-}
-
-interface CLIAdoptionInsightsProps {
-  stats: MetricsStats;
-  trend: DailyCliAdoptionTrend[];
-}
-
-export default function CLIAdoptionInsights({ stats, trend }: CLIAdoptionInsightsProps) {
-  const insights = computeCliInsights(stats, trend);
-
-  if (insights.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {insights.map((insight, i) => (
-        <InsightsCard key={i} title={insight.title} variant={insight.variant}>
-          {insight.message}
-        </InsightsCard>
-      ))}
-    </div>
-  );
 }

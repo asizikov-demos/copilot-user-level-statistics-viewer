@@ -8,16 +8,20 @@ import { formatShortDate } from '../../utils/formatters';
 import { calculateTotal, calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import { chartColors } from './utils/chartColors';
 import { computeRetentionRates, computeAverageRetention } from './utils/chartStyles';
+import { computeCliInsights } from '../../domain/cliAdoptionInsights';
 import type { DailyCliAdoptionTrend } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
+import InsightsCard from '../ui/InsightsCard';
+import type { MetricsStats } from '../../types/metrics';
 
 registerChartJS();
 
 interface CLIAdoptionTrendChartProps {
   data: DailyCliAdoptionTrend[];
+  stats: MetricsStats;
 }
 
-export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartProps) {
+export default function CLIAdoptionTrendChart({ data, stats }: CLIAdoptionTrendChartProps) {
   const totalNewUsers = calculateTotal(data, d => d.newUsers);
   const avgDailyActive = calculateAverage(data, d => d.totalActiveUsers);
   const peakUsers = findMaxValue(data, d => d.totalActiveUsers);
@@ -25,6 +29,8 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
 
   const retentionRates = computeRetentionRates(data);
   const avgRetention = computeAverageRetention(data);
+
+  const insights = computeCliInsights(stats, data);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
@@ -145,6 +151,17 @@ export default function CLIAdoptionTrendChart({ data }: CLIAdoptionTrendChartPro
         { value: peakUsers, label: 'Peak Daily Users', colorClass: 'text-indigo-600' },
         { value: `${avgRetention}%`, label: 'Avg Retention', colorClass: 'text-amber-600' },
       ]}
+      footer={
+        insights.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {insights.map((insight, i) => (
+              <InsightsCard key={i} title={insight.title} variant={insight.variant}>
+                {insight.message}
+              </InsightsCard>
+            ))}
+          </div>
+        ) : undefined
+      }
     >
       <div className="h-full">
         <Chart type="bar" data={chartData} options={options} />
