@@ -4,8 +4,6 @@ import React from 'react';
 import ModeImpactChart from './charts/ModeImpactChart';
 import { ViewPanel } from './ui';
 import type { AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../domain/calculators/metricCalculators';
-import type { VoidCallback } from '../types/events';
-
 interface CopilotImpactViewProps {
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
@@ -15,17 +13,15 @@ interface CopilotImpactViewProps {
   cliImpactData: ModeImpactData[];
   planModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
-  onBack: VoidCallback;
 }
 
-export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, planModeImpactData, joinedImpactData, onBack }: CopilotImpactViewProps) {
+export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, planModeImpactData, joinedImpactData }: CopilotImpactViewProps) {
   return (
     <ViewPanel
       headerProps={{
         title: 'Copilot Impact Analysis',
         description:
           'Analyze the impact and productivity gains from Copilot features, including code completion, agent mode, edit mode, and inline mode contributions to your codebase.',
-        onBack,
       }}
       contentClassName="space-y-8"
     >

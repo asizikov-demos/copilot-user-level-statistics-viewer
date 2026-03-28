@@ -6,6 +6,7 @@ import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
+import { useResetAppState } from '../../hooks/useResetAppState';
 import { terminateWorker, computeUserDetailsInWorker } from '../../workers/metricsWorkerClient';
 import { FileUploadArea } from '../features/file-upload';
 import { OverviewDashboard } from '../features/overview';
@@ -23,13 +24,14 @@ import ExecutiveSummaryView from '../ExecutiveSummaryView';
 const ViewRouter: React.FC = () => {
   const { 
     hasData, enterpriseName, aggregatedMetrics,
-    isLoading, error, resetMetrics
+    isLoading, error
   } = useMetrics();
   const { 
-    currentView, selectedUser, selectedModel,
-    navigateTo, selectUser, selectModel, clearSelectedModel, resetNavigation
+    currentView, selectedUser,
+    navigateTo, selectUser
   } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
+  const resetAppState = useResetAppState();
 
   const [userDetails, setUserDetails] = useState<UserDetailedMetrics | null>(null);
   const [userDetailsLoading, setUserDetailsLoading] = useState(false);
@@ -62,12 +64,6 @@ const ViewRouter: React.FC = () => {
     return () => { terminateWorker(); };
   }, []);
 
-  const resetData = () => {
-    terminateWorker();
-    resetMetrics();
-    resetNavigation();
-  };
-
   const handleUserClick = (userLogin: string, userId: number) => {
     selectUser({ login: userLogin, id: userId });
   };
@@ -79,7 +75,7 @@ const ViewRouter: React.FC = () => {
           <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to process metrics</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
           <button
-            onClick={resetData}
+            onClick={resetAppState}
             className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
           >
             Start Over
@@ -157,7 +153,6 @@ const ViewRouter: React.FC = () => {
           agentImpactData={agentImpactData}
           codeCompletionImpactData={codeCompletionImpactData}
           featureAdoptionData={featureAdoptionData}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -168,7 +163,6 @@ const ViewRouter: React.FC = () => {
           languageFeatureImpactData={languageFeatureImpactData}
           dailyLanguageGenerationsData={dailyLanguageGenerationsData}
           dailyLanguageLocData={dailyLanguageLocData}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -180,7 +174,6 @@ const ViewRouter: React.FC = () => {
           totalUniqueIDEUsers={totalUniqueIDEUsers}
           cliUsers={stats.cliUsers}
           cliSessions={dailyCliSessionData.reduce((sum, d) => sum + d.sessionCount, 0)}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
         />
       );
 
@@ -195,7 +188,6 @@ const ViewRouter: React.FC = () => {
           cliImpactData={cliImpactData}
           planModeImpactData={planModeImpactData}
           joinedImpactData={joinedImpactData}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -205,7 +197,6 @@ const ViewRouter: React.FC = () => {
           modelUsageData={modelUsageData}
           pruAnalysisData={pruAnalysisData}
           modelFeatureDistributionData={modelFeatureDistributionData}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -217,7 +208,6 @@ const ViewRouter: React.FC = () => {
           stats={stats}
           pluginVersionData={pluginVersionData}
           dailyAdoptionTrend={dailyAdoptionTrend}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -228,7 +218,6 @@ const ViewRouter: React.FC = () => {
           dailyCliSessionData={dailyCliSessionData}
           dailyCliTokenData={dailyCliTokenData}
           dailyCliAdoptionTrend={dailyCliAdoptionTrend}
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)}
         />
       );
 
@@ -236,7 +225,6 @@ const ViewRouter: React.FC = () => {
       return (
         <UniqueUsersView 
           users={userSummaries} 
-          onBack={() => navigateTo(VIEW_MODES.OVERVIEW)} 
           onUserClick={handleUserClick}
         />
       );
@@ -268,23 +256,14 @@ const ViewRouter: React.FC = () => {
             userSummary={userSummary}
             userLogin={selectedUser.login}
             userId={selectedUser.id}
-            onBack={() => navigateTo(VIEW_MODES.USERS)}
           />
         );
       }
 
     case VIEW_MODES.MODEL_DETAILS:
-      if (!selectedModel) {
-        navigateTo(VIEW_MODES.OVERVIEW);
-        return null;
-      }
       return (
         <ModelDetailsView
           modelBreakdownData={modelBreakdownData}
-          onBack={() => {
-            navigateTo(VIEW_MODES.OVERVIEW);
-            clearSelectedModel();
-          }}
         />
       );
 
@@ -297,9 +276,6 @@ const ViewRouter: React.FC = () => {
           engagementData={engagementData}
           chatUsersData={chatUsersData}
           chatRequestsData={chatRequestsData}
-          onNavigate={navigateTo}
-          onModelSelect={selectModel}
-          onReset={resetData}
         />
       );
   }

@@ -7,6 +7,8 @@ interface MetricsState {
   hasData: boolean;
   aggregatedMetrics: AggregatedMetrics | null;
   enterpriseName: string | null;
+  filename: string | null;
+  recordCount: number | null;
   isLoading: boolean;
   error: string | null;
   warning: string | null;
@@ -16,6 +18,8 @@ interface MetricsActions {
   setAggregatedMetrics: (metrics: AggregatedMetrics) => void;
   setHasData: (hasData: boolean) => void;
   setEnterpriseName: (name: string | null) => void;
+  setFilename: (filename: string | null) => void;
+  setRecordCount: (count: number | null) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setWarning: (warning: string | null) => void;
@@ -30,6 +34,8 @@ const initialMetricsState: MetricsState = {
   hasData: false,
   aggregatedMetrics: null,
   enterpriseName: null,
+  filename: null,
+  recordCount: null,
   isLoading: false,
   error: null,
   warning: null,
@@ -48,6 +54,14 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
 
   const setEnterpriseName = useCallback((name: string | null) => {
     setState((prev) => ({ ...prev, enterpriseName: name }));
+  }, []);
+
+  const setFilename = useCallback((filename: string | null) => {
+    setState((prev) => ({ ...prev, filename }));
+  }, []);
+
+  const setRecordCount = useCallback((count: number | null) => {
+    setState((prev) => ({ ...prev, recordCount: count }));
   }, []);
 
   const setIsLoading = useCallback((loading: boolean) => {
@@ -72,12 +86,14 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
       setAggregatedMetrics,
       setHasData,
       setEnterpriseName,
+      setFilename,
+      setRecordCount,
       setIsLoading,
       setError,
       setWarning,
       resetMetrics,
     }),
-    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setIsLoading, setError, setWarning, resetMetrics]
+    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setFilename, setRecordCount, setIsLoading, setError, setWarning, resetMetrics]
   );
 
   return (

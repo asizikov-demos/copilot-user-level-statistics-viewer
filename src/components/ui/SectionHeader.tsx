@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import type { VoidCallback } from '../../types/events';
 import { cn } from '../../utils/cn';
 
 type Description = string | React.ReactNode;
@@ -9,7 +8,7 @@ type Description = string | React.ReactNode;
 interface SectionHeaderProps {
   title: string;
   description?: Description;
-  onBack: VoidCallback;
+  onBack?: () => void;
   className?: string;
   titleClassName?: string;
   descriptionClassName?: string;
@@ -45,9 +44,11 @@ export default function SectionHeader({
           description
         ))}
       </div>
-      <button onClick={onBack} className={buttonClassName}>
-        {backButtonLabel}
-      </button>
+      {onBack && (
+        <button type="button" onClick={onBack} className={buttonClassName}>
+          {backButtonLabel}
+        </button>
+      )}
     </div>
   );
 }

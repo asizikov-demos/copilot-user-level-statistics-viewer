@@ -2,35 +2,32 @@
 
 import React from 'react';
 
+const step = (n: number, text: React.ReactNode) => (
+  <div className="flex items-start gap-3">
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0969da] text-white text-[10px] font-bold flex-shrink-0 mt-0.5">{n}</span>
+    <p className="text-sm text-[#24292f] leading-snug">{text}</p>
+  </div>
+);
+
 const HowToGetData: React.FC = () => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3">How to Get Your Data Export</h3>
-      <div className="space-y-3 text-sm text-gray-700">
-        <div className="flex items-start">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs mr-3 flex-shrink-0 mt-0.5">1</span>
-          <p>Navigate to your GitHub Enterprise account settings or organization dashboard</p>
-        </div>
-        <div className="flex items-start">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs mr-3 flex-shrink-0 mt-0.5">2</span>
-          <p>Go to the <strong>GitHub Copilot Usage Metrics Dashboard</strong></p>
-        </div>
-        <div className="flex items-start">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs mr-3 flex-shrink-0 mt-0.5">3</span>
-          <p>Select the desired date range and export options</p>
-        </div>
-        <div className="flex items-start">
-          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-semibold text-xs mr-3 flex-shrink-0 mt-0.5">4</span>
-          <p>Download the <strong>User Level Metrics</strong> file (NDJSON format)</p>
-        </div>
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <a 
-            href="https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/view-usage-and-adoption"
+    <div className="rounded-lg border border-[#d0d7de] bg-white">
+      <div className="px-5 py-4 border-b border-[#d0d7de]">
+        <h3 className="text-sm font-semibold text-[#24292f]">How to export your data</h3>
+      </div>
+      <div className="px-5 py-4 space-y-3">
+        {step(1, <span>Navigate to your enterprise on <strong>GitHub.com</strong> or <strong>GHE.com</strong> (e.g. from the <a href="https://github.com/settings/enterprises" target="_blank" rel="noopener noreferrer" className="text-[#0969da] hover:underline">Enterprises</a> page)</span>)}
+        {step(2, <span>Click the <strong>Insights</strong> tab</span>)}
+        {step(3, <span>In the left sidebar, click <strong>Copilot usage</strong></span>)}
+        {step(4, <span>Export the <strong>User Level Metrics</strong> NDJSON report from the dashboard</span>)}
+        <div className="pt-2">
+          <a
+            href="https://docs.github.com/en/enterprise-cloud@latest/copilot/how-tos/administer-copilot/view-usage-and-adoption"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+            className="inline-flex items-center gap-1.5 text-xs text-[#0969da] hover:underline font-medium"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             View GitHub Documentation

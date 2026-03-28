@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { SortDirection, SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
-import type { VoidCallback } from '../types/events';
 import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types/metrics';
 import LanguageDailyChart from './charts/LanguageDailyChart';
 import { translateFeature } from '../domain/featureTranslations';
@@ -15,7 +14,6 @@ interface LanguagesViewProps {
   languageFeatureImpactData: LanguageFeatureImpactData;
   dailyLanguageGenerationsData: DailyLanguageChartData;
   dailyLanguageLocData: DailyLanguageChartData;
-  onBack: VoidCallback;
 }
 
 type SortField = 'language' | 'totalGenerations' | 'totalAcceptances' | 'totalEngagements' | 'uniqueUsers' | 'locAdded' | 'locDeleted' | 'locSuggestedToAdd' | 'locSuggestedToDelete';
@@ -46,7 +44,7 @@ const formatAcceptanceRate = (lang: LanguageStats) => {
     : '0.0';
 };
 
-export default function LanguagesView({ languages, languageFeatureImpactData, dailyLanguageGenerationsData, dailyLanguageLocData, onBack }: LanguagesViewProps) {
+export default function LanguagesView({ languages, languageFeatureImpactData, dailyLanguageGenerationsData, dailyLanguageLocData }: LanguagesViewProps) {
   const [tableSortState, setTableSortState] = useState<TableSortState>({
     field: 'totalEngagements',
     direction: 'desc',
@@ -392,7 +390,6 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       headerProps={{
         title: 'Programming Languages Analysis',
         description: 'Detailed breakdown of language usage patterns',
-        onBack,
         descriptionClassName: 'text-gray-600 mt-1',
       }}
       contentClassName="space-y-6"

@@ -5,15 +5,13 @@ import ModelsUsageChart from './charts/ModelsUsageChart';
 import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
 import InsightsCard from './ui/InsightsCard';
 import type { ModelBreakdownData } from '../types/metrics';
-import type { VoidCallback } from '../types/events';
 import { ViewPanel } from './ui';
 
 interface ModelDetailsViewProps {
   modelBreakdownData: ModelBreakdownData;
-  onBack: VoidCallback;
 }
 
-export default function ModelDetailsView({ modelBreakdownData, onBack }: ModelDetailsViewProps) {
+export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsViewProps) {
   const premiumUtilization = useMemo(() => {
     const { premiumTotal, standardTotal, unknownTotal } = modelBreakdownData;
 
@@ -126,7 +124,6 @@ export default function ModelDetailsView({ modelBreakdownData, onBack }: ModelDe
       headerProps={{
         title: 'Model Usage',
         description: 'Detailed model insights along with model usage trends.',
-        onBack,
       }}
       contentClassName="space-y-6"
     >

@@ -8,17 +8,15 @@ import { ViewPanel } from './ui';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import StatsGrid from './ui/StatsGrid';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
-import type { VoidCallback } from '../types/events';
 
 interface UniqueUsersViewProps {
   users: UserSummary[];
-  onBack: VoidCallback;
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
 type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
 
-export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUsersViewProps) {
+export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const [filterByAttention, setFilterByAttention] = useState(false);
 
   const attentionUsers = users.filter(u => u.flags.length > 0);
@@ -169,7 +167,6 @@ export default function UniqueUsersView({ users, onBack, onUserClick }: UniqueUs
     <ViewPanel
       headerProps={{
         title: 'Unique Users',
-        onBack,
       }}
       contentClassName="space-y-6"
     >

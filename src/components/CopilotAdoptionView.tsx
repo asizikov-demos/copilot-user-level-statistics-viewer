@@ -14,18 +14,15 @@ import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassif
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
 import type { DailyAdoptionTrend } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
-import type { VoidCallback } from '../types/events';
-
 interface CopilotAdoptionViewProps {
   featureAdoptionData: FeatureAdoptionData | null;
   agentModeHeatmapData: AgentModeHeatmapData[];
   stats: MetricsStats;
   pluginVersionData: PluginVersionAnalysisData;
   dailyAdoptionTrend: DailyAdoptionTrend[];
-  onBack: VoidCallback;
 }
 
-export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, dailyAdoptionTrend, onBack }: CopilotAdoptionViewProps) {
+export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeatmapData, stats, pluginVersionData, dailyAdoptionTrend }: CopilotAdoptionViewProps) {
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
   const {
     stableReleases: vsCodeStableReleases,
@@ -339,7 +336,6 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       headerProps={{
         title: 'Copilot Adoption Analysis',
         description: 'Understand Copilot feature adoption patterns and Agent Mode usage intensity across days.',
-        onBack,
       }}
       contentClassName="space-y-10"
     >
