@@ -3,7 +3,6 @@
 import React from 'react';
 import { ViewPanel, MetricTileGroup, MetricTileIcon } from './ui';
 import CLIAdoptionTrendChart from './charts/CLIAdoptionTrendChart';
-import CLIAdoptionInsights from './CLIAdoptionInsights';
 import CLIUsersChart from './charts/CLIUsersChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
@@ -52,9 +51,7 @@ export default function CLIAdoptionView({
         columns={{ base: 1, md: 2, lg: 2 }}
       />
 
-      <CLIAdoptionInsights stats={stats} trend={dailyCliAdoptionTrend} />
-
-      <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} />
+      <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} stats={stats} />
       <CLIUsersChart data={dailyCliSessionData} />
       <CLISessionChart data={dailyCliSessionData} />
       <CLITokensChart data={dailyCliTokenData} />

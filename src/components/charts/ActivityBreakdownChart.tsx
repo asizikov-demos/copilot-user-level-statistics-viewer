@@ -109,7 +109,7 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
                         {config.columns.map((col, idx) => (
-                          <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             {col.header}
                           </th>
                         ))}
@@ -122,7 +122,7 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
                             {translateFeature(item.feature)}
                           </td>
                           {config.columns.map((col, colIdx) => (
-                            <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
                               {col.accessor(item).toLocaleString()}
                             </td>
                           ))}

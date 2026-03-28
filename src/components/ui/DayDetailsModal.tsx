@@ -107,22 +107,22 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {visibleItems.map((feature, idx) => (
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{translateFeature(feature.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{feature.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{feature.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{feature.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{feature.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{feature.loc_deleted_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.user_initiated_interaction_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.code_generation_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.code_acceptance_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.loc_added_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.loc_deleted_sum.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -145,22 +145,22 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin Version</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin Version</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {visibleItems.map((ide, idx) => (
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{formatIDEName(ide.ide)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{ide.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{ide.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{ide.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{ide.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.user_initiated_interaction_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
                                 {ide.last_known_plugin_version ? 
                                   `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}` : 
                                   'Unknown'
@@ -171,11 +171,11 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                           {dayMetrics.totals_by_cli && dayMetrics.totals_by_cli.prompt_count > 0 && (
                             <tr className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">Copilot CLI</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{dayMetrics.totals_by_cli.prompt_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-500">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{dayMetrics.totals_by_cli.prompt_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
                                 {dayMetrics.totals_by_cli.last_known_cli_version ?
                                   `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}` :
                                   'Unknown'
@@ -204,10 +204,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -215,10 +215,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.language || 'Unknown'}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{translateFeature(item.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.loc_deleted_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_deleted_sum.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -242,10 +242,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -253,10 +253,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.language || 'Unknown'}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{item.model || 'Unknown'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.loc_deleted_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_deleted_sum.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -280,10 +280,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -291,10 +291,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.model || 'Unknown'}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{translateFeature(item.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.loc_added_sum.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.user_initiated_interaction_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>

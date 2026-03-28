@@ -3,7 +3,6 @@
 import React, { useMemo } from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
-import InsightsCard from './ui/InsightsCard';
 import type { ModelBreakdownData } from '../types/metrics';
 import { ViewPanel } from './ui';
 
@@ -132,28 +131,36 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
           Each seat comes with at least 300 Premium Request Units (PRUs) that reset monthly. Comparing premium and standard usage helps ensure those high-value requests are fully utilized before they expire.
         </div>
         {premiumUtilization && (
-          <InsightsCard
-            title="Premium Request Utilization"
-            variant={premiumUtilization.variant}
-          >
-            {premiumUtilization.paragraphs.map((paragraph, index) => (
-              <p key={index} className={index > 0 ? 'mt-2' : ''}>
-                {paragraph}
-              </p>
-            ))}
-            {premiumUtilization.summaryLines.length > 0 && (
-              <ul className="mt-4 list-disc pl-5 space-y-1">
-                {premiumUtilization.summaryLines.map((line, index) => (
-                  <li key={index}>{line}</li>
-                ))}
-              </ul>
-            )}
-            {premiumUtilization.note && (
-              <p className="mt-3 text-xs">
-                {premiumUtilization.note}
-              </p>
-            )}
-          </InsightsCard>
+          <div className="border border-gray-200 rounded-md bg-white">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h4 className="text-sm font-semibold text-gray-900">Premium Request Utilization</h4>
+            </div>
+            <div className="px-4 py-4 space-y-3 text-sm text-gray-900">
+              {premiumUtilization.paragraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+              {premiumUtilization.summaryLines.length > 0 && (
+                <dl className="mt-2 grid grid-cols-1 gap-1 border-t border-gray-100 pt-3">
+                  {premiumUtilization.summaryLines.map((line, index) => {
+                    const [label, value] = line.split(': ');
+                    return value ? (
+                      <div key={index} className="flex justify-between gap-4">
+                        <dt className="text-gray-500">{label}</dt>
+                        <dd className="font-medium tabular-nums text-right">{value}</dd>
+                      </div>
+                    ) : (
+                      <div key={index} className="text-gray-700">{line}</div>
+                    );
+                  })}
+                </dl>
+              )}
+              {premiumUtilization.note && (
+                <p className="border-t border-gray-100 pt-3 text-xs text-gray-500">
+                  {premiumUtilization.note}
+                </p>
+              )}
+            </div>
+          </div>
         )}
         <DailyPremiumBaseChart modelBreakdownData={modelBreakdownData} />
         <ModelsUsageChart modelEntries={modelBreakdownData.standardModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.standardTotal} variant="standard" />

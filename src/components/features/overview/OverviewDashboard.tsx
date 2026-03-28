@@ -31,8 +31,8 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
         <h2 className="text-xl text-gray-900">
           <span className="font-semibold">Metrics Overview</span> - Data covers the period from <strong>{formatDate(stats.reportStartDay)}</strong> to <strong>{formatDate(stats.reportEndDay)}</strong>
           {enterpriseName && (
@@ -47,11 +47,11 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <EngagementChart data={engagementData} />
       </div>
 
-      <div className="mt-8 w-full">
+      <div className="w-full">
         <ChatUsersChart data={chatUsersData} />
       </div>
 
-      <div className="mt-8 w-full">
+      <div className="w-full">
         <ChatRequestsChart data={chatRequestsData} />
       </div>
     </div>

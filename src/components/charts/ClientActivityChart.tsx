@@ -178,13 +178,13 @@ export default function ClientActivityChart({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IDE</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Add</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Delete</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Add</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Delete</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -196,13 +196,13 @@ export default function ClientActivityChart({
                     <span>{formatIDEName(ide.ide)}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.user_initiated_interaction_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.code_generation_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.code_acceptance_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.loc_added_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.loc_deleted_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.loc_suggested_to_add_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ide.loc_suggested_to_delete_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.user_initiated_interaction_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_deleted_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_suggested_to_add_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_suggested_to_delete_sum.toLocaleString()}</td>
               </tr>
             ))}
             {(() => {
@@ -224,13 +224,13 @@ export default function ClientActivityChart({
                       <span>Copilot CLI</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cliTotals.prompt_count.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.prompt_count.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
                 </tr>
               );
             })()}
@@ -262,16 +262,16 @@ export default function ClientActivityChart({
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {(isPluginTableExpanded ? allVersions : allVersions.slice(0, 1)).map((entry, index) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{entry.version}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatShortDate(entry.sampled_at)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{entry.version}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{formatShortDate(entry.sampled_at)}</td>
                         </tr>
                       ))}
                     </tbody>

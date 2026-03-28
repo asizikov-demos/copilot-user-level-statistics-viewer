@@ -14,7 +14,7 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted' | 'total_loc_suggested_to_add' | 'total_loc_suggested_to_delete';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted';
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const [filterByAttention, setFilterByAttention] = useState(false);
@@ -36,12 +36,13 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
   const tableSortState = { field: sortField as string, direction: sortDirection };
 
   const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
 
   const columns: TableColumn<UserSummary>[] = [
     {
       id: 'user_login',
-      header: 'User',
+      header: 'USER',
       sortable: true,
       headerClassName: `${headerBaseClass} w-1/4`,
       className: 'px-6 py-4 whitespace-nowrap',
@@ -73,59 +74,51 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
     },
     {
       id: 'total_user_initiated_interactions',
-      header: 'User Interactions',
+      header: 'INTERACTIONS',
       sortable: true,
       accessor: 'total_user_initiated_interactions',
-      headerClassName: `${headerBaseClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'total_code_generation_activities',
-      header: 'Code Generation',
+      header: 'GENERATIONS',
       sortable: true,
       accessor: 'total_code_generation_activities',
-      headerClassName: `${headerBaseClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'total_loc_added',
-      header: 'LOC Added',
+      header: 'LOC ADDED',
       sortable: true,
       accessor: 'total_loc_added',
-      headerClassName: `${headerBaseClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'total_loc_deleted',
-      header: 'LOC Deleted',
+      header: 'LOC DELETED',
       sortable: true,
       accessor: 'total_loc_deleted',
-      headerClassName: `${headerBaseClass} w-1/8`,
-      className: valueCellClass,
-    },
-    {
-      id: 'total_loc_suggested_to_add',
-      header: 'Suggested Add',
-      sortable: true,
-      accessor: 'total_loc_suggested_to_add',
-      headerClassName: `${headerBaseClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'days_active',
-      header: 'Days Active',
+      header: 'DAYS ACTIVE',
       sortable: true,
       accessor: 'days_active',
-      headerClassName: `${headerBaseClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'features_used',
-      header: 'Features Used',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider w-1/4',
-      className: 'px-6 py-4 whitespace-nowrap min-w-[280px]',
+      header: 'FEATURES USED',
+      headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4',
+      className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right',
       renderCell: (user) => (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 justify-end">
           {user.used_chat && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
               Chat
@@ -209,7 +202,7 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-gray-200">
           <MetricsTable<UserSummary>
             data={sortedUsers}
             columns={columns}

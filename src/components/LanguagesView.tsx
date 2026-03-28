@@ -415,7 +415,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
           <p className="text-sm text-gray-500 mb-4">
             Lines of code impacted (added + deleted) for top 10 languages, broken down by Copilot feature.
           </p>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto border border-gray-200">
             <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -472,7 +472,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
             buttonExpandedLabel="Show Less"
           >
             {({ visibleItems }) => (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border border-gray-200">
                 <MetricsTable
                   data={visibleItems}
                   columns={languagesByGenerationsColumns}
@@ -495,7 +495,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
             buttonExpandedLabel="Show Less"
           >
             {({ visibleItems }) => (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border border-gray-200">
                 <MetricsTable
                   data={visibleItems}
                   columns={languagesByUsersColumns}
@@ -522,7 +522,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
           buttonExpandedLabel="Show Less"
         >
           {({ visibleItems }) => (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border border-gray-200">
               <MetricsTable
                 data={visibleItems}
                 columns={languagesByNetImpactColumns}
@@ -545,7 +545,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
           buttonExpandedLabel="Show Less"
         >
           {({ visibleItems }) => (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border border-gray-200">
               <MetricsTable
                 data={visibleItems}
                 columns={completeLanguagesColumns}
