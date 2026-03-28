@@ -32,7 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: 'Client Analysis',
+    label: 'Clients',
     view: VIEW_MODES.CLIENT_ANALYSIS,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -50,7 +50,7 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: 'Copilot Impact Analysis',
+    label: 'Copilot Impact',
     view: VIEW_MODES.COPILOT_IMPACT,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -59,7 +59,7 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: 'PRU Usage Analysis',
+    label: 'PRU Usage',
     view: VIEW_MODES.PRU_USAGE,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -68,7 +68,7 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    label: 'Copilot Adoption Analysis',
+    label: 'Copilot Adoption',
     view: VIEW_MODES.COPILOT_ADOPTION,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
