@@ -44,7 +44,7 @@ export default function ChartContainer({
 }: ChartContainerProps) {
   if (isEmpty) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+      <div className={`bg-white rounded-md border border-[#d1d9e0] p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
         <div className="text-center py-8 text-gray-500">{emptyState}</div>
       </div>
@@ -53,7 +53,7 @@ export default function ChartContainer({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-full overflow-hidden print:shadow-none print:border-gray-300 print:break-inside-avoid print:p-3 ${className}`}
+      className={`bg-white rounded-md border border-[#d1d9e0] p-6 max-w-full overflow-hidden print:border-gray-300 print:break-inside-avoid print:p-3 ${className}`}
     >
       <div className="flex justify-between items-start mb-6 print:mb-3 print:flex-row print:items-start print:gap-4">
         <div className="print:flex-1">

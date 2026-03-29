@@ -104,7 +104,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Calendar</h3>
       
       <div className="space-y-2">

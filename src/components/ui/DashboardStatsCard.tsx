@@ -54,7 +54,7 @@ export interface DashboardStatsCardProps {
   dataTestId?: string;
 }
 
-const DEFAULT_NEUTRAL_CONTAINER = 'bg-white border-gray-200';
+const DEFAULT_NEUTRAL_CONTAINER = 'bg-white border-[#d1d9e0]';
 const DEFAULT_LABEL_CLASS = 'text-sm text-gray-600';
 const DEFAULT_HELPER_CLASS = 'text-xs text-gray-500';
 
@@ -76,7 +76,7 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
   const accentStyles = deriveAccentStyles(COLOR_PALETTE[accent]);
 
   const containerClasses = cn(
-    'rounded-lg shadow-sm border p-4 transition-colors',
+    'rounded-md border p-4 transition-colors',
     tone === 'tint' ? accentStyles.tint.container : DEFAULT_NEUTRAL_CONTAINER,
     className
   );

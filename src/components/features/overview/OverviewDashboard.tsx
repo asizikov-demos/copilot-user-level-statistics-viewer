@@ -34,12 +34,9 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-xl text-gray-900">
-          <span className="font-semibold">Metrics Overview</span> - Data covers the period from <strong>{formatDate(stats.reportStartDay)}</strong> to <strong>{formatDate(stats.reportEndDay)}</strong>
-          {enterpriseName && (
-            <>
-              {' '}for Enterprise <strong>{enterpriseName}</strong>
-            </>
-          )}
+          <span className="font-semibold">Metrics Overview</span>
+          <br />
+          <span className="text-sm font-normal text-gray-600">Data covers the period from <strong>{formatDate(stats.reportStartDay)}</strong> to <strong>{formatDate(stats.reportEndDay)}</strong>{enterpriseName && <> for Enterprise <strong>{enterpriseName}</strong></>}</span>
         </h2>
       </div>
 
