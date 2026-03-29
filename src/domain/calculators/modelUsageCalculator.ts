@@ -1,5 +1,5 @@
 import { SERVICE_VALUE_RATE, getModelMultiplier, classifyModelBucket } from '../modelConfig';
-import { CopilotMetrics } from '../../types/metrics';
+import type { CopilotMetrics } from '../../types/metrics';
 
 export interface DailyModelUsageData {
   date: string;

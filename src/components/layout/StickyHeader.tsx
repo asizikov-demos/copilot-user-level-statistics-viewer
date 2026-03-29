@@ -3,7 +3,7 @@
 import React from 'react';
 import { useMetrics } from '../MetricsContext';
 import { useNavigation } from '../../state/NavigationContext';
-import { terminateWorker } from '../../workers/metricsWorkerClient';
+import { useResetAppState } from '../../hooks/useResetAppState';
 import { getActiveNavItem, NAV_ITEMS } from './navigationItems';
 
 const GitHubMark = () => (
@@ -19,15 +19,10 @@ const GitHubMark = () => (
 );
 
 const StickyHeader: React.FC = () => {
-  const { hasData, resetMetrics } = useMetrics();
-  const { currentView, navigateTo, resetNavigation } = useNavigation();
+  const { hasData } = useMetrics();
+  const { currentView, navigateTo } = useNavigation();
+  const resetAppState = useResetAppState();
   const activeNavItem = getActiveNavItem(currentView) ?? NAV_ITEMS[0];
-
-  const handleReset = () => {
-    terminateWorker();
-    resetMetrics();
-    resetNavigation();
-  };
 
   const handleMobileNavigation = (event: React.ChangeEvent<HTMLSelectElement>) => {
     navigateTo(event.target.value as typeof activeNavItem.view);
@@ -66,7 +61,7 @@ const StickyHeader: React.FC = () => {
         {hasData && (
           <button
             type="button"
-            onClick={handleReset}
+            onClick={resetAppState}
             className="px-4 py-2 text-sm font-medium text-white bg-transparent hover:bg-white/[0.08] rounded-md transition-all duration-150 border border-[#57606a]"
           >
             <span className="hidden sm:inline">Upload new file</span>
