@@ -3,7 +3,7 @@
 import React from 'react';
 import { useMetrics } from '../MetricsContext';
 import { useNavigation } from '../../state/NavigationContext';
-import { useResetAppState } from '../../hooks/useResetAppState';
+import { terminateWorker } from '../../workers/metricsWorkerClient';
 import { getActiveNavItem, NAV_ITEMS } from './navigationItems';
 
 const GitHubMark = () => (
@@ -19,25 +19,30 @@ const GitHubMark = () => (
 );
 
 const StickyHeader: React.FC = () => {
-  const { hasData } = useMetrics();
-  const { currentView, navigateTo } = useNavigation();
-  const resetAppState = useResetAppState();
+  const { hasData, resetMetrics } = useMetrics();
+  const { currentView, navigateTo, resetNavigation } = useNavigation();
   const activeNavItem = getActiveNavItem(currentView) ?? NAV_ITEMS[0];
 
+  const handleReset = () => {
+    terminateWorker();
+    resetMetrics();
+    resetNavigation();
+  };
+
   const handleMobileNavigation = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    navigateTo(event.target.value as (typeof activeNavItem.view));
+    navigateTo(event.target.value as typeof activeNavItem.view);
   };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#24292f] flex items-center justify-between px-4 sm:px-6 lg:px-8 print:hidden">
-      <div className="flex items-center gap-3">
+      <div className="min-w-0 flex items-center gap-3">
         <GitHubMark />
-        <span className="hidden text-lg font-semibold tracking-tight text-white sm:inline">
+        <span className="hidden text-white font-semibold text-lg tracking-tight sm:inline">
           Copilot Usage Metrics
         </span>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {hasData && (
           <>
             <label htmlFor="mobile-view-select" className="sr-only">
@@ -61,8 +66,8 @@ const StickyHeader: React.FC = () => {
         {hasData && (
           <button
             type="button"
-            onClick={resetAppState}
-            className="rounded-md border border-[#57606a] bg-transparent px-3 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-white/[0.08] sm:px-4"
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-white bg-transparent hover:bg-white/[0.08] rounded-md transition-all duration-150 border border-[#57606a]"
           >
             <span className="hidden sm:inline">Upload new file</span>
             <span className="sm:hidden">Upload</span>
