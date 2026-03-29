@@ -41,18 +41,13 @@ export {
 
 export {
   type DailyModelUsageData,
-  type DailyPRUAnalysisData,
   type AgentModeHeatmapData,
-  type ModelFeatureDistributionData,
   type ModelUsageAccumulator,
   createModelUsageAccumulator,
   accumulateModelFeature,
   accumulateAgentHeatmapFromFeature,
   computeDailyModelUsageData,
-  computePRUAnalysisData,
   computeAgentModeHeatmapData,
-  computeModelFeatureDistributionData,
-  calculateDailyPRUAnalysisFromMetrics,
   calculateDailyModelUsageFromMetrics,
 } from './modelUsageCalculator';
 

@@ -36,16 +36,12 @@ import {
   computeLanguageStats,
 
   DailyModelUsageData,
-  DailyPRUAnalysisData,
   AgentModeHeatmapData,
-  ModelFeatureDistributionData,
   createModelUsageAccumulator,
   accumulateModelFeature,
   accumulateAgentHeatmapFromFeature,
   computeDailyModelUsageData,
-  computePRUAnalysisData,
   computeAgentModeHeatmapData,
-  computeModelFeatureDistributionData,
 
   FeatureAdoptionData,
   createFeatureAdoptionAccumulator,
@@ -113,9 +109,7 @@ export interface AggregatedMetrics {
   languageStats: LanguageStats[];
   modelUsageData: DailyModelUsageData[];
   featureAdoptionData: FeatureAdoptionData;
-  pruAnalysisData: DailyPRUAnalysisData[];
   agentModeHeatmapData: AgentModeHeatmapData[];
-  modelFeatureDistributionData: ModelFeatureDistributionData[];
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
   editModeImpactData: ModeImpactData[];
@@ -345,9 +339,7 @@ export function aggregateMetrics(
     languageStats: computeLanguageStats(languageAccumulator),
     modelUsageData: computeDailyModelUsageData(modelUsageAccumulator),
     featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),
-    pruAnalysisData: computePRUAnalysisData(modelUsageAccumulator),
     agentModeHeatmapData: computeAgentModeHeatmapData(modelUsageAccumulator),
-    modelFeatureDistributionData: computeModelFeatureDistributionData(modelUsageAccumulator),
     agentImpactData: computeAgentImpactData(impactAccumulator),
     codeCompletionImpactData: computeCodeCompletionImpactData(impactAccumulator),
     editModeImpactData: computeEditModeImpactData(impactAccumulator),

@@ -221,7 +221,7 @@ describe('metricsAggregator', () => {
       expect(aggregated.languageStats.length).toBeGreaterThan(0);
     });
 
-    it('should process model usage and PRU data when provided', () => {
+    it('should process model usage data when provided', () => {
       const metric = createBasicMetric({
         totals_by_model_feature: [
           {
@@ -241,8 +241,7 @@ describe('metricsAggregator', () => {
       const { aggregated } = aggregateMetrics([metric]);
 
       expect(aggregated.modelUsageData).toBeDefined();
-      expect(aggregated.pruAnalysisData).toBeDefined();
-      expect(aggregated.modelFeatureDistributionData).toBeDefined();
+      expect(aggregated.modelUsageData.length).toBeGreaterThan(0);
     });
 
     it('should process feature adoption data when provided', () => {

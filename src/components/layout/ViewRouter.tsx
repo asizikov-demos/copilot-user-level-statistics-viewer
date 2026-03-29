@@ -15,7 +15,6 @@ import UserDetailsView from '../UserDetailsView';
 import LanguagesView from '../LanguagesView';
 import ClientsView from '../ClientsView';
 import CopilotImpactView from '../CopilotImpactView';
-import PRUUsageAnalysisView from '../PRUUsageAnalysisView';
 import CopilotAdoptionView from '../CopilotAdoptionView';
 import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
@@ -117,9 +116,7 @@ const ViewRouter: React.FC = () => {
     languageStats,
     modelUsageData,
     featureAdoptionData,
-    pruAnalysisData,
     agentModeHeatmapData,
-    modelFeatureDistributionData,
     agentImpactData,
     codeCompletionImpactData,
     editModeImpactData,
@@ -188,15 +185,6 @@ const ViewRouter: React.FC = () => {
           cliImpactData={cliImpactData}
           planModeImpactData={planModeImpactData}
           joinedImpactData={joinedImpactData}
-        />
-      );
-
-    case VIEW_MODES.PRU_USAGE:
-      return (
-        <PRUUsageAnalysisView
-          modelUsageData={modelUsageData}
-          pruAnalysisData={pruAnalysisData}
-          modelFeatureDistributionData={modelFeatureDistributionData}
         />
       );
 
