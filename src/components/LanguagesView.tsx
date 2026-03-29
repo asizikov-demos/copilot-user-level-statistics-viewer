@@ -159,8 +159,11 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
   }, [languagesByNetLocImpact]);
 
   const narrowHeaderClassName = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+  const narrowHeaderRightClassName = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
   const narrowCellClassName = 'px-4 py-4 whitespace-nowrap text-sm text-gray-900';
-  const wideCellClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+  const narrowCellRightClassName = 'px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const wideCellRightClassName = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const wideHeaderRightClassName = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
 
   const languagesByGenerationsColumns: TableColumn<LanguageStats>[] = [
     {
@@ -185,19 +188,19 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     {
       id: 'generations',
       header: 'Generations',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
+        <div>{lang.totalGenerations.toLocaleString()}</div>
       ),
     },
     {
       id: 'acceptanceRate',
       header: 'Acceptance Rate',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+        <div>{formatAcceptanceRate(lang)}%</div>
       ),
     },
   ];
@@ -225,22 +228,22 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     {
       id: 'users',
       header: 'Users',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{lang.uniqueUsers.toLocaleString()}</div>
+        <div>{lang.uniqueUsers.toLocaleString()}</div>
       ),
     },
     {
       id: 'avgEngagements',
       header: 'Avg Engagements',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => {
         const avgEngagements = lang.uniqueUsers > 0
           ? (lang.totalEngagements / lang.uniqueUsers).toFixed(1)
           : '0.0';
-        return <div className="text-sm text-gray-900">{avgEngagements}</div>;
+        return <div>{avgEngagements}</div>;
       },
     },
   ];
@@ -268,13 +271,13 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     {
       id: 'netImpact',
       header: 'Net LOC Impact',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => {
         const netLocImpact = lang.locAdded - lang.locDeleted;
         const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
         return (
-          <div className={`text-sm font-medium ${impactColor}`}>
+          <div className={`font-medium ${impactColor}`}>
             {netLocImpact.toLocaleString()}
           </div>
         );
@@ -283,19 +286,19 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     {
       id: 'totalGenerations',
       header: 'Total Generations',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{lang.totalGenerations.toLocaleString()}</div>
+        <div>{lang.totalGenerations.toLocaleString()}</div>
       ),
     },
     {
       id: 'acceptanceRate',
       header: 'Acceptance Rate',
-      headerClassName: narrowHeaderClassName,
-      className: narrowCellClassName,
+      headerClassName: narrowHeaderRightClassName,
+      className: narrowCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+        <div>{formatAcceptanceRate(lang)}%</div>
       ),
     },
   ];
@@ -317,54 +320,62 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       header: 'Total Engagements',
       sortable: true,
       accessor: 'totalEngagements',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'totalGenerations',
       header: 'Generations',
       sortable: true,
       accessor: 'totalGenerations',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'totalAcceptances',
       header: 'Acceptances',
       sortable: true,
       accessor: 'totalAcceptances',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'uniqueUsers',
       header: 'Unique Users',
       sortable: true,
       accessor: 'uniqueUsers',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'locAdded',
       header: 'LOC Added',
       sortable: true,
       accessor: 'locAdded',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'locDeleted',
       header: 'LOC Deleted',
       sortable: true,
       accessor: 'locDeleted',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'locSuggestedToAdd',
       header: 'Suggested Add',
       sortable: true,
       accessor: 'locSuggestedToAdd',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
     },
     {
       id: 'netLocImpact',
       header: 'Net LOC Impact',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
       renderCell: (lang) => {
         const netLocImpact = lang.locAdded - lang.locDeleted;
         const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
@@ -378,7 +389,8 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     {
       id: 'acceptanceRate',
       header: 'Acceptance Rate',
-      className: wideCellClassName,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
       renderCell: (lang) => (
         <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
       ),

@@ -6,7 +6,6 @@ export const VIEW_MODES = {
   LANGUAGES: 'languages',
   CLIENT_ANALYSIS: 'ides',
   COPILOT_IMPACT: 'copilotImpact',
-  PRU_USAGE: 'pruUsage',
   COPILOT_ADOPTION: 'copilotAdoption',
   MODEL_DETAILS: 'modelDetails',
   CLI_ADOPTION: 'cliAdoption',

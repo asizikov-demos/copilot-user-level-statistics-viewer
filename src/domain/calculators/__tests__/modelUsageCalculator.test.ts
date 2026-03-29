@@ -3,11 +3,8 @@ import {
   createModelUsageAccumulator,
   accumulateModelFeature,
   computeDailyModelUsageData,
-  computePRUAnalysisData,
-  computeModelFeatureDistributionData,
 } from '../modelUsageCalculator';
 import { SERVICE_VALUE_RATE } from '../../modelConfig';
-import { calculateTotal, calculateAverage, calculatePercentage } from '../statsCalculators';
 
 describe('modelUsageCalculator', () => {
   describe('PRU calculation (interactions × multiplier)', () => {
@@ -85,81 +82,6 @@ describe('modelUsageCalculator', () => {
     });
   });
 
-  describe('Standard vs premium request classification', () => {
-    it('should correctly classify standard models (multiplier 0)', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      const standardModels = ['gpt-4o', 'gpt-4.0', 'gpt-3.5', 'gpt-4o-mini'];
-
-      standardModels.forEach((model, index) => {
-        accumulateModelFeature(accumulator, '2024-01-15', index, model, 'code_completion', 10);
-      });
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results).toHaveLength(1);
-      expect(results[0].standardRequests).toBe(40); // 10 × 4 models
-      expect(results[0].pruRequests).toBe(0);
-      expect(results[0].totalPRUs).toBe(0);
-    });
-
-    it('should correctly classify premium models (multiplier > 0)', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      const premiumModels = [
-        { name: 'gpt-5', multiplier: 1 },
-        { name: 'claude-3.5-sonnet', multiplier: 1 },
-        { name: 'o3-mini', multiplier: 0.33 },
-      ];
-
-      premiumModels.forEach((model, index) => {
-        accumulateModelFeature(accumulator, '2024-01-15', index, model.name, 'code_completion', 10);
-      });
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results[0].pruRequests).toBe(30); // 10 × 3 models
-      expect(results[0].standardRequests).toBe(0);
-      expect(results[0].totalPRUs).toBeCloseTo(23.3, 1); // (10×1) + (10×1) + (10×0.33)
-    });
-
-    it('should calculate PRU percentage correctly', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-4o', 'code_completion', 100);
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'gpt-5', 'code_completion', 50);
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results[0].pruPercentage).toBeCloseTo(33.33, 1); // 50/(100+50) * 100
-    });
-
-    it('overall PRU percentage should use total ratio, not average of daily percentages', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      // Day 1: 100% premium (50 premium, 0 standard)
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 50);
-
-      // Day 2: 0% premium (0 premium, 2 standard)
-      accumulateModelFeature(accumulator, '2024-01-16', 2, 'gpt-4o', 'code_completion', 2);
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results).toHaveLength(2);
-      expect(results[0].pruPercentage).toBe(100); // Day 1: 50/50
-      expect(results[1].pruPercentage).toBe(0);   // Day 2: 0/2
-
-      // calculatePercentage gives the correct overall ratio: 50/52 = 96.15%
-      const totalPRU = calculateTotal(results, d => d.pruRequests);
-      const totalStandard = calculateTotal(results, d => d.standardRequests);
-      expect(calculatePercentage(totalPRU, totalPRU + totalStandard)).toBeCloseTo(96.15, 1);
-
-      // Averaging daily percentages would give (100 + 0) / 2 = 50% — misleading
-      const avgDaily = calculateAverage(results, d => d.pruPercentage);
-      expect(avgDaily).toBe(50);
-    });
-  });
-
   describe('Unknown model handling', () => {
     it('should track unknown models separately', () => {
       const accumulator = createModelUsageAccumulator();
@@ -177,7 +99,7 @@ describe('modelUsageCalculator', () => {
 
       accumulateModelFeature(accumulator, '2024-01-15', 1, 'totally-unknown-xyz', 'code_completion', 10);
 
-      const results = computePRUAnalysisData(accumulator);
+      const results = computeDailyModelUsageData(accumulator);
 
       // Unknown models get multiplier 1 by default
       expect(results[0].totalPRUs).toBe(10);
@@ -210,100 +132,4 @@ describe('modelUsageCalculator', () => {
     });
   });
 
-  describe('Top model selection by PRU', () => {
-    it('should identify top model by PRU consumption', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'claude-3.5-sonnet', 'code_completion', 50);
-      accumulateModelFeature(accumulator, '2024-01-15', 3, 'o3-mini', 'code_completion', 20);
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results[0].topModel).toBe('claude-3.5-sonnet');
-      expect(results[0].topModelPRUs).toBe(50);
-    });
-
-    it('should use request count as tiebreaker when PRUs are equal', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      // Both have same PRU (10 × 1 = 10)
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'claude-3.5-sonnet', 'code_completion', 10);
-
-      const results = computePRUAnalysisData(accumulator);
-
-      // Should still have a top model (either one, deterministic based on entry order)
-      expect(results[0].topModel).toBeDefined();
-      expect(results[0].topModelPRUs).toBe(10);
-    });
-
-    it('should handle empty data gracefully', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      const results = computePRUAnalysisData(accumulator);
-
-      expect(results).toHaveLength(0);
-    });
-  });
-
-  describe('Model feature distribution', () => {
-    it('should track feature usage per model', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'gpt-5', 'chat_panel_ask_mode', 5);
-      accumulateModelFeature(accumulator, '2024-01-15', 3, 'gpt-5', 'chat_panel_agent_mode', 3);
-
-      const results = computeModelFeatureDistributionData(accumulator);
-
-      const gpt5 = results.find(r => r.model === 'gpt-5');
-
-      expect(gpt5).toBeDefined();
-      expect(gpt5?.features.codeCompletion).toBe(10);
-      expect(gpt5?.features.askMode).toBe(5);
-      expect(gpt5?.features.agentMode).toBe(3);
-      expect(gpt5?.totalInteractions).toBe(18);
-    });
-
-    it('should calculate total PRUs per model across all features', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'claude-opus-4.6-fast-mode', 'code_completion', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'claude-opus-4.6-fast-mode', 'chat_panel_agent_mode', 5);
-
-      const results = computeModelFeatureDistributionData(accumulator);
-
-      const claudeOpus = results.find(r => r.model === 'claude-opus-4.6-fast-mode');
-
-      expect(claudeOpus?.totalInteractions).toBe(15);
-      expect(claudeOpus?.totalPRUs).toBe(450); // 15 × 30
-      expect(claudeOpus?.multiplier).toBe(30);
-    });
-
-    it('should sort models by total PRUs descending', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 10); // 10 PRUs
-      accumulateModelFeature(accumulator, '2024-01-15', 2, 'claude-3.5-sonnet', 'code_completion', 50); // 50 PRUs
-      accumulateModelFeature(accumulator, '2024-01-15', 3, 'o3-mini', 'code_completion', 20); // 6.6 PRUs
-
-      const results = computeModelFeatureDistributionData(accumulator);
-
-      expect(results[0].model).toBe('claude-3.5-sonnet');
-      expect(results[1].model).toBe('gpt-5');
-      expect(results[2].model).toBe('o3-mini');
-    });
-
-    it('should filter out models with zero interactions', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 1, 'gpt-5', 'code_completion', 10);
-
-      const results = computeModelFeatureDistributionData(accumulator);
-
-      // Should only have models with interactions
-      expect(results.every(r => r.totalInteractions > 0)).toBe(true);
-    });
-  });
 });

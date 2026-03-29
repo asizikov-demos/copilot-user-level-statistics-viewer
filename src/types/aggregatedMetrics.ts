@@ -1,6 +1,5 @@
 import type { UserDayData } from './metrics';
 import type {
-  DailyPRUAnalysisData,
   DailyModelUsageData,
   AgentImpactData,
   CodeCompletionImpactData,
@@ -60,7 +59,6 @@ export interface UserDetailedMetrics {
     cli_version: string;
     sampled_at: string;
   }>;
-  dailyPRUAnalysis: DailyPRUAnalysisData[];
   dailyCombinedImpact: ModeImpactData[];
   dailyModelUsage: DailyModelUsageData[];
   dailyAgentImpact: AgentImpactData[];

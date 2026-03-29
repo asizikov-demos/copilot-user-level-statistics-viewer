@@ -1,6 +1,5 @@
 import { calculateStatsFromMetrics } from './statsCalculator';
 import {
-  calculateDailyPRUAnalysisFromMetrics,
   calculateDailyModelUsageFromMetrics,
 } from './modelUsageCalculator';
 import {
@@ -25,9 +24,7 @@ export type {
 
 export type {
   DailyModelUsageData,
-  DailyPRUAnalysisData,
   AgentModeHeatmapData,
-  ModelFeatureDistributionData,
 } from './modelUsageCalculator';
 
 export type {
@@ -43,8 +40,6 @@ export type {
 } from './cliUsageCalculator';
 
 export const calculateStats = calculateStatsFromMetrics;
-
-export const calculateDailyPRUAnalysis = calculateDailyPRUAnalysisFromMetrics;
 
 export const calculateDailyModelUsage = calculateDailyModelUsageFromMetrics;
 

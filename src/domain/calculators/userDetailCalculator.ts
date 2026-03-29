@@ -1,7 +1,6 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import {
-  calculateDailyPRUAnalysis,
   calculateJoinedImpactData,
   calculateDailyModelUsage,
   calculateAgentImpactData,
@@ -326,7 +325,6 @@ export function computeSingleUserDetailedMetrics(
     modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
     pluginVersions,
     cliVersions,
-    dailyPRUAnalysis: calculateDailyPRUAnalysis(adaptedMetrics),
     dailyCombinedImpact: calculateJoinedImpactData(adaptedMetrics),
     dailyModelUsage: calculateDailyModelUsage(adaptedMetrics),
     dailyAgentImpact: calculateAgentImpactData(adaptedMetrics),

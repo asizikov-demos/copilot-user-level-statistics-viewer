@@ -174,7 +174,7 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
           <CLIOverlapChart ideStats={ideStats} />
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-md border border-[#d1d9e0]">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Insights</h3>
           </div>
@@ -188,7 +188,7 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-md border border-[#d1d9e0]">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Users</h3>
           </div>
@@ -203,7 +203,7 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
           />
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-md border border-[#d1d9e0]">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Engagements</h3>
           </div>

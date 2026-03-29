@@ -75,7 +75,7 @@ export default function FeatureAdoptionRadarChart({
 
   if (total === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full flex flex-col">
+      <div className="bg-white rounded-md border border-[#d1d9e0] p-6 h-full flex flex-col">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Adoption</h3>
         <div className="flex-1 flex items-center justify-center text-gray-500">No feature adoption data available</div>
       </div>
@@ -83,7 +83,7 @@ export default function FeatureAdoptionRadarChart({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full flex flex-col">
+    <div className="bg-white rounded-md border border-[#d1d9e0] p-6 h-full flex flex-col">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Adoption</h3>
       <div className="flex-1 min-h-0">
         <Radar data={chartData} options={options} />

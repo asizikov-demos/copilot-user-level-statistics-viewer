@@ -11,7 +11,6 @@ import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
 import ModeImpactChart from './charts/ModeImpactChart';
-import PRUCostAnalysisChart from './charts/PRUCostAnalysisChart';
 import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
@@ -21,19 +20,11 @@ import DayDetailsModal from './ui/DayDetailsModal';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import { VIEW_MODES } from '../types/navigation';
 import { useNavigation } from '../state/NavigationContext';
-import type { ModeImpactData, DailyPRUAnalysisData, DailyModelUsageData } from '../domain/calculators/metricCalculators';
+import type { ModeImpactData, DailyModelUsageData } from '../domain/calculators/metricCalculators';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 
 registerChartJS();
-
-
-function fillPRUAnalysis(data: DailyPRUAnalysisData[], startDay: string, endDay: string): DailyPRUAnalysisData[] {
-  const dataMap = new Map(data.map(d => [d.date, d]));
-  return generateDateRange(startDay, endDay).map(date =>
-    dataMap.get(date) ?? { date, pruRequests: 0, standardRequests: 0, pruPercentage: 0, totalPRUs: 0, serviceValue: 0, topModel: 'unknown', topModelPRUs: 0, topModelIsPremium: false, models: [] }
-  );
-}
 
 function fillModelUsage(data: DailyModelUsageData[], startDay: string, endDay: string): DailyModelUsageData[] {
   const dataMap = new Map(data.map(d => [d.date, d]));
@@ -97,7 +88,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
-  const filledPRUAnalysis = useMemo(() => fillPRUAnalysis(userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyPRUAnalysis, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledModelUsage = useMemo(() => fillModelUsage(userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyModelUsage, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const [modalState, setModalState] = useState<{
@@ -670,8 +660,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         languageBarChartData={languageBarChartData}
         languageBarChartOptions={languageBarChartOptions}
         />
-
-      <PRUCostAnalysisChart data={filledPRUAnalysis} />
 
       <PRUModelUsageChart data={filledModelUsage} />
 

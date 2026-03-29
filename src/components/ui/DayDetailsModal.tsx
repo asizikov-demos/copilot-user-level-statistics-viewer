@@ -95,7 +95,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </div>
 
               {/* Features Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_feature}
@@ -133,7 +133,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </div>
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_ide}
@@ -191,7 +191,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </div>
 
               {/* Language + Feature Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language & Feature</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_language_feature}
@@ -229,7 +229,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </div>
 
               {/* Language + Model Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language & Model</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_language_model}
@@ -267,7 +267,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </div>
 
               {/* Model + Feature Section */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Model & Feature</h4>
                 <ExpandableTableSection
                   items={dayMetrics.totals_by_model_feature}

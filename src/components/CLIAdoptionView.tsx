@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ViewPanel, MetricTileGroup, MetricTileIcon } from './ui';
+import { ViewPanel } from './ui';
 import CLIAdoptionTrendChart from './charts/CLIAdoptionTrendChart';
 import CLIUsersChart from './charts/CLIUsersChart';
 import CLISessionChart from './charts/CLISessionChart';
@@ -29,27 +29,14 @@ export default function CLIAdoptionView({
     <ViewPanel
       headerProps={{
         title: 'CLI Adoption',
+        description: (
+          <p className="text-gray-600 text-sm mt-1">
+            This report contains <strong>{stats.cliUsers.toLocaleString()}</strong> GitHub Copilot CLI users out of <strong>{stats.uniqueUsers.toLocaleString()}</strong> (<strong>{cliShare}%</strong>)
+          </p>
+        ),
       }}
       contentClassName="space-y-8"
     >
-      <MetricTileGroup
-        items={[
-          {
-            title: 'CLI Users',
-            value: stats.cliUsers,
-            subtitle: `${cliShare}% of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            accent: 'indigo',
-            icon: <MetricTileIcon name="cli-users" />,
-          },
-          {
-            title: 'Unique Users',
-            value: stats.uniqueUsers,
-            accent: 'blue',
-            icon: <MetricTileIcon name="unique-users" />,
-          },
-        ]}
-        columns={{ base: 1, md: 2, lg: 2 }}
-      />
 
       <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} stats={stats} />
       <CLIUsersChart data={dailyCliSessionData} />
