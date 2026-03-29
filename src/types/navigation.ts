@@ -1,6 +1,7 @@
 export const VIEW_MODES = {
   OVERVIEW: 'overview',
   EXECUTIVE_SUMMARY: 'executiveSummary',
+  CLIENT_VERSIONS: 'clientVersions',
   USERS: 'users',
   USER_DETAILS: 'userDetails',
   LANGUAGES: 'languages',

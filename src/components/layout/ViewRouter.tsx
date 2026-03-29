@@ -19,6 +19,7 @@ import CopilotAdoptionView from '../CopilotAdoptionView';
 import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
+import ClientVersionsView from '../ClientVersionsView';
 
 const ViewRouter: React.FC = () => {
   const { 
@@ -153,6 +154,14 @@ const ViewRouter: React.FC = () => {
         />
       );
 
+    case VIEW_MODES.CLIENT_VERSIONS:
+      return (
+        <ClientVersionsView
+          pluginVersionData={pluginVersionData}
+          stats={stats}
+        />
+      );
+
     case VIEW_MODES.LANGUAGES:
       return (
         <LanguagesView
@@ -194,7 +203,6 @@ const ViewRouter: React.FC = () => {
           featureAdoptionData={featureAdoptionData}
           agentModeHeatmapData={agentModeHeatmapData}
           stats={stats}
-          pluginVersionData={pluginVersionData}
           dailyAdoptionTrend={dailyAdoptionTrend}
         />
       );
