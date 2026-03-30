@@ -51,7 +51,7 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
             icon: <MetricTileIcon name="cli-users" />,
           },
           {
-            title: 'Coding Agent Users',
+            title: 'Cloud Agent Users',
             value: stats.codingAgentUsers,
             accent: 'teal',
             subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,

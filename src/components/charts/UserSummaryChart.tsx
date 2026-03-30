@@ -55,7 +55,7 @@ export default function UserSummaryChart({
           )}
           {usedCodingAgent && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
-              Coding Agent
+              Cloud Agent
             </span>
           )}
           {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && (
