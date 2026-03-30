@@ -190,20 +190,39 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
   const narrowCellClass = 'px-4 py-2 text-sm text-gray-900 whitespace-nowrap';
   const usernameCellClass = 'px-4 py-2 text-sm text-gray-900';
 
-  const renderUsernames = (pluginVersion: string, usernames: string[], expandedSet: Set<string>, toggle: (version: string) => void) => {
+  const createUsernamesContainerId = (scope: 'jetbrains' | 'vscode', pluginVersion: string) => {
+    const encodedVersion = Array.from(pluginVersion)
+      .map((char) => char.charCodeAt(0).toString(16).padStart(4, '0'))
+      .join('-');
+    return `${scope}-usernames-${encodedVersion || 'empty-version'}`;
+  };
+
+  const renderUsernames = (
+    scope: 'jetbrains' | 'vscode',
+    pluginVersion: string,
+    usernames: string[],
+    expandedSet: Set<string>,
+    toggle: (version: string) => void
+  ) => {
     if (usernames.length <= 3) {
       return <span className="text-xs text-gray-600">{usernames.join(', ')}</span>;
     }
 
     const isExpanded = expandedSet.has(pluginVersion);
     const shown = isExpanded ? usernames.join(', ') : `${usernames.slice(0, 3).join(', ')}...`;
+    const usernamesContainerId = createUsernamesContainerId(scope, pluginVersion);
+
     return (
       <div>
-        <span className="text-xs text-gray-600">{shown}</span>
+        <span id={usernamesContainerId} className="text-xs text-gray-600">
+          {shown}
+        </span>
         <button
           type="button"
           onClick={() => toggle(pluginVersion)}
           className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
+          aria-expanded={isExpanded}
+          aria-controls={usernamesContainerId}
         >
           {isExpanded ? 'Show Less' : `Show All ${usernames.length}`}
         </button>
@@ -253,7 +272,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
       header: 'Usernames',
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
-      renderCell: (plugin) => renderUsernames(plugin.version, plugin.usernames, expandedUsernames, (version) => toggleExpanded(setExpandedUsernames, version)),
+      renderCell: (plugin) => renderUsernames('jetbrains', plugin.version, plugin.usernames, expandedUsernames, (version) => toggleExpanded(setExpandedUsernames, version)),
     },
   ];
 
@@ -304,7 +323,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
       header: 'Usernames',
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
-      renderCell: (item) => renderUsernames(item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
+      renderCell: (item) => renderUsernames('vscode', item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
     },
   ];
 
