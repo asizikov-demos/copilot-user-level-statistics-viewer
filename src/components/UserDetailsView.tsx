@@ -119,9 +119,31 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   };
 
   const handleCopyUserLogin = () => {
-    navigator.clipboard.writeText(userLogin).catch((error: unknown) => {
-      console.error('Failed to copy username to clipboard:', error);
-    });
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(userLogin).catch((error: unknown) => {
+        console.error('Failed to copy username to clipboard:', error);
+      });
+      return;
+    }
+
+    // Fallback for environments where the Clipboard API is not available
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = userLogin;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      if (!successful) {
+        throw new Error('document.execCommand("copy") failed');
+      }
+      document.body.removeChild(textArea);
+    } catch (error) {
+      console.error('Failed to copy username to clipboard: Clipboard API not available and fallback failed.', error);
+    }
   };
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
