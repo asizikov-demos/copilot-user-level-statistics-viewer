@@ -1,4 +1,5 @@
 name: Scheduled Plugin Versions Update
+
 permissions:
   contents: write
   pull-requests: write
@@ -14,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
