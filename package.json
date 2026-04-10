@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "anonymize:report": "node --experimental-strip-types data-utils/anonymize-report.ts",
     "update:plugins": "node --experimental-strip-types data-utils/update-plugin-versions.ts"
   },
   "dependencies": {
