@@ -9,12 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -22,10 +16,10 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'npm'
@@ -40,11 +34,11 @@ jobs:
         run: npm run test:run
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         if: github.ref == 'refs/heads/main'
           
       - name: Restore cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         if: github.ref == 'refs/heads/main'
         with:
           path: |
@@ -64,7 +58,7 @@ jobs:
           NODE_ENV: production
         
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/main'
         with:
           path: ./out
@@ -74,10 +68,16 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     needs: build
     if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
