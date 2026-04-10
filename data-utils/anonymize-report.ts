@@ -4,8 +4,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomInt } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
 
 type JsonRecord = Record<string, unknown>;
+interface ParsedRecord {
+  lineNumber: number;
+  record: JsonRecord;
+}
 
 const ENTERPRISE_ID_ANON = '0000';
 const EMU_SUFFIX = '_octoemu';
@@ -235,6 +240,45 @@ function isNdjsonFileName(fileName: string): boolean {
   return fileName.toLowerCase().endsWith('.ndjson');
 }
 
+export function getUserIdentityKey(record: JsonRecord): string | null {
+  const login = record.user_login;
+  if (typeof login === 'string' && login.trim().length > 0) {
+    return `login:${login}`;
+  }
+
+  const userId = record.user_id;
+  if (typeof userId === 'number' && Number.isFinite(userId)) {
+    return `id:${userId}`;
+  }
+
+  if (typeof userId === 'string' && userId.trim().length > 0) {
+    return `id:${userId}`;
+  }
+
+  return null;
+}
+
+export function buildSequentialUserIdMap(records: JsonRecord[]): Map<string, number> {
+  const map = new Map<string, number>();
+
+  for (const record of records) {
+    const key = getUserIdentityKey(record);
+    if (!key || map.has(key)) continue;
+    map.set(key, map.size + 1);
+  }
+
+  return map;
+}
+
+function assertEveryRecordHasUserIdentity(records: ParsedRecord[]): void {
+  const missingIdentityRecord = records.find(({ record }) => getUserIdentityKey(record) === null);
+  if (!missingIdentityRecord) return;
+
+  throw new Error(
+    `Record on line ${missingIdentityRecord.lineNumber} is missing both user_login and user_id`,
+  );
+}
+
 function anonymizeLogin(original: string, existing: Set<string>, map: Map<string, string>): string {
   const cached = map.get(original);
   if (cached) return cached;
@@ -248,7 +292,7 @@ function anonymizeLogin(original: string, existing: Set<string>, map: Map<string
   return anonymized;
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const [inputArg, outputArg] = process.argv.slice(2);
 
   if (!inputArg) {
@@ -274,7 +318,7 @@ async function main(): Promise<void> {
   const content = await readFile(inputPath, 'utf8');
   const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
 
-  const records: JsonRecord[] = [];
+  const records: ParsedRecord[] = [];
   const uniqueLogins = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
@@ -287,7 +331,7 @@ async function main(): Promise<void> {
         if (typeof login === 'string' && login.trim().length > 0) {
           uniqueLogins.add(login);
         }
-        records.push(rec);
+        records.push({ lineNumber: i + 1, record: rec });
       }
     } catch (e) {
       throw new Error(
@@ -296,15 +340,21 @@ async function main(): Promise<void> {
     }
   }
 
+  assertEveryRecordHasUserIdentity(records);
+
+  const plainRecords = records.map(({ record }) => record);
   const map = new Map<string, string>();
   const used = new Set<string>();
+  const userIdMap = buildSequentialUserIdMap(plainRecords);
 
   for (const login of uniqueLogins) {
     anonymizeLogin(login, used, map);
   }
 
   const outputLines: string[] = [];
-  for (const rec of records) {
+  for (const { record: rec } of records) {
+    const userKey = getUserIdentityKey(rec);
+
     if (typeof rec.enterprise_id === 'string') {
       rec.enterprise_id = ENTERPRISE_ID_ANON;
     }
@@ -313,6 +363,12 @@ async function main(): Promise<void> {
       rec.user_login = anonymizeLogin(rec.user_login, used, map);
     }
 
+    const anonymizedUserId = userKey ? userIdMap.get(userKey) : undefined;
+    if (!anonymizedUserId) {
+      throw new Error('Cannot assign anonymized user_id because the record is missing a user key');
+    }
+    rec.user_id = anonymizedUserId;
+
     outputLines.push(JSON.stringify(rec));
   }
 
@@ -320,10 +376,14 @@ async function main(): Promise<void> {
 
   console.log(`Processed ${records.length} records.`);
   console.log(`Anonymized ${uniqueLogins.size} unique user_login values.`);
+  console.log(`Reassigned ${userIdMap.size} unique user_id values to the range 1-${userIdMap.size}.`);
   console.log(`Wrote ${outputPath}`);
 }
 
-main().catch((error) => {
-  console.error('Anonymization failed:', error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+const entryPoint = process.argv[1];
+if (entryPoint && import.meta.url === pathToFileURL(path.resolve(entryPoint)).href) {
+  void main().catch((error) => {
+    console.error('Anonymization failed:', error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}
