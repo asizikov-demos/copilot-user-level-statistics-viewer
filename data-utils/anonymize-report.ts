@@ -14,6 +14,8 @@ interface ParsedRecord {
 
 const ENTERPRISE_ID_ANON = '0000';
 const EMU_SUFFIX = '_octoemu';
+// High upper bound to avoid infinite retries when random slug collisions occur.
+const MAX_USERNAME_GENERATION_ATTEMPTS = 100000;
 
 const ADJECTIVES = [
   'happy',
@@ -229,7 +231,11 @@ function pick(list: string[]): string {
 }
 
 function generateBaseSlug(existing: Set<string>): string {
-  for (let attempt = 0; attempt < 100000; attempt++) {
+  for (
+    let generationAttempt = 0;
+    generationAttempt < MAX_USERNAME_GENERATION_ATTEMPTS;
+    generationAttempt++
+  ) {
     const candidate = `${pick(ADJECTIVES)}-${pick(NOUNS_A)}-${pick(NOUNS_B)}`.toLowerCase();
     if (!existing.has(candidate)) return candidate;
   }
@@ -322,7 +328,10 @@ export async function main(): Promise<void> {
   const uniqueLogins = new Set<string>();
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
+    const line = lines[i];
+    if (line === undefined) {
+      continue;
+    }
     try {
       const parsed = JSON.parse(line) as unknown;
       if (parsed && typeof parsed === 'object') {
@@ -364,7 +373,7 @@ export async function main(): Promise<void> {
     }
 
     const anonymizedUserId = userKey ? userIdMap.get(userKey) : undefined;
-    if (!anonymizedUserId) {
+    if (anonymizedUserId === undefined) {
       throw new Error('Cannot assign anonymized user_id because the record is missing a user key');
     }
     rec.user_id = anonymizedUserId;
