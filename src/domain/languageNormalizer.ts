@@ -15,7 +15,7 @@ const ALIAS_MAP = new Map<string, string>([
 
   // CSV variants
   ['csv', 'CSV'],
-  ['csv (semicolumn)', 'CSV'],
+  ['csv (semicolon)', 'CSV'],
   ['csv (pipe)', 'CSV'],
 
   // Python
