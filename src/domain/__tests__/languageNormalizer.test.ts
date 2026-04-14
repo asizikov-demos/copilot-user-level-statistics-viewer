@@ -18,7 +18,7 @@ describe('normalizeLanguage', () => {
     // CSV variants
     ['csv', 'CSV'],
     ['CSV', 'CSV'],
-    ['csv (semicolumn)', 'CSV'],
+    ['csv (semicolon)', 'CSV'],
     ['csv (pipe)', 'CSV'],
 
     // Python
