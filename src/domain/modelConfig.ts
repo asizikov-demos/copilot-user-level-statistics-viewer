@@ -106,9 +106,14 @@ export function getModelMultiplier(modelName: string): number {
     return MODEL_MULTIPLIERS[normalized];
   }
 
-  const bestPartialMatch = Object.entries(MODEL_MULTIPLIERS)
-    .filter(([key]) => key !== 'unknown' && normalized.includes(key))
-    .sort(([a], [b]) => b.length - a.length)[0];
+  const bestPartialMatch = Object.entries(MODEL_MULTIPLIERS).reduce<[string, number] | undefined>(
+    (best, [key, multiplier]) => {
+      if (key === 'unknown' || !normalized.includes(key)) return best;
+      if (!best || key.length > best[0].length) return [key, multiplier];
+      return best;
+    },
+    undefined
+  );
 
   if (bestPartialMatch) {
     return bestPartialMatch[1];
