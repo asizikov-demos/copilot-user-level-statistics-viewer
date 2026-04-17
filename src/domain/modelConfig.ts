@@ -51,6 +51,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4.1', 10, true),
   new Model('claude-opus-4.5', 3, true),
   new Model('claude-opus-4.6', 3, true),
+  new Model('claude-opus-4.7', 7.5, true),
   new Model('claude-opus-4.6-fast-mode', 30, true),
   new Model('claude-opus-4.6-fast-mode-preview', 30, true),
   new Model('claude-4.5-haiku', 0.33, true),
@@ -66,7 +67,12 @@ export const KNOWN_MODELS: Model[] = [
   new Model('unknown', 1, true),
 ];
 
-const normalizeModelName = (name: string): string => name.trim().toLowerCase();
+const normalizeModelName = (name: string): string =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-');
 
 /**
  * Multiplier map keyed by model name for quick lookups.
@@ -100,10 +106,12 @@ export function getModelMultiplier(modelName: string): number {
     return MODEL_MULTIPLIERS[normalized];
   }
 
-  for (const [key, multiplier] of Object.entries(MODEL_MULTIPLIERS)) {
-    if (key !== 'unknown' && normalized.includes(key)) {
-      return multiplier;
-    }
+  const bestPartialMatch = Object.entries(MODEL_MULTIPLIERS)
+    .filter(([key]) => key !== 'unknown' && normalized.includes(key))
+    .sort(([a], [b]) => b.length - a.length)[0];
+
+  if (bestPartialMatch) {
+    return bestPartialMatch[1];
   }
 
   return UNKNOWN_MULTIPLIER;
