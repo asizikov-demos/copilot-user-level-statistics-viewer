@@ -8,6 +8,7 @@ describe('modelConfig', () => {
         { model: 'gpt-4o', expected: 0 },
         { model: 'gpt-5', expected: 1 },
         { model: 'claude-3.5-sonnet', expected: 1 },
+        { model: 'claude-opus-4.7', expected: 7.5 },
         { model: 'claude-opus-4.6-fast-mode', expected: 30 },
         { model: 'claude-opus-4.6-fast-mode-preview', expected: 30 },
         { model: 'o3-mini', expected: 0.33 },
@@ -23,6 +24,7 @@ describe('modelConfig', () => {
       const testCases = [
         { model: 'GPT-4O', expected: 0 },
         { model: 'Claude-3.5-Sonnet', expected: 1 },
+        { model: 'Claude Opus 4.7', expected: 7.5 },
         { model: 'GEMINI-2.0-FLASH', expected: 0.25 },
       ];
 
@@ -41,6 +43,8 @@ describe('modelConfig', () => {
       // For example, a model name containing "claude-opus-4" should match "claude-opus-4"
       const testCases = [
         { model: 'claude-opus-4-special', expected: 10 }, // Should match claude-opus-4
+        { model: 'claude-opus-4.6-custom', expected: 3 }, // Should prefer claude-opus-4.6 over claude-opus-4
+        { model: 'claude-opus-4.7-custom', expected: 7.5 }, // Should prefer claude-opus-4.7 over claude-opus-4
         { model: 'gpt-4o-special-edition', expected: 0 }, // Should match gpt-4o
       ];
 
@@ -112,6 +116,7 @@ describe('modelConfig', () => {
 
     it('should handle case-insensitive matching for premium detection', () => {
       expect(isPremiumModel('GPT-5')).toBe(true);
+      expect(isPremiumModel('Claude Opus 4.7')).toBe(true);
       expect(isPremiumModel('GPT-4O')).toBe(false);
     });
 
