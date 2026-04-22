@@ -37,6 +37,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-5.1-codex-max', 1, true),
   new Model('gpt-5.1-codex-mini', 0.33, true),
   new Model('gpt-5.4-mini', 0.33, true),
+  new Model('gpt-5.4-nano', 0.25, true),
   new Model('grok-code-fast-1', 0.25, true),
   new Model('o3', 1, true),
   new Model('o3-mini', 0.33, true),

@@ -13,6 +13,7 @@ describe('modelConfig', () => {
         { model: 'claude-opus-4.6-fast-mode-preview', expected: 30 },
         { model: 'o3-mini', expected: 0.33 },
         { model: 'gemini-2.0-flash', expected: 0.25 },
+        { model: 'gpt-5.4-nano', expected: 0.25 },
       ];
 
       testCases.forEach(({ model, expected }) => {
@@ -81,6 +82,7 @@ describe('modelConfig', () => {
         'claude-opus-4',
         'o3',
         'gemini-2.5-pro',
+        'gpt-5.4-nano',
         'auto',
       ];
 
