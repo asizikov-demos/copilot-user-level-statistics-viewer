@@ -156,6 +156,14 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const usedCodingAgent = userSummary.used_copilot_coding_agent;
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
+  const usedAutoMode = userSummary.used_auto_mode ?? modelFeatureAggregates.some(item => {
+    const activityCount =
+      item.user_initiated_interaction_count +
+      item.code_generation_activity_count +
+      item.code_acceptance_activity_count;
+
+    return item.model.trim().toLowerCase() === 'auto' && activityCount > 0;
+  });
 
   const agentInteractions = featureAggregates
     .filter(f => f.feature === 'chat_panel_agent_mode')
@@ -670,6 +678,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         usedAgent={usedAgent}
         usedCli={usedCli}
         usedCodingAgent={usedCodingAgent}
+        usedAutoMode={usedAutoMode}
         ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
         languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
         modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}

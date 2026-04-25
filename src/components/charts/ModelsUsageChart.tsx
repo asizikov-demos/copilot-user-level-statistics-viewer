@@ -5,6 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
+import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
@@ -16,11 +17,12 @@ interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
   dates: string[];
   totalInteractions: number;
-  variant: 'standard' | 'premium';
+  variant: 'standard' | 'premium' | 'auto';
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isPremium = variant === 'premium';
+  const isAuto = variant === 'auto';
 
   const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
     const sortedModels = [...modelEntries].sort((a, b) => b.total - a.total);
@@ -35,6 +37,9 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     const modelIndexMap = new Map(modelsWithoutUnknown.map((m, i) => [m, i]));
 
     const getModelColor = (model: string): string => {
+      if (isAuto || model === 'auto') {
+        return chartColors.violet.solid;
+      }
       if (model === 'unknown') {
         return UNKNOWN_COLOR;
       }
@@ -56,7 +61,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         backgroundColor: color,
         borderColor: color,
         borderWidth: 1,
-        stack: isPremium ? 'premium-models' : 'standard-models'
+        stack: isAuto ? 'auto-models' : isPremium ? 'premium-models' : 'standard-models'
       };
     });
 
@@ -66,9 +71,10 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       modelTotals,
       modelOrder
     };
-  }, [modelEntries, dates, isPremium]);
+  }, [modelEntries, dates, isPremium, isAuto]);
 
   const insights = useMemo(() => {
+    if (isAuto) return null;
     if (!totalInteractions || !modelOrder.length) return null;
 
     const shares = modelOrder.map(m => ({
@@ -119,7 +125,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     paragraphs.push(`Top model share summary: ${summary}${shares.length > 5 ? ', ...' : ''}.`);
 
     return { title, variant: insightVariant, paragraphs, showDocLink };
-  }, [modelTotals, modelOrder, totalInteractions, isPremium]);
+  }, [modelTotals, modelOrder, totalInteractions, isPremium, isAuto]);
 
   const chartData = { labels, datasets };
 
@@ -139,18 +145,19 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
 
   return (
     <ChartContainer
-      title={`${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`}
+      title={isAuto ? 'Auto Model Daily Usage' : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`}
+      description={isAuto ? 'Daily interactions routed through Copilot Auto mode.' : undefined}
       isEmpty={dates.length === 0 || datasets.length === 0}
-      emptyState={`No ${isPremium ? 'premium' : 'standard'} model usage data available`}
+      emptyState={`No ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model usage data available`}
       summaryStats={[
-        { value: datasets.length, label: 'Models', colorClass: isPremium ? 'text-purple-600' : 'text-blue-600' },
-        { value: totalInteractions, label: 'Total Interactions', colorClass: isPremium ? 'text-red-600' : 'text-green-600' },
+        { value: datasets.length, label: isAuto ? 'Auto Models' : 'Models', colorClass: isAuto ? 'text-violet-600' : isPremium ? 'text-purple-600' : 'text-blue-600' },
+        { value: totalInteractions, label: 'Total Interactions', colorClass: isAuto ? 'text-purple-600' : isPremium ? 'text-red-600' : 'text-green-600' },
       ]}
       chartHeight="h-96"
       footer={
         <>
           <p className="text-xs text-gray-600 mb-4">
-            Counts aggregate user initiated interactions across all features per {isPremium ? 'premium' : 'standard'} model per day.
+            Counts aggregate user initiated interactions across all features per {isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.
           </p>
           {insights && (
             <InsightsCard title={insights.title} variant={insights.variant}>

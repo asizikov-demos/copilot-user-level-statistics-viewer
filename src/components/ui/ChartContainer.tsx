@@ -29,6 +29,10 @@ export interface ChartContainerProps {
   chartHeight?: string;
 }
 
+function formatStatValue(value: string | number): string | number {
+  return typeof value === 'number' && !Number.isFinite(value) ? 'N/A' : value;
+}
+
 export default function ChartContainer({
   title,
   description,
@@ -66,7 +70,7 @@ export default function ChartContainer({
               {stats.map((stat, index) => (
                 <div key={index} className="text-sm text-gray-600 print:text-[10px] print:leading-tight">
                   <span className="font-medium">{stat.label}:</span>{' '}
-                  <span className={stat.color}>{stat.value}</span>
+                  <span className={stat.color}>{formatStatValue(stat.value)}</span>
                 </div>
               ))}
             </div>
@@ -80,7 +84,7 @@ export default function ChartContainer({
           {summaryStats.map((stat, index) => (
             <div key={index} className="text-center min-w-[100px] print:min-w-[70px]">
               <div className={`text-2xl font-bold print:text-base ${stat.colorClass || 'text-gray-900'}`}>
-                {stat.value}
+                {formatStatValue(stat.value)}
               </div>
               <div className="text-sm text-gray-600 print:text-[10px]">{stat.label}</div>
               {stat.sublabel && <div className="text-xs text-gray-500 print:text-[9px]">{stat.sublabel}</div>}

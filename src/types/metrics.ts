@@ -123,6 +123,7 @@ export interface UserSummary {
   used_chat: boolean;
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
+  used_auto_mode?: boolean;
   flags: UserFlag[];
 }
 
@@ -180,9 +181,19 @@ export interface ModelDailyUsageEntry {
   dailyData: Record<string, number>;
 }
 
+export interface AutoModeAdoptionTrendEntry {
+  date: string;
+  newUsers: number;
+  returningUsers: number;
+  totalActiveUsers: number;
+  cumulativeUsers: number;
+}
+
 export interface ModelBreakdownData {
   premiumModels: ModelDailyUsageEntry[];
   standardModels: ModelDailyUsageEntry[];
+  autoModels?: ModelDailyUsageEntry[];
+  autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];
   dates: string[];
   premiumTotal: number;
   standardTotal: number;

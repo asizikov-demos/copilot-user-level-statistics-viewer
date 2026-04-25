@@ -111,17 +111,38 @@ describe('metricsAggregator', () => {
         used_cli: true,
       });
 
-      const { aggregated } = aggregateMetrics([agentUser, chatUser, cliUser]);
+      const autoUser = createBasicMetric({
+        user_id: 4,
+        used_agent: false,
+        used_chat: true,
+        used_cli: false,
+        totals_by_model_feature: [
+          {
+            model: 'auto',
+            feature: 'agent_edit',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 1,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 1,
+            loc_deleted_sum: 1,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
 
-      expect(aggregated.stats.uniqueUsers).toBe(3);
+      const { aggregated } = aggregateMetrics([agentUser, chatUser, cliUser, autoUser]);
+
+      expect(aggregated.stats.uniqueUsers).toBe(4);
       expect(aggregated.stats.agentUsers).toBe(1);
-      expect(aggregated.stats.chatUsers).toBe(1);
+      expect(aggregated.stats.chatUsers).toBe(2);
       expect(aggregated.stats.cliUsers).toBe(1);
 
       const summaries = aggregated.userSummaries;
       expect(summaries.find(u => u.user_id === 1)?.used_agent).toBe(true);
       expect(summaries.find(u => u.user_id === 2)?.used_chat).toBe(true);
       expect(summaries.find(u => u.user_id === 3)?.used_cli).toBe(true);
+      expect(summaries.find(u => u.user_id === 4)?.used_auto_mode).toBe(true);
     });
 
     it('should accumulate user flags across multiple days (OR logic)', () => {
@@ -242,6 +263,97 @@ describe('metricsAggregator', () => {
 
       expect(aggregated.modelUsageData).toBeDefined();
       expect(aggregated.modelUsageData.length).toBeGreaterThan(0);
+    });
+
+    it('should compute Auto mode adoption trend from auto model usage', () => {
+      const autoFeature = {
+        model: 'auto',
+        feature: 'chat_panel',
+        user_initiated_interaction_count: 5,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      };
+
+      const day1User1 = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        totals_by_model_feature: [autoFeature],
+      });
+      const day1User2 = createBasicMetric({
+        user_id: 2,
+        day: '2024-01-15',
+        totals_by_model_feature: [autoFeature],
+      });
+      const day2User1 = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-16',
+        totals_by_model_feature: [autoFeature],
+      });
+
+      const { aggregated } = aggregateMetrics([day1User1, day1User2, day2User1]);
+
+      expect(aggregated.modelBreakdownData.autoModeAdoptionTrend).toEqual([
+        {
+          date: '2024-01-15',
+          newUsers: 2,
+          returningUsers: 0,
+          totalActiveUsers: 2,
+          cumulativeUsers: 2,
+        },
+        {
+          date: '2024-01-16',
+          newUsers: 0,
+          returningUsers: 1,
+          totalActiveUsers: 1,
+          cumulativeUsers: 2,
+        },
+      ]);
+      expect(aggregated.modelBreakdownData.premiumModels.some(entry => entry.model === 'auto')).toBe(false);
+      expect(aggregated.modelBreakdownData.premiumTotal).toBe(0);
+    });
+
+    it('should count Auto model activity even when user initiated interactions are zero', () => {
+      const metric = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        totals_by_model_feature: [
+          {
+            model: 'auto',
+            feature: 'agent_edit',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 1,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 1,
+            loc_deleted_sum: 1,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.modelBreakdownData.autoModels).toEqual([
+        {
+          model: 'auto',
+          total: 1,
+          dailyData: { '2024-01-15': 1 },
+        },
+      ]);
+      expect(aggregated.modelBreakdownData.autoModeAdoptionTrend).toEqual([
+        {
+          date: '2024-01-15',
+          newUsers: 1,
+          returningUsers: 0,
+          totalActiveUsers: 1,
+          cumulativeUsers: 1,
+        },
+      ]);
+      expect(aggregated.userSummaries[0].used_auto_mode).toBe(true);
     });
 
     it('should process feature adoption data when provided', () => {
