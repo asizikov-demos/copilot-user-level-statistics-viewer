@@ -30,6 +30,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-5.1', 1, true),
   new Model('gpt-5.2', 1, true),
   new Model('gpt-5.4', 1, true),
+  new Model('gpt-5.5', 7.5, true),
   new Model('gpt-5.3-codex', 1, true),
   new Model('gpt-5-codex', 1, true),
   new Model('gpt-5.2-codex', 1, true),
