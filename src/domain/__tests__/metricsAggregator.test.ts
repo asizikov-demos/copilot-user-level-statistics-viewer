@@ -408,6 +408,42 @@ describe('metricsAggregator', () => {
       expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
     });
 
+    it('should count cloud-agent-only users from the new cloud-agent flag', () => {
+      const metric = createBasicMetric({
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: false,
+        used_copilot_cloud_agent: true,
+        totals_by_feature: [],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.stats.codingAgentUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.codingAgentUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
+      expect(aggregated.userSummaries[0].used_copilot_coding_agent).toBe(true);
+    });
+
+    it('should prefer the new cloud-agent flag over the legacy coding-agent flag', () => {
+      const metric = createBasicMetric({
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: true,
+        used_copilot_cloud_agent: false,
+        totals_by_feature: [],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.stats.codingAgentUsers).toBe(0);
+      expect(aggregated.stats.completionOnlyUsers).toBe(1);
+      expect(aggregated.featureAdoptionData.codingAgentUsers).toBe(0);
+      expect(aggregated.userSummaries[0].used_copilot_coding_agent).toBe(false);
+    });
+
     it('should exclude CLI users from completion-only counts when only used_cli marks CLI usage', () => {
       const metric = createBasicMetric({
         used_cli: true,

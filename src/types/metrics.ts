@@ -77,6 +77,7 @@ export interface CopilotMetrics {
   used_chat: boolean;
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
+  used_copilot_cloud_agent?: boolean;
   totals_by_cli?: {
     session_count: number;
     request_count: number;
