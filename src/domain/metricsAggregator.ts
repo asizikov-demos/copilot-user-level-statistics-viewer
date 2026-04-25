@@ -158,7 +158,8 @@ function hasAutoModeActivity(metric: CopilotMetrics): boolean {
 
 function accumulateUserSummary(
   accumulator: UserSummaryAccumulator,
-  metric: CopilotMetrics
+  metric: CopilotMetrics,
+  usedCopilotCloudAgent: boolean
 ): void {
   const userId = metric.user_id;
   const date = metric.day;
@@ -186,7 +187,6 @@ function accumulateUserSummary(
   }
 
   const userSummary = accumulator.userMap.get(userId)!;
-  const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
   userSummary.total_user_initiated_interactions += metric.user_initiated_interaction_count;
   userSummary.total_code_generation_activities += metric.code_generation_activity_count;
   userSummary.total_code_acceptance_activities += metric.code_acceptance_activity_count;
@@ -245,7 +245,7 @@ export function aggregateMetrics(
     const userId = metric.user_id;
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
 
-    accumulateUserSummary(userSummaryAccumulator, metric);
+    accumulateUserSummary(userSummaryAccumulator, metric, usedCopilotCloudAgent);
     accumulateUserDetail(userDetailAccumulator, metric);
 
     accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, usedCopilotCloudAgent);

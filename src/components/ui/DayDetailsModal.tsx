@@ -101,7 +101,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="text-2xl font-bold text-blue-600">
-                    {(dayMetrics.user_initiated_interaction_count + (dayMetrics.totals_by_cli?.prompt_count ?? 0)).toLocaleString()}
+                    {(dayMetrics.user_initiated_interaction_count + cliInteractionCount).toLocaleString()}
                   </div>
                   <div className="text-sm font-medium text-blue-800">Interactions</div>
                 </div>

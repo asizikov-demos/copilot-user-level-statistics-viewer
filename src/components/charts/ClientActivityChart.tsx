@@ -58,6 +58,11 @@ interface CliFeatureTotals {
   locSuggestedToDelete: number;
 }
 
+interface CliDayTotals extends CliFeatureTotals {
+  promptCount: number;
+  interactionCount: number;
+}
+
 const IDE_COLORS: Record<string, string> = {
   'vscode': '#007ACC',
   'visual_studio': '#5C2D91',
@@ -109,9 +114,16 @@ function getCliFeatureTotals(day: UserDayData): CliFeatureTotals {
   }, createEmptyCliFeatureTotals());
 }
 
-function getCliInteractionCount(day: UserDayData): number {
-  const featureInteractions = getCliFeatureTotals(day).interactions;
-  return featureInteractions > 0 ? featureInteractions : day.totals_by_cli?.prompt_count ?? 0;
+function getCliDayTotals(day: UserDayData): CliDayTotals {
+  const featureTotals = getCliFeatureTotals(day);
+  const promptCount = day.totals_by_cli?.prompt_count ?? 0;
+  const interactionCount = featureTotals.interactions > 0 ? featureTotals.interactions : promptCount;
+
+  return {
+    ...featureTotals,
+    promptCount,
+    interactionCount,
+  };
 }
 
 /**
@@ -130,23 +142,8 @@ export default function ClientActivityChart({
 }: ClientActivityChartProps) {
   const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
 
-  const cliTotals = useMemo(() => (
-    days.reduce((acc, day) => {
-      if (day.totals_by_cli) {
-        acc.promptCount += day.totals_by_cli.prompt_count;
-      }
-
-      const featureTotals = getCliFeatureTotals(day);
-      acc.interactions += featureTotals.interactions;
-      acc.generations += featureTotals.generations;
-      acc.acceptances += featureTotals.acceptances;
-      acc.locAdded += featureTotals.locAdded;
-      acc.locDeleted += featureTotals.locDeleted;
-      acc.locSuggestedToAdd += featureTotals.locSuggestedToAdd;
-      acc.locSuggestedToDelete += featureTotals.locSuggestedToDelete;
-
-      return acc;
-    }, {
+  const { cliTotals, cliTotalsByDay } = useMemo(() => {
+    const totals = {
       promptCount: 0,
       interactions: 0,
       generations: 0,
@@ -155,8 +152,25 @@ export default function ClientActivityChart({
       locDeleted: 0,
       locSuggestedToAdd: 0,
       locSuggestedToDelete: 0,
-    })
-  ), [days]);
+    };
+    const byDay = new Map<string, CliDayTotals>();
+
+    for (const day of days) {
+      const dayTotals = getCliDayTotals(day);
+      byDay.set(day.day, dayTotals);
+
+      totals.promptCount += dayTotals.promptCount;
+      totals.interactions += dayTotals.interactions;
+      totals.generations += dayTotals.generations;
+      totals.acceptances += dayTotals.acceptances;
+      totals.locAdded += dayTotals.locAdded;
+      totals.locDeleted += dayTotals.locDeleted;
+      totals.locSuggestedToAdd += dayTotals.locSuggestedToAdd;
+      totals.locSuggestedToDelete += dayTotals.locSuggestedToDelete;
+    }
+
+    return { cliTotals: totals, cliTotalsByDay: byDay };
+  }, [days]);
 
   const barChartData = useMemo(() => {
     const allIDEs = Array.from(
@@ -183,11 +197,10 @@ export default function ClientActivityChart({
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     // Add CLI dataset if any day has CLI data
-    const hasCliData = days.some(day => getCliInteractionCount(day) > 0);
+    const hasCliData = Array.from(cliTotalsByDay.values()).some(dayTotals => dayTotals.interactionCount > 0);
     if (hasCliData) {
       const cliData = allDays.map(dayStr => {
-        const dayData = dayMap.get(dayStr);
-        return dayData ? getCliInteractionCount(dayData) : 0;
+        return cliTotalsByDay.get(dayStr)?.interactionCount ?? 0;
       });
       datasets.push({
         label: 'Copilot CLI',
@@ -202,7 +215,7 @@ export default function ClientActivityChart({
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [days, reportStartDay, reportEndDay]);
+  }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
 
   const barChartOptions: ChartOptions<'bar'> = useMemo(() => ({
     responsive: true,
