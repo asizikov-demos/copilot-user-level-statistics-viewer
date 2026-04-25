@@ -337,8 +337,8 @@ describe('userDetailCalculator', () => {
     });
   });
 
-  describe('adaptDaysAsMetrics — used_cli passthrough via dailyCliImpact', () => {
-    it('should produce non-empty dailyCliImpact when CLI data includes cli_agent feature', () => {
+  describe('adaptDaysAsMetrics - used_cli passthrough via dailyCliImpact', () => {
+    it('should produce non-empty dailyCliImpact when CLI data includes copilot_cli feature', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -352,7 +352,7 @@ describe('userDetailCalculator', () => {
         },
         totals_by_feature: [
           {
-            feature: 'cli_agent',
+            feature: 'copilot_cli',
             user_initiated_interaction_count: 5,
             code_generation_activity_count: 3,
             code_acceptance_activity_count: 2,
@@ -372,7 +372,7 @@ describe('userDetailCalculator', () => {
       expect(result!.dailyCliImpact[0].locDeleted).toBe(20);
     });
 
-    it('should produce empty dailyCliImpact when no cli_agent feature is present', () => {
+    it('should produce empty dailyCliImpact when no CLI feature is present', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -395,7 +395,6 @@ describe('userDetailCalculator', () => {
       accumulateUserDetail(acc, metric);
 
       const result = computeSingleUserDetailedMetrics(acc, 1);
-      // No cli_agent feature → dailyCliImpact entries should all have zero LOC
       const cliWithLoc = result!.dailyCliImpact.filter(d => d.locAdded > 0 || d.locDeleted > 0);
       expect(cliWithLoc).toHaveLength(0);
     });

@@ -34,7 +34,12 @@ const JOINED_FEATURES = [
   'agent_edit',
   'chat_panel_plan_mode',
   'cli_agent',
+  'copilot_cli',
 ];
+
+function isCliFeature(feature: string): boolean {
+  return feature === 'copilot_cli' || feature === 'cli_agent';
+}
 
 export function createImpactAccumulator(): ImpactAccumulator {
   return {
@@ -157,7 +162,7 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (feature === 'cli_agent' && hasLoc) {
+    if (isCliFeature(feature) && hasLoc) {
       accumulateToMap(
         accumulator.dailyCliImpact,
         date,
