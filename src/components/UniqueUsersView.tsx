@@ -139,6 +139,11 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
               Cloud Agent
             </span>
           )}
+          {user.used_auto_mode && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
+              Auto Mode
+            </span>
+          )}
           {user.total_code_generation_activities > 0 && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Completions

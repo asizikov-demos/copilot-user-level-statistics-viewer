@@ -144,6 +144,17 @@ function createUserSummaryAccumulator(): UserSummaryAccumulator {
   };
 }
 
+function hasAutoModeActivity(metric: CopilotMetrics): boolean {
+  return metric.totals_by_model_feature.some(modelFeature => {
+    const activityCount =
+      modelFeature.user_initiated_interaction_count +
+      modelFeature.code_generation_activity_count +
+      modelFeature.code_acceptance_activity_count;
+
+    return modelFeature.model.trim().toLowerCase() === 'auto' && activityCount > 0;
+  });
+}
+
 function accumulateUserSummary(
   accumulator: UserSummaryAccumulator,
   metric: CopilotMetrics
@@ -167,6 +178,7 @@ function accumulateUserSummary(
       used_chat: false,
       used_cli: false,
       used_copilot_coding_agent: false,
+      used_auto_mode: false,
       flags: [],
     });
     accumulator.userActiveDays.set(userId, new Set());
@@ -184,6 +196,7 @@ function accumulateUserSummary(
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
   userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || metric.used_copilot_coding_agent;
+  userSummary.used_auto_mode = userSummary.used_auto_mode || hasAutoModeActivity(metric);
   accumulator.userActiveDays.get(userId)!.add(date);
 }
 
@@ -282,7 +295,7 @@ export function aggregateMetrics(
         modelFeature.user_initiated_interaction_count
       );
 
-      accumulateModelBreakdown(modelBreakdownAccumulator, date, modelFeature);
+      accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);
     }
 
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];

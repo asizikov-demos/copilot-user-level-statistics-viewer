@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
+import AutoModeAdoptionTrendChart from './charts/AutoModeAdoptionTrendChart';
 import type { ModelBreakdownData } from '../types/metrics';
 import { ViewPanel } from './ui';
 
@@ -11,8 +12,41 @@ interface ModelDetailsViewProps {
 }
 
 export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsViewProps) {
+  const autoModels = modelBreakdownData.autoModels ?? [];
+  const autoModeAdoptionTrend = modelBreakdownData.autoModeAdoptionTrend ?? [];
+
+  const autoModelEntries = useMemo(
+    () => autoModels,
+    [autoModels]
+  );
+
+  const premiumModelEntries = useMemo(
+    () => modelBreakdownData.premiumModels.filter(entry => entry.model !== 'auto'),
+    [modelBreakdownData.premiumModels]
+  );
+
+  const autoTotal = useMemo(
+    () => autoModelEntries.reduce((sum, entry) => sum + entry.total, 0),
+    [autoModelEntries]
+  );
+
+  const premiumTotalWithoutAuto = useMemo(
+    () => premiumModelEntries.reduce((sum, entry) => sum + entry.total, 0),
+    [premiumModelEntries]
+  );
+
+  const premiumBreakdownWithoutAuto = useMemo(
+    () => ({
+      ...modelBreakdownData,
+      premiumModels: premiumModelEntries,
+      premiumTotal: premiumTotalWithoutAuto,
+    }),
+    [modelBreakdownData, premiumModelEntries, premiumTotalWithoutAuto]
+  );
+
   const premiumUtilization = useMemo(() => {
-    const { premiumTotal, standardTotal, unknownTotal } = modelBreakdownData;
+    const { standardTotal, unknownTotal } = modelBreakdownData;
+    const premiumTotal = premiumTotalWithoutAuto;
 
     const trackedTotal = premiumTotal + standardTotal;
     const numberFormatter = new Intl.NumberFormat();
@@ -116,7 +150,7 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
           ? `There are ${numberFormatter.format(unknownTotal)} interactions from models that are not yet tagged as premium or standard.`
           : undefined
     };
-  }, [modelBreakdownData]);
+  }, [modelBreakdownData, premiumTotalWithoutAuto]);
 
   return (
     <ViewPanel
@@ -162,9 +196,11 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
             </div>
           </div>
         )}
-        <DailyPremiumBaseChart modelBreakdownData={modelBreakdownData} />
+        <DailyPremiumBaseChart modelBreakdownData={premiumBreakdownWithoutAuto} />
+        <ModelsUsageChart modelEntries={autoModelEntries} dates={modelBreakdownData.dates} totalInteractions={autoTotal} variant="auto" />
+        <AutoModeAdoptionTrendChart data={autoModeAdoptionTrend} />
         <ModelsUsageChart modelEntries={modelBreakdownData.standardModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.standardTotal} variant="standard" />
-        <ModelsUsageChart modelEntries={modelBreakdownData.premiumModels} dates={modelBreakdownData.dates} totalInteractions={modelBreakdownData.premiumTotal} variant="premium" />
+        <ModelsUsageChart modelEntries={premiumModelEntries} dates={modelBreakdownData.dates} totalInteractions={premiumTotalWithoutAuto} variant="premium" />
       </div>
     </ViewPanel>
   );
