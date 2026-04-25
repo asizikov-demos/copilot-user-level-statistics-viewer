@@ -48,6 +48,16 @@ interface ClientActivityChartProps {
   }[];
 }
 
+interface CliFeatureTotals {
+  interactions: number;
+  generations: number;
+  acceptances: number;
+  locAdded: number;
+  locDeleted: number;
+  locSuggestedToAdd: number;
+  locSuggestedToDelete: number;
+}
+
 const IDE_COLORS: Record<string, string> = {
   'vscode': '#007ACC',
   'visual_studio': '#5C2D91',
@@ -67,6 +77,43 @@ const FALLBACK_COLORS = [
   '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
 ];
 
+function isCliFeature(feature: string): boolean {
+  return feature === 'copilot_cli' || feature === 'cli_agent';
+}
+
+function createEmptyCliFeatureTotals(): CliFeatureTotals {
+  return {
+    interactions: 0,
+    generations: 0,
+    acceptances: 0,
+    locAdded: 0,
+    locDeleted: 0,
+    locSuggestedToAdd: 0,
+    locSuggestedToDelete: 0,
+  };
+}
+
+function getCliFeatureTotals(day: UserDayData): CliFeatureTotals {
+  return day.totals_by_feature.reduce((acc, feature) => {
+    if (!isCliFeature(feature.feature)) return acc;
+
+    acc.interactions += feature.user_initiated_interaction_count;
+    acc.generations += feature.code_generation_activity_count;
+    acc.acceptances += feature.code_acceptance_activity_count;
+    acc.locAdded += feature.loc_added_sum;
+    acc.locDeleted += feature.loc_deleted_sum;
+    acc.locSuggestedToAdd += feature.loc_suggested_to_add_sum;
+    acc.locSuggestedToDelete += feature.loc_suggested_to_delete_sum;
+
+    return acc;
+  }, createEmptyCliFeatureTotals());
+}
+
+function getCliInteractionCount(day: UserDayData): number {
+  const featureInteractions = getCliFeatureTotals(day).interactions;
+  return featureInteractions > 0 ? featureInteractions : day.totals_by_cli?.prompt_count ?? 0;
+}
+
 /**
  * ClientActivityChart
  * Reusable section displaying a daily interactions stacked bar chart (by IDE/CLI) plus
@@ -82,6 +129,34 @@ export default function ClientActivityChart({
   cliVersions,
 }: ClientActivityChartProps) {
   const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
+
+  const cliTotals = useMemo(() => (
+    days.reduce((acc, day) => {
+      if (day.totals_by_cli) {
+        acc.promptCount += day.totals_by_cli.prompt_count;
+      }
+
+      const featureTotals = getCliFeatureTotals(day);
+      acc.interactions += featureTotals.interactions;
+      acc.generations += featureTotals.generations;
+      acc.acceptances += featureTotals.acceptances;
+      acc.locAdded += featureTotals.locAdded;
+      acc.locDeleted += featureTotals.locDeleted;
+      acc.locSuggestedToAdd += featureTotals.locSuggestedToAdd;
+      acc.locSuggestedToDelete += featureTotals.locSuggestedToDelete;
+
+      return acc;
+    }, {
+      promptCount: 0,
+      interactions: 0,
+      generations: 0,
+      acceptances: 0,
+      locAdded: 0,
+      locDeleted: 0,
+      locSuggestedToAdd: 0,
+      locSuggestedToDelete: 0,
+    })
+  ), [days]);
 
   const barChartData = useMemo(() => {
     const allIDEs = Array.from(
@@ -108,11 +183,11 @@ export default function ClientActivityChart({
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     // Add CLI dataset if any day has CLI data
-    const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+    const hasCliData = days.some(day => getCliInteractionCount(day) > 0);
     if (hasCliData) {
       const cliData = allDays.map(dayStr => {
         const dayData = dayMap.get(dayStr);
-        return dayData?.totals_by_cli?.prompt_count || 0;
+        return dayData ? getCliInteractionCount(dayData) : 0;
       });
       datasets.push({
         label: 'Copilot CLI',
@@ -167,7 +242,8 @@ export default function ClientActivityChart({
     }
   }), []);
 
-  const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+  const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
+  const cliInteractionCount = cliTotals.interactions > 0 ? cliTotals.interactions : cliTotals.promptCount;
   const hasCliVersions = cliVersions && cliVersions.length > 0;
   const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
 
@@ -206,16 +282,7 @@ export default function ClientActivityChart({
               </tr>
             ))}
             {(() => {
-              const cliTotals = days.reduce((acc, day) => {
-                if (day.totals_by_cli) {
-                  acc.request_count += day.totals_by_cli.request_count;
-                  acc.session_count += day.totals_by_cli.session_count;
-                  acc.prompt_count += day.totals_by_cli.prompt_count;
-                }
-                return acc;
-              }, { request_count: 0, session_count: 0, prompt_count: 0 });
-
-              if (cliTotals.prompt_count === 0) return null;
+              if (!hasCliData) return null;
               return (
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -224,13 +291,13 @@ export default function ClientActivityChart({
                       <span>Copilot CLI</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.prompt_count.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.generations.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.acceptances.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locAdded.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locDeleted.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToAdd.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToDelete.toLocaleString()}</td>
                 </tr>
               );
             })()}

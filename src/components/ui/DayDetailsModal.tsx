@@ -15,6 +15,10 @@ interface DayDetailsModalProps {
   userLogin?: string;
 }
 
+function isCliFeature(feature: string): boolean {
+  return feature === 'copilot_cli' || feature === 'cli_agent';
+}
+
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {
   if (!isOpen) return null;
 
@@ -28,6 +32,33 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   };
 
   const hasData = !!dayMetrics;
+  const cliFeatureTotals = dayMetrics?.totals_by_feature.reduce((acc, feature) => {
+    if (!isCliFeature(feature.feature)) return acc;
+
+    acc.interactions += feature.user_initiated_interaction_count;
+    acc.generations += feature.code_generation_activity_count;
+    acc.acceptances += feature.code_acceptance_activity_count;
+    acc.locAdded += feature.loc_added_sum;
+    acc.locDeleted += feature.loc_deleted_sum;
+
+    return acc;
+  }, {
+    interactions: 0,
+    generations: 0,
+    acceptances: 0,
+    locAdded: 0,
+    locDeleted: 0,
+  }) ?? {
+    interactions: 0,
+    generations: 0,
+    acceptances: 0,
+    locAdded: 0,
+    locDeleted: 0,
+  };
+  const hasCliActivity = (dayMetrics?.totals_by_cli?.prompt_count ?? 0) > 0 || cliFeatureTotals.interactions > 0;
+  const cliInteractionCount = cliFeatureTotals.interactions > 0
+    ? cliFeatureTotals.interactions
+    : dayMetrics?.totals_by_cli?.prompt_count ?? 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -146,37 +177,40 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                           <tr>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin Version</th>
-                          </tr>
-                        </thead>
+                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
+                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
+                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
+                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
+                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin Version</th>
+                           </tr>
+                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {visibleItems.map((ide, idx) => (
                             <tr key={idx} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{formatIDEName(ide.ide)}</td>
                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                {ide.last_known_plugin_version ? 
-                                  `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}` : 
+                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
+                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
+                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
+                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_deleted_sum.toLocaleString()}</td>
+                               <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                 {ide.last_known_plugin_version ? 
+                                   `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}` : 
                                   'Unknown'
                                 }
                               </td>
-                            </tr>
-                          ))}
-                          {dayMetrics.totals_by_cli && dayMetrics.totals_by_cli.prompt_count > 0 && (
+                             </tr>
+                           ))}
+                          {hasCliActivity && (
                             <tr className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">Copilot CLI</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{dayMetrics.totals_by_cli.prompt_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
-                              <td className="px-4 py-3 text-sm text-gray-500 text-right">—</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.generations.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.acceptances.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.locAdded.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.locDeleted.toLocaleString()}</td>
                               <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                {dayMetrics.totals_by_cli.last_known_cli_version ?
+                                {dayMetrics.totals_by_cli?.last_known_cli_version ?
                                   `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}` :
                                   'Unknown'
                                 }
