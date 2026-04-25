@@ -1,5 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
+import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { normalizeLanguage } from './languageNormalizer';
 
 function normalizeMetricLanguages(metric: CopilotMetrics): void {
@@ -59,7 +60,9 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
     // We rely on upstream schema conformity; at runtime we only soft-validated key fields
     const metric = parsedRaw as unknown as CopilotMetrics;
     metric.used_cli = metric.used_cli ?? false;
-    metric.used_copilot_coding_agent = metric.used_copilot_coding_agent ?? false;
+    const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
+    metric.used_copilot_coding_agent = usedCopilotCloudAgent;
+    metric.used_copilot_cloud_agent = usedCopilotCloudAgent;
 
     // Normalize language names to canonical form
     normalizeMetricLanguages(metric);

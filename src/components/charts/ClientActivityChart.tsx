@@ -48,6 +48,21 @@ interface ClientActivityChartProps {
   }[];
 }
 
+interface CliFeatureTotals {
+  interactions: number;
+  generations: number;
+  acceptances: number;
+  locAdded: number;
+  locDeleted: number;
+  locSuggestedToAdd: number;
+  locSuggestedToDelete: number;
+}
+
+interface CliDayTotals extends CliFeatureTotals {
+  promptCount: number;
+  interactionCount: number;
+}
+
 const IDE_COLORS: Record<string, string> = {
   'vscode': '#007ACC',
   'visual_studio': '#5C2D91',
@@ -67,6 +82,50 @@ const FALLBACK_COLORS = [
   '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
 ];
 
+function isCliFeature(feature: string): boolean {
+  return feature === 'copilot_cli' || feature === 'cli_agent';
+}
+
+function createEmptyCliFeatureTotals(): CliFeatureTotals {
+  return {
+    interactions: 0,
+    generations: 0,
+    acceptances: 0,
+    locAdded: 0,
+    locDeleted: 0,
+    locSuggestedToAdd: 0,
+    locSuggestedToDelete: 0,
+  };
+}
+
+function getCliFeatureTotals(day: UserDayData): CliFeatureTotals {
+  return day.totals_by_feature.reduce((acc, feature) => {
+    if (!isCliFeature(feature.feature)) return acc;
+
+    acc.interactions += feature.user_initiated_interaction_count;
+    acc.generations += feature.code_generation_activity_count;
+    acc.acceptances += feature.code_acceptance_activity_count;
+    acc.locAdded += feature.loc_added_sum;
+    acc.locDeleted += feature.loc_deleted_sum;
+    acc.locSuggestedToAdd += feature.loc_suggested_to_add_sum;
+    acc.locSuggestedToDelete += feature.loc_suggested_to_delete_sum;
+
+    return acc;
+  }, createEmptyCliFeatureTotals());
+}
+
+function getCliDayTotals(day: UserDayData): CliDayTotals {
+  const featureTotals = getCliFeatureTotals(day);
+  const promptCount = day.totals_by_cli?.prompt_count ?? 0;
+  const interactionCount = featureTotals.interactions > 0 ? featureTotals.interactions : promptCount;
+
+  return {
+    ...featureTotals,
+    promptCount,
+    interactionCount,
+  };
+}
+
 /**
  * ClientActivityChart
  * Reusable section displaying a daily interactions stacked bar chart (by IDE/CLI) plus
@@ -82,6 +141,36 @@ export default function ClientActivityChart({
   cliVersions,
 }: ClientActivityChartProps) {
   const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
+
+  const { cliTotals, cliTotalsByDay } = useMemo(() => {
+    const totals = {
+      promptCount: 0,
+      interactions: 0,
+      generations: 0,
+      acceptances: 0,
+      locAdded: 0,
+      locDeleted: 0,
+      locSuggestedToAdd: 0,
+      locSuggestedToDelete: 0,
+    };
+    const byDay = new Map<string, CliDayTotals>();
+
+    for (const day of days) {
+      const dayTotals = getCliDayTotals(day);
+      byDay.set(day.day, dayTotals);
+
+      totals.promptCount += dayTotals.promptCount;
+      totals.interactions += dayTotals.interactions;
+      totals.generations += dayTotals.generations;
+      totals.acceptances += dayTotals.acceptances;
+      totals.locAdded += dayTotals.locAdded;
+      totals.locDeleted += dayTotals.locDeleted;
+      totals.locSuggestedToAdd += dayTotals.locSuggestedToAdd;
+      totals.locSuggestedToDelete += dayTotals.locSuggestedToDelete;
+    }
+
+    return { cliTotals: totals, cliTotalsByDay: byDay };
+  }, [days]);
 
   const barChartData = useMemo(() => {
     const allIDEs = Array.from(
@@ -108,11 +197,10 @@ export default function ClientActivityChart({
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     // Add CLI dataset if any day has CLI data
-    const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+    const hasCliData = Array.from(cliTotalsByDay.values()).some(dayTotals => dayTotals.interactionCount > 0);
     if (hasCliData) {
       const cliData = allDays.map(dayStr => {
-        const dayData = dayMap.get(dayStr);
-        return dayData?.totals_by_cli?.prompt_count || 0;
+        return cliTotalsByDay.get(dayStr)?.interactionCount ?? 0;
       });
       datasets.push({
         label: 'Copilot CLI',
@@ -127,7 +215,7 @@ export default function ClientActivityChart({
       labels: allDays.map(day => formatShortDate(day)),
       datasets: datasets,
     };
-  }, [days, reportStartDay, reportEndDay]);
+  }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
 
   const barChartOptions: ChartOptions<'bar'> = useMemo(() => ({
     responsive: true,
@@ -167,7 +255,8 @@ export default function ClientActivityChart({
     }
   }), []);
 
-  const hasCliData = days.some(d => d.totals_by_cli && d.totals_by_cli.prompt_count > 0);
+  const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
+  const cliInteractionCount = cliTotals.interactions > 0 ? cliTotals.interactions : cliTotals.promptCount;
   const hasCliVersions = cliVersions && cliVersions.length > 0;
   const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
 
@@ -206,16 +295,7 @@ export default function ClientActivityChart({
               </tr>
             ))}
             {(() => {
-              const cliTotals = days.reduce((acc, day) => {
-                if (day.totals_by_cli) {
-                  acc.request_count += day.totals_by_cli.request_count;
-                  acc.session_count += day.totals_by_cli.session_count;
-                  acc.prompt_count += day.totals_by_cli.prompt_count;
-                }
-                return acc;
-              }, { request_count: 0, session_count: 0, prompt_count: 0 });
-
-              if (cliTotals.prompt_count === 0) return null;
+              if (!hasCliData) return null;
               return (
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -224,13 +304,13 @@ export default function ClientActivityChart({
                       <span>Copilot CLI</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.prompt_count.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">—</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.generations.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.acceptances.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locAdded.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locDeleted.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToAdd.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToDelete.toLocaleString()}</td>
                 </tr>
               );
             })()}

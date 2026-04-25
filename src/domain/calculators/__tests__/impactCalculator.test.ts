@@ -6,6 +6,7 @@ import {
   computeAgentImpactData,
   computeCodeCompletionImpactData,
   computeEditModeImpactData,
+  computeCliImpactData,
   computeJoinedImpactData,
   type FeatureImpactInput,
 } from '../impactCalculator';
@@ -66,6 +67,40 @@ describe('impactCalculator', () => {
       expect(results[0].locDeleted).toBe(15);
     });
 
+    it('should route copilot_cli to CLI impact', () => {
+      const accumulator = createImpactAccumulator();
+      ensureImpactDates(accumulator, '2024-01-15');
+
+      const features: FeatureImpactInput[] = [
+        { feature: 'copilot_cli', locAdded: 100, locDeleted: 20 },
+      ];
+
+      accumulateFeatureImpacts(accumulator, '2024-01-15', 1, features);
+
+      const results = computeCliImpactData(accumulator);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].locAdded).toBe(100);
+      expect(results[0].locDeleted).toBe(20);
+      expect(results[0].userCount).toBe(1);
+    });
+
+    it('should continue routing legacy cli_agent to CLI impact', () => {
+      const accumulator = createImpactAccumulator();
+      ensureImpactDates(accumulator, '2024-01-15');
+
+      const features: FeatureImpactInput[] = [
+        { feature: 'cli_agent', locAdded: 50, locDeleted: 10 },
+      ];
+
+      accumulateFeatureImpacts(accumulator, '2024-01-15', 1, features);
+
+      const results = computeCliImpactData(accumulator);
+
+      expect(results[0].locAdded).toBe(50);
+      expect(results[0].locDeleted).toBe(10);
+    });
+
     it('should handle multiple feature categories in single accumulation', () => {
       const accumulator = createImpactAccumulator();
       ensureImpactDates(accumulator, '2024-01-15');
@@ -99,7 +134,7 @@ describe('impactCalculator', () => {
         { feature: 'chat_panel_edit_mode', locAdded: 30, locDeleted: 5 },
         { feature: 'chat_inline', locAdded: 20, locDeleted: 3 },
         { feature: 'chat_panel_agent_mode', locAdded: 40, locDeleted: 8 },
-        { feature: 'cli_agent', locAdded: 10, locDeleted: 2 },
+        { feature: 'copilot_cli', locAdded: 10, locDeleted: 2 },
         { feature: 'chat_panel_plan_mode', locAdded: 15, locDeleted: 3 },
       ];
 

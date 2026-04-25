@@ -8,6 +8,7 @@ import {
   DailyLanguageChartData,
   ModelBreakdownData,
 } from '../types/metrics';
+import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import {
   createStatsAccumulator,
   accumulateUserUsage,
@@ -157,7 +158,8 @@ function hasAutoModeActivity(metric: CopilotMetrics): boolean {
 
 function accumulateUserSummary(
   accumulator: UserSummaryAccumulator,
-  metric: CopilotMetrics
+  metric: CopilotMetrics,
+  usedCopilotCloudAgent: boolean
 ): void {
   const userId = metric.user_id;
   const date = metric.day;
@@ -195,7 +197,7 @@ function accumulateUserSummary(
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
-  userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || metric.used_copilot_coding_agent;
+  userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || usedCopilotCloudAgent;
   userSummary.used_auto_mode = userSummary.used_auto_mode || hasAutoModeActivity(metric);
   accumulator.userActiveDays.get(userId)!.add(date);
 }
@@ -241,11 +243,12 @@ export function aggregateMetrics(
 
     const date = metric.day;
     const userId = metric.user_id;
+    const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
 
-    accumulateUserSummary(userSummaryAccumulator, metric);
+    accumulateUserSummary(userSummaryAccumulator, metric, usedCopilotCloudAgent);
     accumulateUserDetail(userDetailAccumulator, metric);
 
-    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, metric.used_copilot_coding_agent);
+    accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, usedCopilotCloudAgent);
 
     accumulateEngagement(engagementAccumulator, date, userId);
 
@@ -301,7 +304,7 @@ export function aggregateMetrics(
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
 
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
-    accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, metric.used_copilot_coding_agent);
+    accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, usedCopilotCloudAgent);
     accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
 
     for (const feature of metric.totals_by_feature) {

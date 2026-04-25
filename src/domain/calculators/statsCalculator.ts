@@ -1,4 +1,5 @@
 import { CopilotMetrics, MetricsStats } from '../../types/metrics';
+import { resolveCopilotCloudAgentUsage } from '../copilotCloudAgentUsage';
 
 export interface UserUsageStats {
   userUsageMap: Map<number, { used_chat: boolean; used_agent: boolean; used_cli: boolean; used_copilot_coding_agent: boolean }>;
@@ -154,7 +155,7 @@ export function calculateStatsFromMetrics(
   accumulator.reportEndDay = metrics[0].report_end_day;
 
   for (const metric of metrics) {
-    accumulateUserUsage(accumulator, metric.user_id, metric.used_chat, metric.used_agent, metric.used_cli, metric.used_copilot_coding_agent);
+    accumulateUserUsage(accumulator, metric.user_id, metric.used_chat, metric.used_agent, metric.used_cli, resolveCopilotCloudAgentUsage(metric));
 
     for (const ideTotal of metric.totals_by_ide) {
       accumulateIdeUser(accumulator, ideTotal.ide, metric.user_id);

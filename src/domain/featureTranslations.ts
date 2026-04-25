@@ -12,6 +12,7 @@ export const featureTranslations: Record<string, string> = {
   'chat_inline': 'Chat: Inline',
   'agent_edit': 'Agent Edit',
   'cli_agent': 'CLI Agent',
+  'copilot_cli': 'Copilot CLI',
 };
 
 /**
