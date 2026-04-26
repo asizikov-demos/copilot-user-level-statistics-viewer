@@ -488,6 +488,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       date,
       outputTokens: cli?.token_usage.output_tokens_sum ?? 0,
       promptTokens: cli?.token_usage.prompt_tokens_sum ?? 0,
+      requestCount: cli?.request_count ?? 0,
     })),
     [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay],
   );
@@ -617,10 +618,10 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         emptyStateMessage="No combined impact data available."
       />
 
-      {/* Copilot CLI Adoption */}
+      {/* Copilot CLI Usage */}
       {hasCliActivity && (
         <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Adoption</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Usage</h3>
           <div className="space-y-8">
             <CLITokensChart data={dailyCliTokenData} />
             <CLISessionChart data={dailyCliSessionData} />
