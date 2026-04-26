@@ -2,6 +2,7 @@
 
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import type { ReactNode } from 'react';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
@@ -20,6 +21,7 @@ interface ModeImpactChartProps {
   deletedColor?: string;
   deletedBorderColor?: string;
   emptyStateMessage?: string;
+  footer?: ReactNode;
 }
 
 const DEFAULT_DELETED_COLOR = 'rgba(248, 113, 113, 0.85)';
@@ -34,6 +36,7 @@ export default function ModeImpactChart({
   deletedColor = DEFAULT_DELETED_COLOR,
   deletedBorderColor = DEFAULT_DELETED_BORDER_COLOR,
   emptyStateMessage = 'No impact data available for this mode',
+  footer,
 }: ModeImpactChartProps) {
   const totalAdded = calculateTotal(data, d => d.locAdded);
   const totalDeleted = calculateTotal(data, d => d.locDeleted);
@@ -106,8 +109,11 @@ export default function ModeImpactChart({
         { label: 'Net Change', value: `${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()}`, color: netChange >= 0 ? 'text-green-600' : 'text-red-600' },
       ]}
       footer={
-        <div className="text-xs text-gray-500 print:text-[10px] print:text-gray-700">
-          Average daily users: {averageDailyUsers}
+        <div className="space-y-4">
+          <div className="text-xs text-gray-500 print:text-[10px] print:text-gray-700">
+            Average daily users: {averageDailyUsers}
+          </div>
+          {footer}
         </div>
       }
     >

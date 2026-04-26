@@ -3,6 +3,7 @@
 import React from 'react';
 import ModeImpactChart from './charts/ModeImpactChart';
 import { ViewPanel } from './ui';
+import InsightsCard from './ui/InsightsCard';
 import type { AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../domain/calculators/metricCalculators';
 interface CopilotImpactViewProps {
   agentImpactData: AgentImpactData[];
@@ -38,10 +39,10 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         emptyStateMessage="No agent mode impact data available."
       />
       <ModeImpactChart
-        data={askModeImpactData || []}
-        title="Copilot Ask Mode Impact"
-        description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
-        emptyStateMessage="No Ask Mode impact data available."
+        data={cliImpactData || []}
+        title="Copilot CLI Impact"
+        description="Daily lines of code added and deleted through Copilot CLI sessions."
+        emptyStateMessage="No CLI impact data available."
       />
       <ModeImpactChart
         data={codeCompletionImpactData || []}
@@ -50,10 +51,16 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         emptyStateMessage="No code completion impact data available."
       />
       <ModeImpactChart
-        data={editModeImpactData || []}
-        title="Copilot Edit Mode Impact"
-        description="Daily lines of code added and deleted through Copilot's Edit Mode sessions."
-        emptyStateMessage="No Edit Mode impact data available."
+        data={planModeImpactData || []}
+        title="Copilot Plan Mode Impact"
+        description="Daily lines of code added and deleted through Copilot Plan Mode sessions."
+        emptyStateMessage="No Plan Mode impact data available."
+      />
+      <ModeImpactChart
+        data={askModeImpactData || []}
+        title="Copilot Ask Mode Impact"
+        description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+        emptyStateMessage="No Ask Mode impact data available."
       />
       <ModeImpactChart
         data={inlineModeImpactData || []}
@@ -62,16 +69,15 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         emptyStateMessage="No Inline Mode impact data available."
       />
       <ModeImpactChart
-        data={cliImpactData || []}
-        title="Copilot CLI Impact"
-        description="Daily lines of code added and deleted through Copilot CLI sessions."
-        emptyStateMessage="No CLI impact data available."
-      />
-      <ModeImpactChart
-        data={planModeImpactData || []}
-        title="Copilot Plan Mode Impact"
-        description="Daily lines of code added and deleted through Copilot Plan Mode sessions."
-        emptyStateMessage="No Plan Mode impact data available."
+        data={editModeImpactData || []}
+        title="Copilot Edit Mode Impact"
+        description="Daily lines of code added and deleted through Copilot's Edit Mode sessions."
+        emptyStateMessage="No Edit Mode impact data available."
+        footer={
+          <InsightsCard title="Edit Mode Deprecation" variant="orange">
+            Edit mode is deprecated and will be removed in newer versions of IDE clients.
+          </InsightsCard>
+        }
       />
     </ViewPanel>
   );

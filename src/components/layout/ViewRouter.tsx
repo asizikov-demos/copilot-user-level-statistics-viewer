@@ -180,6 +180,8 @@ const ViewRouter: React.FC = () => {
           totalUniqueIDEUsers={totalUniqueIDEUsers}
           cliUsers={stats.cliUsers}
           cliSessions={dailyCliSessionData.reduce((sum, d) => sum + d.sessionCount, 0)}
+          cliLocAdded={cliImpactData.reduce((sum, d) => sum + d.locAdded, 0)}
+          cliLocDeleted={cliImpactData.reduce((sum, d) => sum + d.locDeleted, 0)}
         />
       );
 

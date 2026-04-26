@@ -252,9 +252,11 @@ describe('cliUsageCalculator', () => {
       expect(result[0].date).toBe('2024-01-15');
       expect(result[0].outputTokens).toBe(500);
       expect(result[0].promptTokens).toBe(300);
+      expect(result[0].requestCount).toBe(1);
       expect(result[1].date).toBe('2024-01-16');
       expect(result[1].outputTokens).toBe(200);
       expect(result[1].promptTokens).toBe(100);
+      expect(result[1].requestCount).toBe(1);
     });
 
     it('should aggregate tokens from multiple users on the same day', () => {
@@ -274,6 +276,7 @@ describe('cliUsageCalculator', () => {
       expect(result).toHaveLength(1);
       expect(result[0].outputTokens).toBe(3000);
       expect(result[0].promptTokens).toBe(1300);
+      expect(result[0].requestCount).toBe(2);
     });
   });
 });

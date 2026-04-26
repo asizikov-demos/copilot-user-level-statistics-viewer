@@ -12,6 +12,7 @@ export interface DailyCliTokenData {
   date: string;
   outputTokens: number;
   promptTokens: number;
+  requestCount: number;
 }
 
 export interface CliUsageAccumulator {
@@ -24,6 +25,7 @@ export interface CliUsageAccumulator {
   dailyTokens: Map<string, {
     outputTokens: number;
     promptTokens: number;
+    requestCount: number;
   }>;
 }
 
@@ -44,7 +46,7 @@ export function ensureCliDates(accumulator: CliUsageAccumulator, date: string): 
     });
   }
   if (!accumulator.dailyTokens.has(date)) {
-    accumulator.dailyTokens.set(date, { outputTokens: 0, promptTokens: 0 });
+    accumulator.dailyTokens.set(date, { outputTokens: 0, promptTokens: 0, requestCount: 0 });
   }
 }
 
@@ -68,6 +70,7 @@ export function accumulateCliUsage(
   const dt = accumulator.dailyTokens.get(date)!;
   dt.outputTokens += cli.token_usage.output_tokens_sum;
   dt.promptTokens += cli.token_usage.prompt_tokens_sum;
+  dt.requestCount += cli.request_count;
 }
 
 export function computeDailyCliSessionData(
@@ -92,6 +95,7 @@ export function computeDailyCliTokenData(
       date,
       outputTokens: data.outputTokens,
       promptTokens: data.promptTokens,
+      requestCount: data.requestCount,
     }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
