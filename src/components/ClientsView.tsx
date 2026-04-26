@@ -18,9 +18,19 @@ interface IDEViewProps {
   totalUniqueIDEUsers: number;
   cliUsers: number;
   cliSessions: number;
+  cliLocAdded: number;
+  cliLocDeleted: number;
 }
 
-export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueIDEUsers, cliUsers, cliSessions }: IDEViewProps) {
+export default function ClientsView({
+  ideStats,
+  multiIDEUsersCount,
+  totalUniqueIDEUsers,
+  cliUsers,
+  cliSessions,
+  cliLocAdded,
+  cliLocDeleted,
+}: IDEViewProps) {
 
   const allClients: IDEStats[] = React.useMemo(() => {
     if (cliUsers <= 0) return ideStats;
@@ -31,13 +41,13 @@ export default function ClientsView({ ideStats, multiIDEUsersCount, totalUniqueI
       totalEngagements: cliSessions,
       totalGenerations: 0,
       totalAcceptances: 0,
-      locAdded: 0,
-      locDeleted: 0,
+      locAdded: cliLocAdded,
+      locDeleted: cliLocDeleted,
       locSuggestedToAdd: 0,
       locSuggestedToDelete: 0,
     };
     return [...ideStats, cliEntry];
-  }, [ideStats, cliUsers, cliSessions]);
+  }, [ideStats, cliUsers, cliSessions, cliLocAdded, cliLocDeleted]);
 
   const {
     sortField: usersSortField,
