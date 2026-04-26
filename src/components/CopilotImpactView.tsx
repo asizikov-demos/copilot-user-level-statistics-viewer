@@ -73,10 +73,12 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         title="Copilot Edit Mode Impact"
         description="Daily lines of code added and deleted through Copilot's Edit Mode sessions."
         emptyStateMessage="No Edit Mode impact data available."
+        footer={
+          <InsightsCard title="Edit Mode Deprecation" variant="orange">
+            Edit mode is deprecated and will be removed in newer versions of IDE clients.
+          </InsightsCard>
+        }
       />
-      <InsightsCard title="Edit Mode Deprecation" variant="orange">
-        Edit mode is deprecated and will be removed in newer versions of IDE clients.
-      </InsightsCard>
     </ViewPanel>
   );
 }

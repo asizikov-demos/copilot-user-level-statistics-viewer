@@ -4,7 +4,7 @@ import { Chart } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { createDualAxisChartOptions } from './utils/chartOptions';
-import { createBarDataset } from './utils/chartStyles';
+import { createBarDataset, createLineDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import { calculateTotal } from '../../domain/calculators/statsCalculators';
@@ -53,18 +53,16 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
       },
       {
         type: 'line' as const,
-        label: 'Avg Tokens per Request',
-        data: dailyAverageTokensPerRequest,
-        backgroundColor: chartColors.blue.alpha,
-        borderColor: chartColors.blue.solid,
-        borderWidth: 2,
-        borderDash: [5, 3],
-        fill: false,
-        tension: 0.3,
-        pointRadius: 2,
-        pointHoverRadius: 4,
-        spanGaps: true,
-        yAxisID: 'y1',
+        ...createLineDataset(chartColors.blue.solid, 'Avg Tokens per Request', dailyAverageTokensPerRequest, {
+          backgroundColor: chartColors.blue.alpha,
+          borderWidth: 2,
+          borderDash: [5, 3],
+          tension: 0.3,
+          pointRadius: 2,
+          pointHoverRadius: 4,
+          spanGaps: true,
+          yAxisID: 'y1',
+        }),
       },
     ],
   };

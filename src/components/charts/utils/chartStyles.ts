@@ -1,5 +1,7 @@
 'use client';
 
+import type { ChartDataset } from 'chart.js';
+
 /**
  * Centralized dataset styling presets for Chart.js charts.
  * Reduces duplication across chart components.
@@ -44,7 +46,7 @@ export function createLineDataset(
   color: string,
   label: string,
   data: (number | null)[],
-  options: Partial<typeof lineDatasetDefaults & { fill: boolean }> = {}
+  options: Partial<ChartDataset<'line', (number | null)[]>> = {}
 ) {
   const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.1)');
   
@@ -70,7 +72,7 @@ export function createFilledLineDataset(
   color: string,
   label: string,
   data: (number | null)[],
-  options: Partial<typeof filledLineDatasetDefaults> = {}
+  options: Partial<ChartDataset<'line', (number | null)[]>> = {}
 ) {
   return createLineDataset(color, label, data, { fill: true, ...options });
 }
