@@ -21,6 +21,17 @@ describe('modelConfig', () => {
       });
     });
 
+    it('should handle display names with parentheses (fast mode / preview)', () => {
+      const testCases = [
+        { model: 'Claude Opus 4.6 (fast mode) (preview)', expected: 30 },
+        { model: 'Claude Opus 4.6 (fast mode)', expected: 30 },
+      ];
+
+      testCases.forEach(({ model, expected }) => {
+        expect(getModelMultiplier(model)).toBe(expected);
+      });
+    });
+
     it('should handle case-insensitive matching', () => {
       const testCases = [
         { model: 'GPT-4O', expected: 0 },
