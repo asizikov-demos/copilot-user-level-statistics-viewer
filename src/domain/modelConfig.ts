@@ -73,6 +73,7 @@ const normalizeModelName = (name: string): string =>
   name
     .trim()
     .toLowerCase()
+    .replace(/[()]/g, '')
     .replace(/[\s_]+/g, '-')
     .replace(/-+/g, '-');
 
