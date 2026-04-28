@@ -14,13 +14,32 @@ import InsightsCard from '../ui/InsightsCard';
 
 registerChartJS();
 
-interface DailyPremiumBaseChartProps {
-  modelBreakdownData?: ModelBreakdownData;
-  dailyModelUsageData?: DailyModelUsageData[];
-  reportStartDay?: string;
-  reportEndDay?: string;
+interface ModelBreakdownChartProps {
+  modelBreakdownData: ModelBreakdownData;
+  dailyModelUsageData?: never;
+  reportStartDay?: never;
+  reportEndDay?: never;
   hideInsights?: boolean;
 }
+
+interface DailyModelUsageChartProps {
+  modelBreakdownData?: never;
+  dailyModelUsageData: DailyModelUsageData[];
+  reportStartDay: string;
+  reportEndDay: string;
+  hideInsights?: boolean;
+}
+
+type DailyPremiumBaseChartProps = ModelBreakdownChartProps | DailyModelUsageChartProps;
+
+type DailyPremiumDataset = {
+  label: string;
+  data: number[];
+  backgroundColor: string;
+  borderColor: string;
+  borderWidth: number;
+  stack: string;
+};
 
 export default function DailyPremiumBaseChart({
   modelBreakdownData,
@@ -29,12 +48,10 @@ export default function DailyPremiumBaseChart({
   reportEndDay,
   hideInsights = false,
 }: DailyPremiumBaseChartProps) {
-  const { labels, datasets, dailyPremium, dailyStandard, isEmpty } = useMemo(() => {
+  const { labels, datasets, dailyPremium, dailyStandard, dailyUnknown, isEmpty } = useMemo(() => {
     const dates = modelBreakdownData
       ? modelBreakdownData.dates
-      : reportStartDay && reportEndDay
-        ? generateDateRange(reportStartDay, reportEndDay)
-        : dailyModelUsageData?.map(d => d.date) ?? [];
+      : generateDateRange(reportStartDay, reportEndDay);
 
     const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
 
@@ -50,28 +67,46 @@ export default function DailyPremiumBaseChart({
         )
       : dates.map(d => dailyUsageByDate.get(d)?.standardModels ?? 0);
 
+    const dailyUnknown = modelBreakdownData
+      ? dates.map(() => 0)
+      : dates.map(d => dailyUsageByDate.get(d)?.unknownModels ?? 0);
+
+    const datasets: DailyPremiumDataset[] = [
+      {
+        label: 'Standard',
+        data: dailyStandard,
+        backgroundColor: chartColors.blue.solid,
+        borderColor: chartColors.blue.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      },
+      {
+        label: 'Premium',
+        data: dailyPremium,
+        backgroundColor: chartColors.purple.solid,
+        borderColor: chartColors.purple.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      },
+    ];
+
+    if (dailyUnknown.some(value => value > 0)) {
+      datasets.push({
+        label: 'Unknown',
+        data: dailyUnknown,
+        backgroundColor: chartColors.gray.solid,
+        borderColor: chartColors.gray.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      });
+    }
+
     return {
       labels: dates.map(d => formatShortDate(d)),
-      datasets: [
-        {
-          label: 'Standard',
-          data: dailyStandard,
-          backgroundColor: chartColors.blue.solid,
-          borderColor: chartColors.blue.solid,
-          borderWidth: 1,
-          stack: 'premium-base',
-        },
-        {
-          label: 'Premium',
-          data: dailyPremium,
-          backgroundColor: chartColors.purple.solid,
-          borderColor: chartColors.purple.solid,
-          borderWidth: 1,
-          stack: 'premium-base',
-        },
-      ],
+      datasets,
       dailyPremium,
       dailyStandard,
+      dailyUnknown,
       isEmpty: dates.length === 0,
     };
   }, [dailyModelUsageData, modelBreakdownData, reportEndDay, reportStartDay]);
@@ -94,7 +129,8 @@ export default function DailyPremiumBaseChart({
 
   const totalPremium = dailyPremium.reduce((s, v) => s + v, 0);
   const totalStandard = dailyStandard.reduce((s, v) => s + v, 0);
-  const totalAll = totalPremium + totalStandard;
+  const totalUnknown = dailyUnknown.reduce((s, v) => s + v, 0);
+  const totalAll = totalPremium + totalStandard + totalUnknown;
   const premiumShare = totalAll > 0 ? ((totalPremium / totalAll) * 100).toFixed(1) : '0.0';
 
   const premiumShareNum = totalAll > 0 ? (totalPremium / totalAll) * 100 : 0;
@@ -108,6 +144,9 @@ export default function DailyPremiumBaseChart({
       summaryStats={[
         { value: totalPremium.toLocaleString(), label: 'Premium', colorClass: 'text-purple-600' },
         { value: totalStandard.toLocaleString(), label: 'Standard', colorClass: 'text-blue-600' },
+        ...(totalUnknown > 0
+          ? [{ value: totalUnknown.toLocaleString(), label: 'Unknown', colorClass: 'text-gray-600' }]
+          : []),
         { value: `${premiumShare}%`, label: 'Premium Share', colorClass: 'text-gray-700' },
       ]}
       footer={!hideInsights && totalAll > 0 ? (
