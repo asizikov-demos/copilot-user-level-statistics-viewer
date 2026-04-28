@@ -5,7 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
-import { chartColors } from './utils/chartColors';
+import { chartColors, getSequentialColor } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
@@ -17,12 +17,13 @@ interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
   dates: string[];
   totalInteractions: number;
-  variant: 'standard' | 'premium' | 'auto';
+  variant: 'standard' | 'premium' | 'auto' | 'cli';
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isPremium = variant === 'premium';
   const isAuto = variant === 'auto';
+  const isCli = variant === 'cli';
 
   const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
     const sortedModels = [...modelEntries].sort((a, b) => b.total - a.total);
@@ -39,6 +40,10 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     const getModelColor = (model: string): string => {
       if (isAuto || model === 'auto') {
         return chartColors.violet.solid;
+      }
+      if (isCli) {
+        const adjustedIndex = modelIndexMap.get(model) ?? 0;
+        return getSequentialColor(adjustedIndex + 7);
       }
       if (model === 'unknown') {
         return UNKNOWN_COLOR;
@@ -61,7 +66,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         backgroundColor: color,
         borderColor: color,
         borderWidth: 1,
-        stack: isAuto ? 'auto-models' : isPremium ? 'premium-models' : 'standard-models'
+        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : isPremium ? 'premium-models' : 'standard-models'
       };
     });
 
@@ -71,10 +76,10 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       modelTotals,
       modelOrder
     };
-  }, [modelEntries, dates, isPremium, isAuto]);
+  }, [modelEntries, dates, isPremium, isAuto, isCli]);
 
   const insights = useMemo(() => {
-    if (isAuto) return null;
+    if (isAuto || isCli) return null;
     if (!totalInteractions || !modelOrder.length) return null;
 
     const shares = modelOrder.map(m => ({
@@ -125,7 +130,21 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     paragraphs.push(`Top model share summary: ${summary}${shares.length > 5 ? ', ...' : ''}.`);
 
     return { title, variant: insightVariant, paragraphs, showDocLink };
-  }, [modelTotals, modelOrder, totalInteractions, isPremium, isAuto]);
+  }, [modelTotals, modelOrder, totalInteractions, isPremium, isAuto, isCli]);
+
+  const chartTitle = isCli
+    ? 'CLI Models Daily Usage'
+    : isAuto
+      ? 'Auto Model Daily Usage'
+      : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`;
+  const chartDescription = isCli
+    ? 'Daily Copilot CLI user-initiated interactions grouped by model.'
+    : isAuto
+      ? 'Daily interactions routed through Copilot Auto mode.'
+      : undefined;
+  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : isPremium ? 'Premium' : 'Standard';
+  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : isPremium ? 'text-purple-600' : 'text-blue-600';
+  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : isPremium ? 'text-red-600' : 'text-green-600';
 
   const chartData = { labels, datasets };
 
@@ -145,19 +164,21 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
 
   return (
     <ChartContainer
-      title={isAuto ? 'Auto Model Daily Usage' : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`}
-      description={isAuto ? 'Daily interactions routed through Copilot Auto mode.' : undefined}
+      title={chartTitle}
+      description={chartDescription}
       isEmpty={dates.length === 0 || datasets.length === 0}
-      emptyState={`No ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model usage data available`}
+      emptyState={`No ${isCli ? 'CLI' : isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model usage data available`}
       summaryStats={[
-        { value: datasets.length, label: isAuto ? 'Auto Models' : 'Models', colorClass: isAuto ? 'text-violet-600' : isPremium ? 'text-purple-600' : 'text-blue-600' },
-        { value: totalInteractions, label: 'Total Interactions', colorClass: isAuto ? 'text-purple-600' : isPremium ? 'text-red-600' : 'text-green-600' },
+        { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: primaryColorClass },
+        { value: totalInteractions, label: 'Total Interactions', colorClass: totalColorClass },
       ]}
       chartHeight="h-96"
       footer={
         <>
           <p className="text-xs text-gray-600 mb-4">
-            Counts aggregate user initiated interactions across all features per {isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.
+            {isCli
+              ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
+              : `Counts aggregate user-initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
           </p>
           {insights && (
             <InsightsCard title={insights.title} variant={insights.variant}>

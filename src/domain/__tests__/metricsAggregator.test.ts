@@ -378,6 +378,97 @@ describe('metricsAggregator', () => {
       expect(aggregated.featureAdoptionData.totalUsers).toBeGreaterThan(0);
     });
 
+    it('should aggregate daily CLI model usage from model feature totals', () => {
+      const day1 = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        totals_by_model_feature: [
+          {
+            model: 'gpt-5.4',
+            feature: 'copilot_cli',
+            user_initiated_interaction_count: 15,
+            code_generation_activity_count: 8,
+            code_acceptance_activity_count: 8,
+            loc_added_sum: 209,
+            loc_deleted_sum: 50,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'claude-sonnet-4.6',
+            feature: 'copilot_cli',
+            user_initiated_interaction_count: 5,
+            code_generation_activity_count: 9,
+            code_acceptance_activity_count: 9,
+            loc_added_sum: 56,
+            loc_deleted_sum: 18,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'gpt-5.4',
+            feature: 'chat_panel_ask_mode',
+            user_initiated_interaction_count: 50,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+      const day2 = createBasicMetric({
+        user_id: 2,
+        day: '2024-01-16',
+        totals_by_model_feature: [
+          {
+            model: 'gpt-5.4',
+            feature: 'copilot_cli',
+            user_initiated_interaction_count: 3,
+            code_generation_activity_count: 1,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 12,
+            loc_deleted_sum: 2,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'claude-opus-4.7',
+            feature: 'copilot_cli',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 9,
+            code_acceptance_activity_count: 9,
+            loc_added_sum: 1414,
+            loc_deleted_sum: 1,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated } = aggregateMetrics([day1, day2]);
+
+      expect(aggregated.modelBreakdownData.cliTotal).toBe(23);
+      expect(aggregated.modelBreakdownData.cliModels).toEqual([
+        {
+          model: 'gpt-5.4',
+          total: 18,
+          dailyData: {
+            '2024-01-15': 15,
+            '2024-01-16': 3,
+          },
+        },
+        {
+          model: 'claude-sonnet-4.6',
+          total: 5,
+          dailyData: {
+            '2024-01-15': 5,
+          },
+        },
+      ]);
+    });
+
     it('should count CLI adoption from used_cli without relying on feature rows', () => {
       const metric = createBasicMetric({
         used_cli: true,

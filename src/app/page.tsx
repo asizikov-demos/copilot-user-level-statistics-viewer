@@ -15,6 +15,18 @@ export default function Home() {
         <div className={`px-4 sm:px-6 lg:px-8 pb-6 print:px-0 print:mx-0 ${hasData ? 'py-6 lg:pt-12' : 'py-6'}`}>
           <AppHeader />
           <ViewRouter />
+          <footer className="mt-12 pb-4 text-center text-xs text-gray-400 print:hidden">
+            &copy;{' '}
+            <a
+              href="https://github.com/asizikov"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-600 underline underline-offset-2 transition-colors"
+            >
+              Anton Sizikov
+            </a>
+            {' '}&mdash; Solutions Engineer @ GitHub
+          </footer>
         </div>
       </div>
     </div>
