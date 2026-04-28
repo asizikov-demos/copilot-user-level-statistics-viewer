@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { ViewPanel } from './ui';
+import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
 import ModeImpactChart from './charts/ModeImpactChart';
-import PRUModelUsageChart from './charts/PRUModelUsageChart';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import type {
   ModeImpactData,
@@ -142,7 +142,12 @@ export default function ExecutiveSummaryView({
         </dl>
       </div>
 
-      <PRUModelUsageChart data={modelUsageData || []} hideInsights />
+      <DailyPremiumBaseChart
+        dailyModelUsageData={modelUsageData || []}
+        reportStartDay={stats.reportStartDay}
+        reportEndDay={stats.reportEndDay}
+        hideInsights
+      />
 
       <div className="border border-gray-200 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-900 print:border-black print:bg-white print:text-black print:text-xs">
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 print:text-black">

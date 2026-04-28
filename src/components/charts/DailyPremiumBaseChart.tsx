@@ -6,7 +6,8 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate } from '../../utils/formatters';
+import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import type { DailyModelUsageData } from '../../domain/calculators/metricCalculators';
 import type { ModelBreakdownData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 import InsightsCard from '../ui/InsightsCard';
@@ -14,19 +15,40 @@ import InsightsCard from '../ui/InsightsCard';
 registerChartJS();
 
 interface DailyPremiumBaseChartProps {
-  modelBreakdownData: ModelBreakdownData;
+  modelBreakdownData?: ModelBreakdownData;
+  dailyModelUsageData?: DailyModelUsageData[];
+  reportStartDay?: string;
+  reportEndDay?: string;
+  hideInsights?: boolean;
 }
 
-export default function DailyPremiumBaseChart({ modelBreakdownData }: DailyPremiumBaseChartProps) {
-  const { dates, premiumModels, standardModels } = modelBreakdownData;
+export default function DailyPremiumBaseChart({
+  modelBreakdownData,
+  dailyModelUsageData,
+  reportStartDay,
+  reportEndDay,
+  hideInsights = false,
+}: DailyPremiumBaseChartProps) {
+  const { labels, datasets, dailyPremium, dailyStandard, isEmpty } = useMemo(() => {
+    const dates = modelBreakdownData
+      ? modelBreakdownData.dates
+      : reportStartDay && reportEndDay
+        ? generateDateRange(reportStartDay, reportEndDay)
+        : dailyModelUsageData?.map(d => d.date) ?? [];
 
-  const { labels, datasets, dailyPremium, dailyStandard } = useMemo(() => {
-    const dailyPremium = dates.map(d =>
-      premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-    );
-    const dailyStandard = dates.map(d =>
-      standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-    );
+    const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
+
+    const dailyPremium = modelBreakdownData
+      ? dates.map(d =>
+          modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+        )
+      : dates.map(d => dailyUsageByDate.get(d)?.pruModels ?? 0);
+
+    const dailyStandard = modelBreakdownData
+      ? dates.map(d =>
+          modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+        )
+      : dates.map(d => dailyUsageByDate.get(d)?.standardModels ?? 0);
 
     return {
       labels: dates.map(d => formatShortDate(d)),
@@ -50,8 +72,9 @@ export default function DailyPremiumBaseChart({ modelBreakdownData }: DailyPremi
       ],
       dailyPremium,
       dailyStandard,
+      isEmpty: dates.length === 0,
     };
-  }, [dates, premiumModels, standardModels]);
+  }, [dailyModelUsageData, modelBreakdownData, reportEndDay, reportStartDay]);
 
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
@@ -78,16 +101,16 @@ export default function DailyPremiumBaseChart({ modelBreakdownData }: DailyPremi
 
   return (
     <ChartContainer
-      title="Daily Premium vs Standard Usage"
+      title="Daily Premium vs Standard Model Usage"
       description="Stacked daily breakdown highlighting the premium-to-standard ratio over time."
-      isEmpty={dates.length === 0}
+      isEmpty={isEmpty}
       emptyState="No model usage data available"
       summaryStats={[
         { value: totalPremium.toLocaleString(), label: 'Premium', colorClass: 'text-purple-600' },
         { value: totalStandard.toLocaleString(), label: 'Standard', colorClass: 'text-blue-600' },
         { value: `${premiumShare}%`, label: 'Premium Share', colorClass: 'text-gray-700' },
       ]}
-      footer={totalAll > 0 ? (
+      footer={!hideInsights && totalAll > 0 ? (
         premiumShareNum < 50 ? (
           <InsightsCard title="Premium Adoption Opportunity" variant="orange">
             <p>
