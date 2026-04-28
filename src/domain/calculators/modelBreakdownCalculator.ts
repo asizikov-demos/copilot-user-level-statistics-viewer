@@ -11,9 +11,11 @@ export interface ModelBreakdownAccumulator {
   premiumModels: Map<string, ModelAccEntry>;
   standardModels: Map<string, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
+  cliModels: Map<string, ModelAccEntry>;
   autoModeUsersByDate: Map<string, Set<number>>;
   premiumTotal: number;
   standardTotal: number;
+  cliTotal: number;
   unknownTotal: number;
   allDates: Set<string>;
 }
@@ -32,12 +34,32 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
     premiumModels: new Map(),
     standardModels: new Map(),
     autoModels: new Map(),
+    cliModels: new Map(),
     autoModeUsersByDate: new Map(),
     premiumTotal: 0,
     standardTotal: 0,
+    cliTotal: 0,
     unknownTotal: 0,
     allDates: new Set(),
   };
+}
+
+function isCliFeature(feature: string): boolean {
+  return feature === 'copilot_cli' || feature === 'cli_agent';
+}
+
+function accumulateModelEntry(
+  modelsMap: Map<string, ModelAccEntry>,
+  model: string,
+  date: string,
+  count: number
+): void {
+  if (!modelsMap.has(model)) {
+    modelsMap.set(model, { total: 0, dailyData: new Map() });
+  }
+  const entry = modelsMap.get(model)!;
+  entry.total += count;
+  entry.dailyData.set(date, (entry.dailyData.get(date) || 0) + count);
 }
 
 export function accumulateModelBreakdown(
@@ -46,6 +68,7 @@ export function accumulateModelBreakdown(
   userId: number,
   modelFeature: {
     model: string;
+    feature: string;
     user_initiated_interaction_count: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
@@ -55,6 +78,12 @@ export function accumulateModelBreakdown(
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
   const normalizedModel = modelFeature.model.trim().toLowerCase();
 
+  if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
+    accumulator.allDates.add(date);
+    accumulator.cliTotal += interactionCount;
+    accumulateModelEntry(accumulator.cliModels, normalizedModel, date, interactionCount);
+  }
+
   if (normalizedModel === 'auto' && (interactionCount > 0 || activityCount > 0)) {
     accumulator.allDates.add(date);
     if (!accumulator.autoModeUsersByDate.has(date)) {
@@ -62,13 +91,8 @@ export function accumulateModelBreakdown(
     }
     accumulator.autoModeUsersByDate.get(date)!.add(userId);
 
-    if (!accumulator.autoModels.has(normalizedModel)) {
-      accumulator.autoModels.set(normalizedModel, { total: 0, dailyData: new Map() });
-    }
-    const entry = accumulator.autoModels.get(normalizedModel)!;
     const autoUsageCount = interactionCount > 0 ? interactionCount : activityCount;
-    entry.total += autoUsageCount;
-    entry.dailyData.set(date, (entry.dailyData.get(date) || 0) + autoUsageCount);
+    accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount);
     return;
   }
 
@@ -81,20 +105,10 @@ export function accumulateModelBreakdown(
 
   if (classification === true) {
     accumulator.premiumTotal += interactionCount;
-    if (!accumulator.premiumModels.has(normalizedModel)) {
-      accumulator.premiumModels.set(normalizedModel, { total: 0, dailyData: new Map() });
-    }
-    const entry = accumulator.premiumModels.get(normalizedModel)!;
-    entry.total += interactionCount;
-    entry.dailyData.set(date, (entry.dailyData.get(date) || 0) + interactionCount);
+    accumulateModelEntry(accumulator.premiumModels, normalizedModel, date, interactionCount);
   } else if (classification === false) {
     accumulator.standardTotal += interactionCount;
-    if (!accumulator.standardModels.has(normalizedModel)) {
-      accumulator.standardModels.set(normalizedModel, { total: 0, dailyData: new Map() });
-    }
-    const entry = accumulator.standardModels.get(normalizedModel)!;
-    entry.total += interactionCount;
-    entry.dailyData.set(date, (entry.dailyData.get(date) || 0) + interactionCount);
+    accumulateModelEntry(accumulator.standardModels, normalizedModel, date, interactionCount);
   } else {
     accumulator.unknownTotal += interactionCount;
   }
@@ -159,10 +173,12 @@ export function computeModelBreakdownData(
     premiumModels: buildModelEntries(accumulator.premiumModels),
     standardModels: buildModelEntries(accumulator.standardModels),
     autoModels: buildModelEntries(accumulator.autoModels),
+    cliModels: buildModelEntries(accumulator.cliModels),
     autoModeAdoptionTrend: computeAutoModeAdoptionTrend(dates, accumulator.autoModeUsersByDate),
     dates,
     premiumTotal: accumulator.premiumTotal,
     standardTotal: accumulator.standardTotal,
+    cliTotal: accumulator.cliTotal,
     unknownTotal: accumulator.unknownTotal,
   };
 }

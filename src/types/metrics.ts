@@ -194,10 +194,12 @@ export interface ModelBreakdownData {
   premiumModels: ModelDailyUsageEntry[];
   standardModels: ModelDailyUsageEntry[];
   autoModels?: ModelDailyUsageEntry[];
+  cliModels?: ModelDailyUsageEntry[];
   autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];
   dates: string[];
   premiumTotal: number;
   standardTotal: number;
+  cliTotal?: number;
   unknownTotal: number;
 }
 
