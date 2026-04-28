@@ -1,4 +1,5 @@
 import { CopilotMetrics } from '../../types/metrics';
+import { isCliFeature } from '../featureCategories';
 
 export interface ImpactData {
   date: string;
@@ -36,10 +37,6 @@ const JOINED_FEATURES = [
   'cli_agent',
   'copilot_cli',
 ];
-
-function isCliFeature(feature: string): boolean {
-  return feature === 'copilot_cli' || feature === 'cli_agent';
-}
 
 export function createImpactAccumulator(): ImpactAccumulator {
   return {

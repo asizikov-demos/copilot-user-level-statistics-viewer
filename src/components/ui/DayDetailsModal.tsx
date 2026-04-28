@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { UserDayData } from '../../types/metrics';
+import { isCliFeature } from '../../domain/featureCategories';
 import { translateFeature } from '../../domain/featureTranslations';
 import { formatIDEName } from '../icons/IDEIcons';
 import ExpandableTableSection from './ExpandableTableSection';
@@ -13,10 +14,6 @@ interface DayDetailsModalProps {
   date: string;
   dayMetrics?: UserDayData;
   userLogin?: string;
-}
-
-function isCliFeature(feature: string): boolean {
-  return feature === 'copilot_cli' || feature === 'cli_agent';
 }
 
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {

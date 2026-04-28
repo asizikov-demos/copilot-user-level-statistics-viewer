@@ -4,6 +4,7 @@ import { Bar } from 'react-chartjs-2';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
+import { isCliFeature } from '../../domain/featureCategories';
 import { formatShortDate } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import type { UserDayData } from '../../types/metrics';
@@ -81,10 +82,6 @@ const FALLBACK_COLORS = [
   '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
   '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
 ];
-
-function isCliFeature(feature: string): boolean {
-  return feature === 'copilot_cli' || feature === 'cli_agent';
-}
 
 function createEmptyCliFeatureTotals(): CliFeatureTotals {
   return {

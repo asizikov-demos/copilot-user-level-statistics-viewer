@@ -5,7 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
-import { chartColors } from './utils/chartColors';
+import { chartColors, getSequentialColor } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
@@ -43,8 +43,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       }
       if (isCli) {
         const adjustedIndex = modelIndexMap.get(model) ?? 0;
-        const hue = (315 + adjustedIndex * 42) % 360;
-        return `hsl(${hue}, 70%, 55%)`;
+        return getSequentialColor(adjustedIndex + 7);
       }
       if (model === 'unknown') {
         return UNKNOWN_COLOR;
@@ -178,8 +177,8 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         <>
           <p className="text-xs text-gray-600 mb-4">
             {isCli
-              ? 'Counts aggregate user initiated interactions for the Copilot CLI feature per model per day.'
-              : `Counts aggregate user initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
+              ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
+              : `Counts aggregate user-initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
           </p>
           {insights && (
             <InsightsCard title={insights.title} variant={insights.variant}>

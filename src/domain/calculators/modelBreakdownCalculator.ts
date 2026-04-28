@@ -1,4 +1,5 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
+import { isCliFeature } from '../featureCategories';
 import { KNOWN_MODELS } from '../modelConfig';
 
 interface ModelAccEntry {
@@ -42,10 +43,6 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
     unknownTotal: 0,
     allDates: new Set(),
   };
-}
-
-function isCliFeature(feature: string): boolean {
-  return feature === 'copilot_cli' || feature === 'cli_agent';
 }
 
 function accumulateModelEntry(

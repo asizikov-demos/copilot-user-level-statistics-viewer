@@ -217,7 +217,11 @@ const ViewRouter: React.FC = () => {
           dailyCliTokenData={dailyCliTokenData}
           dailyCliAdoptionTrend={dailyCliAdoptionTrend}
           cliModelEntries={modelBreakdownData.cliModels ?? []}
-          cliModelDates={modelBreakdownData.dates}
+          cliModelDates={
+            dailyCliSessionData.length > 0
+              ? dailyCliSessionData.map((entry) => entry.date)
+              : modelBreakdownData.dates
+          }
           cliModelTotal={modelBreakdownData.cliTotal ?? 0}
         />
       );
