@@ -42,6 +42,7 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
         ...createBarDataset(chartColors.amber.solid, 'Prompt Tokens', data.map(d => d.promptTokens), {
           yAxisID: 'y',
           stack: 'tokens',
+          order: 2,
         }),
       },
       {
@@ -49,6 +50,7 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
         ...createBarDataset(chartColors.red.solid, 'Output Tokens', data.map(d => d.outputTokens), {
           yAxisID: 'y',
           stack: 'tokens',
+          order: 2,
         }),
       },
       {
@@ -62,6 +64,7 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
           pointHoverRadius: 4,
           spanGaps: true,
           yAxisID: 'y1',
+          order: 1,
         }),
       },
     ],
