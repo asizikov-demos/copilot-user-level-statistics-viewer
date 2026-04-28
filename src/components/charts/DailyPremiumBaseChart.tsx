@@ -6,52 +6,110 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate } from '../../utils/formatters';
+import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import type { DailyModelUsageData } from '../../domain/calculators/metricCalculators';
 import type { ModelBreakdownData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 import InsightsCard from '../ui/InsightsCard';
 
 registerChartJS();
 
-interface DailyPremiumBaseChartProps {
+interface ModelBreakdownChartProps {
   modelBreakdownData: ModelBreakdownData;
+  dailyModelUsageData?: never;
+  reportStartDay?: never;
+  reportEndDay?: never;
+  hideInsights?: boolean;
 }
 
-export default function DailyPremiumBaseChart({ modelBreakdownData }: DailyPremiumBaseChartProps) {
-  const { dates, premiumModels, standardModels } = modelBreakdownData;
+interface DailyModelUsageChartProps {
+  modelBreakdownData?: never;
+  dailyModelUsageData: DailyModelUsageData[];
+  reportStartDay: string;
+  reportEndDay: string;
+  hideInsights?: boolean;
+}
 
-  const { labels, datasets, dailyPremium, dailyStandard } = useMemo(() => {
-    const dailyPremium = dates.map(d =>
-      premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-    );
-    const dailyStandard = dates.map(d =>
-      standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-    );
+type DailyPremiumBaseChartProps = ModelBreakdownChartProps | DailyModelUsageChartProps;
+
+type DailyPremiumDataset = {
+  label: string;
+  data: number[];
+  backgroundColor: string;
+  borderColor: string;
+  borderWidth: number;
+  stack: string;
+};
+
+export default function DailyPremiumBaseChart({
+  modelBreakdownData,
+  dailyModelUsageData,
+  reportStartDay,
+  reportEndDay,
+  hideInsights = false,
+}: DailyPremiumBaseChartProps) {
+  const { labels, datasets, dailyPremium, dailyStandard, dailyUnknown, isEmpty } = useMemo(() => {
+    const dates = modelBreakdownData
+      ? modelBreakdownData.dates
+      : generateDateRange(reportStartDay, reportEndDay);
+
+    const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
+
+    const dailyPremium = modelBreakdownData
+      ? dates.map(d =>
+          modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+        )
+      : dates.map(d => dailyUsageByDate.get(d)?.pruModels ?? 0);
+
+    const dailyStandard = modelBreakdownData
+      ? dates.map(d =>
+          modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+        )
+      : dates.map(d => dailyUsageByDate.get(d)?.standardModels ?? 0);
+
+    const dailyUnknown = modelBreakdownData
+      ? dates.map(() => 0)
+      : dates.map(d => dailyUsageByDate.get(d)?.unknownModels ?? 0);
+
+    const datasets: DailyPremiumDataset[] = [
+      {
+        label: 'Standard',
+        data: dailyStandard,
+        backgroundColor: chartColors.blue.solid,
+        borderColor: chartColors.blue.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      },
+      {
+        label: 'Premium',
+        data: dailyPremium,
+        backgroundColor: chartColors.purple.solid,
+        borderColor: chartColors.purple.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      },
+    ];
+
+    if (dailyUnknown.some(value => value > 0)) {
+      datasets.push({
+        label: 'Unknown',
+        data: dailyUnknown,
+        backgroundColor: chartColors.gray.solid,
+        borderColor: chartColors.gray.solid,
+        borderWidth: 1,
+        stack: 'premium-base',
+      });
+    }
 
     return {
       labels: dates.map(d => formatShortDate(d)),
-      datasets: [
-        {
-          label: 'Standard',
-          data: dailyStandard,
-          backgroundColor: chartColors.blue.solid,
-          borderColor: chartColors.blue.solid,
-          borderWidth: 1,
-          stack: 'premium-base',
-        },
-        {
-          label: 'Premium',
-          data: dailyPremium,
-          backgroundColor: chartColors.purple.solid,
-          borderColor: chartColors.purple.solid,
-          borderWidth: 1,
-          stack: 'premium-base',
-        },
-      ],
+      datasets,
       dailyPremium,
       dailyStandard,
+      dailyUnknown,
+      isEmpty: dates.length === 0,
     };
-  }, [dates, premiumModels, standardModels]);
+  }, [dailyModelUsageData, modelBreakdownData, reportEndDay, reportStartDay]);
 
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
@@ -71,23 +129,27 @@ export default function DailyPremiumBaseChart({ modelBreakdownData }: DailyPremi
 
   const totalPremium = dailyPremium.reduce((s, v) => s + v, 0);
   const totalStandard = dailyStandard.reduce((s, v) => s + v, 0);
-  const totalAll = totalPremium + totalStandard;
+  const totalUnknown = dailyUnknown.reduce((s, v) => s + v, 0);
+  const totalAll = totalPremium + totalStandard + totalUnknown;
   const premiumShare = totalAll > 0 ? ((totalPremium / totalAll) * 100).toFixed(1) : '0.0';
 
   const premiumShareNum = totalAll > 0 ? (totalPremium / totalAll) * 100 : 0;
 
   return (
     <ChartContainer
-      title="Daily Premium vs Standard Usage"
+      title="Daily Premium vs Standard Model Usage"
       description="Stacked daily breakdown highlighting the premium-to-standard ratio over time."
-      isEmpty={dates.length === 0}
+      isEmpty={isEmpty}
       emptyState="No model usage data available"
       summaryStats={[
         { value: totalPremium.toLocaleString(), label: 'Premium', colorClass: 'text-purple-600' },
         { value: totalStandard.toLocaleString(), label: 'Standard', colorClass: 'text-blue-600' },
+        ...(totalUnknown > 0
+          ? [{ value: totalUnknown.toLocaleString(), label: 'Unknown', colorClass: 'text-gray-600' }]
+          : []),
         { value: `${premiumShare}%`, label: 'Premium Share', colorClass: 'text-gray-700' },
       ]}
-      footer={totalAll > 0 ? (
+      footer={!hideInsights && totalAll > 0 ? (
         premiumShareNum < 50 ? (
           <InsightsCard title="Premium Adoption Opportunity" variant="orange">
             <p>

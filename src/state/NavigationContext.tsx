@@ -18,6 +18,12 @@ const initialNavigationState: NavigationState = {
   selectedUser: null,
 };
 
+function scrollToPageTop(): void {
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  });
+}
+
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<NavigationState>(initialNavigationState);
 
@@ -26,6 +32,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ...prev,
       currentView: view,
     }));
+    scrollToPageTop();
   }, []);
 
   const selectUser = useCallback((user: SelectedUser) => {
@@ -34,10 +41,12 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       selectedUser: user,
       currentView: VIEW_MODES.USER_DETAILS,
     }));
+    scrollToPageTop();
   }, []);
 
   const resetNavigation = useCallback(() => {
     setState(initialNavigationState);
+    scrollToPageTop();
   }, []);
 
   const value = useMemo<NavigationContextValue>(
