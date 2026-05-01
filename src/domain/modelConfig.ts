@@ -15,6 +15,7 @@ export class Model {
  */
 export const KNOWN_MODELS: Model[] = [
   // Included models (0 PRUs for paid plans)
+  new Model('goldeneye', 0, false),
   new Model('gpt-4.0', 0, false),
   new Model('gpt-4.1', 0, false),
   new Model('gpt-3.5', 0, false),
@@ -53,7 +54,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4.1', 10, true),
   new Model('claude-opus-4.5', 3, true),
   new Model('claude-opus-4.6', 3, true),
-  new Model('claude-opus-4.7', 7.5, true),
+  new Model('claude-opus-4.7', 15, true),
   new Model('claude-opus-4.6-fast-mode', 30, true),
   new Model('claude-opus-4.6-fast-mode-preview', 30, true),
   new Model('claude-4.5-haiku', 0.33, true),
