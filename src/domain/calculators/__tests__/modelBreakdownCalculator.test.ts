@@ -46,6 +46,7 @@ describe('modelBreakdownCalculator', () => {
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.7'));
       expect(acc.premiumTotal).toBe(10);
       expect(acc.standardTotal).toBe(0);
+      expect(Array.from(acc.premiumModels.keys())).toEqual(['claude-opus-4.7']);
     });
 
     it('should classify a model name with parentheses (e.g. "Claude Opus 4.6 (fast mode)") as premium', () => {
@@ -53,9 +54,20 @@ describe('modelBreakdownCalculator', () => {
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.6 (fast mode)'));
       expect(acc.premiumTotal).toBe(10);
       expect(acc.standardTotal).toBe(0);
+      expect(Array.from(acc.premiumModels.keys())).toEqual(['claude-opus-4.6-fast-mode']);
     });
 
-    it('should classify truly unknown models to unknownTotal', () => {
+    it('should aggregate premium variants with the same canonical model key', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.7'));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('claude-opus-4.7'));
+
+      expect(acc.premiumTotal).toBe(20);
+      expect(acc.premiumModels.size).toBe(1);
+      expect(acc.premiumModels.get('claude-opus-4.7')?.total).toBe(20);
+    });
+
+    it('should classify the unknown sentinel to unknownTotal', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('unknown'));
       expect(acc.unknownTotal).toBe(10);

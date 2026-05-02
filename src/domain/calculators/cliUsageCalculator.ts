@@ -1,4 +1,5 @@
 import { CopilotMetrics } from '../../types/metrics';
+import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 export interface DailyCliSessionData {
   date: string;
@@ -100,38 +101,14 @@ export function computeDailyCliTokenData(
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-export interface DailyCliAdoptionTrend {
-  date: string;
-  newUsers: number;
-  returningUsers: number;
-  totalActiveUsers: number;
-  cumulativeUsers: number;
-}
+export type DailyCliAdoptionTrend = AdoptionTrendEntry;
 
 export function computeCliAdoptionTrend(
   accumulator: CliUsageAccumulator
 ): DailyCliAdoptionTrend[] {
-  const sortedDates = Array.from(accumulator.dailySessions.entries())
-    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime());
+  const sortedDateUserSets = Array.from(accumulator.dailySessions.entries())
+    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+    .map(([date, data]) => ({ date, users: data.users }));
 
-  const seenBefore = new Set<number>();
-  return sortedDates.map(([date, data]) => {
-    let newUsers = 0;
-    let returningUsers = 0;
-    for (const userId of data.users) {
-      if (seenBefore.has(userId)) {
-        returningUsers++;
-      } else {
-        newUsers++;
-        seenBefore.add(userId);
-      }
-    }
-    return {
-      date,
-      newUsers,
-      returningUsers,
-      totalActiveUsers: newUsers + returningUsers,
-      cumulativeUsers: seenBefore.size,
-    };
-  });
+  return computeAdoptionTrendFromUserSets(sortedDateUserSets);
 }

@@ -1,6 +1,7 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { classifyModelBucket } from '../modelConfig';
+import { classifyModelBucket, normalizeModelName } from '../modelConfig';
+import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 interface ModelAccEntry {
   total: number;
@@ -63,7 +64,7 @@ export function accumulateModelBreakdown(
 ): void {
   const interactionCount = modelFeature.user_initiated_interaction_count || 0;
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
-  const normalizedModel = modelFeature.model.trim().toLowerCase();
+  const normalizedModel = normalizeModelName(modelFeature.model);
 
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
@@ -123,30 +124,11 @@ function computeAutoModeAdoptionTrend(
   dates: string[],
   usersByDate: Map<string, Set<number>>
 ): AutoModeAdoptionTrendEntry[] {
-  const seenBefore = new Set<number>();
-
-  return dates.map((date) => {
-    const users = usersByDate.get(date) ?? new Set<number>();
-    let newUsers = 0;
-    let returningUsers = 0;
-
-    for (const userId of users) {
-      if (seenBefore.has(userId)) {
-        returningUsers++;
-      } else {
-        newUsers++;
-        seenBefore.add(userId);
-      }
-    }
-
-    return {
-      date,
-      newUsers,
-      returningUsers,
-      totalActiveUsers: newUsers + returningUsers,
-      cumulativeUsers: seenBefore.size,
-    };
-  });
+  const dateUserSets = dates.map((date) => ({
+    date,
+    users: usersByDate.get(date) ?? new Set<number>(),
+  }));
+  return computeAdoptionTrendFromUserSets(dateUserSets);
 }
 
 export function computeModelBreakdownData(
