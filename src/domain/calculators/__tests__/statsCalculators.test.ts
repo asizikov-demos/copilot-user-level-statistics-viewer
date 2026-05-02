@@ -1,5 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { calculatePercentage, compareDatesAsc, compareByDateAsc } from '../statsCalculators';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  calculatePercentage,
+  compareDatesAsc,
+  compareByDateAsc,
+  findMaxItem,
+  findMaxValue,
+  findMinItem,
+  findMinMaxItems,
+  findMinMaxValues,
+  findMinValue,
+} from '../statsCalculators';
 
 describe('calculatePercentage', () => {
   it('should return correct percentage for typical values', () => {
@@ -59,5 +69,92 @@ describe('compareByDateAsc', () => {
 
   it('should return 0 for objects with equal dates', () => {
     expect(compareByDateAsc({ date: '2024-01-01' }, { date: '2024-01-01' })).toBe(0);
+  });
+});
+
+describe('findMaxValue', () => {
+  it('should find the maximum value without calling the accessor more than once per item', () => {
+    const data = [{ value: 1 }, { value: 5 }, { value: 3 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMaxValue(data, accessor)).toBe(5);
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return 0 for empty data', () => {
+    expect(findMaxValue([], (value: number) => value)).toBe(0);
+  });
+});
+
+describe('findMinValue', () => {
+  it('should find the minimum value without calling the accessor more than once per item', () => {
+    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMinValue(data, accessor)).toBe(1);
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return 0 for empty data', () => {
+    expect(findMinValue([], (value: number) => value)).toBe(0);
+  });
+});
+
+describe('findMinMaxValues', () => {
+  it('should find minimum and maximum values in one pass', () => {
+    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMinMaxValues(data, accessor)).toEqual({ min: 1, max: 5 });
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return 0 for both values for empty data', () => {
+    expect(findMinMaxValues([], (value: number) => value)).toEqual({ min: 0, max: 0 });
+  });
+});
+
+describe('findMaxItem', () => {
+  it('should find the item with the maximum value without calling the accessor more than once per item', () => {
+    const data = [{ value: 1 }, { value: 5 }, { value: 3 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMaxItem(data, accessor)).toBe(data[1]);
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return undefined for empty data', () => {
+    expect(findMaxItem([], (value: number) => value)).toBeUndefined();
+  });
+});
+
+describe('findMinItem', () => {
+  it('should find the item with the minimum value without calling the accessor more than once per item', () => {
+    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMinItem(data, accessor)).toBe(data[1]);
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return undefined for empty data', () => {
+    expect(findMinItem([], (value: number) => value)).toBeUndefined();
+  });
+});
+
+describe('findMinMaxItems', () => {
+  it('should find minimum and maximum items in one pass', () => {
+    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
+    const accessor = vi.fn((item: { value: number }) => item.value);
+
+    expect(findMinMaxItems(data, accessor)).toEqual({
+      minItem: data[1],
+      maxItem: data[2],
+    });
+    expect(accessor).toHaveBeenCalledTimes(data.length);
+  });
+
+  it('should return undefined for empty data', () => {
+    expect(findMinMaxItems([], (value: number) => value)).toBeUndefined();
   });
 });
