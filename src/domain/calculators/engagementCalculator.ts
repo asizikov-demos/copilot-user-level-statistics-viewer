@@ -1,4 +1,5 @@
 import { CliUsageAccumulator } from './cliUsageCalculator';
+import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 export interface DailyEngagementData {
   date: string;
@@ -79,13 +80,7 @@ export function computeEngagementData(
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-export interface DailyAdoptionTrend {
-  date: string;
-  newUsers: number;
-  returningUsers: number;
-  totalActiveUsers: number;
-  cumulativeUsers: number;
-}
+export type DailyAdoptionTrend = AdoptionTrendEntry;
 
 export function computeAdoptionTrend(
   accumulator: EngagementAccumulator,
@@ -101,33 +96,16 @@ export function computeAdoptionTrend(
   const sortedDates = Array.from(allDates)
     .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
-  const seenBefore = new Set<number>();
-  return sortedDates.map(date => {
-    const activeUsersSet = new Set(accumulator.dailyEngagement.get(date) ?? []);
+  const dateUserSets = sortedDates.map(date => {
+    const users = new Set(accumulator.dailyEngagement.get(date) ?? []);
     const cliData = cliAccumulator?.dailySessions.get(date);
     if (cliData) {
       for (const userId of cliData.users) {
-        activeUsersSet.add(userId);
+        users.add(userId);
       }
     }
-
-    let newUsers = 0;
-    let returningUsers = 0;
-    for (const userId of activeUsersSet) {
-      if (seenBefore.has(userId)) {
-        returningUsers++;
-      } else {
-        newUsers++;
-        seenBefore.add(userId);
-      }
-    }
-
-    return {
-      date,
-      newUsers,
-      returningUsers,
-      totalActiveUsers: newUsers + returningUsers,
-      cumulativeUsers: seenBefore.size,
-    };
+    return { date, users };
   });
+
+  return computeAdoptionTrendFromUserSets(dateUserSets);
 }

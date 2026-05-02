@@ -1,6 +1,7 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
 import { KNOWN_MODELS } from '../modelConfig';
+import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 interface ModelAccEntry {
   total: number;
@@ -133,30 +134,11 @@ function computeAutoModeAdoptionTrend(
   dates: string[],
   usersByDate: Map<string, Set<number>>
 ): AutoModeAdoptionTrendEntry[] {
-  const seenBefore = new Set<number>();
-
-  return dates.map((date) => {
-    const users = usersByDate.get(date) ?? new Set<number>();
-    let newUsers = 0;
-    let returningUsers = 0;
-
-    for (const userId of users) {
-      if (seenBefore.has(userId)) {
-        returningUsers++;
-      } else {
-        newUsers++;
-        seenBefore.add(userId);
-      }
-    }
-
-    return {
-      date,
-      newUsers,
-      returningUsers,
-      totalActiveUsers: newUsers + returningUsers,
-      cumulativeUsers: seenBefore.size,
-    };
-  });
+  const dateUserSets = dates.map(date => ({
+    date,
+    users: usersByDate.get(date) ?? new Set<number>(),
+  }));
+  return computeAdoptionTrendFromUserSets(dateUserSets);
 }
 
 export function computeModelBreakdownData(
