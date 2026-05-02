@@ -57,7 +57,14 @@ export function findMaxValue<T>(
   accessor: (item: T) => number
 ): number {
   if (data.length === 0) return 0;
-  return Math.max(...data.map(accessor));
+
+  let max = accessor(data[0]);
+
+  for (let index = 1; index < data.length; index += 1) {
+    max = Math.max(max, accessor(data[index]));
+  }
+
+  return max;
 }
 
 /**
@@ -71,7 +78,41 @@ export function findMinValue<T>(
   accessor: (item: T) => number
 ): number {
   if (data.length === 0) return 0;
-  return Math.min(...data.map(accessor));
+
+  let min = accessor(data[0]);
+
+  for (let index = 1; index < data.length; index += 1) {
+    min = Math.min(min, accessor(data[index]));
+  }
+
+  return min;
+}
+
+/**
+ * Find the minimum and maximum values in an array in a single pass.
+ * Returns 0 for both values if the array is empty.
+ * @param data - Array of items
+ * @param accessor - Function to extract numeric value from each item
+ */
+export function findMinMaxValues<T>(
+  data: T[],
+  accessor: (item: T) => number
+): {
+  min: number;
+  max: number;
+} {
+  if (data.length === 0) return { min: 0, max: 0 };
+
+  let min = accessor(data[0]);
+  let max = min;
+
+  for (let index = 1; index < data.length; index += 1) {
+    const value = accessor(data[index]);
+    min = Math.min(min, value);
+    max = Math.max(max, value);
+  }
+
+  return { min, max };
 }
 
 /**
@@ -85,10 +126,61 @@ export function findMaxItem<T>(
   accessor: (item: T) => number
 ): T | undefined {
   if (data.length === 0) return undefined;
-  return data.reduce((max, item) => 
-    accessor(item) > accessor(max) ? item : max, 
-    data[0]
-  );
+
+  const initialItem = data[0];
+  let maxItem = initialItem;
+  let maxValue = accessor(initialItem);
+
+  for (let index = 1; index < data.length; index += 1) {
+    const item = data[index];
+    const value = accessor(item);
+
+    if (value > maxValue) {
+      maxItem = item;
+      maxValue = value;
+    }
+  }
+
+  return maxItem;
+}
+
+/**
+ * Find the items with the minimum and maximum values in an array in a single pass.
+ * Returns undefined if the array is empty.
+ * @param data - Array of items
+ * @param accessor - Function to extract numeric value from each item
+ */
+export function findMinMaxItems<T>(
+  data: T[],
+  accessor: (item: T) => number
+): {
+  minItem: T;
+  maxItem: T;
+} | undefined {
+  if (data.length === 0) return undefined;
+
+  const initialItem = data[0];
+  let minItem = initialItem;
+  let minValue = accessor(initialItem);
+  let maxItem = initialItem;
+  let maxValue = minValue;
+
+  for (let index = 1; index < data.length; index += 1) {
+    const item = data[index];
+    const value = accessor(item);
+
+    if (value < minValue) {
+      minItem = item;
+      minValue = value;
+    }
+
+    if (value > maxValue) {
+      maxItem = item;
+      maxValue = value;
+    }
+  }
+
+  return { minItem, maxItem };
 }
 
 /**
@@ -102,10 +194,22 @@ export function findMinItem<T>(
   accessor: (item: T) => number
 ): T | undefined {
   if (data.length === 0) return undefined;
-  return data.reduce((min, item) => 
-    accessor(item) < accessor(min) ? item : min, 
-    data[0]
-  );
+
+  const initialItem = data[0];
+  let minItem = initialItem;
+  let minValue = accessor(initialItem);
+
+  for (let index = 1; index < data.length; index += 1) {
+    const item = data[index];
+    const value = accessor(item);
+
+    if (value < minValue) {
+      minItem = item;
+      minValue = value;
+    }
+  }
+
+  return minItem;
 }
 
 /**
@@ -144,11 +248,19 @@ export function calculateStats<T>(
     return { average: 0, total: 0, max: 0, min: 0, count: 0 };
   }
 
-  const values = data.map(accessor);
-  const total = values.reduce((sum, v) => sum + v, 0);
-  const max = Math.max(...values);
-  const min = Math.min(...values);
-  const average = Math.round((total / values.length) * 100) / 100;
+  const initialValue = accessor(data[0]);
+  let total = initialValue;
+  let max = initialValue;
+  let min = initialValue;
+
+  for (let index = 1; index < data.length; index += 1) {
+    const value = accessor(data[index]);
+    total += value;
+    max = Math.max(max, value);
+    min = Math.min(min, value);
+  }
+
+  const average = Math.round((total / data.length) * 100) / 100;
 
   return { average, total, max, min, count: data.length };
 }

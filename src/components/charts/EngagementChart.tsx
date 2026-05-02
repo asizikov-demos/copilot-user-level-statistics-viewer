@@ -7,7 +7,7 @@ import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { createFilledLineDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateAverage, findMaxValue, findMinValue } from '../../domain/calculators/statsCalculators';
+import { calculateAverage, findMinMaxValues } from '../../domain/calculators/statsCalculators';
 import { DailyEngagementData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 
@@ -19,8 +19,7 @@ interface EngagementChartProps {
 
 export default function EngagementChart({ data }: EngagementChartProps) {
   const avgEngagement = calculateAverage(data, d => d.engagementPercentage);
-  const maxEngagement = findMaxValue(data, d => d.engagementPercentage);
-  const minEngagement = findMinValue(data, d => d.engagementPercentage);
+  const { min: minEngagement, max: maxEngagement } = findMinMaxValues(data, d => d.engagementPercentage);
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
