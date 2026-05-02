@@ -138,3 +138,5 @@ export {
   computeDailyCliTokenData,
   computeCliAdoptionTrend,
 } from './cliUsageCalculator';
+
+export { compareDatesAsc, compareByDateAsc } from './statsCalculators';

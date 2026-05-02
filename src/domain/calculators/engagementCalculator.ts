@@ -1,4 +1,5 @@
 import { CliUsageAccumulator } from './cliUsageCalculator';
+import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 
 export interface DailyEngagementData {
   date: string;
@@ -76,7 +77,7 @@ export function computeEngagementData(
           : 0,
       };
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export interface DailyAdoptionTrend {
@@ -99,7 +100,7 @@ export function computeAdoptionTrend(
   }
 
   const sortedDates = Array.from(allDates)
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    .sort(compareDatesAsc);
 
   const seenBefore = new Set<number>();
   return sortedDates.map(date => {

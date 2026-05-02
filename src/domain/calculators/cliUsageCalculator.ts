@@ -1,4 +1,5 @@
 import { CopilotMetrics } from '../../types/metrics';
+import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 
 export interface DailyCliSessionData {
   date: string;
@@ -84,7 +85,7 @@ export function computeDailyCliSessionData(
       promptCount: data.promptCount,
       uniqueUsers: data.users.size,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function computeDailyCliTokenData(
@@ -97,7 +98,7 @@ export function computeDailyCliTokenData(
       promptTokens: data.promptTokens,
       requestCount: data.requestCount,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export interface DailyCliAdoptionTrend {
@@ -112,7 +113,7 @@ export function computeCliAdoptionTrend(
   accumulator: CliUsageAccumulator
 ): DailyCliAdoptionTrend[] {
   const sortedDates = Array.from(accumulator.dailySessions.entries())
-    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime());
+    .sort(([a], [b]) => compareDatesAsc(a, b));
 
   const seenBefore = new Set<number>();
   return sortedDates.map(([date, data]) => {

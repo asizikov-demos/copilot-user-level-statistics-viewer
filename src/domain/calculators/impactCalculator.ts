@@ -1,5 +1,6 @@
 import { CopilotMetrics } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
+import { compareByDateAsc } from './statsCalculators';
 
 export interface ImpactData {
   date: string;
@@ -220,7 +221,7 @@ function formatImpactMap(
       userCount: data.userIds.size,
       totalUniqueUsers,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function computeAgentImpactData(accumulator: ImpactAccumulator): AgentImpactData[] {
