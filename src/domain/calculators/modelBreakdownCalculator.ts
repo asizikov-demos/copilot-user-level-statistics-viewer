@@ -1,6 +1,7 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
 import { KNOWN_MODELS } from '../modelConfig';
+import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 interface ModelAccEntry {
@@ -145,7 +146,7 @@ export function computeModelBreakdownData(
   accumulator: ModelBreakdownAccumulator
 ): ModelBreakdownData {
   const dates = Array.from(accumulator.allDates).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    compareDatesAsc
   );
 
   return {

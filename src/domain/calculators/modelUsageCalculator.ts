@@ -1,5 +1,6 @@
 import { SERVICE_VALUE_RATE, getModelMultiplier, classifyModelBucket } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
+import { compareByDateAsc } from './statsCalculators';
 
 export interface DailyModelUsageData {
   date: string;
@@ -107,7 +108,7 @@ export function computeDailyModelUsageData(
       totalPRUs: Math.round(data.totalPRUs * 100) / 100,
       serviceValue: Math.round(data.totalPRUs * SERVICE_VALUE_RATE * 100) / 100,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function computeAgentModeHeatmapData(
@@ -124,7 +125,7 @@ export function computeAgentModeHeatmapData(
       intensity: Math.ceil((data.requests / maxRequests) * 5),
       serviceValue: Math.round(data.totalPRUs * SERVICE_VALUE_RATE * 100) / 100,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function calculateDailyModelUsageFromMetrics(
