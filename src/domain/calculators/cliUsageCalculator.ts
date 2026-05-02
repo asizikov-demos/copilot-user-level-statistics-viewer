@@ -1,4 +1,5 @@
 import { CopilotMetrics } from '../../types/metrics';
+import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 export interface DailyCliSessionData {
@@ -85,7 +86,7 @@ export function computeDailyCliSessionData(
       promptCount: data.promptCount,
       uniqueUsers: data.users.size,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function computeDailyCliTokenData(
@@ -98,7 +99,7 @@ export function computeDailyCliTokenData(
       promptTokens: data.promptTokens,
       requestCount: data.requestCount,
     }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export type DailyCliAdoptionTrend = AdoptionTrendEntry;
@@ -107,7 +108,7 @@ export function computeCliAdoptionTrend(
   accumulator: CliUsageAccumulator
 ): DailyCliAdoptionTrend[] {
   const sortedDateUserSets = Array.from(accumulator.dailySessions.entries())
-    .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+    .sort(([a], [b]) => compareDatesAsc(a, b))
     .map(([date, data]) => ({ date, users: data.users }));
 
   return computeAdoptionTrendFromUserSets(sortedDateUserSets);

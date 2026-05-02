@@ -1,4 +1,5 @@
 import { CliUsageAccumulator } from './cliUsageCalculator';
+import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
 export interface DailyEngagementData {
@@ -77,7 +78,7 @@ export function computeEngagementData(
           : 0,
       };
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export type DailyAdoptionTrend = AdoptionTrendEntry;
@@ -94,7 +95,7 @@ export function computeAdoptionTrend(
   }
 
   const sortedDates = Array.from(allDates)
-    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    .sort(compareDatesAsc);
 
   const dateUserSets = sortedDates.map(date => {
     const users = new Set(accumulator.dailyEngagement.get(date) ?? []);

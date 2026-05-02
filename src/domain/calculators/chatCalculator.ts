@@ -1,4 +1,5 @@
 import { CliUsageAccumulator } from './cliUsageCalculator';
+import { compareByDateAsc } from './statsCalculators';
 
 export interface DailyChatUsersData {
   date: string;
@@ -124,7 +125,7 @@ export function computeChatUsersData(accumulator: ChatAccumulator, cliAccumulato
         cliUsers: cliData?.users.size ?? 0,
       };
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }
 
 export function computeChatRequestsData(accumulator: ChatAccumulator, cliAccumulator?: CliUsageAccumulator): DailyChatRequestsData[] {
@@ -149,5 +150,5 @@ export function computeChatRequestsData(accumulator: ChatAccumulator, cliAccumul
         cliSessions: cliData?.sessionCount ?? 0,
       };
     })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort(compareByDateAsc);
 }

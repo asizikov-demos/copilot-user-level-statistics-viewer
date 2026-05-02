@@ -4,6 +4,19 @@
  */
 
 /**
+ * Compare two ISO-8601 date strings (YYYY-MM-DD) in ascending order.
+ * Lexicographic comparison is correct and faster than Date construction.
+ */
+export const compareDatesAsc = (a: string, b: string): number =>
+  a < b ? -1 : a > b ? 1 : 0;
+
+/**
+ * Compare two objects with a `date` string field in ascending order.
+ */
+export const compareByDateAsc = <T extends { date: string }>(a: T, b: T): number =>
+  compareDatesAsc(a.date, b.date);
+
+/**
  * Calculate the average of values extracted from an array.
  * Returns 0 if the array is empty.
  * @param data - Array of items

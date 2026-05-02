@@ -1,4 +1,5 @@
 import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../../types/metrics';
+import { compareDatesAsc } from './statsCalculators';
 
 export interface LanguageFeatureImpactAccumulator {
   languageFeatureMap: Map<string, Map<string, number>>;
@@ -115,7 +116,7 @@ function buildDailyChartData(
   totals: Map<string, number>
 ): DailyLanguageChartData {
   const dates = Array.from(dailyMap.keys()).sort(
-    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    compareDatesAsc
   );
 
   const languages = Array.from(totals.entries())
