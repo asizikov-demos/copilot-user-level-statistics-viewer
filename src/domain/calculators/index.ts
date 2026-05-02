@@ -11,6 +11,11 @@ export {
 } from './statsCalculator';
 
 export {
+  type AdoptionTrendEntry,
+  computeAdoptionTrendFromUserSets,
+} from './adoptionTrendHelpers';
+
+export {
   type DailyEngagementData,
   type DailyAdoptionTrend,
   type EngagementAccumulator,
