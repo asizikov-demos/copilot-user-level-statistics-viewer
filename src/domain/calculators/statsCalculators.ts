@@ -57,7 +57,10 @@ export function findMaxValue<T>(
   accessor: (item: T) => number
 ): number {
   if (data.length === 0) return 0;
-  return Math.max(...data.map(accessor));
+  return data.reduce(
+    (max, item) => Math.max(max, accessor(item)),
+    accessor(data[0])
+  );
 }
 
 /**
@@ -71,7 +74,10 @@ export function findMinValue<T>(
   accessor: (item: T) => number
 ): number {
   if (data.length === 0) return 0;
-  return Math.min(...data.map(accessor));
+  return data.reduce(
+    (min, item) => Math.min(min, accessor(item)),
+    accessor(data[0])
+  );
 }
 
 /**
@@ -85,10 +91,21 @@ export function findMaxItem<T>(
   accessor: (item: T) => number
 ): T | undefined {
   if (data.length === 0) return undefined;
-  return data.reduce((max, item) => 
-    accessor(item) > accessor(max) ? item : max, 
-    data[0]
-  );
+
+  const initialItem = data[0];
+  const initialValue = accessor(initialItem);
+
+  return data
+    .slice(1)
+    .reduce(
+      (acc, item) => {
+        const currentValue = accessor(item);
+        return currentValue > acc.maxValue
+          ? { maxItem: item, maxValue: currentValue }
+          : acc;
+      },
+      { maxItem: initialItem, maxValue: initialValue }
+    ).maxItem;
 }
 
 /**
@@ -102,10 +119,19 @@ export function findMinItem<T>(
   accessor: (item: T) => number
 ): T | undefined {
   if (data.length === 0) return undefined;
-  return data.reduce((min, item) => 
-    accessor(item) < accessor(min) ? item : min, 
-    data[0]
+
+  const initialItem = data[0];
+  const initialValue = accessor(initialItem);
+
+  const min = data.slice(1).reduce(
+    (acc, item) => {
+      const itemValue = accessor(item);
+      return itemValue < acc.value ? { item, value: itemValue } : acc;
+    },
+    { item: initialItem, value: initialValue }
   );
+
+  return min.item;
 }
 
 /**
