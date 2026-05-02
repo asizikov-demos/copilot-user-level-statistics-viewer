@@ -1,6 +1,6 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { KNOWN_MODELS } from '../modelConfig';
+import { classifyModelBucket, normalizeModelName } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -10,7 +10,6 @@ interface ModelAccEntry {
 }
 
 export interface ModelBreakdownAccumulator {
-  modelClassification: Record<string, boolean>;
   premiumModels: Map<string, ModelAccEntry>;
   standardModels: Map<string, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
@@ -24,16 +23,7 @@ export interface ModelBreakdownAccumulator {
 }
 
 export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
-  const modelClassification = KNOWN_MODELS.reduce<Record<string, boolean>>(
-    (acc, model) => {
-      acc[model.name.toLowerCase()] = model.isPremium;
-      return acc;
-    },
-    {}
-  );
-
   return {
-    modelClassification,
     premiumModels: new Map(),
     standardModels: new Map(),
     autoModels: new Map(),
@@ -75,7 +65,7 @@ export function accumulateModelBreakdown(
 ): void {
   const interactionCount = modelFeature.user_initiated_interaction_count || 0;
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
-  const normalizedModel = modelFeature.model.trim().toLowerCase();
+  const normalizedModel = normalizeModelName(modelFeature.model);
 
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
@@ -100,12 +90,12 @@ export function accumulateModelBreakdown(
   }
 
   accumulator.allDates.add(date);
-  const classification = accumulator.modelClassification[normalizedModel];
+  const bucket = classifyModelBucket(normalizedModel);
 
-  if (classification === true) {
+  if (bucket === 'premium') {
     accumulator.premiumTotal += interactionCount;
     accumulateModelEntry(accumulator.premiumModels, normalizedModel, date, interactionCount);
-  } else if (classification === false) {
+  } else if (bucket === 'standard') {
     accumulator.standardTotal += interactionCount;
     accumulateModelEntry(accumulator.standardModels, normalizedModel, date, interactionCount);
   } else {
@@ -135,7 +125,7 @@ function computeAutoModeAdoptionTrend(
   dates: string[],
   usersByDate: Map<string, Set<number>>
 ): AutoModeAdoptionTrendEntry[] {
-  const dateUserSets = dates.map(date => ({
+  const dateUserSets = dates.map((date) => ({
     date,
     users: usersByDate.get(date) ?? new Set<number>(),
   }));

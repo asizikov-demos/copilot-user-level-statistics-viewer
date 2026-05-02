@@ -70,7 +70,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('unknown', 1, true),
 ];
 
-const normalizeModelName = (name: string): string =>
+export const normalizeModelName = (name: string): string =>
   name
     .trim()
     .toLowerCase()
