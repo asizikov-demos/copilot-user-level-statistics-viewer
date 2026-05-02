@@ -84,6 +84,18 @@ describe('findMaxValue', () => {
   it('should return 0 for empty data', () => {
     expect(findMaxValue([], (value: number) => value)).toBe(0);
   });
+
+  it('should handle a single item', () => {
+    expect(findMaxValue([{ value: 7 }], item => item.value)).toBe(7);
+  });
+
+  it('should handle tied maximum values', () => {
+    expect(findMaxValue([{ value: 5 }, { value: 5 }], item => item.value)).toBe(5);
+  });
+
+  it('should handle negative values', () => {
+    expect(findMaxValue([{ value: -8 }, { value: -2 }, { value: -5 }], item => item.value)).toBe(-2);
+  });
 });
 
 describe('findMinValue', () => {
@@ -97,6 +109,18 @@ describe('findMinValue', () => {
 
   it('should return 0 for empty data', () => {
     expect(findMinValue([], (value: number) => value)).toBe(0);
+  });
+
+  it('should handle a single item', () => {
+    expect(findMinValue([{ value: 7 }], item => item.value)).toBe(7);
+  });
+
+  it('should handle tied minimum values', () => {
+    expect(findMinValue([{ value: 1 }, { value: 1 }], item => item.value)).toBe(1);
+  });
+
+  it('should handle negative values', () => {
+    expect(findMinValue([{ value: -8 }, { value: -2 }, { value: -5 }], item => item.value)).toBe(-8);
   });
 });
 
@@ -126,6 +150,24 @@ describe('findMaxItem', () => {
   it('should return undefined for empty data', () => {
     expect(findMaxItem([], (value: number) => value)).toBeUndefined();
   });
+
+  it('should return the only item for single-item data', () => {
+    const data = [{ value: 7 }];
+
+    expect(findMaxItem(data, item => item.value)).toBe(data[0]);
+  });
+
+  it('should keep the first item when maximum values tie', () => {
+    const data = [{ value: 5, id: 'first' }, { value: 5, id: 'second' }];
+
+    expect(findMaxItem(data, item => item.value)).toBe(data[0]);
+  });
+
+  it('should handle negative values', () => {
+    const data = [{ value: -8 }, { value: -2 }, { value: -5 }];
+
+    expect(findMaxItem(data, item => item.value)).toBe(data[1]);
+  });
 });
 
 describe('findMinItem', () => {
@@ -139,6 +181,24 @@ describe('findMinItem', () => {
 
   it('should return undefined for empty data', () => {
     expect(findMinItem([], (value: number) => value)).toBeUndefined();
+  });
+
+  it('should return the only item for single-item data', () => {
+    const data = [{ value: 7 }];
+
+    expect(findMinItem(data, item => item.value)).toBe(data[0]);
+  });
+
+  it('should keep the first item when minimum values tie', () => {
+    const data = [{ value: 1, id: 'first' }, { value: 1, id: 'second' }];
+
+    expect(findMinItem(data, item => item.value)).toBe(data[0]);
+  });
+
+  it('should handle negative values', () => {
+    const data = [{ value: -8 }, { value: -2 }, { value: -5 }];
+
+    expect(findMinItem(data, item => item.value)).toBe(data[0]);
   });
 });
 
