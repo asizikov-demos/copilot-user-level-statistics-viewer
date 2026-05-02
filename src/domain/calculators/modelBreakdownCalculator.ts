@@ -1,6 +1,6 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { KNOWN_MODELS } from '../modelConfig';
+import { classifyModelBucket } from '../modelConfig';
 
 interface ModelAccEntry {
   total: number;
@@ -8,7 +8,6 @@ interface ModelAccEntry {
 }
 
 export interface ModelBreakdownAccumulator {
-  modelClassification: Record<string, boolean>;
   premiumModels: Map<string, ModelAccEntry>;
   standardModels: Map<string, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
@@ -22,16 +21,7 @@ export interface ModelBreakdownAccumulator {
 }
 
 export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
-  const modelClassification = KNOWN_MODELS.reduce<Record<string, boolean>>(
-    (acc, model) => {
-      acc[model.name.toLowerCase()] = model.isPremium;
-      return acc;
-    },
-    {}
-  );
-
   return {
-    modelClassification,
     premiumModels: new Map(),
     standardModels: new Map(),
     autoModels: new Map(),
@@ -98,12 +88,12 @@ export function accumulateModelBreakdown(
   }
 
   accumulator.allDates.add(date);
-  const classification = accumulator.modelClassification[normalizedModel];
+  const bucket = classifyModelBucket(normalizedModel);
 
-  if (classification === true) {
+  if (bucket === 'premium') {
     accumulator.premiumTotal += interactionCount;
     accumulateModelEntry(accumulator.premiumModels, normalizedModel, date, interactionCount);
-  } else if (classification === false) {
+  } else if (bucket === 'standard') {
     accumulator.standardTotal += interactionCount;
     accumulateModelEntry(accumulator.standardModels, normalizedModel, date, interactionCount);
   } else {
