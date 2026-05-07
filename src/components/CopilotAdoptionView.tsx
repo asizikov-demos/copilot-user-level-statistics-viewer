@@ -4,7 +4,7 @@ import React from 'react';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import AgentModeHeatmapChart from './charts/AgentModeHeatmapChart';
 import AdoptionTrendChart from './charts/AdoptionTrendChart';
-import { MetricTileGroup, MetricTileIcon, ViewPanel } from './ui';
+import { ViewPanel } from './ui';
 import type { FeatureAdoptionData, AgentModeHeatmapData } from '../domain/calculators/metricCalculators';
 import type { DailyAdoptionTrend } from '../domain/calculators/metricCalculators';
 import type { MetricsStats } from '../types/metrics';
@@ -25,47 +25,6 @@ export default function CopilotAdoptionView({ featureAdoptionData, agentModeHeat
       }}
       contentClassName="space-y-10"
     >
-      <MetricTileGroup
-        title="User Adoption Metrics"
-        columns={{ base: 1, md: 3, lg: 5 }}
-        items={[
-          {
-            title: 'Chat Users',
-            value: stats.chatUsers,
-            accent: 'emerald',
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            icon: <MetricTileIcon name="chat-users" />,
-          },
-          {
-            title: 'Agent Mode Users',
-            value: stats.agentUsers,
-            accent: 'violet',
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            icon: <MetricTileIcon name="agent-users" />,
-          },
-          {
-            title: 'CLI Users',
-            value: stats.cliUsers,
-            accent: 'indigo',
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            icon: <MetricTileIcon name="cli-users" />,
-          },
-          {
-            title: 'Cloud Agent Users',
-            value: stats.codingAgentUsers,
-            accent: 'teal',
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            icon: <MetricTileIcon name="agent-users" />,
-          },
-          {
-            title: 'Completion Only Users',
-            value: stats.completionOnlyUsers,
-            accent: 'amber',
-            subtitle: `Out of ${stats.uniqueUsers.toLocaleString()} unique users`,
-            icon: <MetricTileIcon name="completion-only-users" />,
-          },
-        ]}
-      />
       <FeatureAdoptionChart
         data={
           featureAdoptionData || {
