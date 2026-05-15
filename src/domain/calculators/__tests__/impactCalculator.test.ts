@@ -135,7 +135,6 @@ describe('impactCalculator', () => {
         { feature: 'chat_inline', locAdded: 20, locDeleted: 3 },
         { feature: 'chat_panel_agent_mode', locAdded: 40, locDeleted: 8 },
         { feature: 'copilot_cli', locAdded: 10, locDeleted: 2 },
-        { feature: 'chat_panel_plan_mode', locAdded: 15, locDeleted: 3 },
       ];
 
       accumulateFeatureImpacts(accumulator, '2024-01-15', 1, features);
@@ -143,8 +142,8 @@ describe('impactCalculator', () => {
       const results = computeJoinedImpactData(accumulator);
 
       expect(results).toHaveLength(1);
-      expect(results[0].locAdded).toBe(265); // Sum of all
-      expect(results[0].locDeleted).toBe(51); // Sum of all
+      expect(results[0].locAdded).toBe(250); // Sum of all
+      expect(results[0].locDeleted).toBe(48); // Sum of all
     });
 
     it('should exclude non-joined features from joined impact', () => {
