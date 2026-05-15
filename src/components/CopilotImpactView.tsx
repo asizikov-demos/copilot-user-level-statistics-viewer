@@ -12,11 +12,10 @@ interface CopilotImpactViewProps {
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
-  planModeImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
 
-export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, planModeImpactData, joinedImpactData }: CopilotImpactViewProps) {
+export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, joinedImpactData }: CopilotImpactViewProps) {
   return (
     <ViewPanel
       headerProps={{
@@ -29,7 +28,7 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
       <ModeImpactChart
         data={joinedImpactData || []}
         title="Combined Copilot Impact"
-        description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Plan Mode, Inline Mode, and CLI activities."
+        description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, and CLI activities."
         emptyStateMessage="No combined impact data available."
       />
       <ModeImpactChart
@@ -49,12 +48,6 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         title="Code Completion Impact"
         description="Daily lines of code added and deleted when developers accept Copilot code completions."
         emptyStateMessage="No code completion impact data available."
-      />
-      <ModeImpactChart
-        data={planModeImpactData || []}
-        title="Copilot Plan Mode Impact"
-        description="Daily lines of code added and deleted through Copilot Plan Mode sessions."
-        emptyStateMessage="No Plan Mode impact data available."
       />
       <ModeImpactChart
         data={askModeImpactData || []}
