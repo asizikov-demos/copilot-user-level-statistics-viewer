@@ -22,7 +22,6 @@ export interface ImpactAccumulator {
   dailyInlineModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyAskModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyCliImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
-  dailyPlanModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyJoinedImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   allUniqueUsers: Set<number>;
 }
@@ -34,7 +33,6 @@ const JOINED_FEATURES = [
   'chat_inline',
   'chat_panel_agent_mode',
   'agent_edit',
-  'chat_panel_plan_mode',
   'cli_agent',
   'copilot_cli',
 ];
@@ -47,7 +45,6 @@ export function createImpactAccumulator(): ImpactAccumulator {
     dailyInlineModeImpact: new Map(),
     dailyAskModeImpact: new Map(),
     dailyCliImpact: new Map(),
-    dailyPlanModeImpact: new Map(),
     dailyJoinedImpact: new Map(),
     allUniqueUsers: new Set(),
   };
@@ -83,7 +80,6 @@ export function ensureImpactDates(accumulator: ImpactAccumulator, date: string):
   ensureImpactDate(accumulator.dailyInlineModeImpact, date);
   ensureImpactDate(accumulator.dailyAskModeImpact, date);
   ensureImpactDate(accumulator.dailyCliImpact, date);
-  ensureImpactDate(accumulator.dailyPlanModeImpact, date);
   ensureImpactDate(accumulator.dailyJoinedImpact, date);
 }
 
@@ -170,16 +166,6 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (feature === 'chat_panel_plan_mode' && hasLoc) {
-      accumulateToMap(
-        accumulator.dailyPlanModeImpact,
-        date,
-        userId,
-        locAdded,
-        locDeleted
-      );
-    }
-
     if (JOINED_FEATURES.includes(feature) && hasLoc) {
       joinedLocAdded += locAdded;
       joinedLocDeleted += locDeleted;
@@ -250,10 +236,6 @@ export function computeCliImpactData(accumulator: ImpactAccumulator): ModeImpact
   return formatImpactMap(accumulator.dailyCliImpact, accumulator.allUniqueUsers.size);
 }
 
-export function computePlanModeImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
-  return formatImpactMap(accumulator.dailyPlanModeImpact, accumulator.allUniqueUsers.size);
-}
-
 export function computeJoinedImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
   return formatImpactMap(accumulator.dailyJoinedImpact, accumulator.allUniqueUsers.size);
 }
@@ -312,9 +294,4 @@ export function calculateCodeCompletionImpactFromMetrics(metrics: CopilotMetrics
 export function calculateCliImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
   const accumulator = processMetricsForImpact(metrics);
   return computeCliImpactData(accumulator);
-}
-
-export function calculatePlanModeImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
-  const accumulator = processMetricsForImpact(metrics);
-  return computePlanModeImpactData(accumulator);
 }

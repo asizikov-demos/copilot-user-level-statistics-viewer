@@ -82,14 +82,12 @@ export {
   computeInlineModeImpactData,
   computeAskModeImpactData,
   computeCliImpactData,
-  computePlanModeImpactData,
   computeJoinedImpactData,
   calculateJoinedImpactFromMetrics,
   calculateEditModeImpactFromMetrics,
   calculateInlineModeImpactFromMetrics,
   calculateAskModeImpactFromMetrics,
   calculateCliImpactFromMetrics,
-  calculatePlanModeImpactFromMetrics,
 } from './impactCalculator';
 
 export {
