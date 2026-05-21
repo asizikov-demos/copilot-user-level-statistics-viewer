@@ -68,6 +68,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gemini-3.1-pro', 1, true),
   new Model('gemini-3.0-flash', 0.33, true),
   new Model('gemini-3-flash', 0.33, true),
+  new Model('gemini-3.5-flash', 14, true),
 
   new Model('auto', 0.7, true), // a temp hack for auto premium models, we don't know the actual model behind it yet.
 
