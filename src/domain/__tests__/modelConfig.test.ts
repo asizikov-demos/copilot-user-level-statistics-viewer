@@ -13,6 +13,7 @@ describe('modelConfig', () => {
         { model: 'claude-opus-4.6-fast-mode-preview', expected: 30 },
         { model: 'o3-mini', expected: 0.33 },
         { model: 'gemini-2.0-flash', expected: 0.25 },
+        { model: 'gemini-3.5-flash', expected: 14 },
         { model: 'gpt-5.4-nano', expected: 0.25 },
       ];
 
@@ -38,6 +39,7 @@ describe('modelConfig', () => {
         { model: 'Claude-3.5-Sonnet', expected: 1 },
         { model: 'Claude Opus 4.7', expected: 15 },
         { model: 'GEMINI-2.0-FLASH', expected: 0.25 },
+        { model: 'Gemini 3.5 Flash', expected: 14 },
       ];
 
       testCases.forEach(({ model, expected }) => {
@@ -93,6 +95,7 @@ describe('modelConfig', () => {
         'claude-opus-4',
         'o3',
         'gemini-2.5-pro',
+        'gemini-3.5-flash',
         'gpt-5.4-nano',
         'auto',
       ];
@@ -161,6 +164,7 @@ describe('modelConfig', () => {
 
     it('should classify premium models', () => {
       expect(classifyModelBucket('claude-3.5-sonnet')).toBe('premium');
+      expect(classifyModelBucket('Gemini 3.5 Flash')).toBe('premium');
       expect(classifyModelBucket('gpt-5')).toBe('premium');
     });
 
