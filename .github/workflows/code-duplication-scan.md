@@ -35,6 +35,23 @@ safe-outputs:
 timeout-minutes: 20
 
 steps:
+  - name: Verify manual dispatch authorization
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    uses: actions/github-script@v9
+    with:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
+      script: |
+        const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          username: context.actor,
+        });
+
+        const allowedPermissions = new Set(['admin', 'maintain', 'write']);
+        if (!allowedPermissions.has(data.permission)) {
+          core.setFailed(`Actor ${context.actor} has ${data.permission} permission and is not authorized to run this workflow.`);
+        }
+
   - name: Checkout
     uses: actions/checkout@v5
     with:
