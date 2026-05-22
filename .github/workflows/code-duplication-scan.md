@@ -4,9 +4,6 @@ description: Weekly and manual code duplication audit for the user-level metrics
 on:
   workflow_dispatch:
   schedule: weekly on friday
-  skip-if-match:
-    query: 'is:issue is:open in:title "[duplication]"'
-    max: 1
 
 permissions:
   contents: read
