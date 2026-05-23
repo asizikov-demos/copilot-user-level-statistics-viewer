@@ -10,7 +10,6 @@ import { padSeriesWithDefaults } from '../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
-import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
 import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
@@ -706,12 +705,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         languageBarChartData={languageBarChartData}
         languageBarChartOptions={languageBarChartOptions}
         />
-
-      <DailyPremiumBaseChart
-        dailyModelUsageData={userDetails.dailyModelUsage}
-        reportStartDay={userDetails.reportStartDay}
-        reportEndDay={userDetails.reportEndDay}
-      />
 
       <UserActivityByModelAndFeatureChart
         modelFeatureAggregates={modelFeatureAggregates}
