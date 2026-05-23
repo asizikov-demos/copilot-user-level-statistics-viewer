@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import { padSeriesWithDefaults } from '../../utils/timeSeries';
 import type { DailyModelUsageData } from '../../domain/calculators/metricCalculators';
 import type { ModelBreakdownData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
@@ -53,23 +54,33 @@ export default function DailyPremiumBaseChart({
       ? modelBreakdownData.dates
       : generateDateRange(reportStartDay, reportEndDay);
 
-    const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
+    let dailyPremium: number[];
+    let dailyStandard: number[];
+    let dailyUnknown: number[];
 
-    const dailyPremium = modelBreakdownData
-      ? dates.map(d =>
-          modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-        )
-      : dates.map(d => dailyUsageByDate.get(d)?.pruModels ?? 0);
+    if (modelBreakdownData) {
+      dailyPremium = dates.map(d =>
+        modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+      );
+      dailyStandard = dates.map(d =>
+        modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+      );
+      dailyUnknown = dates.map(() => 0);
+    } else {
+      const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
+      const paddedUsage = padSeriesWithDefaults(dates, dailyUsageByDate, date => ({
+        date,
+        pruModels: 0,
+        standardModels: 0,
+        unknownModels: 0,
+        totalPRUs: 0,
+        serviceValue: 0,
+      }));
 
-    const dailyStandard = modelBreakdownData
-      ? dates.map(d =>
-          modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-        )
-      : dates.map(d => dailyUsageByDate.get(d)?.standardModels ?? 0);
-
-    const dailyUnknown = modelBreakdownData
-      ? dates.map(() => 0)
-      : dates.map(d => dailyUsageByDate.get(d)?.unknownModels ?? 0);
+      dailyPremium = paddedUsage.map(d => d.pruModels);
+      dailyStandard = paddedUsage.map(d => d.standardModels);
+      dailyUnknown = paddedUsage.map(d => d.unknownModels);
+    }
 
     const datasets: DailyPremiumDataset[] = [
       {

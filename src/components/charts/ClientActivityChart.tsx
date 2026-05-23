@@ -5,21 +5,11 @@ import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
 import { isCliFeature } from '../../domain/featureCategories';
-import { formatShortDate } from '../../utils/formatters';
+import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import type { UserDayData } from '../../types/metrics';
 
 registerChartJS();
-
-function generateAllDays(startDay: string, endDay: string): string[] {
-  const start = new Date(startDay + 'T00:00:00Z');
-  const end = new Date(endDay + 'T00:00:00Z');
-  const dates: string[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
-    dates.push(cur.toISOString().split('T')[0]);
-  }
-  return dates;
-}
 
 interface IDEAggregateItem {
   ide: string;
@@ -174,7 +164,7 @@ export default function ClientActivityChart({
       new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
-    const allDays = generateAllDays(reportStartDay, reportEndDay);
+    const allDays = generateDateRange(reportStartDay, reportEndDay);
     const dayMap = new Map(days.map(d => [d.day, d]));
 
     const datasets = allIDEs.map((ide, index) => {
