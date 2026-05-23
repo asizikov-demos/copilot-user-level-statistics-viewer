@@ -161,8 +161,20 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
       contentClassName="space-y-6"
     >
       <div className="space-y-6">
+        <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          Starting 1st of June, GitHub Copilot is switching to a usage-based billing model.{' '}
+          <a
+            href="https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium underline decoration-blue-400 underline-offset-2 hover:text-blue-700"
+          >
+            Read the announcement.
+          </a>{' '}
+          Premium vs standard model separation will no longer be applicable after the transition.
+        </div>
         <div className="text-sm text-gray-500">
-          Each seat comes with at least 300 Premium Request Units (PRUs) that reset monthly. Comparing premium and standard usage helps ensure those high-value requests are fully utilized before they expire.
+          For reporting windows before the transition, each seat comes with at least 300 Premium Request Units (PRUs) that reset monthly. Comparing premium and standard usage helps ensure those high-value requests are fully utilized before they expire.
         </div>
         {premiumUtilization && (
           <div className="border border-gray-200 rounded-md bg-white">
