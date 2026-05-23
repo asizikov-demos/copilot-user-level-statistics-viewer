@@ -33,8 +33,10 @@ describe('table state primitives', () => {
   });
 
   it('resolves default and custom expand button labels', () => {
-    expect(resolveExpandableToggleLabel(false, 1200)).toBe('Show All 1,200 Items');
-    expect(resolveExpandableToggleLabel(true, 1200)).toBe('Show Less');
+    const total = 1200;
+
+    expect(resolveExpandableToggleLabel(false, total)).toBe(`Show All ${total.toLocaleString()} Items`);
+    expect(resolveExpandableToggleLabel(true, total)).toBe('Show Less');
     expect(resolveExpandableToggleLabel(false, 10, (total) => `More (${total})`)).toBe('More (10)');
     expect(resolveExpandableToggleLabel(true, 10, undefined, 'Collapse')).toBe('Collapse');
   });

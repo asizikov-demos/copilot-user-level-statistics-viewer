@@ -85,7 +85,12 @@ export function useExpandableList<T>(
   };
 
   const setExpanded = (expanded: boolean) => {
-    setIsExpanded(expanded);
+    setIsExpanded((prev) => {
+      if (prev !== expanded) {
+        onToggle?.(expanded);
+      }
+      return expanded;
+    });
   };
 
   return {
