@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   parseMinorFromTag,
-  findLatestStableRelease,
   collectStableReleases,
   hasVsCodeDataChanged,
   STABLE_RELEASES_WINDOW,
-  type GitHubRelease,
   type VsCodeData,
 } from './update-plugin-versions';
 
@@ -28,69 +26,20 @@ describe('parseMinorFromTag', () => {
   });
 });
 
-describe('findLatestStableRelease', () => {
-  const makeRelease = (
-    tag: string,
-    prerelease: boolean,
-    draft = false,
-  ): GitHubRelease => ({
-    tag_name: tag,
-    prerelease,
-    draft,
-    published_at: '2026-03-06T00:00:00Z',
-    created_at: '2026-03-06T00:00:00Z',
-  });
-
-  it('returns the first non-prerelease non-draft release', () => {
-    const releases: GitHubRelease[] = [
-      makeRelease('v0.39.2026030604', true),
-      makeRelease('v0.38.2', false),
-      makeRelease('v0.38.1', false),
-    ];
-    expect(findLatestStableRelease(releases)?.tag_name).toBe('v0.38.2');
-  });
-
-  it('skips draft releases', () => {
-    const releases: GitHubRelease[] = [
-      makeRelease('v0.38.3', false, true), // draft
-      makeRelease('v0.38.2', false, false),
-    ];
-    expect(findLatestStableRelease(releases)?.tag_name).toBe('v0.38.2');
-  });
-
-  it('returns null when all releases are prerelease', () => {
-    const releases: GitHubRelease[] = [
-      makeRelease('v0.39.001', true),
-      makeRelease('v0.39.002', true),
-    ];
-    expect(findLatestStableRelease(releases)).toBeNull();
-  });
-
-  it('returns null for an empty list', () => {
-    expect(findLatestStableRelease([])).toBeNull();
-  });
-});
-
 describe('collectStableReleases', () => {
   const makeRelease = (
-    tag: string,
-    prerelease: boolean,
-    draft = false,
-    publishedAt = '2026-03-06T00:00:00Z',
-  ): GitHubRelease => ({
-    tag_name: tag,
-    prerelease,
-    draft,
-    published_at: publishedAt,
-    created_at: publishedAt,
+    version: string,
+    lastUpdated = '2026-03-06T00:00:00.123Z',
+  ) => ({
+    version,
+    lastUpdated,
   });
 
-  it('filters out prerelease and draft releases', () => {
-    const releases: GitHubRelease[] = [
-      makeRelease('v0.39.2026030604', true),
-      makeRelease('v0.38.3', false, true), // draft
-      makeRelease('v0.38.2', false),
-      makeRelease('v0.38.1', false),
+  it('filters out timestamp builds from Marketplace versions', () => {
+    const releases = [
+      makeRelease('0.39.2026030604'),
+      makeRelease('0.38.2'),
+      makeRelease('0.38.1'),
     ];
     const result = collectStableReleases(releases, 10);
     expect(result).toHaveLength(2);
@@ -98,47 +47,37 @@ describe('collectStableReleases', () => {
     expect(result[1].version).toBe('0.38.1');
   });
 
-  it('strips the v prefix from tag names', () => {
-    const releases: GitHubRelease[] = [makeRelease('v0.38.2', false)];
-    expect(collectStableReleases(releases, 10)[0].version).toBe('0.38.2');
-  });
-
   it('respects the limit', () => {
-    const releases: GitHubRelease[] = Array.from({ length: 30 }, (_, i) =>
-      makeRelease(`v0.${38 - i}.0`, false),
+    const releases = Array.from({ length: 30 }, (_, i) =>
+      makeRelease(`0.${38 - i}.0`),
     );
     expect(collectStableReleases(releases, 5)).toHaveLength(5);
   });
 
-  it('returns an empty array when all releases are prerelease', () => {
-    const releases: GitHubRelease[] = [makeRelease('v0.39.001', true)];
+  it('returns an empty array when all releases are timestamp builds', () => {
+    const releases = [makeRelease('0.39.2026030604')];
     expect(collectStableReleases(releases, 10)).toHaveLength(0);
   });
 
-  it('uses published_at for releaseDate when available', () => {
-    const releases: GitHubRelease[] = [
-      {
-        tag_name: 'v0.38.2',
-        prerelease: false,
-        draft: false,
-        published_at: '2026-03-06T12:00:00Z',
-        created_at: '2026-03-05T00:00:00Z',
-      },
-    ];
+  it('uses Marketplace lastUpdated for releaseDate without fractional seconds', () => {
+    const releases = [makeRelease('0.38.2', '2026-03-06T12:00:00.987Z')];
     expect(collectStableReleases(releases, 10)[0].releaseDate).toBe('2026-03-06T12:00:00Z');
   });
 
-  it('falls back to created_at when published_at is null', () => {
-    const releases: GitHubRelease[] = [
-      {
-        tag_name: 'v0.38.2',
-        prerelease: false,
-        draft: false,
-        published_at: null,
-        created_at: '2026-03-05T00:00:00Z',
-      },
+  it('matches current Marketplace stable ordering', () => {
+    const releases = [
+      makeRelease('0.48.1', '2026-05-15T22:33:59.763Z'),
+      makeRelease('0.45.1', '2026-04-23T20:05:11.56Z'),
+      makeRelease('0.44.2', '2026-04-20T09:34:44.32Z'),
+      makeRelease('0.43.2026040705', '2026-04-07T11:18:40.72Z'),
+      makeRelease('0.43.0', '2026-04-07T11:38:19.68Z'),
     ];
-    expect(collectStableReleases(releases, 10)[0].releaseDate).toBe('2026-03-05T00:00:00Z');
+    expect(collectStableReleases(releases, 10)).toEqual([
+      { version: '0.48.1', releaseDate: '2026-05-15T22:33:59Z' },
+      { version: '0.45.1', releaseDate: '2026-04-23T20:05:11Z' },
+      { version: '0.44.2', releaseDate: '2026-04-20T09:34:44Z' },
+      { version: '0.43.0', releaseDate: '2026-04-07T11:38:19Z' },
+    ]);
   });
 
   it('STABLE_RELEASES_WINDOW is exported and is a positive number', () => {

@@ -14,6 +14,23 @@ interface JetBrainsUpdate {
   cdate: string; // epoch millis as string
 }
 
+interface MarketplaceVersion {
+  version: string;
+  lastUpdated: string;
+}
+
+interface MarketplaceExtension {
+  versions?: MarketplaceVersion[];
+}
+
+interface MarketplaceResult {
+  extensions?: MarketplaceExtension[];
+}
+
+interface MarketplaceResponse {
+  results?: MarketplaceResult[];
+}
+
 export interface StableRelease {
   version: string;
   releaseDate: string;
@@ -26,14 +43,6 @@ export interface VsCodeData {
   stableReleases: StableRelease[];
 }
 
-export interface GitHubRelease {
-  tag_name: string;
-  prerelease: boolean;
-  draft: boolean;
-  published_at: string | null;
-  created_at: string;
-}
-
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) {
@@ -43,7 +52,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 /**
- * Parse the minor version number from a GitHub tag like "v0.38.2" or "0.38.0".
+ * Parse the minor version number from a version like "v0.38.2" or "0.38.0".
  * Returns null if the tag does not match the expected format.
  */
 export function parseMinorFromTag(tag: string): number | null {
@@ -52,24 +61,24 @@ export function parseMinorFromTag(tag: string): number | null {
   return parseInt(match[2], 10);
 }
 
-/**
- * Find the most-recently published stable (non-prerelease, non-draft) release.
- */
-export function findLatestStableRelease(releases: GitHubRelease[]): GitHubRelease | null {
-  return releases.find((r) => !r.prerelease && !r.draft) ?? null;
+function normalizeIsoTimestamp(timestamp: string): string {
+  return timestamp.replace(/\.\d{1,7}Z$/, 'Z');
 }
 
-/**
- * Collect up to `limit` stable (non-prerelease, non-draft) releases from a
- * GitHub releases list (newest-first order) and map them to StableRelease records.
- */
-export function collectStableReleases(releases: GitHubRelease[], limit: number): StableRelease[] {
-  return releases
-    .filter((r) => !r.prerelease && !r.draft)
+function isStableVsCodeVersion(version: string): boolean {
+  return /^\d+\.\d+\.\d+$/.test(version) && !/^\d+\.\d+\.20\d{8}$/.test(version);
+}
+
+export function collectStableReleases(
+  versions: MarketplaceVersion[],
+  limit: number,
+): StableRelease[] {
+  return versions
+    .filter((item) => isStableVsCodeVersion(item.version))
     .slice(0, limit)
-    .map((r) => ({
-      version: r.tag_name.replace(/^v/, ''),
-      releaseDate: (r.published_at ?? r.created_at).replace(/\.\d{3}Z$/, 'Z'),
+    .map((item) => ({
+      version: item.version,
+      releaseDate: normalizeIsoTimestamp(item.lastUpdated),
     }));
 }
 
@@ -101,32 +110,37 @@ async function fetchJetBrainsVersions(): Promise<SimpleVersionInfo[]> {
     .slice(0, MAX);
 }
 
-async function fetchVsCodeData(githubToken?: string): Promise<VsCodeData> {
-  const baseUrl =
-    'https://api.github.com/repos/microsoft/vscode-copilot-chat/releases?per_page=100';
+async function fetchVsCodeData(): Promise<VsCodeData> {
+  const marketplaceUrl =
+    'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.2-preview.1';
+  const includeVersionsFlag = 1;
 
-  const headers: HeadersInit = {
-    Accept: 'application/vnd.github.v3+json',
-    'User-Agent': 'copilot-user-level-statistics-viewer',
-  };
-  if (githubToken) {
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${githubToken}`;
-  }
+  const data = await fetchJson<MarketplaceResponse>(marketplaceUrl, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json;api-version=7.2-preview.1;excludeUrls=true',
+      'Content-Type': 'application/json',
+      'User-Agent': 'copilot-user-level-statistics-viewer',
+    },
+    body: JSON.stringify({
+      filters: [
+        {
+          criteria: [
+            {
+              filterType: 7,
+              value: 'GitHub.copilot-chat',
+            },
+          ],
+        },
+      ],
+      flags: includeVersionsFlag,
+    }),
+  });
 
-  const allReleases: GitHubRelease[] = [];
-  const maxPages = 5;
-  for (let page = 1; page <= maxPages; page++) {
-    const url = `${baseUrl}&page=${page}`;
-    const batch = await fetchJson<GitHubRelease[]>(url, { headers });
-    allReleases.push(...batch);
-
-    const stableCount = allReleases.filter((r) => !r.prerelease && !r.draft).length;
-    if (stableCount >= STABLE_RELEASES_WINDOW || batch.length < 100) break;
-  }
-
-  const stableReleases = collectStableReleases(allReleases, STABLE_RELEASES_WINDOW);
+  const versions = data.results?.[0]?.extensions?.[0]?.versions ?? [];
+  const stableReleases = collectStableReleases(versions, STABLE_RELEASES_WINDOW);
   if (stableReleases.length === 0) {
-    throw new Error('No stable release found in microsoft/vscode-copilot-chat releases');
+    throw new Error('No stable release found in VS Code Marketplace for GitHub.copilot-chat');
   }
 
   const stableMinor = parseMinorFromTag(stableReleases[0].version);
@@ -146,11 +160,9 @@ async function main(): Promise<void> {
     const __dirnameLocal = path.dirname(__filename);
     const outputDir = path.join(__dirnameLocal, '..', 'public', 'data');
 
-    const githubToken = process.env.GITHUB_TOKEN;
-
     const [jbVersions, incomingVsCode] = await Promise.all([
       fetchJetBrainsVersions(),
-      fetchVsCodeData(githubToken),
+      fetchVsCodeData(),
     ]);
 
     // JetBrains — always update with latest rolling list
