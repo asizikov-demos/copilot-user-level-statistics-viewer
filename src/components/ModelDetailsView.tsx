@@ -171,7 +171,7 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
           >
             Read the announcement.
           </a>{' '}
-          Premium vs Base Models separation will no longer be applicable after the transition.
+          Premium vs standard model separation will no longer be applicable after the transition.
         </div>
         <div className="text-sm text-gray-500">
           For reporting windows before the transition, each seat comes with at least 300 Premium Request Units (PRUs) that reset monthly. Comparing premium and standard usage helps ensure those high-value requests are fully utilized before they expire.
