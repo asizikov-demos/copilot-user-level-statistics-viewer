@@ -79,7 +79,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
   }, [modelEntries, dates, isPremium, isAuto, isCli]);
 
   const insights = useMemo(() => {
-    if (isAuto || isCli) return null;
+    if (!isPremium) return null;
     if (!totalInteractions || !modelOrder.length) return null;
 
     const shares = modelOrder.map(m => ({
@@ -95,7 +95,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
 
     let insightVariant: 'green' | 'blue' | 'red' | 'orange' | 'purple';
     const paragraphs: string[] = [];
-    const title = `${isPremium ? 'Premium' : 'Standard'} Model Usage Insights`;
+    const title = 'Premium Model Usage Insights';
     let showDocLink = false;
 
     if (top.share >= strongDominanceThreshold) {
@@ -130,7 +130,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     paragraphs.push(`Top model share summary: ${summary}${shares.length > 5 ? ', ...' : ''}.`);
 
     return { title, variant: insightVariant, paragraphs, showDocLink };
-  }, [modelTotals, modelOrder, totalInteractions, isPremium, isAuto, isCli]);
+  }, [modelTotals, modelOrder, totalInteractions, isPremium]);
 
   const chartTitle = isCli
     ? 'CLI Models Daily Usage'
