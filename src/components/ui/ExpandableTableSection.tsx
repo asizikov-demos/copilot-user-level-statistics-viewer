@@ -1,10 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import type { ToggleCallback, VoidCallback } from '../../types/events';
 import { cn } from '../../utils/cn';
-
-type LabelResolver = string | ((totalItems: number) => string);
+import {
+  useExpandableList,
+  type ExpandableLabelResolver,
+  type ExpandButtonAlignment,
+  EXPAND_BUTTON_ALIGNMENT_CLASS,
+  resolveExpandableToggleLabel,
+} from '../../hooks/useExpandableList';
 
 export interface ExpandableTableSectionRenderProps<T> {
   visibleItems: readonly T[];
@@ -18,11 +23,11 @@ export interface ExpandableTableSectionProps<T> {
   initialCount?: number;
   defaultExpanded?: boolean;
   children: (props: ExpandableTableSectionRenderProps<T>) => React.ReactNode;
-  buttonCollapsedLabel?: LabelResolver;
-  buttonExpandedLabel?: LabelResolver;
+  buttonCollapsedLabel?: ExpandableLabelResolver;
+  buttonExpandedLabel?: ExpandableLabelResolver;
   buttonClassName?: string;
   buttonContainerClassName?: string;
-  buttonAlignment?: 'left' | 'center' | 'right';
+  buttonAlignment?: ExpandButtonAlignment;
   ariaLabel?: string;
   buttonTestId?: string;
   onToggle?: ToggleCallback;
@@ -30,17 +35,6 @@ export interface ExpandableTableSectionProps<T> {
 
 const DEFAULT_BUTTON_CLASS =
   'px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors';
-
-const ALIGNMENT_TO_CLASS: Record<NonNullable<ExpandableTableSectionProps<unknown>['buttonAlignment']>, string> = {
-  left: 'text-left',
-  center: 'text-center',
-  right: 'text-right'
-};
-
-function resolveLabel(label: LabelResolver | undefined, total: number, fallback: string): string {
-  if (!label) return fallback;
-  return typeof label === 'function' ? label(total) : label;
-}
 
 function ExpandableTableSection<T>({
   items,
@@ -56,38 +50,27 @@ function ExpandableTableSection<T>({
   buttonTestId,
   onToggle
 }: ExpandableTableSectionProps<T>) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const totalItems = items.length;
-  const shouldRenderToggle = totalItems > initialCount;
+  const {
+    visibleItems,
+    isExpanded,
+    canExpand: shouldRenderToggle,
+    totalCount: totalItems,
+    toggleExpanded: handleToggle,
+  } = useExpandableList(items, initialCount, {
+    defaultExpanded,
+    onToggle,
+  });
 
-  const visibleItems = useMemo(() => {
-    if (isExpanded || !shouldRenderToggle) {
-      return items;
-    }
-    return items.slice(0, initialCount);
-  }, [items, initialCount, isExpanded, shouldRenderToggle]);
-
-  const handleToggle = () => {
-    setIsExpanded((prev) => {
-      const next = !prev;
-      onToggle?.(next);
-      return next;
-    });
-  };
-
-  const collapsedLabel = resolveLabel(
-    buttonCollapsedLabel,
+  const toggleLabel = resolveExpandableToggleLabel(
+    isExpanded,
     totalItems,
-    `Show All ${totalItems.toLocaleString()} Items`
+    buttonCollapsedLabel,
+    buttonExpandedLabel
   );
-
-  const expandedLabel = resolveLabel(buttonExpandedLabel, totalItems, 'Show Less');
-
-  const toggleLabel = isExpanded ? expandedLabel : collapsedLabel;
 
   const containerClassName = cn(
     buttonContainerClassName ?? 'mt-4',
-    ALIGNMENT_TO_CLASS[buttonAlignment]
+    EXPAND_BUTTON_ALIGNMENT_CLASS[buttonAlignment]
   );
 
   return (

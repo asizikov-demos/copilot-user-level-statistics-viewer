@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { DataTableProvider, SortDirection } from './DataTableContext';
-import { sortByField, toggleSortDirection } from '../../../utils/sorting';
+import { useSortableTable } from '../../../hooks/useSortableTable';
+import { useExpandableList } from '../../../hooks/useExpandableList';
 
 export interface DataTableProps<T> {
   data: T[];
@@ -25,35 +26,21 @@ export function DataTable<T>({
   tableClassName = '',
   containerClassName = '',
 }: DataTableProps<T>) {
-  const [sortField, setSortField] = useState<keyof T | null>(defaultSortField ?? null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(defaultSortDirection);
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleSort = (field: keyof T) => {
-    if (sortField === field) {
-      setSortDirection(toggleSortDirection);
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
-
-  const sortedData = useMemo(
-    () => sortByField(data, sortField, sortDirection),
-    [data, sortField, sortDirection]
+  const {
+    sortField,
+    sortDirection,
+    sortedItems: sortedData,
+    handleSort,
+  } = useSortableTable<T, keyof T>(
+    data,
+    defaultSortField,
+    defaultSortDirection
   );
 
-  const canExpand = data.length > initialCount;
-  const visibleData = useMemo(() => {
-    if (isExpanded || !canExpand) {
-      return sortedData;
-    }
-    return sortedData.slice(0, initialCount);
-  }, [sortedData, isExpanded, initialCount, canExpand]);
-
-  const toggleExpanded = () => {
-    setIsExpanded((prev) => !prev);
-  };
+  const { visibleItems: visibleData, isExpanded, canExpand, toggleExpanded } = useExpandableList(
+    sortedData,
+    initialCount
+  );
 
   const contextValue = {
     data: sortedData as unknown[],

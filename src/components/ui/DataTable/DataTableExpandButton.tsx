@@ -2,30 +2,23 @@
 
 import React from 'react';
 import { useDataTableContext } from './DataTableContext';
-
-type LabelResolver = string | ((totalItems: number) => string);
+import {
+  type ExpandableLabelResolver,
+  type ExpandButtonAlignment,
+  EXPAND_BUTTON_ALIGNMENT_CLASS,
+  resolveExpandableToggleLabel,
+} from '../../../hooks/useExpandableList';
 
 export interface DataTableExpandButtonProps {
-  collapsedLabel?: LabelResolver;
-  expandedLabel?: LabelResolver;
+  collapsedLabel?: ExpandableLabelResolver;
+  expandedLabel?: ExpandableLabelResolver;
   className?: string;
   containerClassName?: string;
-  alignment?: 'left' | 'center' | 'right';
+  alignment?: ExpandButtonAlignment;
 }
 
 const DEFAULT_BUTTON_CLASS =
   'px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors';
-
-const ALIGNMENT_TO_CLASS: Record<string, string> = {
-  left: 'text-left',
-  center: 'text-center',
-  right: 'text-right',
-};
-
-function resolveLabel(label: LabelResolver | undefined, total: number, fallback: string): string {
-  if (!label) return fallback;
-  return typeof label === 'function' ? label(total) : label;
-}
 
 export function DataTableExpandButton({
   collapsedLabel,
@@ -40,15 +33,14 @@ export function DataTableExpandButton({
     return null;
   }
 
-  const resolvedCollapsedLabel = resolveLabel(
-    collapsedLabel,
+  const buttonLabel = resolveExpandableToggleLabel(
+    isExpanded,
     totalCount,
-    `Show All ${totalCount.toLocaleString()} Items`
+    collapsedLabel,
+    expandedLabel
   );
-  const resolvedExpandedLabel = resolveLabel(expandedLabel, totalCount, 'Show Less');
-  const buttonLabel = isExpanded ? resolvedExpandedLabel : resolvedCollapsedLabel;
 
-  const containerClass = `${containerClassName ?? 'mt-4'} ${ALIGNMENT_TO_CLASS[alignment]}`;
+  const containerClass = `${containerClassName ?? 'mt-4'} ${EXPAND_BUTTON_ALIGNMENT_CLASS[alignment]}`;
 
   return (
     <div className={containerClass}>

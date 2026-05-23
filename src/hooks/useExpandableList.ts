@@ -1,9 +1,55 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import type { ToggleCallback } from '../types/events';
+
+export type ExpandableLabelResolver = string | ((totalItems: number) => string);
+export type ExpandButtonAlignment = 'left' | 'center' | 'right';
+
+export const EXPAND_BUTTON_ALIGNMENT_CLASS: Record<ExpandButtonAlignment, string> = {
+  left: 'text-left',
+  center: 'text-center',
+  right: 'text-right',
+};
+
+export function resolveExpandableLabel(
+  label: ExpandableLabelResolver | undefined,
+  total: number,
+  fallback: string
+): string {
+  if (!label) return fallback;
+  return typeof label === 'function' ? label(total) : label;
+}
+
+export function resolveExpandableToggleLabel(
+  isExpanded: boolean,
+  totalItems: number,
+  collapsedLabel?: ExpandableLabelResolver,
+  expandedLabel?: ExpandableLabelResolver
+): string {
+  const resolvedCollapsedLabel = resolveExpandableLabel(
+    collapsedLabel,
+    totalItems,
+    `Show All ${totalItems.toLocaleString()} Items`
+  );
+  const resolvedExpandedLabel = resolveExpandableLabel(expandedLabel, totalItems, 'Show Less');
+  return isExpanded ? resolvedExpandedLabel : resolvedCollapsedLabel;
+}
+
+export function getExpandableVisibleItems<T>(
+  items: readonly T[],
+  isExpanded: boolean,
+  initialCount: number
+): readonly T[] {
+  const canExpand = items.length > initialCount;
+  if (isExpanded || !canExpand) {
+    return items;
+  }
+  return items.slice(0, initialCount);
+}
 
 export interface ExpandableListResult<T> {
-  visibleItems: T[];
+  visibleItems: readonly T[];
   isExpanded: boolean;
   canExpand: boolean;
   totalCount: number;
@@ -11,23 +57,31 @@ export interface ExpandableListResult<T> {
   setExpanded: (expanded: boolean) => void;
 }
 
+interface ExpandableListOptions {
+  defaultExpanded?: boolean;
+  onToggle?: ToggleCallback;
+}
+
 export function useExpandableList<T>(
-  items: T[],
-  initialCount: number
+  items: readonly T[],
+  initialCount: number,
+  options: ExpandableListOptions = {}
 ): ExpandableListResult<T> {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { defaultExpanded = false, onToggle } = options;
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const canExpand = items.length > initialCount;
 
   const visibleItems = useMemo(() => {
-    if (isExpanded || !canExpand) {
-      return items;
-    }
-    return items.slice(0, initialCount);
-  }, [items, isExpanded, initialCount, canExpand]);
+    return getExpandableVisibleItems(items, isExpanded, initialCount);
+  }, [items, isExpanded, initialCount]);
 
   const toggleExpanded = () => {
-    setIsExpanded((prev) => !prev);
+    setIsExpanded((prev) => {
+      const next = !prev;
+      onToggle?.(next);
+      return next;
+    });
   };
 
   const setExpanded = (expanded: boolean) => {
