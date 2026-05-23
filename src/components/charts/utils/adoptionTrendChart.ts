@@ -155,7 +155,9 @@ export function createAdoptionTrendChartConfig(config: AdoptionTrendChartConfig)
         labels.cumulativeUsers,
         data.map(d => d.cumulativeUsers),
         {
+          type: 'line',
           borderWidth: 3,
+          borderDash: [5, 3],
           fill: false,
           tension: 0.4,
           pointRadius: 3,
@@ -166,6 +168,7 @@ export function createAdoptionTrendChartConfig(config: AdoptionTrendChartConfig)
         }
       ),
       createLineDataset(chartColors.amber.solid, labels.retentionRate, retentionRates, {
+        type: 'line',
         borderWidth: 2,
         borderDash: [5, 3],
         fill: false,
