@@ -7,10 +7,11 @@ interface ActivityCalendarProps {
   days: UserDayData[];
   reportStartDay: string;
   reportEndDay: string;
+  title?: string;
   onDayClick: (date: string, dayData?: UserDayData) => void;
 }
 
-export default function ActivityCalendar({ days, reportStartDay, reportEndDay, onDayClick }: ActivityCalendarProps) {
+export default function ActivityCalendar({ days, reportStartDay, reportEndDay, title = 'Activity Calendar', onDayClick }: ActivityCalendarProps) {
   const startDate = new Date(reportStartDay);
   const endDate = new Date(reportEndDay);
 
@@ -105,7 +106,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, o
 
   return (
     <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Calendar</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       
       <div className="space-y-2">
         {/* Day headers */}
