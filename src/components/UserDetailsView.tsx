@@ -139,8 +139,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   };
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
-  const totalStandardModelRequests = userDetails.totalStandardModelRequests;
-  const totalPremiumModelRequests = userDetails.totalPremiumModelRequests;
   const daysActive = userSummary.days_active;
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
@@ -513,21 +511,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         </svg>
       ),
     }] : []),
-    {
-      value: totalStandardModelRequests,
-      label: 'Standard Model Requests',
-      accent: 'amber' as const,
-    },
-    {
-      value: totalPremiumModelRequests,
-      label: 'Premium Model Requests',
-      accent: 'rose' as const,
-    },
-    {
-      value: daysActive,
-      label: 'Days Active',
-      accent: 'indigo' as const,
-    },
   ];
 
 
@@ -582,14 +565,20 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       {/* Summary Stats */}
       <DashboardStatsCardGroup
         className="mb-6"
-        columns={{ base: 1, md: hasFlags ? 4 : 3 }}
+        columns={{ base: 1 }}
         gapClassName="gap-4"
         items={summaryCards}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ActivityCalendar days={userDetails.days} reportStartDay={userDetails.reportStartDay} reportEndDay={userDetails.reportEndDay} onDayClick={handleDayClick} />
+          <ActivityCalendar
+            days={userDetails.days}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+            title={`Activity Calendar (${daysActive} active ${daysActive === 1 ? 'day' : 'days'})`}
+            onDayClick={handleDayClick}
+          />
         </div>
         <div className="lg:col-span-1">
           <FeatureAdoptionRadarChart
