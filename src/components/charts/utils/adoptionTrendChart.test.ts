@@ -69,7 +69,18 @@ describe('createAdoptionTrendChartConfig', () => {
 
     expect(chartData.datasets).toHaveLength(4);
     expect(chartData.datasets[0].label).toBe('New Auto Users');
-    expect(chartData.datasets[3].label).toBe('Retention Rate');
+    expect(chartData.datasets[2]).toMatchObject({
+      label: 'Cumulative Users',
+      type: 'line',
+      borderDash: [5, 3],
+      yAxisID: 'y1',
+    });
+    expect(chartData.datasets[3]).toMatchObject({
+      label: 'Retention Rate',
+      type: 'line',
+      borderDash: [5, 3],
+      yAxisID: 'y2',
+    });
     expect(retentionRates).toEqual([33.3, null]);
 
     const tooltipLines = options.plugins.tooltip.callbacks.afterBody([{ dataIndex: 1 }]);
