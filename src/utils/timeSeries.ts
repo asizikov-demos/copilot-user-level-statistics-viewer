@@ -25,7 +25,12 @@ export function padSeriesWithDefaults<T>(
   dataMap: Map<string, T>,
   getDefault: (date: string) => T,
 ): T[] {
-  return dates.map(date => dataMap.get(date) ?? getDefault(date));
+  return dates.map(date => {
+    if (dataMap.has(date)) {
+      return dataMap.get(date) as T;
+    }
+    return getDefault(date);
+  });
 }
 
 /**
@@ -54,8 +59,8 @@ export function padSeriesWithCarryForward<T, C>(
 ): T[] {
   let carried = initialCarried;
   return dates.map(date => {
-    const existing = dataMap.get(date);
-    if (existing !== undefined) {
+    if (dataMap.has(date)) {
+      const existing = dataMap.get(date) as T;
       carried = updateCarried(existing, carried);
       return existing;
     }

@@ -54,33 +54,33 @@ export default function DailyPremiumBaseChart({
       ? modelBreakdownData.dates
       : generateDateRange(reportStartDay, reportEndDay);
 
-    const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
-    const paddedUsage = modelBreakdownData
-      ? null
-      : padSeriesWithDefaults(dates, dailyUsageByDate, date => ({
-          date,
-          pruModels: 0,
-          standardModels: 0,
-          unknownModels: 0,
-          totalPRUs: 0,
-          serviceValue: 0,
-        }));
+    let dailyPremium: number[];
+    let dailyStandard: number[];
+    let dailyUnknown: number[];
 
-    const dailyPremium = modelBreakdownData
-      ? dates.map(d =>
-          modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-        )
-      : paddedUsage!.map(d => d.pruModels);
+    if (modelBreakdownData) {
+      dailyPremium = dates.map(d =>
+        modelBreakdownData.premiumModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+      );
+      dailyStandard = dates.map(d =>
+        modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
+      );
+      dailyUnknown = dates.map(() => 0);
+    } else {
+      const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
+      const paddedUsage = padSeriesWithDefaults(dates, dailyUsageByDate, date => ({
+        date,
+        pruModels: 0,
+        standardModels: 0,
+        unknownModels: 0,
+        totalPRUs: 0,
+        serviceValue: 0,
+      }));
 
-    const dailyStandard = modelBreakdownData
-      ? dates.map(d =>
-          modelBreakdownData.standardModels.reduce((sum, entry) => sum + (entry.dailyData[d] || 0), 0)
-        )
-      : paddedUsage!.map(d => d.standardModels);
-
-    const dailyUnknown = modelBreakdownData
-      ? dates.map(() => 0)
-      : paddedUsage!.map(d => d.unknownModels);
+      dailyPremium = paddedUsage.map(d => d.pruModels);
+      dailyStandard = paddedUsage.map(d => d.standardModels);
+      dailyUnknown = paddedUsage.map(d => d.unknownModels);
+    }
 
     const datasets: DailyPremiumDataset[] = [
       {

@@ -60,6 +60,18 @@ describe('padSeriesWithDefaults', () => {
     });
     expect(seen).toEqual(['2024-03-01', '2024-03-02']);
   });
+
+  it('preserves explicitly stored nullish values', () => {
+    const dates = ['2024-01-01', '2024-01-02', '2024-01-03'];
+    const dataMap = new Map<string, string | null | undefined>([
+      ['2024-01-01', null],
+      ['2024-01-02', undefined],
+    ]);
+
+    const result = padSeriesWithDefaults(dates, dataMap, date => `default-${date}`);
+
+    expect(result).toEqual([null, undefined, 'default-2024-01-03']);
+  });
 });
 
 // ── padSeriesWithCarryForward ─────────────────────────────────────────────────
@@ -152,5 +164,22 @@ describe('padSeriesWithCarryForward', () => {
     expect(result[1].cumulative).toBe(10); // carried from day 1
     expect(result[2].cumulative).toBe(10); // still carried
     expect(result[3].cumulative).toBe(14); // real value
+  });
+
+  it('treats explicitly stored undefined as present when carrying forward', () => {
+    const dates = ['2024-01-01', '2024-01-02'];
+    const dataMap = new Map<string, string | undefined>([
+      ['2024-01-01', undefined],
+    ]);
+
+    const result = padSeriesWithCarryForward<string | undefined, number>(
+      dates,
+      dataMap,
+      0,
+      (entry, previous) => entry === undefined ? previous + 1 : previous,
+      (_date, carried) => `default-${carried}`,
+    );
+
+    expect(result).toEqual([undefined, 'default-1']);
   });
 });
