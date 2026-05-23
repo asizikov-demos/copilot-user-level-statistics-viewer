@@ -6,6 +6,7 @@ import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
 import { formatShortDate, generateDateRange } from '../utils/formatters';
+import { padSeriesWithDefaults } from '../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
@@ -35,22 +36,17 @@ interface UserDetailsViewProps {
 
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
   if (data.length === 0) return [];
+  const dates = generateDateRange(startDay, endDay);
   const dataMap = new Map(data.map(d => [d.date, d]));
-  const start = new Date(startDay + 'T00:00:00Z');
-  const end = new Date(endDay + 'T00:00:00Z');
-  const result: ModeImpactData[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
-    const date = cur.toISOString().split('T')[0];
-    result.push(dataMap.get(date) ?? {
-      date,
-      locAdded: 0,
-      locDeleted: 0,
-      netChange: 0,
-      userCount: 0,
-      totalUniqueUsers: data[0]?.totalUniqueUsers ?? 0,
-    });
-  }
-  return result;
+  const totalUniqueUsers = data[0]?.totalUniqueUsers ?? 0;
+  return padSeriesWithDefaults(dates, dataMap, date => ({
+    date,
+    locAdded: 0,
+    locDeleted: 0,
+    netChange: 0,
+    userCount: 0,
+    totalUniqueUsers,
+  }));
 }
 
 function buildDailyCliSeries<T>(
@@ -59,19 +55,13 @@ function buildDailyCliSeries<T>(
   endDay: string,
   buildItem: (date: string, cli: NonNullable<UserDayData['totals_by_cli']> | undefined) => T,
 ): T[] {
+  const dates = generateDateRange(startDay, endDay);
   const cliMap = new Map<string, NonNullable<UserDayData['totals_by_cli']>>(
     days
       .filter(d => d.totals_by_cli)
       .map(d => [d.day, d.totals_by_cli as NonNullable<UserDayData['totals_by_cli']>]),
   );
-  const start = new Date(startDay + 'T00:00:00Z');
-  const end = new Date(endDay + 'T00:00:00Z');
-  const result: T[] = [];
-  for (const cur = new Date(start); cur <= end; cur.setUTCDate(cur.getUTCDate() + 1)) {
-    const date = cur.toISOString().split('T')[0];
-    result.push(buildItem(date, cliMap.get(date)));
-  }
-  return result;
+  return dates.map(date => buildItem(date, cliMap.get(date)));
 }
 
 export default function UserDetailsView({ userDetails, userSummary, userLogin, userId }: UserDetailsViewProps) {

@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
 import { createDualAxisChartOptions } from './utils/chartOptions';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import { padSeriesWithCarryForward } from '../../utils/timeSeries';
 import { calculateTotal, calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import { chartColors } from './utils/chartColors';
 import { computeRetentionRates, computeAverageRetention } from './utils/chartStyles';
@@ -31,22 +32,19 @@ export default function AdoptionTrendChart({ data, reportStartDay, reportEndDay 
   const paddedData = useMemo(() => {
     const allDays = generateDateRange(reportStartDay, reportEndDay);
     const dataMap = new Map(data.map(d => [d.date, d]));
-    let lastCumulative = 0;
-
-    return allDays.map(date => {
-      const existing = dataMap.get(date);
-      if (existing) {
-        lastCumulative = existing.cumulativeUsers;
-        return existing;
-      }
-      return {
+    return padSeriesWithCarryForward(
+      allDays,
+      dataMap,
+      0,
+      (entry) => entry.cumulativeUsers,
+      (date, lastCumulative) => ({
         date,
         newUsers: 0,
         returningUsers: 0,
         totalActiveUsers: 0,
         cumulativeUsers: lastCumulative,
-      };
-    });
+      }),
+    );
   }, [data, reportStartDay, reportEndDay]);
 
   const paddedRetentionRates = computeRetentionRates(paddedData);
