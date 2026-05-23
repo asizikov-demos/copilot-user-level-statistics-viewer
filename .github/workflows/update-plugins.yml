@@ -30,8 +30,6 @@ jobs:
 
       - name: Update plugin versions
         run: npm run update:plugins
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Validate updater tests
         run: npm run test:run -- data-utils/update-plugin-versions.test.ts
@@ -58,7 +56,7 @@ jobs:
 
             - **JetBrains**: rolling latest builds from the JetBrains plugin repository.
             - **VS Code** (`vscode.json`): maintains a rolling window of stable releases with
-              release dates (source: `microsoft/vscode-copilot-chat` GitHub releases). Updated
+              release dates (source: VS Code Marketplace `GitHub.copilot-chat`). Updated
               only when the stable release list changes. Preview builds do not trigger a change
               to this file.
 
