@@ -3,7 +3,8 @@ description: Weekly and manual code duplication audit for the user-level metrics
 
 on:
   workflow_dispatch:
-  schedule: weekly on friday
+  schedule:
+    - cron: "20 12 * * 5"
 
 permissions:
   contents: read
