@@ -16,7 +16,9 @@ concurrency:
   cancel-in-progress: false
 
 strict: true
-engine: copilot
+engine:
+  id: copilot
+  model: gpt-5.4
 network: defaults
 
 tools:
