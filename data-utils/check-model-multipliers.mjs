@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-function normalize(name) {
+export function normalize(name) {
   return String(name ?? '').trim().toLowerCase();
 }
 
-function toConfigKey(displayName) {
+export function toConfigKey(displayName) {
   const s = String(displayName ?? '').trim();
 
   if (/^GPT-/i.test(s)) {
@@ -163,4 +164,6 @@ function main() {
   if (!ok) process.exit(2);
 }
 
-main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}
