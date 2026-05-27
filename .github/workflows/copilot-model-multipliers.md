@@ -67,6 +67,11 @@ Use `.cache/model-multipliers-table.html` and `src/domain/modelConfig.ts`.
 2. Convert `displayName` to a `KNOWN_MODELS` key using these normalization rules:
    - trim + lowercase as base normalization
    - `GPT-*`, `Grok *`, `Raptor *`: lowercase and replace spaces with `-`
+   - `Claude (Haiku|Sonnet|Opus) <version> (fast mode)` with optional `(preview)`:
+     - if version is an integer, append `.0`
+     - add `-fast-mode`, and append `-preview` when `(preview)` is present
+     - Opus key: `claude-opus-<version>-fast-mode[-preview]`
+     - Haiku/Sonnet keys: `claude-<version>-<family>-fast-mode[-preview]`
    - `Claude (Haiku|Sonnet|Opus) <version>`:
      - if version is an integer, append `.0`
      - Opus key: `claude-opus-<version>`
