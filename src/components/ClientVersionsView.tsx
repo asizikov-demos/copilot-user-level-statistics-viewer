@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { MetricTileGroup, MetricTileIcon, StatsGrid, ViewPanel } from './ui';
 import ExpandableTableSection from './ui/ExpandableTableSection';
+import ExpandableInlineList from './ui/ExpandableInlineList';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
@@ -25,9 +26,6 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
     currentPreviewMinor,
     updatedAt: vsUpdatedAt,
   } = usePluginVersions('vscode');
-
-  const [expandedUsernames, setExpandedUsernames] = useState<Set<string>>(new Set());
-  const [expandedVsUsernames, setExpandedVsUsernames] = useState<Set<string>>(new Set());
 
   const pluginVersionAnalysis = pluginVersionData.jetbrains;
   const totalUniqueIntellijUsers = pluginVersionData.totalUniqueIntellijUsers;
@@ -200,46 +198,15 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
   const renderUsernames = (
     scope: 'jetbrains' | 'vscode',
     pluginVersion: string,
-    usernames: string[],
-    expandedSet: Set<string>,
-    toggle: (version: string) => void
+    usernames: string[]
   ) => {
-    if (usernames.length <= 3) {
-      return <span className="text-xs text-gray-600">{usernames.join(', ')}</span>;
-    }
-
-    const isExpanded = expandedSet.has(pluginVersion);
-    const shown = isExpanded ? usernames.join(', ') : `${usernames.slice(0, 3).join(', ')}...`;
-    const usernamesContainerId = createUsernamesContainerId(scope, pluginVersion);
-
     return (
-      <div>
-        <span id={usernamesContainerId} className="text-xs text-gray-600">
-          {shown}
-        </span>
-        <button
-          type="button"
-          onClick={() => toggle(pluginVersion)}
-          className="ml-2 text-xs text-blue-600 hover:text-blue-800 underline"
-          aria-expanded={isExpanded}
-          aria-controls={usernamesContainerId}
-        >
-          {isExpanded ? 'Show Less' : `Show All ${usernames.length}`}
-        </button>
-      </div>
+      <ExpandableInlineList
+        items={usernames}
+        initialCount={3}
+        contentId={createUsernamesContainerId(scope, pluginVersion)}
+      />
     );
-  };
-
-  const toggleExpanded = (setState: React.Dispatch<React.SetStateAction<Set<string>>>, version: string) => {
-    setState((prev) => {
-      const next = new Set(prev);
-      if (next.has(version)) {
-        next.delete(version);
-      } else {
-        next.add(version);
-      }
-      return next;
-    });
   };
 
   const outdatedPluginsColumns: TableColumn<typeof outdatedPlugins[number]>[] = [
@@ -272,7 +239,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
       header: 'Usernames',
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
-      renderCell: (plugin) => renderUsernames('jetbrains', plugin.version, plugin.usernames, expandedUsernames, (version) => toggleExpanded(setExpandedUsernames, version)),
+      renderCell: (plugin) => renderUsernames('jetbrains', plugin.version, plugin.usernames),
     },
   ];
 
@@ -323,7 +290,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
       header: 'Usernames',
       headerClassName: `${tableHeaderClass} text-red-600`,
       className: usernameCellClass,
-      renderCell: (item) => renderUsernames('vscode', item.version, item.usernames, expandedVsUsernames, (version) => toggleExpanded(setExpandedVsUsernames, version)),
+      renderCell: (item) => renderUsernames('vscode', item.version, item.usernames),
     },
   ];
 
