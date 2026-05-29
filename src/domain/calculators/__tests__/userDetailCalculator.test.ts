@@ -557,4 +557,267 @@ describe('userDetailCalculator', () => {
       expect(result!.reportEndDay).toBe('2024-01-31');
     });
   });
+
+  describe('Feature aggregate accumulation', () => {
+    it('should accumulate all metric fields for the same feature across multiple days', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-10',
+        totals_by_feature: [{
+          feature: 'code_completion',
+          user_initiated_interaction_count: 10,
+          code_generation_activity_count: 8,
+          code_acceptance_activity_count: 6,
+          loc_added_sum: 100,
+          loc_deleted_sum: 20,
+          loc_suggested_to_add_sum: 120,
+          loc_suggested_to_delete_sum: 25,
+        }],
+      }));
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-20',
+        totals_by_feature: [{
+          feature: 'code_completion',
+          user_initiated_interaction_count: 5,
+          code_generation_activity_count: 4,
+          code_acceptance_activity_count: 3,
+          loc_added_sum: 50,
+          loc_deleted_sum: 10,
+          loc_suggested_to_add_sum: 60,
+          loc_suggested_to_delete_sum: 15,
+        }],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.featureAggregates).toHaveLength(1);
+      const fa = result!.featureAggregates[0];
+      expect(fa.feature).toBe('code_completion');
+      expect(fa.user_initiated_interaction_count).toBe(15);
+      expect(fa.code_generation_activity_count).toBe(12);
+      expect(fa.code_acceptance_activity_count).toBe(9);
+      expect(fa.loc_added_sum).toBe(150);
+      expect(fa.loc_deleted_sum).toBe(30);
+      expect(fa.loc_suggested_to_add_sum).toBe(180);
+      expect(fa.loc_suggested_to_delete_sum).toBe(40);
+    });
+
+    it('should keep separate entries for different features', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_feature: [
+          {
+            feature: 'code_completion',
+            user_initiated_interaction_count: 10,
+            code_generation_activity_count: 8,
+            code_acceptance_activity_count: 6,
+            loc_added_sum: 100,
+            loc_deleted_sum: 20,
+            loc_suggested_to_add_sum: 120,
+            loc_suggested_to_delete_sum: 25,
+          },
+          {
+            feature: 'copilot_chat',
+            user_initiated_interaction_count: 5,
+            code_generation_activity_count: 3,
+            code_acceptance_activity_count: 2,
+            loc_added_sum: 40,
+            loc_deleted_sum: 8,
+            loc_suggested_to_add_sum: 50,
+            loc_suggested_to_delete_sum: 10,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.featureAggregates).toHaveLength(2);
+      const completionAgg = result!.featureAggregates.find(f => f.feature === 'code_completion')!;
+      const chatAgg = result!.featureAggregates.find(f => f.feature === 'copilot_chat')!;
+      expect(completionAgg.user_initiated_interaction_count).toBe(10);
+      expect(chatAgg.user_initiated_interaction_count).toBe(5);
+    });
+  });
+
+  describe('Language-feature aggregate accumulation', () => {
+    it('should accumulate all metric fields for the same language-feature key across multiple days', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-10',
+        totals_by_language_feature: [{
+          language: 'typescript',
+          feature: 'code_completion',
+          code_generation_activity_count: 20,
+          code_acceptance_activity_count: 15,
+          loc_added_sum: 200,
+          loc_deleted_sum: 40,
+          loc_suggested_to_add_sum: 250,
+          loc_suggested_to_delete_sum: 50,
+        }],
+      }));
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-20',
+        totals_by_language_feature: [{
+          language: 'typescript',
+          feature: 'code_completion',
+          code_generation_activity_count: 10,
+          code_acceptance_activity_count: 8,
+          loc_added_sum: 100,
+          loc_deleted_sum: 20,
+          loc_suggested_to_add_sum: 120,
+          loc_suggested_to_delete_sum: 25,
+        }],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.languageFeatureAggregates).toHaveLength(1);
+      const lfa = result!.languageFeatureAggregates[0];
+      expect(lfa.language).toBe('typescript');
+      expect(lfa.feature).toBe('code_completion');
+      expect(lfa.code_generation_activity_count).toBe(30);
+      expect(lfa.code_acceptance_activity_count).toBe(23);
+      expect(lfa.loc_added_sum).toBe(300);
+      expect(lfa.loc_deleted_sum).toBe(60);
+      expect(lfa.loc_suggested_to_add_sum).toBe(370);
+      expect(lfa.loc_suggested_to_delete_sum).toBe(75);
+    });
+
+    it('should keep separate entries for different language-feature combinations', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_language_feature: [
+          {
+            language: 'typescript',
+            feature: 'code_completion',
+            code_generation_activity_count: 10,
+            code_acceptance_activity_count: 8,
+            loc_added_sum: 100,
+            loc_deleted_sum: 20,
+            loc_suggested_to_add_sum: 120,
+            loc_suggested_to_delete_sum: 25,
+          },
+          {
+            language: 'python',
+            feature: 'code_completion',
+            code_generation_activity_count: 5,
+            code_acceptance_activity_count: 4,
+            loc_added_sum: 50,
+            loc_deleted_sum: 10,
+            loc_suggested_to_add_sum: 60,
+            loc_suggested_to_delete_sum: 12,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.languageFeatureAggregates).toHaveLength(2);
+      const tsAgg = result!.languageFeatureAggregates.find(lf => lf.language === 'typescript')!;
+      const pyAgg = result!.languageFeatureAggregates.find(lf => lf.language === 'python')!;
+      expect(tsAgg.code_generation_activity_count).toBe(10);
+      expect(pyAgg.code_generation_activity_count).toBe(5);
+    });
+  });
+
+  describe('Model-feature aggregate accumulation', () => {
+    it('should accumulate all metric fields for the same model-feature key across multiple days', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-10',
+        totals_by_model_feature: [{
+          model: 'gpt-4o',
+          feature: 'code_completion',
+          user_initiated_interaction_count: 12,
+          code_generation_activity_count: 10,
+          code_acceptance_activity_count: 8,
+          loc_added_sum: 150,
+          loc_deleted_sum: 30,
+          loc_suggested_to_add_sum: 180,
+          loc_suggested_to_delete_sum: 35,
+        }],
+      }));
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-20',
+        totals_by_model_feature: [{
+          model: 'gpt-4o',
+          feature: 'code_completion',
+          user_initiated_interaction_count: 8,
+          code_generation_activity_count: 6,
+          code_acceptance_activity_count: 5,
+          loc_added_sum: 80,
+          loc_deleted_sum: 15,
+          loc_suggested_to_add_sum: 90,
+          loc_suggested_to_delete_sum: 18,
+        }],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.modelFeatureAggregates).toHaveLength(1);
+      const mfa = result!.modelFeatureAggregates[0];
+      expect(mfa.model).toBe('gpt-4o');
+      expect(mfa.feature).toBe('code_completion');
+      expect(mfa.user_initiated_interaction_count).toBe(20);
+      expect(mfa.code_generation_activity_count).toBe(16);
+      expect(mfa.code_acceptance_activity_count).toBe(13);
+      expect(mfa.loc_added_sum).toBe(230);
+      expect(mfa.loc_deleted_sum).toBe(45);
+      expect(mfa.loc_suggested_to_add_sum).toBe(270);
+      expect(mfa.loc_suggested_to_delete_sum).toBe(53);
+    });
+
+    it('should keep separate entries for different model-feature combinations', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_model_feature: [
+          {
+            model: 'gpt-4o',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 10,
+            code_generation_activity_count: 8,
+            code_acceptance_activity_count: 6,
+            loc_added_sum: 100,
+            loc_deleted_sum: 20,
+            loc_suggested_to_add_sum: 120,
+            loc_suggested_to_delete_sum: 25,
+          },
+          {
+            model: 'gpt-4o',
+            feature: 'copilot_chat',
+            user_initiated_interaction_count: 5,
+            code_generation_activity_count: 3,
+            code_acceptance_activity_count: 2,
+            loc_added_sum: 40,
+            loc_deleted_sum: 8,
+            loc_suggested_to_add_sum: 50,
+            loc_suggested_to_delete_sum: 10,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.modelFeatureAggregates).toHaveLength(2);
+      const completionAgg = result!.modelFeatureAggregates.find(mf => mf.feature === 'code_completion')!;
+      const chatAgg = result!.modelFeatureAggregates.find(mf => mf.feature === 'copilot_chat')!;
+      expect(completionAgg.user_initiated_interaction_count).toBe(10);
+      expect(chatAgg.user_initiated_interaction_count).toBe(5);
+    });
+  });
 });
