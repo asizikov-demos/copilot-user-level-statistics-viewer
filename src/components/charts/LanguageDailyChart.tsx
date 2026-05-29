@@ -5,6 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
+import { createBarDataset } from './utils/chartStyles';
 import { formatShortDate } from '../../utils/formatters';
 import type { DailyLanguageChartData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
@@ -39,14 +40,7 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
 
     const datasets = sortedLanguages.map((language, index) => {
       const color = LANGUAGE_COLORS[index % LANGUAGE_COLORS.length];
-      return {
-        label: language,
-        data: chartData.dates.map(d => chartData.data[d]?.[language] || 0),
-        backgroundColor: color,
-        borderColor: color,
-        borderWidth: 1,
-        stack: 'languages',
-      };
+      return createBarDataset(color, language, chartData.dates.map(d => chartData.data[d]?.[language] || 0), { stack: 'languages' });
     });
 
     const total = sortedLanguages.reduce((sum, lang) => sum + (chartData.totals[lang] || 0), 0);

@@ -5,6 +5,7 @@ import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
+import { createBarDataset } from './utils/chartStyles';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import type { IDEStatsData } from '../../types/metrics';
@@ -27,20 +28,8 @@ export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
   const data = {
     labels,
     datasets: [
-      {
-        label: 'Also uses CLI',
-        data: cliOverlap,
-        backgroundColor: 'rgba(16, 185, 129, 0.8)',
-        borderColor: 'rgb(16, 185, 129)',
-        borderWidth: 1,
-      },
-      {
-        label: 'IDE only',
-        data: ideOnly,
-        backgroundColor: 'rgba(209, 213, 219, 0.8)',
-        borderColor: 'rgb(156, 163, 175)',
-        borderWidth: 1,
-      },
+      createBarDataset('rgb(16, 185, 129)', 'Also uses CLI', cliOverlap, { backgroundColor: 'rgba(16, 185, 129, 0.8)' }),
+      createBarDataset('rgb(156, 163, 175)', 'IDE only', ideOnly, { backgroundColor: 'rgba(209, 213, 219, 0.8)' }),
     ],
   };
 

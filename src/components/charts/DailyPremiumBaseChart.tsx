@@ -5,6 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
+import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import { padSeriesWithDefaults } from '../../utils/timeSeries';
@@ -32,15 +33,6 @@ interface DailyModelUsageChartProps {
 }
 
 type DailyPremiumBaseChartProps = ModelBreakdownChartProps | DailyModelUsageChartProps;
-
-type DailyPremiumDataset = {
-  label: string;
-  data: number[];
-  backgroundColor: string;
-  borderColor: string;
-  borderWidth: number;
-  stack: string;
-};
 
 export default function DailyPremiumBaseChart({
   modelBreakdownData,
@@ -82,34 +74,13 @@ export default function DailyPremiumBaseChart({
       dailyUnknown = paddedUsage.map(d => d.unknownModels);
     }
 
-    const datasets: DailyPremiumDataset[] = [
-      {
-        label: 'Standard',
-        data: dailyStandard,
-        backgroundColor: chartColors.blue.solid,
-        borderColor: chartColors.blue.solid,
-        borderWidth: 1,
-        stack: 'premium-base',
-      },
-      {
-        label: 'Premium',
-        data: dailyPremium,
-        backgroundColor: chartColors.purple.solid,
-        borderColor: chartColors.purple.solid,
-        borderWidth: 1,
-        stack: 'premium-base',
-      },
+    const datasets = [
+      createBarDataset(chartColors.blue.solid, 'Standard', dailyStandard, { stack: 'premium-base' }),
+      createBarDataset(chartColors.purple.solid, 'Premium', dailyPremium, { stack: 'premium-base' }),
     ];
 
     if (dailyUnknown.some(value => value > 0)) {
-      datasets.push({
-        label: 'Unknown',
-        data: dailyUnknown,
-        backgroundColor: chartColors.gray.solid,
-        borderColor: chartColors.gray.solid,
-        borderWidth: 1,
-        stack: 'premium-base',
-      });
+      datasets.push(createBarDataset(chartColors.gray.solid, 'Unknown', dailyUnknown, { stack: 'premium-base' }));
     }
 
     return {
