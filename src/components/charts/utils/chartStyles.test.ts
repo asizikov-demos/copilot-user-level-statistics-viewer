@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeRetentionRates, computeAverageRetention } from './chartStyles';
+import { computeRetentionRates, computeAverageRetention, createBarDataset, barDatasetDefaults } from './chartStyles';
 
 describe('computeRetentionRates', () => {
   it('returns the percentage of returning users out of total active', () => {
@@ -72,5 +72,33 @@ describe('computeAverageRetention', () => {
     // 2/3 = 66.666... → 66.7
     const data = [{ returningUsers: 2, totalActiveUsers: 3 }];
     expect(computeAverageRetention(data)).toBe(66.7);
+  });
+});
+
+describe('createBarDataset', () => {
+  it('sets label, data, backgroundColor and borderColor from the color argument', () => {
+    const result = createBarDataset('hsl(210, 70%, 55%)', 'My Label', [1, 2, 3]);
+    expect(result.label).toBe('My Label');
+    expect(result.data).toEqual([1, 2, 3]);
+    expect(result.backgroundColor).toBe('hsl(210, 70%, 55%)');
+    expect(result.borderColor).toBe('hsl(210, 70%, 55%)');
+  });
+
+  it('applies barDatasetDefaults (borderWidth: 1)', () => {
+    const result = createBarDataset('rgb(0,0,0)', 'L', []);
+    expect(result.borderWidth).toBe(barDatasetDefaults.borderWidth);
+  });
+
+  it('options override default properties', () => {
+    const result = createBarDataset('rgb(0,0,0)', 'L', [5], { backgroundColor: 'rgba(0,0,0,0.5)', stack: 'my-stack' });
+    expect(result.backgroundColor).toBe('rgba(0,0,0,0.5)');
+    expect((result as Record<string, unknown>).stack).toBe('my-stack');
+    expect(result.borderColor).toBe('rgb(0,0,0)');
+  });
+
+  it('passes through extra options', () => {
+    const result = createBarDataset('red', 'R', [], { stack: 'languages', borderWidth: 2 });
+    expect((result as Record<string, unknown>).stack).toBe('languages');
+    expect(result.borderWidth).toBe(2);
   });
 });

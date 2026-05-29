@@ -5,6 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
+import { createBarDataset } from './utils/chartStyles';
 import { chartColors, getSequentialColor } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
@@ -60,14 +61,9 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
 
     const datasets = sortedModels.map((entry) => {
       const color = getModelColor(entry.model);
-      return {
-        label: entry.model,
-        data: dates.map(d => entry.dailyData[d] || 0),
-        backgroundColor: color,
-        borderColor: color,
-        borderWidth: 1,
+      return createBarDataset(color, entry.model, dates.map(d => entry.dailyData[d] || 0), {
         stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : isPremium ? 'premium-models' : 'standard-models'
-      };
+      });
     });
 
     return {

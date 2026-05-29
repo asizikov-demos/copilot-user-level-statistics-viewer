@@ -4,6 +4,7 @@ import { Bar } from 'react-chartjs-2';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
+import { createBarDataset } from './utils/chartStyles';
 import { isCliFeature } from '../../domain/featureCategories';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
@@ -174,13 +175,8 @@ export default function ClientActivityChart({
         return ideData?.user_initiated_interaction_count || 0;
       });
 
-      return {
-        label: formatIDEName(ide),
-        data: data,
-        backgroundColor: IDE_COLORS[ide] || FALLBACK_COLORS[index % FALLBACK_COLORS.length],
-        borderColor: IDE_COLORS[ide] || FALLBACK_COLORS[index % FALLBACK_COLORS.length],
-        borderWidth: 1,
-      };
+      const color = IDE_COLORS[ide] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+      return createBarDataset(color, formatIDEName(ide), data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     // Add CLI dataset if any day has CLI data
@@ -189,13 +185,7 @@ export default function ClientActivityChart({
       const cliData = allDays.map(dayStr => {
         return cliTotalsByDay.get(dayStr)?.interactionCount ?? 0;
       });
-      datasets.push({
-        label: 'Copilot CLI',
-        data: cliData,
-        backgroundColor: IDE_COLORS['copilot_cli'],
-        borderColor: IDE_COLORS['copilot_cli'],
-        borderWidth: 1,
-      });
+      datasets.push(createBarDataset(IDE_COLORS['copilot_cli'], 'Copilot CLI', cliData));
     }
 
     return {
