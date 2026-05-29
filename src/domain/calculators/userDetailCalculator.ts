@@ -111,6 +111,61 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   return state;
 }
 
+// Shared metric accumulation helpers
+
+/** Fields shared by all four aggregate types: code-generation, acceptance, and LOC. */
+interface AggMetricTotals {
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+  loc_added_sum: number;
+  loc_deleted_sum: number;
+  loc_suggested_to_add_sum: number;
+  loc_suggested_to_delete_sum: number;
+}
+
+/** Extends AggMetricTotals with user-initiated interaction count (used by Feature, IDE, ModelFeature). */
+interface InteractionAggMetricTotals extends AggMetricTotals {
+  user_initiated_interaction_count: number;
+}
+
+/** Accumulates the 6 shared code-gen/acceptance/LOC fields in-place on `existing`. */
+function accumulateAggMetricTotals(existing: AggMetricTotals, incoming: AggMetricTotals): void {
+  existing.code_generation_activity_count += incoming.code_generation_activity_count;
+  existing.code_acceptance_activity_count += incoming.code_acceptance_activity_count;
+  existing.loc_added_sum += incoming.loc_added_sum;
+  existing.loc_deleted_sum += incoming.loc_deleted_sum;
+  existing.loc_suggested_to_add_sum += incoming.loc_suggested_to_add_sum;
+  existing.loc_suggested_to_delete_sum += incoming.loc_suggested_to_delete_sum;
+}
+
+/** Accumulates user-interaction count plus the 6 shared code-gen/acceptance/LOC fields in-place on `existing`. */
+function accumulateInteractionAggMetricTotals(
+  existing: InteractionAggMetricTotals,
+  incoming: InteractionAggMetricTotals
+): void {
+  existing.user_initiated_interaction_count += incoming.user_initiated_interaction_count;
+  accumulateAggMetricTotals(existing, incoming);
+}
+
+/**
+ * Upserts an aggregate entry into a keyed map.
+ * If the key exists, calls `accumulate` to merge `entry` into the existing record.
+ * If not, inserts a shallow copy of `entry` as a new record.
+ */
+function upsertAggMapEntry<T extends object>(
+  map: Map<string, T>,
+  key: string,
+  entry: T,
+  accumulate: (existing: T, incoming: T) => void
+): void {
+  const existing = map.get(key);
+  if (existing) {
+    accumulate(existing, entry);
+  } else {
+    map.set(key, { ...entry } as T);
+  }
+}
+
 export function accumulateUserDetail(
   accumulator: UserDetailAccumulator,
   metric: CopilotMetrics
@@ -129,42 +184,21 @@ export function accumulateUserDetail(
   }
 
   for (const f of metric.totals_by_feature) {
-    const existing = state.featureMap.get(f.feature);
-    if (existing) {
-      existing.user_initiated_interaction_count += f.user_initiated_interaction_count;
-      existing.code_generation_activity_count += f.code_generation_activity_count;
-      existing.code_acceptance_activity_count += f.code_acceptance_activity_count;
-      existing.loc_added_sum += f.loc_added_sum;
-      existing.loc_deleted_sum += f.loc_deleted_sum;
-      existing.loc_suggested_to_add_sum += f.loc_suggested_to_add_sum;
-      existing.loc_suggested_to_delete_sum += f.loc_suggested_to_delete_sum;
-    } else {
-      state.featureMap.set(f.feature, { ...f });
-    }
+    upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
   }
 
   for (const ide of metric.totals_by_ide) {
-    const existing = state.ideMap.get(ide.ide);
-    if (existing) {
-      existing.user_initiated_interaction_count += ide.user_initiated_interaction_count;
-      existing.code_generation_activity_count += ide.code_generation_activity_count;
-      existing.code_acceptance_activity_count += ide.code_acceptance_activity_count;
-      existing.loc_added_sum += ide.loc_added_sum;
-      existing.loc_deleted_sum += ide.loc_deleted_sum;
-      existing.loc_suggested_to_add_sum += ide.loc_suggested_to_add_sum;
-      existing.loc_suggested_to_delete_sum += ide.loc_suggested_to_delete_sum;
-    } else {
-      state.ideMap.set(ide.ide, {
-        ide: ide.ide,
-        user_initiated_interaction_count: ide.user_initiated_interaction_count,
-        code_generation_activity_count: ide.code_generation_activity_count,
-        code_acceptance_activity_count: ide.code_acceptance_activity_count,
-        loc_added_sum: ide.loc_added_sum,
-        loc_deleted_sum: ide.loc_deleted_sum,
-        loc_suggested_to_add_sum: ide.loc_suggested_to_add_sum,
-        loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
-      });
-    }
+    const ideEntry: IDEAgg = {
+      ide: ide.ide,
+      user_initiated_interaction_count: ide.user_initiated_interaction_count,
+      code_generation_activity_count: ide.code_generation_activity_count,
+      code_acceptance_activity_count: ide.code_acceptance_activity_count,
+      loc_added_sum: ide.loc_added_sum,
+      loc_deleted_sum: ide.loc_deleted_sum,
+      loc_suggested_to_add_sum: ide.loc_suggested_to_add_sum,
+      loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
+    };
+    upsertAggMapEntry(state.ideMap, ide.ide, ideEntry, accumulateInteractionAggMetricTotals);
 
     if (ide.last_known_plugin_version) {
       const pv = ide.last_known_plugin_version;
@@ -186,34 +220,11 @@ export function accumulateUserDetail(
   }
 
   for (const lf of metric.totals_by_language_feature) {
-    const key = `${lf.language}-${lf.feature}`;
-    const existing = state.langFeatureMap.get(key);
-    if (existing) {
-      existing.code_generation_activity_count += lf.code_generation_activity_count;
-      existing.code_acceptance_activity_count += lf.code_acceptance_activity_count;
-      existing.loc_added_sum += lf.loc_added_sum;
-      existing.loc_deleted_sum += lf.loc_deleted_sum;
-      existing.loc_suggested_to_add_sum += lf.loc_suggested_to_add_sum;
-      existing.loc_suggested_to_delete_sum += lf.loc_suggested_to_delete_sum;
-    } else {
-      state.langFeatureMap.set(key, { ...lf });
-    }
+    upsertAggMapEntry(state.langFeatureMap, `${lf.language}-${lf.feature}`, lf, accumulateAggMetricTotals);
   }
 
   for (const mf of metric.totals_by_model_feature) {
-    const key = `${mf.model}-${mf.feature}`;
-    const existing = state.modelFeatureMap.get(key);
-    if (existing) {
-      existing.user_initiated_interaction_count += mf.user_initiated_interaction_count;
-      existing.code_generation_activity_count += mf.code_generation_activity_count;
-      existing.code_acceptance_activity_count += mf.code_acceptance_activity_count;
-      existing.loc_added_sum += mf.loc_added_sum;
-      existing.loc_deleted_sum += mf.loc_deleted_sum;
-      existing.loc_suggested_to_add_sum += mf.loc_suggested_to_add_sum;
-      existing.loc_suggested_to_delete_sum += mf.loc_suggested_to_delete_sum;
-    } else {
-      state.modelFeatureMap.set(key, { ...mf });
-    }
+    upsertAggMapEntry(state.modelFeatureMap, `${mf.model}-${mf.feature}`, mf, accumulateInteractionAggMetricTotals);
   }
 
   state.days.push({
