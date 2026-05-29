@@ -8,6 +8,7 @@ import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors, getSequentialColor } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
+import { sortBySelector } from '../../utils/sorting';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 import InsightsCard from '../ui/InsightsCard';
@@ -27,7 +28,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
   const isCli = variant === 'cli';
 
   const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
-    const sortedModels = [...modelEntries].sort((a, b) => b.total - a.total);
+    const sortedModels = sortBySelector(modelEntries, e => e.total, 'desc');
     const modelOrder = sortedModels.map(e => e.model);
     const modelTotals: Record<string, number> = {};
     for (const entry of sortedModels) {

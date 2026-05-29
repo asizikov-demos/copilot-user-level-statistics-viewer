@@ -3,11 +3,12 @@
 import { LanguageStats } from '../domain/calculators/metricCalculators';
 import { useMemo, useState } from 'react';
 import ExpandableTableSection from './ui/ExpandableTableSection';
-import MetricsTable, { SortDirection, SortState as TableSortState, TableColumn } from './ui/MetricsTable';
+import MetricsTable, { SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types/metrics';
 import LanguageDailyChart from './charts/LanguageDailyChart';
 import { translateFeature } from '../domain/featureTranslations';
+import { sortBySelector, rankBySelector } from '../utils/sorting';
 
 interface LanguagesViewProps {
   languages: LanguageStats[];
@@ -17,26 +18,6 @@ interface LanguagesViewProps {
 }
 
 type SortField = 'language' | 'totalGenerations' | 'totalAcceptances' | 'totalEngagements' | 'uniqueUsers' | 'locAdded' | 'locDeleted' | 'locSuggestedToAdd' | 'locSuggestedToDelete';
-
-const compareSortableValues = (a: string | number, b: string | number, direction: SortDirection) => {
-  if (typeof a === 'string' && typeof b === 'string') {
-    const result = a.localeCompare(b);
-    return direction === 'asc' ? result : -result;
-  }
-
-  const aNumber = Number(a);
-  const bNumber = Number(b);
-
-  if (aNumber === bNumber) {
-    return 0;
-  }
-
-  if (direction === 'asc') {
-    return aNumber < bNumber ? -1 : 1;
-  }
-
-  return aNumber > bNumber ? -1 : 1;
-};
 
 const formatAcceptanceRate = (lang: LanguageStats) => {
   return lang.totalGenerations > 0
@@ -68,13 +49,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
   const sortedLanguages = useMemo(() => {
     const field = (tableSortState.field as SortField) || 'totalEngagements';
     const selector = sortSelectors[field];
-    const direction = tableSortState.direction;
-
-    return [...languages].sort((a, b) => {
-      const aVal = selector(a);
-      const bVal = selector(b);
-      return compareSortableValues(aVal, bVal, direction);
-    });
+    return sortBySelector(languages, selector, tableSortState.direction);
   }, [languages, sortSelectors, tableSortState]);
 
   const handleTableSortChange = (next: TableSortState) => {
@@ -120,43 +95,34 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
   ];
 
   const languagesByGenerations = useMemo(
-    () => [...languages].sort((a, b) => b.totalGenerations - a.totalGenerations),
+    () => sortBySelector(languages, lang => lang.totalGenerations, 'desc'),
     [languages],
   );
 
   const languagesByUsers = useMemo(
-    () => [...languages].sort((a, b) => b.uniqueUsers - a.uniqueUsers),
+    () => sortBySelector(languages, lang => lang.uniqueUsers, 'desc'),
     [languages],
   );
 
   const languagesByNetLocImpact = useMemo(
-    () => [...languages].sort((a, b) => (b.locAdded - b.locDeleted) - (a.locAdded - a.locDeleted)),
+    () => sortBySelector(languages, lang => lang.locAdded - lang.locDeleted, 'desc'),
     [languages],
   );
 
-  const generationRankMap = useMemo(() => {
-    const map = new Map<string, number>();
-    languagesByGenerations.forEach((lang, index) => {
-      map.set(lang.language, index + 1);
-    });
-    return map;
-  }, [languagesByGenerations]);
+  const generationRankMap = useMemo(
+    () => rankBySelector(languages, lang => lang.language, lang => lang.totalGenerations),
+    [languages],
+  );
 
-  const userRankMap = useMemo(() => {
-    const map = new Map<string, number>();
-    languagesByUsers.forEach((lang, index) => {
-      map.set(lang.language, index + 1);
-    });
-    return map;
-  }, [languagesByUsers]);
+  const userRankMap = useMemo(
+    () => rankBySelector(languages, lang => lang.language, lang => lang.uniqueUsers),
+    [languages],
+  );
 
-  const netImpactRankMap = useMemo(() => {
-    const map = new Map<string, number>();
-    languagesByNetLocImpact.forEach((lang, index) => {
-      map.set(lang.language, index + 1);
-    });
-    return map;
-  }, [languagesByNetLocImpact]);
+  const netImpactRankMap = useMemo(
+    () => rankBySelector(languages, lang => lang.language, lang => lang.locAdded - lang.locDeleted),
+    [languages],
+  );
 
   const narrowHeaderClassName = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const narrowHeaderRightClassName = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';

@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { formatShortDate } from '../../utils/formatters';
+import { takeTopBySelector } from '../../utils/sorting';
 import type { DailyLanguageChartData } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
 
@@ -34,9 +35,11 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
   const isGenerations = variant === 'generations';
 
   const { labels, datasets, total } = useMemo(() => {
-    const sortedLanguages = [...chartData.languages]
-      .sort((a, b) => (chartData.totals[b] || 0) - (chartData.totals[a] || 0))
-      .slice(0, 10);
+    const sortedLanguages = takeTopBySelector(
+      chartData.languages,
+      lang => chartData.totals[lang] || 0,
+      10,
+    );
 
     const datasets = sortedLanguages.map((language, index) => {
       const color = LANGUAGE_COLORS[index % LANGUAGE_COLORS.length];

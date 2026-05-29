@@ -6,6 +6,7 @@ import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
+import { sortBySelector } from '../../utils/sorting';
 import type { IDEStatsData } from '../../types/metrics';
 
 registerChartJS();
@@ -36,7 +37,7 @@ const FALLBACK_COLORS = [
 ];
 
 export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistributionChartProps) {
-  const sorted = [...ideStats].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
+  const sorted = sortBySelector(ideStats, ide => ide.uniqueUsers, 'desc');
   const hasCliUsers = cliUsers > 0;
   const hasData = sorted.length > 0 || hasCliUsers;
 
