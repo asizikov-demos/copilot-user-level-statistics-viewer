@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { translateFeature } from '../../domain/featureTranslations';
 import ChartContainer from '../ui/ChartContainer';
+import DisclosureSection from '../ui/DisclosureSection';
 
 registerChartJS();
 
@@ -48,8 +49,6 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
   barChartOptions,
   config
 }: ActivityBreakdownChartProps<T>) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const groupedAndSorted = useMemo(() => {
     const grouped = aggregates.reduce<Record<string, T[]>>((acc, item) => {
       const key = String(item[config.groupKey]);
@@ -72,71 +71,52 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
   const hasBarChart = barChartData.datasets && barChartData.datasets.length > 0;
 
   const footer = (
-    <div className="border-t border-gray-200 pt-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-      >
-        <span className="text-sm font-medium text-gray-700">
-          {config.detailsLabel}
-        </span>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {isExpanded && (
-        <div className="mt-4 overflow-x-auto">
-          <div className="space-y-6">
-            {groupedAndSorted.sortedKeys.map(key => {
-              const items = groupedAndSorted.grouped[key];
-              const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
-              return (
-                <div key={key} className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-md font-semibold text-gray-800 mb-3 capitalize">
-                    {key === 'unknown' || key === '' ? config.unknownLabel : key}
-                    <span className="text-sm font-normal text-gray-600 ml-2">
-                      ({total.toLocaleString()} {config.totalLabel})
-                    </span>
-                  </h4>
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                        {config.columns.map((col, idx) => (
-                          <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {col.header}
-                          </th>
+    <DisclosureSection label={config.detailsLabel}>
+      <div className="overflow-x-auto">
+        <div className="space-y-6">
+          {groupedAndSorted.sortedKeys.map(key => {
+            const items = groupedAndSorted.grouped[key];
+            const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
+            return (
+              <div key={key} className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-md font-semibold text-gray-800 mb-3 capitalize">
+                  {key === 'unknown' || key === '' ? config.unknownLabel : key}
+                  <span className="text-sm font-normal text-gray-600 ml-2">
+                    ({total.toLocaleString()} {config.totalLabel})
+                  </span>
+                </h4>
+                <table className="w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
+                      {config.columns.map((col, idx) => (
+                        <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {col.header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {translateFeature(item.feature)}
+                        </td>
+                        {config.columns.map((col, colIdx) => (
+                          <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {col.accessor(item).toLocaleString()}
+                          </td>
                         ))}
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {items.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {translateFeature(item.feature)}
-                          </td>
-                          {config.columns.map((col, colIdx) => (
-                            <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {col.accessor(item).toLocaleString()}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })}
-          </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
         </div>
-      )}
-    </div>
+      </div>
+    </DisclosureSection>
   );
 
   return (

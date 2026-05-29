@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
@@ -8,6 +8,7 @@ import { createBarDataset } from './utils/chartStyles';
 import { isCliFeature } from '../../domain/featureCategories';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
+import ExpandableTableSection from '../ui/ExpandableTableSection';
 import type { UserDayData } from '../../types/metrics';
 
 registerChartJS();
@@ -128,8 +129,6 @@ export default function ClientActivityChart({
   pluginVersions,
   cliVersions,
 }: ClientActivityChartProps) {
-  const [isPluginTableExpanded, setIsPluginTableExpanded] = useState(false);
-
   const { cliTotals, cliTotalsByDay } = useMemo(() => {
     const totals = {
       promptCount: 0,
@@ -235,6 +234,18 @@ export default function ClientActivityChart({
   const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
   const cliInteractionCount = cliTotals.interactions > 0 ? cliTotals.interactions : cliTotals.promptCount;
   const hasCliVersions = cliVersions && cliVersions.length > 0;
+  const allVersions = [
+    ...(pluginVersions || []).map(p => ({
+      name: p.plugin,
+      version: p.plugin_version,
+      sampled_at: p.sampled_at,
+    })),
+    ...(cliVersions || []).map(c => ({
+      name: 'Copilot CLI',
+      version: c.cli_version,
+      sampled_at: c.sampled_at,
+    })),
+  ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
   const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
 
   const footer = (
@@ -295,58 +306,38 @@ export default function ClientActivityChart({
         </table>
       </div>
 
-      {((pluginVersions && pluginVersions.length > 0) || (cliVersions && cliVersions.length > 0)) && (
+      {allVersions.length > 0 && (
         <div className="mt-8">
           <h4 className="text-md font-semibold text-gray-900 mb-4">Client Versions</h4>
-          {(() => {
-            const allVersions = [
-              ...(pluginVersions || []).map(p => ({
-                name: p.plugin,
-                version: p.plugin_version,
-                sampled_at: p.sampled_at,
-              })),
-              ...(cliVersions || []).map(c => ({
-                name: 'Copilot CLI',
-                version: c.cli_version,
-                sampled_at: c.sampled_at,
-              })),
-            ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
-
-            return (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
+          <ExpandableTableSection
+            items={allVersions}
+            initialCount={1}
+            buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
+            buttonExpandedLabel="Show Less"
+          >
+            {({ visibleItems }) => (
+              <div className="overflow-x-auto">
+                <table className="w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {visibleItems.map((entry, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{entry.version}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{formatShortDate(entry.sampled_at)}</td>
                       </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {(isPluginTableExpanded ? allVersions : allVersions.slice(0, 1)).map((entry, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{entry.version}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{formatShortDate(entry.sampled_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {allVersions.length > 1 && (
-                  <div className="mt-4 text-center">
-                    <button
-                      onClick={() => setIsPluginTableExpanded(!isPluginTableExpanded)}
-                      className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-                    >
-                      {isPluginTableExpanded ? 'Show Less' : `Show All ${allVersions.length} Client Versions`}
-                    </button>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ExpandableTableSection>
         </div>
       )}
     </>
