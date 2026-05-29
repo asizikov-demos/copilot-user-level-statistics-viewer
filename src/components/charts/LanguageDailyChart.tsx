@@ -6,6 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
+import { createStackedTotalFooter } from './utils/tooltipFooters';
 import { formatShortDate } from '../../utils/formatters';
 import { takeTopBySelector } from '../../utils/sorting';
 import type { DailyLanguageChartData } from '../../types/metrics';
@@ -65,11 +66,7 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
       const unit = isGenerations ? 'generations' : 'LOC';
       return `${context.dataset.label}: ${value.toLocaleString()} ${unit}`;
     },
-    tooltipFooterCallback: (items: TooltipItem<'line' | 'bar'>[]) => {
-      if (!items.length) return '';
-      const dayTotal = items.reduce((sum, it) => sum + (it.parsed.y || 0), 0);
-      return `Total: ${dayTotal.toLocaleString()}`;
-    },
+    tooltipFooterCallback: createStackedTotalFooter(),
   });
 
   const title = isGenerations
