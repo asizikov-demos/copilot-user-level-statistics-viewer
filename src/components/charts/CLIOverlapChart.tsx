@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
+import { sortBySelector } from '../../utils/sorting';
 import type { IDEStatsData } from '../../types/metrics';
 
 registerChartJS();
@@ -16,9 +17,11 @@ interface CLIOverlapChartProps {
 }
 
 export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
-  const sorted = [...ideStats]
-    .filter(ide => ide.uniqueUsers > 0)
-    .sort((a, b) => (b.cliOverlapUsers / b.uniqueUsers) - (a.cliOverlapUsers / a.uniqueUsers));
+  const sorted = sortBySelector(
+    ideStats.filter(ide => ide.uniqueUsers > 0),
+    ide => ide.cliOverlapUsers / ide.uniqueUsers,
+    'desc',
+  );
 
   const labels = sorted.map(ide => formatIDEName(ide.ide));
   const cliOverlap = sorted.map(ide => ide.cliOverlapUsers);
