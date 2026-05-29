@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors, getSequentialColor } from './utils/chartColors';
+import { createStackedTotalFooter } from './utils/tooltipFooters';
 import { formatShortDate } from '../../utils/formatters';
 import { sortBySelector } from '../../utils/sorting';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
@@ -152,11 +153,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       const value = context.parsed.y || 0;
       return `${context.dataset.label}: ${value} interactions`;
     },
-    tooltipFooterCallback: (items: TooltipItem<'line' | 'bar'>[]) => {
-      if (!items.length) return '';
-      const dayTotal = items.reduce((sum, it) => sum + (it.parsed.y || 0), 0);
-      return `Total: ${dayTotal}`;
-    },
+    tooltipFooterCallback: createStackedTotalFooter({ useLocaleFormatting: false }),
   });
 
   return (

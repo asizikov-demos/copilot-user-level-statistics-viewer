@@ -7,6 +7,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
+import { createStackedTotalWithShareFooter } from './utils/tooltipFooters';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import { padSeriesWithDefaults } from '../../utils/timeSeries';
 import type { DailyModelUsageData } from '../../domain/calculators/metricCalculators';
@@ -100,13 +101,11 @@ export default function DailyPremiumBaseChart({
       const value = context.parsed.y || 0;
       return `${context.dataset.label}: ${value.toLocaleString()}`;
     },
-    tooltipFooterCallback: (items: TooltipItem<'line' | 'bar'>[]) => {
-      if (!items.length) return '';
-      const dayTotal = items.reduce((sum, it) => sum + (it.parsed.y || 0), 0);
-      const premiumVal = items.find(it => it.dataset.label === 'Premium')?.parsed.y || 0;
-      const share = dayTotal > 0 ? ((premiumVal / dayTotal) * 100).toFixed(1) : '0.0';
-      return `Total: ${dayTotal.toLocaleString()} · Premium share: ${share}%`;
-    },
+    tooltipFooterCallback: createStackedTotalWithShareFooter({
+      shareDatasetLabel: 'Premium',
+      shareLabel: 'Premium share',
+      shareSeparator: ' · ',
+    }),
   });
 
   const totalPremium = dailyPremium.reduce((s, v) => s + v, 0);
