@@ -153,7 +153,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       const value = context.parsed.y || 0;
       return `${context.dataset.label}: ${value} interactions`;
     },
-    tooltipFooterCallback: createStackedTotalFooter({ totalFormatter: value => String(value) }),
+    tooltipFooterCallback: createStackedTotalFooter({ useLocaleFormatting: false }),
   });
 
   return (

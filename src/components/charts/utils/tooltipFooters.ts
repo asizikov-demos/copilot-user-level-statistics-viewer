@@ -8,6 +8,7 @@ interface StackedTotalFooterOptions {
   totalLabel?: string;
   unit?: string;
   totalFormatter?: NumberFormatter;
+  useLocaleFormatting?: boolean;
 }
 
 interface StackedTotalWithShareFooterOptions extends StackedTotalFooterOptions {
@@ -23,7 +24,7 @@ function parsedValue(item: StackedTooltipItem): number {
 
 function formatTotal(value: number, options: StackedTotalFooterOptions): string {
   const totalLabel = options.totalLabel ?? 'Total';
-  const totalFormatter = options.totalFormatter ?? (v => v.toLocaleString());
+  const totalFormatter = options.totalFormatter ?? (options.useLocaleFormatting === false ? String : (v => v.toLocaleString()));
   const unit = options.unit ? ` ${options.unit}` : '';
   return `${totalLabel}: ${totalFormatter(value)}${unit}`;
 }

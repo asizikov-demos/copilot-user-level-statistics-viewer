@@ -26,6 +26,11 @@ describe('tooltip footer helpers', () => {
     expect(footer([tooltipItem('A', 1200), tooltipItem('B', 34)])).toBe('Total: 1.234 interactions');
   });
 
+  it('supports disabling locale formatting for totals', () => {
+    const footer = createStackedTotalFooter({ useLocaleFormatting: false });
+    expect(footer([tooltipItem('A', 1200), tooltipItem('B', 34)])).toBe('Total: 1234');
+  });
+
   it('formats stacked total with share and zero-total fallback', () => {
     const footer = createStackedTotalWithShareFooter({
       shareDatasetLabel: 'Premium',
