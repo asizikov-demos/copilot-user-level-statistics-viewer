@@ -244,7 +244,7 @@ export default function ClientActivityChart({
   const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
   const cliInteractionCount = cliTotals.interactions > 0 ? cliTotals.interactions : cliTotals.promptCount;
   const hasCliVersions = cliVersions && cliVersions.length > 0;
-  const allVersions = useMemo(() => [
+  const allVersions = [
     ...(pluginVersions || []).map(p => ({
       name: p.plugin,
       version: p.plugin_version,
@@ -255,7 +255,7 @@ export default function ClientActivityChart({
       version: c.cli_version,
       sampled_at: c.sampled_at,
     })),
-  ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()), [cliVersions, pluginVersions]);
+  ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
   const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
 
   const footer = (
