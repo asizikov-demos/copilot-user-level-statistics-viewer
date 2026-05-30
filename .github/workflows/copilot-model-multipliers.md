@@ -30,27 +30,73 @@ safe-outputs:
 steps:
   - name: Checkout
     uses: actions/checkout@v5
+    with:
+      persist-credentials: false
 
-  - name: Fetch GitHub Docs page
+  - name: Fetch GitHub Docs model multipliers
     run: |
       set -euo pipefail
       mkdir -p .cache
-      curl -sSL https://docs.github.com/en/copilot/reference/ai-models/supported-models -o .cache/supported-models.html
+      curl --fail --show-error --silent --location --retry 3 \
+        https://raw.githubusercontent.com/github/docs/main/data/tables/copilot/model-multipliers.yml \
+        -o .cache/model-multipliers.yml
 
-  - name: Extract model multipliers section
+  - name: Render model multipliers table
     run: |
       set -euo pipefail
-      python - <<'PY'
-      import re
-      html=open('.cache/supported-models.html','r',encoding='utf-8',errors='ignore').read()
-      h=re.search(r'<h2 id="model-multipliers"[\s\S]*?</h2>', html)
-      if not h:
-        raise SystemExit('Could not find model-multipliers section')
-      after=html[h.end():]
-      t=re.search(r'<table[\s\S]*?</table>', after)
-      if not t:
-        raise SystemExit('Could not find multipliers table after model-multipliers heading')
-      open('.cache/model-multipliers-table.html','w',encoding='utf-8').write(t.group(0))
+      python3 - <<'PY'
+      from html import escape
+      from pathlib import Path
+
+      def clean(value):
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+          return value[1:-1]
+        return value
+
+      source = Path('.cache/model-multipliers.yml').read_text(encoding='utf-8')
+      rows = []
+      current = {}
+
+      for raw_line in source.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#'):
+          continue
+        if line.startswith('- '):
+          if current:
+            rows.append(current)
+          current = {}
+          line = line[2:].strip()
+        if current is not None and ':' in line:
+          key, _, value = line.partition(':')
+          current[key.strip()] = clean(value)
+
+      if current:
+        rows.append(current)
+
+      required_keys = {'name', 'multiplier_paid', 'multiplier_free'}
+      if not rows:
+        raise SystemExit('Could not find model multiplier rows')
+      for row in rows:
+        missing = required_keys - row.keys()
+        if missing:
+          raise SystemExit(f"Model multiplier row is missing {', '.join(sorted(missing))}: {row}")
+
+      table_rows = [
+        '<table>',
+        '<thead><tr><th>Model</th><th>Multiplier for paid plans</th><th>Multiplier for Copilot Free</th></tr></thead>',
+        '<tbody>',
+      ]
+      for row in rows:
+        table_rows.append(
+          '<tr>'
+          f"<td>{escape(row['name'])}</td>"
+          f"<td>{escape(row['multiplier_paid'])}</td>"
+          f"<td>{escape(row['multiplier_free'])}</td>"
+          '</tr>'
+        )
+      table_rows.extend(['</tbody>', '</table>'])
+      Path('.cache/model-multipliers-table.html').write_text('\n'.join(table_rows), encoding='utf-8')
       PY
 ---
 

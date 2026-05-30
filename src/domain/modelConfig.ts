@@ -24,6 +24,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-4o-latest', 0, false),
   new Model('gpt-5-mini', 0, false),
   new Model('grok-code-fast', 0, false),
+  new Model('raptor-mini', 0, false),
 
   // Premium models with multipliers
   new Model('gpt-5', 1, true),
@@ -55,6 +56,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4.5', 3, true),
   new Model('claude-opus-4.6', 3, true),
   new Model('claude-opus-4.7', 15, true),
+  new Model('claude-opus-4.8', 15, true),
   new Model('claude-opus-4.6-fast-mode', 30, true),
   new Model('claude-opus-4.6-fast-mode-preview', 30, true),
   new Model('claude-4.5-haiku', 0.33, true),
