@@ -26,7 +26,7 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 
 ## Key Domain File
 
-`src/domain/modelConfig.ts` contains Copilot model multipliers synced with GitHub pricing docs. An automated workflow keeps them updated — see `.github/workflows/copilot-model-multipliers.md`.
+`src/domain/modelConfig.ts` contains legacy Copilot model multipliers retained for backward compatibility.
 
 ## UX Patterns
 

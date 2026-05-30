@@ -66,8 +66,6 @@ export default function DailyPremiumBaseChart({
         pruModels: 0,
         standardModels: 0,
         unknownModels: 0,
-        totalPRUs: 0,
-        serviceValue: 0,
       }));
 
       dailyPremium = paddedUsage.map(d => d.pruModels);

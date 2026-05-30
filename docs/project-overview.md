@@ -60,7 +60,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ### 3.3. Model Configuration
 
-`src/domain/modelConfig.ts` contains a curated catalog of known LLM models with PRU multipliers and premium flags. Key exports: `getModelMultiplier()` and `isPremiumModel()`. Used by calculators to compute PRU costs and service value.
+`src/domain/modelConfig.ts` contains a curated catalog of known LLM models with legacy PRU multipliers and premium flags retained for backward compatibility. Key exports: `getModelMultiplier()` and `isPremiumModel()`. Calculators use this data to classify historical model requests as standard, premium, or unknown.
 
 ---
 
@@ -134,4 +134,3 @@ flowchart TB
 	MC --> VR
 	NC --> VR
 ```
-
