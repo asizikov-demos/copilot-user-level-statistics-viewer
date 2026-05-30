@@ -10,7 +10,7 @@ A **client-side single-page analytics dashboard** for exploring **GitHub Copilot
 
 The app runs entirely in the browser — uploaded metrics files are parsed client-side and never sent to a backend.
 
-Key analysis dimensions: **user**, **IDE**, **language**, **feature**, **model**, and **Premium Request Unit (PRU)** consumption.
+Key analysis dimensions: **user**, **IDE**, **language**, **feature**, **model**, and premium/standard model usage.
 
 ---
 
@@ -51,7 +51,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 | `src/components/` | View components, charts, layout, UI primitives |
 | `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
 | `src/domain/` | Business logic: parser, aggregator, model config |
-| `src/domain/calculators/` | Individual metric calculators (stats, engagement, PRU, impact, etc.) |
+| `src/domain/calculators/` | Individual metric calculators (stats, engagement, model usage, impact, etc.) |
 | `src/hooks/` | Reusable React hooks (file upload, sorting, search) |
 | `src/workers/` | Web Worker entry point, client API, message types |
 | `src/state/` | Navigation context |
@@ -60,7 +60,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ### 3.3. Model Configuration
 
-`src/domain/modelConfig.ts` contains a curated catalog of known LLM models with legacy PRU multipliers and premium flags retained for backward compatibility. Key exports: `getModelMultiplier()` and `isPremiumModel()`. Calculators use this data to classify historical model requests as standard, premium, or unknown.
+`src/domain/modelConfig.ts` contains a curated catalog of known LLM models with legacy PRU multipliers and premium flags retained for backward compatibility. Calculators use `classifyModelBucket()` to classify historical model requests as standard, premium, or unknown; multiplier helpers remain for legacy compatibility.
 
 ---
 
@@ -84,11 +84,11 @@ flowchart LR
 
 ### 4.2. Aggregation
 
-`metricsAggregator.ts` orchestrates all calculators in `src/domain/calculators/` to produce the `AggregatedMetrics` object. This includes user summaries, daily time series,  language/IDE/model breakdowns, PRU analysis, feature adoption, and LOC impact by mode. See the calculator files for specifics.
+`metricsAggregator.ts` orchestrates all calculators in `src/domain/calculators/` to produce the `AggregatedMetrics` object. This includes user summaries, daily time series, language/IDE/model breakdowns, premium/standard model usage, feature adoption, and LOC impact by mode. See the calculator files for specifics.
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, PRU usage, adoption, and model details.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, premium model usage, adoption, and model details.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 
