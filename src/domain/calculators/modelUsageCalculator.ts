@@ -1,4 +1,4 @@
-import { SERVICE_VALUE_RATE, getModelMultiplier, classifyModelBucket } from '../modelConfig';
+import { classifyModelBucket } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
 import { compareByDateAsc } from './statsCalculators';
 
@@ -7,8 +7,6 @@ export interface DailyModelUsageData {
   pruModels: number;
   standardModels: number;
   unknownModels: number;
-  totalPRUs: number;
-  serviceValue: number;
 }
 
 export interface AgentModeHeatmapData {
@@ -16,7 +14,6 @@ export interface AgentModeHeatmapData {
   agentModeRequests: number;
   uniqueUsers: number;
   intensity: number;
-  serviceValue: number;
 }
 
 export interface ModelUsageAccumulator {
@@ -24,12 +21,10 @@ export interface ModelUsageAccumulator {
     pruModels: number;
     standardModels: number;
     unknownModels: number;
-    totalPRUs: number;
   }>;
   dailyAgentHeatmap: Map<string, {
     requests: number;
     users: Set<number>;
-    totalPRUs: number;
   }>;
 }
 
@@ -43,25 +38,19 @@ export function createModelUsageAccumulator(): ModelUsageAccumulator {
 export function accumulateModelFeature(
   accumulator: ModelUsageAccumulator,
   date: string,
-  _userId: number,
   model: string,
-  feature: string,
   interactions: number
 ): void {
   const modelLower = model.toLowerCase();
-  const multiplier = getModelMultiplier(modelLower);
-  const prus = interactions * multiplier;
 
   if (!accumulator.dailyModelUsage.has(date)) {
     accumulator.dailyModelUsage.set(date, {
       pruModels: 0,
       standardModels: 0,
       unknownModels: 0,
-      totalPRUs: 0,
     });
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
-  dmu.totalPRUs += prus;
   const bucket = classifyModelBucket(modelLower);
   if (bucket === 'unknown') {
     dmu.unknownModels += interactions;
@@ -69,13 +58,6 @@ export function accumulateModelFeature(
     dmu.standardModels += interactions;
   } else {
     dmu.pruModels += interactions;
-  }
-
-  if (feature === 'chat_panel_agent_mode') {
-    if (!accumulator.dailyAgentHeatmap.has(date)) {
-      accumulator.dailyAgentHeatmap.set(date, { requests: 0, users: new Set(), totalPRUs: 0 });
-    }
-    accumulator.dailyAgentHeatmap.get(date)!.totalPRUs += prus;
   }
 }
 
@@ -88,7 +70,7 @@ export function accumulateAgentHeatmapFromFeature(
 ): void {
   if (feature === 'chat_panel_agent_mode' && interactionCount > 0) {
     if (!accumulator.dailyAgentHeatmap.has(date)) {
-      accumulator.dailyAgentHeatmap.set(date, { requests: 0, users: new Set(), totalPRUs: 0 });
+      accumulator.dailyAgentHeatmap.set(date, { requests: 0, users: new Set() });
     }
     const dah = accumulator.dailyAgentHeatmap.get(date)!;
     dah.requests += interactionCount;
@@ -105,8 +87,6 @@ export function computeDailyModelUsageData(
       pruModels: data.pruModels,
       standardModels: data.standardModels,
       unknownModels: data.unknownModels,
-      totalPRUs: Math.round(data.totalPRUs * 100) / 100,
-      serviceValue: Math.round(data.totalPRUs * SERVICE_VALUE_RATE * 100) / 100,
     }))
     .sort(compareByDateAsc);
 }
@@ -123,7 +103,6 @@ export function computeAgentModeHeatmapData(
       agentModeRequests: data.requests,
       uniqueUsers: data.users.size,
       intensity: Math.ceil((data.requests / maxRequests) * 5),
-      serviceValue: Math.round(data.totalPRUs * SERVICE_VALUE_RATE * 100) / 100,
     }))
     .sort(compareByDateAsc);
 }
@@ -135,15 +114,12 @@ export function calculateDailyModelUsageFromMetrics(
 
   for (const metric of metrics) {
     const date = metric.day;
-    const userId = metric.user_id;
 
     for (const modelFeature of metric.totals_by_model_feature) {
       accumulateModelFeature(
         accumulator,
         date,
-        userId,
         modelFeature.model,
-        modelFeature.feature,
         modelFeature.user_initiated_interaction_count
       );
     }

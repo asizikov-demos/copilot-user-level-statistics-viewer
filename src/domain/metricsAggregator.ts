@@ -290,9 +290,7 @@ export function aggregateMetrics(
       accumulateModelFeature(
         modelUsageAccumulator,
         date,
-        userId,
         modelFeature.model,
-        modelFeature.feature,
         modelFeature.user_initiated_interaction_count
       );
 

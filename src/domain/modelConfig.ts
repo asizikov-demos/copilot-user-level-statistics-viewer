@@ -97,11 +97,6 @@ export const MODEL_MULTIPLIERS: Record<string, number> = KNOWN_MODELS.reduce(
   {} as Record<string, number>
 );
 
-/**
- * Dollar cost applied per Premium Request Unit (PRU).
- */
-export const SERVICE_VALUE_RATE = 0.04;
-
 const UNKNOWN_MULTIPLIER = MODEL_MULTIPLIERS['unknown'] ?? 1;
 
 /**
