@@ -37,14 +37,6 @@ export default function FeatureAdoptionRadarChart({
     ...item,
     value: radarValues[item.key],
   }));
-  const summaryLabels = {
-    agentInteractions: 'Agent',
-    planInteractions: 'Plan',
-    cliInteractions: 'CLI',
-    askModeInteractions: 'Ask',
-    editModeInteractions: 'Edit',
-    completionInteractions: 'Completions',
-  } as const;
 
   const chartData = {
     labels: radarItems.map((item) => item.label),
@@ -113,7 +105,7 @@ export default function FeatureAdoptionRadarChart({
       </div>
       <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 mt-4 text-sm text-gray-600">
         {radarItems.map((item) => (
-          <span key={item.key}>{summaryLabels[item.key]}: <strong>{item.value.toLocaleString()}</strong></span>
+          <span key={item.key}>{item.summaryLabel}: <strong>{item.value.toLocaleString()}</strong></span>
         ))}
       </div>
     </div>

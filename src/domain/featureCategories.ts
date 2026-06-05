@@ -105,12 +105,12 @@ export const FEATURE_ADOPTION_CHART_METADATA = [
 ] as const;
 
 export const FEATURE_ADOPTION_RADAR_METADATA = [
-  { key: 'agentInteractions', label: 'Agent Mode', unit: 'interactions' },
-  { key: 'planInteractions', label: 'Plan Mode', unit: 'interactions' },
-  { key: 'cliInteractions', label: 'CLI', unit: 'interactions' },
-  { key: 'askModeInteractions', label: 'Ask Mode', unit: 'interactions' },
-  { key: 'editModeInteractions', label: 'Edit Mode', unit: 'interactions' },
-  { key: 'completionInteractions', label: 'Completions', unit: 'acceptances' },
+  { key: 'agentInteractions', label: 'Agent Mode', summaryLabel: 'Agent', unit: 'interactions' },
+  { key: 'planInteractions', label: 'Plan Mode', summaryLabel: 'Plan', unit: 'interactions' },
+  { key: 'cliInteractions', label: 'CLI', summaryLabel: 'CLI', unit: 'interactions' },
+  { key: 'askModeInteractions', label: 'Ask Mode', summaryLabel: 'Ask', unit: 'interactions' },
+  { key: 'editModeInteractions', label: 'Edit Mode', summaryLabel: 'Edit', unit: 'interactions' },
+  { key: 'completionInteractions', label: 'Completions', summaryLabel: 'Completions', unit: 'acceptances' },
 ] as const;
 
 export function getFeatureTaxonomy(): readonly FeatureTaxonomyEntry[] {
