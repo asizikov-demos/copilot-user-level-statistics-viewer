@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getModelMultiplier, isPremiumModel, classifyModelBucket, MODEL_MULTIPLIERS, KNOWN_MODELS } from '../modelConfig';
+import { getModelMultiplier, isPremiumModel, classifyModelBucket, MODEL_MULTIPLIERS, KNOWN_MODELS, isActiveAutoModeFeature } from '../modelConfig';
 
 describe('modelConfig', () => {
   describe('getModelMultiplier', () => {
@@ -175,6 +175,43 @@ describe('modelConfig', () => {
 
     it('should treat unrecognized models as premium', () => {
       expect(classifyModelBucket('totally-made-up')).toBe('premium');
+    });
+  });
+
+  describe('isActiveAutoModeFeature', () => {
+    const makeFeature = (
+      model: string,
+      user_initiated_interaction_count = 0,
+      code_generation_activity_count = 0,
+      code_acceptance_activity_count = 0
+    ) => ({ model, user_initiated_interaction_count, code_generation_activity_count, code_acceptance_activity_count });
+
+    it('should return true when model is "auto" and interactions are non-zero', () => {
+      expect(isActiveAutoModeFeature(makeFeature('auto', 5))).toBe(true);
+    });
+
+    it('should return true when model is "auto" and only generation activity is non-zero', () => {
+      expect(isActiveAutoModeFeature(makeFeature('auto', 0, 3))).toBe(true);
+    });
+
+    it('should return true when model is "auto" and only acceptance activity is non-zero', () => {
+      expect(isActiveAutoModeFeature(makeFeature('auto', 0, 0, 2))).toBe(true);
+    });
+
+    it('should return false when model is "auto" but all activity counts are zero', () => {
+      expect(isActiveAutoModeFeature(makeFeature('auto', 0, 0, 0))).toBe(false);
+    });
+
+    it('should return false when model is not "auto"', () => {
+      expect(isActiveAutoModeFeature(makeFeature('gpt-4o', 10))).toBe(false);
+    });
+
+    it('should normalize aliases with extra spaces to "auto"', () => {
+      expect(isActiveAutoModeFeature(makeFeature('  Auto  ', 1))).toBe(true);
+    });
+
+    it('should normalize uppercase "AUTO" to "auto"', () => {
+      expect(isActiveAutoModeFeature(makeFeature('AUTO', 1))).toBe(true);
     });
   });
 });

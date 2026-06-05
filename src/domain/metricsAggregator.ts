@@ -99,6 +99,7 @@ import {
   computeCliAdoptionTrend,
 } from './calculators';
 import { scanAllUserFlags } from './calculators/userFlagScanner';
+import { isActiveAutoModeFeature } from './modelConfig';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;
@@ -144,14 +145,7 @@ function createUserSummaryAccumulator(): UserSummaryAccumulator {
 }
 
 function hasAutoModeActivity(metric: CopilotMetrics): boolean {
-  return metric.totals_by_model_feature.some(modelFeature => {
-    const activityCount =
-      modelFeature.user_initiated_interaction_count +
-      modelFeature.code_generation_activity_count +
-      modelFeature.code_acceptance_activity_count;
-
-    return modelFeature.model.trim().toLowerCase() === 'auto' && activityCount > 0;
-  });
+  return metric.totals_by_model_feature.some(isActiveAutoModeFeature);
 }
 
 function accumulateUserSummary(

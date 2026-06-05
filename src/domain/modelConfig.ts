@@ -157,3 +157,22 @@ export function isPremiumModel(modelName: string): boolean {
   const unknown = KNOWN_MODELS.find(m => normalizeModelName(m.name) === 'unknown');
   return unknown ? unknown.isPremium : true;
 }
+
+/**
+ * Returns true when a model-feature record represents active Auto mode usage.
+ * A feature counts as active when the normalized model name is 'auto' AND at least
+ * one of the qualifying activity counters (interactions, generation, or acceptance) is non-zero.
+ */
+export function isActiveAutoModeFeature(modelFeature: {
+  model: string;
+  user_initiated_interaction_count: number;
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+}): boolean {
+  if (normalizeModelName(modelFeature.model) !== 'auto') return false;
+  return (
+    modelFeature.user_initiated_interaction_count > 0 ||
+    modelFeature.code_generation_activity_count > 0 ||
+    modelFeature.code_acceptance_activity_count > 0
+  );
+}

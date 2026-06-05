@@ -93,6 +93,41 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.size).toBe(2);
       expect(acc.autoModeUsersByDate.get('2024-01-16')?.size).toBe(1);
     });
+
+    it('should treat auto model as active when only interactions are non-zero', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'chat_panel', 5, 0, 0));
+      expect(acc.autoModels.size).toBe(1);
+      expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
+    });
+
+    it('should treat auto model as active when only generation activity is non-zero', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'agent_edit', 0, 3, 0));
+      expect(acc.autoModels.size).toBe(1);
+      expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
+    });
+
+    it('should treat auto model as active when only acceptance activity is non-zero', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'code_completion', 0, 0, 2));
+      expect(acc.autoModels.size).toBe(1);
+      expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
+    });
+
+    it('should not record auto model when all activity counts are zero', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'chat_panel', 0, 0, 0));
+      expect(acc.autoModels.size).toBe(0);
+      expect(acc.autoModeUsersByDate.size).toBe(0);
+    });
+
+    it('should normalize "  Auto  " (with spaces) to auto bucket', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('  Auto  ', 'chat_panel', 5));
+      expect(acc.autoModels.size).toBe(1);
+      expect(acc.premiumTotal).toBe(0);
+    });
   });
 
   describe('CLI model handling', () => {

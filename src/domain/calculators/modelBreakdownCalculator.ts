@@ -1,6 +1,6 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { classifyModelBucket, normalizeModelName } from '../modelConfig';
+import { classifyModelBucket, isActiveAutoModeFeature, normalizeModelName } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -73,7 +73,7 @@ export function accumulateModelBreakdown(
     accumulateModelEntry(accumulator.cliModels, normalizedModel, date, interactionCount);
   }
 
-  if (normalizedModel === 'auto' && (interactionCount > 0 || activityCount > 0)) {
+  if (isActiveAutoModeFeature(modelFeature)) {
     accumulator.allDates.add(date);
     if (!accumulator.autoModeUsersByDate.has(date)) {
       accumulator.autoModeUsersByDate.set(date, new Set());
