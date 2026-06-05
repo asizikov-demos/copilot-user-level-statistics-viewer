@@ -1,4 +1,4 @@
-import { classifyModelBucket } from '../modelConfig';
+import { classifyModelRequest } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
 import { compareByDateAsc } from './statsCalculators';
 
@@ -41,8 +41,6 @@ export function accumulateModelFeature(
   model: string,
   interactions: number
 ): void {
-  const modelLower = model.toLowerCase();
-
   if (!accumulator.dailyModelUsage.has(date)) {
     accumulator.dailyModelUsage.set(date, {
       pruModels: 0,
@@ -51,7 +49,7 @@ export function accumulateModelFeature(
     });
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
-  const bucket = classifyModelBucket(modelLower);
+  const { bucket } = classifyModelRequest(model);
   if (bucket === 'unknown') {
     dmu.unknownModels += interactions;
   } else if (bucket === 'standard') {

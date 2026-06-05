@@ -23,6 +23,17 @@ describe('modelUsageCalculator', () => {
       expect(results[0].unknownModels).toBe(10);
     });
 
+    it('should classify normalized aliases in the premium bucket', () => {
+      const accumulator = createModelUsageAccumulator();
+
+      accumulateModelFeature(accumulator, '2024-01-15', 'Claude Opus 4.6 (fast mode)', 10);
+
+      const results = computeDailyModelUsageData(accumulator);
+      expect(results[0].pruModels).toBe(10);
+      expect(results[0].standardModels).toBe(0);
+      expect(results[0].unknownModels).toBe(0);
+    });
+
     it('should accumulate interactions for the same model bucket', () => {
       const accumulator = createModelUsageAccumulator();
 

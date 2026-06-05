@@ -74,6 +74,14 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.premiumTotal).toBe(0);
       expect(acc.standardTotal).toBe(0);
     });
+
+    it('should classify empty model names to unknownTotal', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature(''));
+      expect(acc.unknownTotal).toBe(10);
+      expect(acc.premiumTotal).toBe(0);
+      expect(acc.standardTotal).toBe(0);
+    });
   });
 
   describe('auto model handling', () => {
