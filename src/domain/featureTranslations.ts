@@ -1,19 +1,9 @@
+import { FEATURE_TRANSLATIONS, getFeatureLabel } from './featureCategories';
+
 /**
  * Maps technical feature names to human-readable labels
  */
-export const featureTranslations: Record<string, string> = {
-  'chat_panel_edit_mode': 'Chat: Edit Mode',
-  'chat_panel_ask_mode': 'Chat: Ask Mode',
-  'chat_panel_agent_mode': 'Chat: Agent Mode',
-  'chat_panel_custom_mode': 'Chat: Custom Mode',
-  'chat_panel_plan_mode': 'Chat: Plan Mode',
-  'code_completion': 'Code Completion',
-  'chat_panel_unknown_mode': 'Chat: Unknown Mode',
-  'chat_inline': 'Chat: Inline',
-  'agent_edit': 'Agent Edit',
-  'cli_agent': 'CLI Agent',
-  'copilot_cli': 'Copilot CLI',
-};
+export const featureTranslations: Record<string, string> = FEATURE_TRANSLATIONS;
 
 /**
  * Translates a technical feature name to a human-readable label
@@ -21,7 +11,7 @@ export const featureTranslations: Record<string, string> = {
  * @returns The human-readable label or the original feature name if no translation exists
  */
 export function translateFeature(feature: string): string {
-  return featureTranslations[feature] || feature;
+  return getFeatureLabel(feature) || feature;
 }
 
 /**

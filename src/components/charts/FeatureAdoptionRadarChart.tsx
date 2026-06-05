@@ -3,6 +3,7 @@
 import { Radar } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
+import { FEATURE_ADOPTION_RADAR_METADATA } from '../../domain/featureCategories';
 
 registerChartJS();
 
@@ -23,12 +24,34 @@ export default function FeatureAdoptionRadarChart({
   editModeInteractions,
   completionInteractions,
 }: FeatureAdoptionRadarChartProps) {
+  const radarValues = {
+    agentInteractions,
+    planInteractions,
+    cliInteractions,
+    askModeInteractions,
+    editModeInteractions,
+    completionInteractions,
+  } as const;
+
+  const radarItems = FEATURE_ADOPTION_RADAR_METADATA.map((item) => ({
+    ...item,
+    value: radarValues[item.key],
+  }));
+  const summaryLabels = {
+    agentInteractions: 'Agent',
+    planInteractions: 'Plan',
+    cliInteractions: 'CLI',
+    askModeInteractions: 'Ask',
+    editModeInteractions: 'Edit',
+    completionInteractions: 'Completions',
+  } as const;
+
   const chartData = {
-    labels: ['Agent Mode', 'Plan Mode', 'CLI', 'Ask Mode', 'Edit Mode', 'Completions'],
+    labels: radarItems.map((item) => item.label),
     datasets: [
       {
         label: 'Interactions',
-        data: [agentInteractions, planInteractions, cliInteractions, askModeInteractions, editModeInteractions, completionInteractions],
+        data: radarItems.map((item) => item.value),
         backgroundColor: 'rgba(99, 102, 241, 0.2)',
         borderColor: 'rgba(99, 102, 241, 1)',
         borderWidth: 2,
@@ -48,7 +71,7 @@ export default function FeatureAdoptionRadarChart({
       tooltip: {
         callbacks: {
           label: (context) => {
-            const unit = context.label === 'Completions' ? 'acceptances' : 'interactions';
+            const unit = radarItems[context.dataIndex]?.unit || 'interactions';
             return `${context.label}: ${context.parsed.r.toLocaleString()} ${unit}`;
           },
         },
@@ -71,7 +94,7 @@ export default function FeatureAdoptionRadarChart({
     },
   };
 
-  const total = agentInteractions + planInteractions + cliInteractions + askModeInteractions + editModeInteractions + completionInteractions;
+  const total = radarItems.reduce((sum, item) => sum + item.value, 0);
 
   if (total === 0) {
     return (
@@ -89,12 +112,9 @@ export default function FeatureAdoptionRadarChart({
         <Radar data={chartData} options={options} />
       </div>
       <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 mt-4 text-sm text-gray-600">
-        <span>Agent: <strong>{agentInteractions.toLocaleString()}</strong></span>
-        <span>Plan: <strong>{planInteractions.toLocaleString()}</strong></span>
-        <span>CLI: <strong>{cliInteractions.toLocaleString()}</strong></span>
-        <span>Ask: <strong>{askModeInteractions.toLocaleString()}</strong></span>
-        <span>Edit: <strong>{editModeInteractions.toLocaleString()}</strong></span>
-        <span>Completions: <strong>{completionInteractions.toLocaleString()}</strong></span>
+        {radarItems.map((item) => (
+          <span key={item.key}>{summaryLabels[item.key]}: <strong>{item.value.toLocaleString()}</strong></span>
+        ))}
       </div>
     </div>
   );
