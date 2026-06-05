@@ -245,4 +245,94 @@ export const yAxisFormatters = {
   },
 };
 
+/**
+ * Configuration for radar chart options
+ */
+export interface RadarChartConfig {
+  showLegend?: boolean;
+  tooltipLabelCallback?: (context: TooltipItem<'radar'>) => string | string[];
+  gridColor?: string;
+  angleLineColor?: string;
+  pointLabelFontSize?: number;
+  pointLabelFontWeight?: 'normal' | 'bold' | 'lighter' | 'bolder' | number;
+  pointLabelColor?: string;
+}
 
+/**
+ * Creates chart options for radar charts.
+ */
+export function createRadarChartOptions(config: RadarChartConfig = {}) {
+  const {
+    showLegend = false,
+    tooltipLabelCallback,
+    gridColor = 'rgba(0, 0, 0, 0.08)',
+    angleLineColor = 'rgba(0, 0, 0, 0.08)',
+    pointLabelFontSize = 13,
+    pointLabelFontWeight = 'bold',
+    pointLabelColor = '#374151',
+  } = config;
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: showLegend },
+      tooltip: {
+        callbacks: {
+          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
+        },
+      },
+    },
+    scales: {
+      r: {
+        beginAtZero: true,
+        ticks: {
+          display: true,
+          backdropColor: 'transparent',
+        },
+        pointLabels: {
+          font: { size: pointLabelFontSize, weight: pointLabelFontWeight },
+          color: pointLabelColor,
+        },
+        grid: { color: gridColor },
+        angleLines: { color: angleLineColor },
+      },
+    },
+  };
+}
+
+/**
+ * Configuration for doughnut chart options
+ */
+export interface DoughnutChartConfig {
+  cutout?: string;
+  legendPosition?: 'top' | 'bottom' | 'left' | 'right';
+  tooltipLabelCallback?: (context: TooltipItem<'doughnut'>) => string | string[];
+}
+
+/**
+ * Creates chart options for doughnut charts.
+ */
+export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
+  const {
+    cutout = '55%',
+    legendPosition = 'right',
+    tooltipLabelCallback,
+  } = config;
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout,
+    plugins: {
+      legend: {
+        position: legendPosition,
+      },
+      tooltip: {
+        callbacks: {
+          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
+        },
+      },
+    },
+  };
+}

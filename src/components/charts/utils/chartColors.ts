@@ -106,6 +106,45 @@ export const chatModeColors = {
 } as const;
 
 /**
+ * IDE/client brand colors for consistent representation across distribution and activity charts.
+ * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').
+ * Both 'visualstudio' and 'visual_studio' are supported as aliases.
+ */
+export const ideColors: Record<string, string> = {
+  vscode: '#007ACC',
+  visualstudio: '#68217A',
+  visual_studio: '#68217A',
+  jetbrains: '#FC801D',
+  vim: '#019733',
+  neovim: '#57A143',
+  emacs: '#9266CC',
+  eclipse: '#2C2255',
+  sublime_text: '#FF9800',
+  xcode: '#29ABE2',
+  intellij: '#FC801D',
+  copilot_cli: '#DB61A2',
+  zed: '#F9CE49',
+};
+
+/**
+ * Fallback colors used sequentially for IDEs not present in `ideColors`.
+ */
+export const ideFallbackColors: readonly string[] = [
+  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+  '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6',
+];
+
+/**
+ * Get a color for the given IDE key, falling back to an indexed palette for unknown IDEs.
+ * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains'); normalized to lowercase + trim
+ * @param fallbackIndex - Index into `ideFallbackColors` for unknown IDEs (wraps around)
+ */
+export function getIdeColor(ideKey: string, fallbackIndex: number): string {
+  const key = ideKey.toLowerCase().trim();
+  return ideColors[key] ?? ideFallbackColors[fallbackIndex % ideFallbackColors.length];
+}
+
+/**
  * Default color sequence for datasets with dynamic/unknown categories
  */
 export const defaultColorSequence = [
