@@ -1,5 +1,6 @@
 import { CliUsageAccumulator } from './cliUsageCalculator';
 import { compareByDateAsc } from './statsCalculators';
+import { getChatModeBucket } from '../featureCategories';
 
 export interface DailyChatUsersData {
   date: string;
@@ -79,24 +80,24 @@ export function accumulateChatFeature(
   const users = accumulator.dailyChatUsers.get(date)!;
   const requests = accumulator.dailyChatRequests.get(date)!;
 
-  switch (feature) {
-    case 'chat_panel_ask_mode':
+  switch (getChatModeBucket(feature)) {
+    case 'ask':
       users.askModeUsers.add(userId);
       requests.askModeRequests += interactionCount;
       break;
-    case 'chat_panel_agent_mode':
+    case 'agent':
       users.agentModeUsers.add(userId);
       requests.agentModeRequests += interactionCount;
       break;
-    case 'chat_panel_edit_mode':
+    case 'edit':
       users.editModeUsers.add(userId);
       requests.editModeRequests += interactionCount;
       break;
-    case 'chat_inline':
+    case 'inline':
       users.inlineModeUsers.add(userId);
       requests.inlineModeRequests += interactionCount;
       break;
-    case 'chat_panel_plan_mode':
+    case 'plan':
       users.planModeUsers.add(userId);
       requests.planModeRequests += interactionCount;
       break;
