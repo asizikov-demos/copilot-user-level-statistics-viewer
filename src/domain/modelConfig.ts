@@ -141,6 +141,19 @@ export function classifyModelBucket(modelName: string): ModelBucket {
   return getModelMultiplier(normalized) === 0 ? 'standard' : 'premium';
 }
 
+export interface ModelRequestClassification {
+  normalizedModel: string;
+  bucket: ModelBucket;
+}
+
+export function classifyModelRequest(modelName: string): ModelRequestClassification {
+  const normalizedModel = normalizeModelName(modelName);
+  return {
+    normalizedModel,
+    bucket: classifyModelBucket(normalizedModel),
+  };
+}
+
 export function isPremiumModel(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
   // Exact match first

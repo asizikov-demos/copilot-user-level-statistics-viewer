@@ -134,13 +134,25 @@ export const ideFallbackColors: readonly string[] = [
   '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6',
 ];
 
+function normalizeIdeKey(ideKey: string): string {
+  return ideKey.toLowerCase().trim();
+}
+
+/**
+ * Check whether the given IDE key has a configured brand color.
+ * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains'); normalized to lowercase + trim
+ */
+export function hasIdeColor(ideKey: string): boolean {
+  return normalizeIdeKey(ideKey) in ideColors;
+}
+
 /**
  * Get a color for the given IDE key, falling back to an indexed palette for unknown IDEs.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains'); normalized to lowercase + trim
  * @param fallbackIndex - Index into `ideFallbackColors` for unknown IDEs (wraps around)
  */
 export function getIdeColor(ideKey: string, fallbackIndex: number): string {
-  const key = ideKey.toLowerCase().trim();
+  const key = normalizeIdeKey(ideKey);
   return ideColors[key] ?? ideFallbackColors[fallbackIndex % ideFallbackColors.length];
 }
 

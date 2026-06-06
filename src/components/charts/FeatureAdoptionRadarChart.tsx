@@ -7,6 +7,7 @@ import { createRadarChartOptions } from './utils/chartOptions';
 import { createRadarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import ChartContainer from '../ui/ChartContainer';
+import { FEATURE_ADOPTION_RADAR_METADATA } from '../../domain/featureCategories';
 
 registerChartJS();
 
@@ -27,25 +28,39 @@ export default function FeatureAdoptionRadarChart({
   editModeInteractions,
   completionInteractions,
 }: FeatureAdoptionRadarChartProps) {
+  const radarValues = {
+    agentInteractions,
+    planInteractions,
+    cliInteractions,
+    askModeInteractions,
+    editModeInteractions,
+    completionInteractions,
+  } as const;
+
+  const radarItems = FEATURE_ADOPTION_RADAR_METADATA.map((item) => ({
+    ...item,
+    value: radarValues[item.key],
+  }));
+
   const chartData = {
-    labels: ['Agent Mode', 'Plan Mode', 'CLI', 'Ask Mode', 'Edit Mode', 'Completions'],
+    labels: radarItems.map((item) => item.label),
     datasets: [
       createRadarDataset(
         chartColors.indigo.solid,
         'Interactions',
-        [agentInteractions, planInteractions, cliInteractions, askModeInteractions, editModeInteractions, completionInteractions]
+        radarItems.map((item) => item.value)
       ),
     ],
   };
 
   const options = createRadarChartOptions({
     tooltipLabelCallback: (context: TooltipItem<'radar'>) => {
-      const unit = context.label === 'Completions' ? 'acceptances' : 'interactions';
+      const unit = radarItems[context.dataIndex]?.unit || 'interactions';
       return `${context.label}: ${context.parsed.r.toLocaleString()} ${unit}`;
     },
   });
 
-  const total = agentInteractions + planInteractions + cliInteractions + askModeInteractions + editModeInteractions + completionInteractions;
+  const total = radarItems.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <ChartContainer
@@ -56,12 +71,9 @@ export default function FeatureAdoptionRadarChart({
       chartHeight="flex-1 min-h-0"
       footer={
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-gray-600">
-          <span>Agent: <strong>{agentInteractions.toLocaleString()}</strong></span>
-          <span>Plan: <strong>{planInteractions.toLocaleString()}</strong></span>
-          <span>CLI: <strong>{cliInteractions.toLocaleString()}</strong></span>
-          <span>Ask: <strong>{askModeInteractions.toLocaleString()}</strong></span>
-          <span>Edit: <strong>{editModeInteractions.toLocaleString()}</strong></span>
-          <span>Completions: <strong>{completionInteractions.toLocaleString()}</strong></span>
+          {radarItems.map((item) => (
+            <span key={item.key}>{item.summaryLabel}: <strong>{item.value.toLocaleString()}</strong></span>
+          ))}
         </div>
       }
     >

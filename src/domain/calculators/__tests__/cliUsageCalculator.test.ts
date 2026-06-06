@@ -5,9 +5,11 @@ import {
   accumulateCliUsage,
   computeDailyCliSessionData,
   computeDailyCliTokenData,
+  computeCliFeatureTotals,
+  computeCliDayTotals,
 } from '../cliUsageCalculator';
 import { makeMetric } from '../../../__tests__/factories/metrics';
-import type { CopilotMetrics } from '../../../types/metrics';
+import type { CopilotMetrics, UserDayData } from '../../../types/metrics';
 
 function makeCliMetric(
   cli: { sessionCount: number; requestCount: number; promptCount: number; outputTokens: number; promptTokens: number },
@@ -30,7 +32,143 @@ function makeCliMetric(
   });
 }
 
+function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
+  return {
+    day: '2024-01-15',
+    user_initiated_interaction_count: 0,
+    code_generation_activity_count: 0,
+    code_acceptance_activity_count: 0,
+    loc_added_sum: 0,
+    loc_deleted_sum: 0,
+    loc_suggested_to_add_sum: 0,
+    loc_suggested_to_delete_sum: 0,
+    totals_by_feature: [],
+    totals_by_ide: [],
+    totals_by_language_feature: [],
+    totals_by_language_model: [],
+    totals_by_model_feature: [],
+    ...overrides,
+  };
+}
+
 describe('cliUsageCalculator', () => {
+  describe('computeCliFeatureTotals', () => {
+    it('should aggregate only CLI feature totals including suggested LOC fields', () => {
+      const day = makeUserDayData({
+        totals_by_feature: [
+          {
+            feature: 'copilot_cli',
+            user_initiated_interaction_count: 2,
+            code_generation_activity_count: 3,
+            code_acceptance_activity_count: 4,
+            loc_added_sum: 5,
+            loc_deleted_sum: 6,
+            loc_suggested_to_add_sum: 7,
+            loc_suggested_to_delete_sum: 8,
+          },
+          {
+            feature: 'cli_agent',
+            user_initiated_interaction_count: 10,
+            code_generation_activity_count: 11,
+            code_acceptance_activity_count: 12,
+            loc_added_sum: 13,
+            loc_deleted_sum: 14,
+            loc_suggested_to_add_sum: 15,
+            loc_suggested_to_delete_sum: 16,
+          },
+          {
+            feature: 'code_completions',
+            user_initiated_interaction_count: 100,
+            code_generation_activity_count: 100,
+            code_acceptance_activity_count: 100,
+            loc_added_sum: 100,
+            loc_deleted_sum: 100,
+            loc_suggested_to_add_sum: 100,
+            loc_suggested_to_delete_sum: 100,
+          },
+        ],
+      });
+
+      const totals = computeCliFeatureTotals(day.totals_by_feature);
+
+      expect(totals).toEqual({
+        interactions: 12,
+        generations: 14,
+        acceptances: 16,
+        locAdded: 18,
+        locDeleted: 20,
+        locSuggestedToAdd: 22,
+        locSuggestedToDelete: 24,
+      });
+    });
+  });
+
+  describe('computeCliDayTotals', () => {
+    it('should fallback to prompt count when cli feature interactions are zero', () => {
+      const day = makeUserDayData({
+        totals_by_feature: [{
+          feature: 'code_completions',
+          user_initiated_interaction_count: 0,
+          code_generation_activity_count: 1,
+          code_acceptance_activity_count: 1,
+          loc_added_sum: 1,
+          loc_deleted_sum: 1,
+          loc_suggested_to_add_sum: 1,
+          loc_suggested_to_delete_sum: 1,
+        }],
+        totals_by_cli: {
+          session_count: 1,
+          request_count: 2,
+          prompt_count: 9,
+          token_usage: {
+            output_tokens_sum: 10,
+            prompt_tokens_sum: 11,
+            avg_tokens_per_request: 10.5,
+          },
+        },
+      });
+
+      const totals = computeCliDayTotals(day);
+
+      expect(totals.interactions).toBe(0);
+      expect(totals.promptCount).toBe(9);
+      expect(totals.interactionCount).toBe(9);
+    });
+
+    it('should use cli feature interactions when present', () => {
+      const day = makeUserDayData({
+        totals_by_feature: [{
+          feature: 'copilot_cli',
+          user_initiated_interaction_count: 5,
+          code_generation_activity_count: 1,
+          code_acceptance_activity_count: 2,
+          loc_added_sum: 3,
+          loc_deleted_sum: 4,
+          loc_suggested_to_add_sum: 6,
+          loc_suggested_to_delete_sum: 7,
+        }],
+        totals_by_cli: {
+          session_count: 1,
+          request_count: 2,
+          prompt_count: 20,
+          token_usage: {
+            output_tokens_sum: 10,
+            prompt_tokens_sum: 11,
+            avg_tokens_per_request: 10.5,
+          },
+        },
+      });
+
+      const totals = computeCliDayTotals(day);
+
+      expect(totals.promptCount).toBe(20);
+      expect(totals.interactions).toBe(5);
+      expect(totals.interactionCount).toBe(5);
+      expect(totals.locSuggestedToAdd).toBe(6);
+      expect(totals.locSuggestedToDelete).toBe(7);
+    });
+  });
+
   describe('ensureCliDates', () => {
     it('should initialize empty entries for a new date', () => {
       const acc = createCliUsageAccumulator();

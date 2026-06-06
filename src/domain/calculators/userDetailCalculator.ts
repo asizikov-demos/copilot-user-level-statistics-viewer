@@ -8,7 +8,7 @@ import {
   calculateCodeCompletionImpactData,
   calculateCliImpactData,
 } from './metricCalculators';
-import { getModelMultiplier } from '../modelConfig';
+import { classifyModelRequest } from '../modelConfig';
 
 interface FeatureAgg {
   feature: string;
@@ -174,9 +174,8 @@ export function accumulateUserDetail(
   const state = getOrCreateUserState(accumulator, userId);
 
   for (const mf of metric.totals_by_model_feature) {
-    const model = mf.model.toLowerCase();
-    const multiplier = getModelMultiplier(model);
-    if (multiplier === 0) {
+    const { bucket } = classifyModelRequest(mf.model);
+    if (bucket === 'standard') {
       state.totalStandardModelRequests += mf.user_initiated_interaction_count;
     } else {
       state.totalPremiumModelRequests += mf.user_initiated_interaction_count;

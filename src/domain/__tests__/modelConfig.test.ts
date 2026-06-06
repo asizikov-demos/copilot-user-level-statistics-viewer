@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getModelMultiplier, isPremiumModel, classifyModelBucket, MODEL_MULTIPLIERS, KNOWN_MODELS } from '../modelConfig';
+import { getModelMultiplier, isPremiumModel, classifyModelBucket, classifyModelRequest, MODEL_MULTIPLIERS, KNOWN_MODELS } from '../modelConfig';
 
 describe('modelConfig', () => {
   describe('getModelMultiplier', () => {
@@ -175,6 +175,20 @@ describe('modelConfig', () => {
 
     it('should treat unrecognized models as premium', () => {
       expect(classifyModelBucket('totally-made-up')).toBe('premium');
+    });
+  });
+
+  describe('classifyModelRequest', () => {
+    it('should return normalized model and bucket for aliases', () => {
+      expect(classifyModelRequest('Claude Opus 4.6 (fast mode)')).toEqual({
+        normalizedModel: 'claude-opus-4.6-fast-mode',
+        bucket: 'premium',
+      });
+    });
+
+    it('should preserve unknown and empty buckets', () => {
+      expect(classifyModelRequest('unknown')).toEqual({ normalizedModel: 'unknown', bucket: 'unknown' });
+      expect(classifyModelRequest('')).toEqual({ normalizedModel: '', bucket: 'unknown' });
     });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getIdeColor, ideColors, ideFallbackColors } from './chartColors';
+import { getIdeColor, hasIdeColor, ideColors, ideFallbackColors } from './chartColors';
 
 describe('getIdeColor', () => {
   it('returns the brand color for a known IDE key', () => {
@@ -11,6 +11,12 @@ describe('getIdeColor', () => {
   it('normalizes the key with lowercase and trim', () => {
     expect(getIdeColor('VSCode', 0)).toBe(ideColors['vscode']);
     expect(getIdeColor('  JetBrains  ', 0)).toBe(ideColors['jetbrains']);
+  });
+
+  it('checks whether an IDE has a configured brand color', () => {
+    expect(hasIdeColor('VSCode')).toBe(true);
+    expect(hasIdeColor('  JetBrains  ')).toBe(true);
+    expect(hasIdeColor('unknown_ide')).toBe(false);
   });
 
   it('supports both visualstudio and visual_studio as aliases', () => {

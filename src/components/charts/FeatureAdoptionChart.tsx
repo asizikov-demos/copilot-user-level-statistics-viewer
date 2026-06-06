@@ -8,6 +8,7 @@ import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
 import { FeatureAdoptionData } from '../../domain/calculators/metricCalculators';
 import { computeFeatureAdoptionInsights } from '../../domain/featureAdoptionInsights';
+import { FEATURE_ADOPTION_CHART_METADATA } from '../../domain/featureCategories';
 import ChartContainer from '../ui/ChartContainer';
 import ChartToggleButtons from '../ui/ChartToggleButtons';
 import InsightsCard from '../ui/InsightsCard';
@@ -26,18 +27,25 @@ const VIEW_TYPE_OPTIONS = [
 export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps) {
   const [viewType, setViewType] = useState<'absolute' | 'percentage'>('absolute');
 
-  const features = [
-    { name: 'Total Users', count: data?.totalUsers || 0, color: chartColors.indigo.solid, description: 'All users in the dataset' },
-    { name: 'Code Completion', count: data?.completionUsers || 0, color: chartColors.green.solid, description: 'Users who used code completion' },
-    { name: 'Chat Features', count: data?.chatUsers || 0, color: chartColors.blue.solid, description: 'Users who used any chat feature (Ask/Edit/Agent/Plan/Inline)' },
-    { name: 'Ask Mode', count: data?.askModeUsers || 0, color: chartColors.purple.solid, description: 'Users who used chat ask mode' },
-    { name: 'Edit Mode', count: data?.editModeUsers || 0, color: chartColors.amber.solid, description: 'Users who used chat edit mode' },
-    { name: 'IDE Agent Mode', count: data?.agentModeUsers || 0, color: chartColors.red.solid, description: 'Users who used Agent Mode in the IDE' },
-    { name: 'Plan Mode', count: data?.planModeUsers || 0, color: chartColors.indigo.solid, description: 'Users who used Plan Mode' },
-    { name: 'Copilot CLI', count: data?.cliUsers || 0, color: chartColors.pink.solid, description: 'Users who used Copilot CLI' },
-    { name: 'Inline Chat', count: data?.inlineModeUsers || 0, color: chartColors.violet.solid, description: 'Users who used inline chat' },
-    { name: 'Copilot Cloud Agent', count: data?.codingAgentUsers || 0, color: chartColors.teal.solid, description: 'Users who used Copilot Cloud Agent' },
-  ];
+  const colorsByKey = {
+    totalUsers: chartColors.indigo.solid,
+    completionUsers: chartColors.green.solid,
+    chatUsers: chartColors.blue.solid,
+    askModeUsers: chartColors.purple.solid,
+    editModeUsers: chartColors.amber.solid,
+    agentModeUsers: chartColors.red.solid,
+    planModeUsers: chartColors.indigo.solid,
+    cliUsers: chartColors.pink.solid,
+    inlineModeUsers: chartColors.violet.solid,
+    codingAgentUsers: chartColors.teal.solid,
+  } as const;
+
+  const features = FEATURE_ADOPTION_CHART_METADATA.map((feature) => ({
+    name: feature.label,
+    count: data?.[feature.key] || 0,
+    color: colorsByKey[feature.key],
+    description: feature.description,
+  }));
 
   const totalUsers = data?.totalUsers || 0;
   const completionRate = totalUsers > 0 ? (data.completionUsers / totalUsers) * 100 : 0;

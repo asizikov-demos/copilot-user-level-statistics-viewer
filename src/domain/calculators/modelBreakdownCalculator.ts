@@ -1,6 +1,6 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { classifyModelBucket, normalizeModelName } from '../modelConfig';
+import { classifyModelRequest } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -65,7 +65,7 @@ export function accumulateModelBreakdown(
 ): void {
   const interactionCount = modelFeature.user_initiated_interaction_count || 0;
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
-  const normalizedModel = normalizeModelName(modelFeature.model);
+  const { normalizedModel, bucket } = classifyModelRequest(modelFeature.model);
 
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
@@ -90,7 +90,6 @@ export function accumulateModelBreakdown(
   }
 
   accumulator.allDates.add(date);
-  const bucket = classifyModelBucket(normalizedModel);
 
   if (bucket === 'premium') {
     accumulator.premiumTotal += interactionCount;

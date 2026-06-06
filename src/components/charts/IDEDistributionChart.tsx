@@ -6,7 +6,7 @@ import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { createDoughnutChartOptions } from './utils/chartOptions';
 import { createDoughnutDataset } from './utils/chartStyles';
-import { ideColors, getIdeColor } from './utils/chartColors';
+import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import { sortBySelector } from '../../utils/sorting';
@@ -36,7 +36,13 @@ export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistribu
 
   let fallbackIndex = 0;
   const backgroundColors = [
-    ...sorted.map((ide) => getIdeColor(ide.ide, fallbackIndex++)),
+    ...sorted.map((ide) => {
+      const color = getIdeColor(ide.ide, fallbackIndex);
+      if (!hasIdeColor(ide.ide)) {
+        fallbackIndex += 1;
+      }
+      return color;
+    }),
     ...(hasCliUsers ? [ideColors['copilot_cli']] : []),
   ];
 

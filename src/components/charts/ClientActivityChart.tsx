@@ -6,8 +6,8 @@ import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
 import { createBarDataset } from './utils/chartStyles';
 import { createBaseChartOptions } from './utils/chartOptions';
-import { ideColors, ideFallbackColors } from './utils/chartColors';
-import { isCliFeature } from '../../domain/featureCategories';
+import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
+import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import ExpandableTableSection from '../ui/ExpandableTableSection';
@@ -43,61 +43,6 @@ interface ClientActivityChartProps {
   }[];
 }
 
-interface CliFeatureTotals {
-  interactions: number;
-  generations: number;
-  acceptances: number;
-  locAdded: number;
-  locDeleted: number;
-  locSuggestedToAdd: number;
-  locSuggestedToDelete: number;
-}
-
-interface CliDayTotals extends CliFeatureTotals {
-  promptCount: number;
-  interactionCount: number;
-}
-
-function createEmptyCliFeatureTotals(): CliFeatureTotals {
-  return {
-    interactions: 0,
-    generations: 0,
-    acceptances: 0,
-    locAdded: 0,
-    locDeleted: 0,
-    locSuggestedToAdd: 0,
-    locSuggestedToDelete: 0,
-  };
-}
-
-function getCliFeatureTotals(day: UserDayData): CliFeatureTotals {
-  return day.totals_by_feature.reduce((acc, feature) => {
-    if (!isCliFeature(feature.feature)) return acc;
-
-    acc.interactions += feature.user_initiated_interaction_count;
-    acc.generations += feature.code_generation_activity_count;
-    acc.acceptances += feature.code_acceptance_activity_count;
-    acc.locAdded += feature.loc_added_sum;
-    acc.locDeleted += feature.loc_deleted_sum;
-    acc.locSuggestedToAdd += feature.loc_suggested_to_add_sum;
-    acc.locSuggestedToDelete += feature.loc_suggested_to_delete_sum;
-
-    return acc;
-  }, createEmptyCliFeatureTotals());
-}
-
-function getCliDayTotals(day: UserDayData): CliDayTotals {
-  const featureTotals = getCliFeatureTotals(day);
-  const promptCount = day.totals_by_cli?.prompt_count ?? 0;
-  const interactionCount = featureTotals.interactions > 0 ? featureTotals.interactions : promptCount;
-
-  return {
-    ...featureTotals,
-    promptCount,
-    interactionCount,
-  };
-}
-
 /**
  * ClientActivityChart
  * Reusable section displaying a daily interactions stacked bar chart (by IDE/CLI) plus
@@ -126,7 +71,7 @@ export default function ClientActivityChart({
     const byDay = new Map<string, CliDayTotals>();
 
     for (const day of days) {
-      const dayTotals = getCliDayTotals(day);
+      const dayTotals = computeCliDayTotals(day);
       byDay.set(day.day, dayTotals);
 
       totals.promptCount += dayTotals.promptCount;
@@ -150,14 +95,18 @@ export default function ClientActivityChart({
     const allDays = generateDateRange(reportStartDay, reportEndDay);
     const dayMap = new Map(days.map(d => [d.day, d]));
 
-    const datasets = allIDEs.map((ide, index) => {
+    let fallbackIndex = 0;
+    const datasets = allIDEs.map((ide) => {
       const data = allDays.map(dayStr => {
         const dayData = dayMap.get(dayStr);
         const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
         return ideData?.user_initiated_interaction_count || 0;
       });
 
-      const color = ideColors[ide] ?? ideFallbackColors[index % ideFallbackColors.length];
+      const color = getIdeColor(ide, fallbackIndex);
+      if (!hasIdeColor(ide)) {
+        fallbackIndex += 1;
+      }
       return createBarDataset(color, formatIDEName(ide), data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 

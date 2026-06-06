@@ -1,3 +1,9 @@
+import {
+  isAgentFeature,
+  isChatFeature,
+  isCodeCompletionFeature,
+} from '../featureCategories';
+
 export interface FeatureAdoptionData {
   totalUsers: number;
   completionUsers: number;
@@ -77,17 +83,6 @@ export function computeFeatureAdoptionData(
   let codingAgentUsers = 0;
   let advancedUsers = 0;
 
-  const isChatUser = (features: Set<string>) =>
-    features.has('chat_panel_unknown_mode') ||
-    features.has('chat_panel_ask_mode') ||
-    features.has('chat_panel_agent_mode') ||
-    features.has('chat_panel_edit_mode') ||
-    features.has('chat_panel_plan_mode') ||
-    features.has('chat_inline');
-
-  const isAgentUser = (features: Set<string>) =>
-    features.has('chat_panel_agent_mode') || features.has('agent_edit');
-
   const userIds = new Set<number>([
     ...accumulator.userFeatures.keys(),
     ...accumulator.cliUsers.values(),
@@ -98,19 +93,28 @@ export function computeFeatureAdoptionData(
     const features = accumulator.userFeatures.get(userId) || new Set<string>();
     const isCliUser = accumulator.cliUsers.has(userId);
     const isCodingAgentUser = accumulator.codingAgentUsers.has(userId);
+    let hasCompletionFeature = false;
+    let hasChatFeature = false;
+    let hasAgentFeature = false;
 
-    if (features.has('code_completion')) completionUsers++;
-    if (isChatUser(features)) chatUsers++;
-    if (isAgentUser(features)) agentModeUsers++;
+    for (const feature of features) {
+      if (isCodeCompletionFeature(feature)) hasCompletionFeature = true;
+      if (isChatFeature(feature)) hasChatFeature = true;
+      if (isAgentFeature(feature)) hasAgentFeature = true;
+    }
+
+    if (hasCompletionFeature) completionUsers++;
+    if (hasChatFeature) chatUsers++;
+    if (hasAgentFeature) agentModeUsers++;
     if (features.has('chat_panel_ask_mode')) askModeUsers++;
     if (features.has('chat_panel_edit_mode')) editModeUsers++;
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('chat_panel_plan_mode')) planModeUsers++;
     if (isCliUser) cliUsers++;
     if (isCodingAgentUser) codingAgentUsers++;
-    if (isAgentUser(features) || isCliUser || isCodingAgentUser) advancedUsers++;
+    if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (features.has('code_completion') && !isChatUser(features) && !isAgentUser(features) && !isCliUser && !isCodingAgentUser) {
+    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser) {
       completionOnlyUsers++;
     }
   }
