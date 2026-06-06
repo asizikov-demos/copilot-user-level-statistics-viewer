@@ -1,10 +1,12 @@
 "use client";
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions, TooltipItem } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
 import { createBarDataset } from './utils/chartStyles';
+import { createBaseChartOptions } from './utils/chartOptions';
+import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
@@ -40,25 +42,6 @@ interface ClientActivityChartProps {
     sampled_at: string;
   }[];
 }
-
-const IDE_COLORS: Record<string, string> = {
-  'vscode': '#007ACC',
-  'visual_studio': '#5C2D91',
-  'jetbrains': '#FE315D',
-  'vim': '#019733',
-  'neovim': '#57A143',
-  'emacs': '#7F5AB6',
-  'eclipse': '#66595C',
-  'sublime_text': '#FF9800',
-  'xcode': '#1575F9',
-  'intellij': '#FE315D',
-  'copilot_cli': '#6E40C9',
-};
-
-const FALLBACK_COLORS = [
-  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-  '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6'
-];
 
 /**
  * ClientActivityChart
@@ -112,14 +95,18 @@ export default function ClientActivityChart({
     const allDays = generateDateRange(reportStartDay, reportEndDay);
     const dayMap = new Map(days.map(d => [d.day, d]));
 
-    const datasets = allIDEs.map((ide, index) => {
+    let fallbackIndex = 0;
+    const datasets = allIDEs.map((ide) => {
       const data = allDays.map(dayStr => {
         const dayData = dayMap.get(dayStr);
         const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
         return ideData?.user_initiated_interaction_count || 0;
       });
 
-      const color = IDE_COLORS[ide] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+      const color = getIdeColor(ide, fallbackIndex);
+      if (!hasIdeColor(ide)) {
+        fallbackIndex += 1;
+      }
       return createBarDataset(color, formatIDEName(ide), data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 
@@ -129,7 +116,7 @@ export default function ClientActivityChart({
       const cliData = allDays.map(dayStr => {
         return cliTotalsByDay.get(dayStr)?.interactionCount ?? 0;
       });
-      datasets.push(createBarDataset(IDE_COLORS['copilot_cli'], 'Copilot CLI', cliData));
+      datasets.push(createBarDataset(ideColors['copilot_cli'], 'Copilot CLI', cliData));
     }
 
     return {
@@ -138,42 +125,14 @@ export default function ClientActivityChart({
     };
   }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
 
-  const barChartOptions: ChartOptions<'bar'> = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: TooltipItem<'bar'>) {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value.toLocaleString()} interactions`;
-          }
-        }
-      }
+  const barChartOptions = useMemo(() => createBaseChartOptions({
+    xAxisLabel: 'Date',
+    yAxisLabel: 'Interactions',
+    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+      const label = context.dataset.label || '';
+      const value = context.parsed.y || 0;
+      return `${label}: ${value.toLocaleString()} interactions`;
     },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Date'
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Interactions'
-        },
-        beginAtZero: true
-      }
-    }
   }), []);
 
   const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
