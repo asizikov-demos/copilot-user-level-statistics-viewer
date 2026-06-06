@@ -1,5 +1,10 @@
 import { CopilotMetrics } from '../../types/metrics';
-import { isCliFeature } from '../featureCategories';
+import {
+  isAgentFeature,
+  isCliFeature,
+  isCodeCompletionFeature,
+  isJoinedImpactFeature,
+} from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
 
 export interface ImpactData {
@@ -25,17 +30,6 @@ export interface ImpactAccumulator {
   dailyJoinedImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   allUniqueUsers: Set<number>;
 }
-
-const JOINED_FEATURES = [
-  'code_completion',
-  'chat_panel_ask_mode',
-  'chat_panel_edit_mode',
-  'chat_inline',
-  'chat_panel_agent_mode',
-  'agent_edit',
-  'cli_agent',
-  'copilot_cli',
-];
 
 export function createImpactAccumulator(): ImpactAccumulator {
   return {
@@ -108,7 +102,7 @@ export function accumulateFeatureImpacts(
   for (const { feature, locAdded, locDeleted } of features) {
     const hasLoc = locAdded > 0 || locDeleted > 0;
 
-    if (feature === 'agent_edit' || feature === 'chat_panel_agent_mode') {
+    if (isAgentFeature(feature)) {
       if (hasLoc) {
         agentLocAdded += locAdded;
         agentLocDeleted += locDeleted;
@@ -116,7 +110,7 @@ export function accumulateFeatureImpacts(
       }
     }
 
-    if (feature === 'code_completion' && hasLoc) {
+    if (isCodeCompletionFeature(feature) && hasLoc) {
       accumulateToMap(
         accumulator.dailyCodeCompletionImpact,
         date,
@@ -166,7 +160,7 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (JOINED_FEATURES.includes(feature) && hasLoc) {
+    if (isJoinedImpactFeature(feature) && hasLoc) {
       joinedLocAdded += locAdded;
       joinedLocDeleted += locDeleted;
       hasJoinedActivity = true;

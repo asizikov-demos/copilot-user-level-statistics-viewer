@@ -99,7 +99,7 @@ import {
   computeCliAdoptionTrend,
 } from './calculators';
 import { scanAllUserFlags } from './calculators/userFlagScanner';
-import { isActiveAutoModeFeature } from './modelConfig';
+import { isActiveAutoModeFeature } from './autoMode';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;

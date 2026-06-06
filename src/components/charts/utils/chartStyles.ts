@@ -100,6 +100,69 @@ export function createBarDataset(
   };
 }
 
+/**
+ * Default styling for radar chart datasets
+ */
+export const radarDatasetDefaults = {
+  borderWidth: 2,
+  pointBorderColor: '#fff',
+  pointBorderWidth: 2,
+  pointRadius: 5,
+};
+
+/**
+ * Creates a radar chart dataset with consistent styling.
+ * Background fill is derived from the border color at 0.2 opacity.
+ * @param color - RGB color string (e.g., 'rgb(99, 102, 241)')
+ * @param label - Dataset label
+ * @param data - Array of data points
+ * @param options - Additional options to override defaults
+ */
+export function createRadarDataset(
+  color: string,
+  label: string,
+  data: number[],
+  options: Record<string, unknown> = {}
+) {
+  const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.2)');
+  return {
+    ...radarDatasetDefaults,
+    label,
+    data,
+    backgroundColor: alphaColor,
+    borderColor: color,
+    pointBackgroundColor: color,
+    ...options,
+  };
+}
+
+/**
+ * Default styling for doughnut/pie chart datasets
+ */
+export const doughnutDatasetDefaults = {
+  borderWidth: 1,
+  borderColor: '#ffffff',
+};
+
+/**
+ * Creates a doughnut (or pie) chart dataset with consistent styling.
+ * @param dataValues - Array of numeric values for each segment
+ * @param backgroundColors - Array of colors for each segment (one per data value)
+ * @param options - Additional options to override defaults
+ */
+export function createDoughnutDataset(
+  dataValues: number[],
+  backgroundColors: string[],
+  options: Record<string, unknown> = {}
+) {
+  return {
+    ...doughnutDatasetDefaults,
+    data: dataValues,
+    backgroundColor: backgroundColors,
+    ...options,
+  };
+}
+
 export function computeRetentionRates(
   data: Array<{ returningUsers: number; totalActiveUsers: number }>
 ): (number | null)[] {

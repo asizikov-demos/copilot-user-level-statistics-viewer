@@ -2,6 +2,10 @@
  * Shared configuration for model classification and cost calculations.
  * Keep this list in sync with GitHub Copilot pricing and entitlement docs.
  */
+import { normalizeModelName } from './autoMode';
+
+export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
+
 export class Model {
   constructor(
     public readonly name: string,
@@ -78,14 +82,6 @@ export const KNOWN_MODELS: Model[] = [
   new Model('unknown', 1, true),
 ];
 
-export const normalizeModelName = (name: string): string =>
-  name
-    .trim()
-    .toLowerCase()
-    .replace(/[()]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-');
-
 /**
  * Multiplier map keyed by model name for quick lookups.
  */
@@ -141,6 +137,19 @@ export function classifyModelBucket(modelName: string): ModelBucket {
   return getModelMultiplier(normalized) === 0 ? 'standard' : 'premium';
 }
 
+export interface ModelRequestClassification {
+  normalizedModel: string;
+  bucket: ModelBucket;
+}
+
+export function classifyModelRequest(modelName: string): ModelRequestClassification {
+  const normalizedModel = normalizeModelName(modelName);
+  return {
+    normalizedModel,
+    bucket: classifyModelBucket(normalizedModel),
+  };
+}
+
 export function isPremiumModel(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
   // Exact match first
@@ -156,23 +165,4 @@ export function isPremiumModel(modelName: string): boolean {
   // Fallback to 'unknown' model's premium flag
   const unknown = KNOWN_MODELS.find(m => normalizeModelName(m.name) === 'unknown');
   return unknown ? unknown.isPremium : true;
-}
-
-/**
- * Returns true when a model-feature record represents active Auto mode usage.
- * A feature counts as active when the normalized model name is 'auto' AND at least
- * one of the qualifying activity counters (interactions, generation, or acceptance) is non-zero.
- */
-export function isActiveAutoModeFeature(modelFeature: {
-  model: string;
-  user_initiated_interaction_count: number;
-  code_generation_activity_count: number;
-  code_acceptance_activity_count: number;
-}): boolean {
-  if (normalizeModelName(modelFeature.model) !== 'auto') return false;
-  return (
-    modelFeature.user_initiated_interaction_count > 0 ||
-    modelFeature.code_generation_activity_count > 0 ||
-    modelFeature.code_acceptance_activity_count > 0
-  );
 }

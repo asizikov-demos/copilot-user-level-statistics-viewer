@@ -23,7 +23,7 @@ import { useNavigation } from '../state/NavigationContext';
 import type { ModeImpactData } from '../domain/calculators/metricCalculators';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
-import { isActiveAutoModeFeature } from '../domain/modelConfig';
+import { isActiveAutoModeFeature } from '../domain/autoMode';
 
 registerChartJS();
 

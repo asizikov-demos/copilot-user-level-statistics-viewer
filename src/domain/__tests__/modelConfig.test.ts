@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getModelMultiplier, isPremiumModel, classifyModelBucket, MODEL_MULTIPLIERS, KNOWN_MODELS, isActiveAutoModeFeature } from '../modelConfig';
+import { getModelMultiplier, isPremiumModel, classifyModelBucket, classifyModelRequest, MODEL_MULTIPLIERS, KNOWN_MODELS, isActiveAutoModeFeature } from '../modelConfig';
 
 describe('modelConfig', () => {
   describe('getModelMultiplier', () => {
@@ -186,15 +186,15 @@ describe('modelConfig', () => {
       code_acceptance_activity_count = 0
     ) => ({ model, user_initiated_interaction_count, code_generation_activity_count, code_acceptance_activity_count });
 
-    it('should return true when model is "auto" and interactions are non-zero', () => {
+    it('should return true when model is "auto" and interactions are greater than zero', () => {
       expect(isActiveAutoModeFeature(makeFeature('auto', 5))).toBe(true);
     });
 
-    it('should return true when model is "auto" and only generation activity is non-zero', () => {
+    it('should return true when model is "auto" and only generation activity is greater than zero', () => {
       expect(isActiveAutoModeFeature(makeFeature('auto', 0, 3))).toBe(true);
     });
 
-    it('should return true when model is "auto" and only acceptance activity is non-zero', () => {
+    it('should return true when model is "auto" and only acceptance activity is greater than zero', () => {
       expect(isActiveAutoModeFeature(makeFeature('auto', 0, 0, 2))).toBe(true);
     });
 
@@ -212,6 +212,24 @@ describe('modelConfig', () => {
 
     it('should normalize uppercase "AUTO" to "auto"', () => {
       expect(isActiveAutoModeFeature(makeFeature('AUTO', 1))).toBe(true);
+    });
+
+    it('should return false when auto activity counts are negative', () => {
+      expect(isActiveAutoModeFeature(makeFeature('auto', -1, -2, -3))).toBe(false);
+    });
+  });
+
+  describe('classifyModelRequest', () => {
+    it('should return normalized model and bucket for aliases', () => {
+      expect(classifyModelRequest('Claude Opus 4.6 (fast mode)')).toEqual({
+        normalizedModel: 'claude-opus-4.6-fast-mode',
+        bucket: 'premium',
+      });
+    });
+
+    it('should preserve unknown and empty buckets', () => {
+      expect(classifyModelRequest('unknown')).toEqual({ normalizedModel: 'unknown', bucket: 'unknown' });
+      expect(classifyModelRequest('')).toEqual({ normalizedModel: '', bucket: 'unknown' });
     });
   });
 });
