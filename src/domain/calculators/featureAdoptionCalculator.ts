@@ -91,22 +91,30 @@ export function computeFeatureAdoptionData(
 
   for (const userId of userIds) {
     const features = accumulator.userFeatures.get(userId) || new Set<string>();
-    const featureList = Array.from(features);
     const isCliUser = accumulator.cliUsers.has(userId);
     const isCodingAgentUser = accumulator.codingAgentUsers.has(userId);
+    let hasCompletionFeature = false;
+    let hasChatFeature = false;
+    let hasAgentFeature = false;
 
-    if (featureList.some(isCodeCompletionFeature)) completionUsers++;
-    if (featureList.some(isChatFeature)) chatUsers++;
-    if (featureList.some(isAgentFeature)) agentModeUsers++;
+    for (const feature of features) {
+      if (isCodeCompletionFeature(feature)) hasCompletionFeature = true;
+      if (isChatFeature(feature)) hasChatFeature = true;
+      if (isAgentFeature(feature)) hasAgentFeature = true;
+    }
+
+    if (hasCompletionFeature) completionUsers++;
+    if (hasChatFeature) chatUsers++;
+    if (hasAgentFeature) agentModeUsers++;
     if (features.has('chat_panel_ask_mode')) askModeUsers++;
     if (features.has('chat_panel_edit_mode')) editModeUsers++;
     if (features.has('chat_inline')) inlineModeUsers++;
     if (features.has('chat_panel_plan_mode')) planModeUsers++;
     if (isCliUser) cliUsers++;
     if (isCodingAgentUser) codingAgentUsers++;
-    if (featureList.some(isAgentFeature) || isCliUser || isCodingAgentUser) advancedUsers++;
+    if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (featureList.some(isCodeCompletionFeature) && !featureList.some(isChatFeature) && !featureList.some(isAgentFeature) && !isCliUser && !isCodingAgentUser) {
+    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser) {
       completionOnlyUsers++;
     }
   }
