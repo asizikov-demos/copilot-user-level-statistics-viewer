@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { UserDayData } from '../../types/metrics';
-import { isCliFeature } from '../../domain/featureCategories';
+import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
 import { translateFeature } from '../../domain/featureTranslations';
 import { formatIDEName } from '../icons/IDEIcons';
 import ExpandableTableSection from './ExpandableTableSection';
@@ -29,33 +29,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   };
 
   const hasData = !!dayMetrics;
-  const cliFeatureTotals = dayMetrics?.totals_by_feature.reduce((acc, feature) => {
-    if (!isCliFeature(feature.feature)) return acc;
-
-    acc.interactions += feature.user_initiated_interaction_count;
-    acc.generations += feature.code_generation_activity_count;
-    acc.acceptances += feature.code_acceptance_activity_count;
-    acc.locAdded += feature.loc_added_sum;
-    acc.locDeleted += feature.loc_deleted_sum;
-
-    return acc;
-  }, {
-    interactions: 0,
-    generations: 0,
-    acceptances: 0,
-    locAdded: 0,
-    locDeleted: 0,
-  }) ?? {
-    interactions: 0,
-    generations: 0,
-    acceptances: 0,
-    locAdded: 0,
-    locDeleted: 0,
-  };
-  const hasCliActivity = (dayMetrics?.totals_by_cli?.prompt_count ?? 0) > 0 || cliFeatureTotals.interactions > 0;
-  const cliInteractionCount = cliFeatureTotals.interactions > 0
-    ? cliFeatureTotals.interactions
-    : dayMetrics?.totals_by_cli?.prompt_count ?? 0;
+  const cliDayTotals = computeCliDayTotals(dayMetrics);
+  const hasCliActivity = cliDayTotals.promptCount > 0 || cliDayTotals.interactions > 0;
+  const cliInteractionCount = cliDayTotals.interactionCount;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -202,10 +178,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                             <tr className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">Copilot CLI</td>
                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.generations.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.acceptances.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.locAdded.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliFeatureTotals.locDeleted.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.generations.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.acceptances.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.locAdded.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.locDeleted.toLocaleString()}</td>
                               <td className="px-4 py-3 text-sm text-gray-900 text-right">
                                 {dayMetrics.totals_by_cli?.last_known_cli_version ?
                                   `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}` :
