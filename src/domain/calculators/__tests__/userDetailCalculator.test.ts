@@ -76,6 +76,26 @@ describe('userDetailCalculator', () => {
       expect(state.totalStandardModelRequests).toBe(0);
       expect(state.totalPremiumModelRequests).toBe(5);
     });
+
+    it('should classify normalized aliases as premium', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_model_feature: [{
+          model: 'Claude Opus 4.6 (fast mode)', feature: 'code_completion',
+          user_initiated_interaction_count: 7,
+          code_generation_activity_count: 0, code_acceptance_activity_count: 0,
+          loc_added_sum: 0, loc_deleted_sum: 0,
+          loc_suggested_to_add_sum: 0, loc_suggested_to_delete_sum: 0,
+        }],
+      }));
+
+      const state = acc.users.get(1)!;
+      expect(state.totalStandardModelRequests).toBe(0);
+      expect(state.totalPremiumModelRequests).toBe(7);
+    });
   });
 
   describe('accumulateUserDetail — CLI data stored in days', () => {
