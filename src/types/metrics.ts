@@ -189,15 +189,11 @@ export interface AutoModeAdoptionTrendEntry {
 
 export interface ModelBreakdownData {
   allModels: ModelDailyUsageEntry[];
-  premiumModels: ModelDailyUsageEntry[];
-  standardModels: ModelDailyUsageEntry[];
   autoModels?: ModelDailyUsageEntry[];
   cliModels?: ModelDailyUsageEntry[];
   autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];
   dates: string[];
   modelTotal: number;
-  premiumTotal: number;
-  standardTotal: number;
   cliTotal?: number;
   unknownTotal: number;
 }

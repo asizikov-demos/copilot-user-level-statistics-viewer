@@ -252,14 +252,11 @@ describe('metricsAggregator', () => {
 
       expect(aggregated.modelUsageData).toBeDefined();
       expect(aggregated.modelUsageData.length).toBeGreaterThan(0);
-      expect(aggregated.modelUsageData[0].modelInteractions).toBe(
-        aggregated.modelUsageData[0].pruModels
-        + aggregated.modelUsageData[0].standardModels
-        + aggregated.modelUsageData[0].unknownModels
-      );
+      expect(aggregated.modelUsageData[0].modelInteractions).toBe(10);
+      expect(aggregated.modelUsageData[0].unknownModels).toBe(0);
     });
 
-    it('should expose neutral model totals alongside legacy model buckets', () => {
+    it('should expose neutral model totals and entries', () => {
       const metric = createBasicMetric({
         totals_by_model_feature: [
           {
@@ -302,9 +299,7 @@ describe('metricsAggregator', () => {
       const { modelBreakdownData } = aggregated;
 
       expect(modelBreakdownData.modelTotal).toBe(20);
-      expect(modelBreakdownData.modelTotal).toBe(
-        modelBreakdownData.premiumTotal + modelBreakdownData.standardTotal + modelBreakdownData.unknownTotal
-      );
+      expect(modelBreakdownData.unknownTotal).toBe(3);
       expect(modelBreakdownData.allModels.map(entry => entry.model)).toEqual(['gpt-4o', 'gpt-5', 'unknown']);
     });
 
@@ -355,8 +350,8 @@ describe('metricsAggregator', () => {
           cumulativeUsers: 2,
         },
       ]);
-      expect(aggregated.modelBreakdownData.premiumModels.some(entry => entry.model === 'auto')).toBe(false);
-      expect(aggregated.modelBreakdownData.premiumTotal).toBe(0);
+      expect(aggregated.modelBreakdownData.allModels.some(entry => entry.model === 'auto')).toBe(false);
+      expect(aggregated.modelBreakdownData.modelTotal).toBe(0);
     });
 
     it('should count Auto model activity even when user initiated interactions are zero', () => {

@@ -89,7 +89,7 @@ describe('modelConfig', () => {
 
   describe('isPremiumModel', () => {
     it('should correctly identify premium models', () => {
-      const premiumModels = [
+      const modelsExpectedPremium = [
         'gpt-5',
         'claude-3.5-sonnet',
         'claude-opus-4',
@@ -100,7 +100,7 @@ describe('modelConfig', () => {
         'auto',
       ];
 
-      premiumModels.forEach((model) => {
+      modelsExpectedPremium.forEach((model) => {
         expect(isPremiumModel(model)).toBe(true);
       });
     });

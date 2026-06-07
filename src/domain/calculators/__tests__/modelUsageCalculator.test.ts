@@ -6,8 +6,8 @@ import {
 } from '../modelUsageCalculator';
 
 describe('modelUsageCalculator', () => {
-  describe('Model bucket accumulation', () => {
-    it('should classify interactions into standard, premium, and unknown buckets', () => {
+  describe('Model interaction accumulation', () => {
+    it('should aggregate interactions and track explicit unknown models', () => {
       const accumulator = createModelUsageAccumulator();
 
       accumulateModelFeature(accumulator, '2024-01-15', 'gpt-4o', 100);
@@ -18,33 +18,18 @@ describe('modelUsageCalculator', () => {
 
       expect(results).toHaveLength(1);
       expect(results[0].date).toBe('2024-01-15');
-      expect(results[0].standardModels).toBe(100);
-      expect(results[0].pruModels).toBe(50);
       expect(results[0].unknownModels).toBe(10);
       expect(results[0].modelInteractions).toBe(160);
     });
 
-    it('should classify normalized aliases in the premium bucket', () => {
+    it('should include normalized aliases in model interactions', () => {
       const accumulator = createModelUsageAccumulator();
 
       accumulateModelFeature(accumulator, '2024-01-15', 'Claude Opus 4.6 (fast mode)', 10);
 
       const results = computeDailyModelUsageData(accumulator);
-      expect(results[0].pruModels).toBe(10);
-      expect(results[0].standardModels).toBe(0);
+      expect(results[0].modelInteractions).toBe(10);
       expect(results[0].unknownModels).toBe(0);
-    });
-
-    it('should accumulate interactions for the same model bucket', () => {
-      const accumulator = createModelUsageAccumulator();
-
-      accumulateModelFeature(accumulator, '2024-01-15', 'gpt-5', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', 'claude-sonnet-4.5', 20);
-      accumulateModelFeature(accumulator, '2024-01-15', 'o3-mini', 5);
-
-      const results = computeDailyModelUsageData(accumulator);
-
-      expect(results[0].pruModels).toBe(35);
     });
   });
 
@@ -63,10 +48,10 @@ describe('modelUsageCalculator', () => {
       const day1 = results.find(r => r.date === '2024-01-15');
       const day2 = results.find(r => r.date === '2024-01-16');
 
-      expect(day1?.pruModels).toBe(30);
-      expect(day1?.standardModels).toBe(0);
-      expect(day2?.pruModels).toBe(0);
-      expect(day2?.standardModels).toBe(5);
+      expect(day1?.modelInteractions).toBe(30);
+      expect(day1?.unknownModels).toBe(0);
+      expect(day2?.modelInteractions).toBe(5);
+      expect(day2?.unknownModels).toBe(0);
     });
 
     it('should maintain separate accumulation per date', () => {
@@ -81,7 +66,7 @@ describe('modelUsageCalculator', () => {
 
       expect(results).toHaveLength(3);
       results.forEach(result => {
-        expect(result.pruModels).toBe(10);
+        expect(result.modelInteractions).toBe(10);
       });
     });
   });
@@ -95,18 +80,19 @@ describe('modelUsageCalculator', () => {
 
       const results = computeDailyModelUsageData(accumulator);
 
-      expect(results[0].unknownModels).toBe(15); // 10 + 5
+      expect(results[0].unknownModels).toBe(15);
       expect(results[0].modelInteractions).toBe(15);
     });
 
-    it('should classify unrecognized model names as premium by default', () => {
+    it('should not count unrecognized model names as explicit unknown models', () => {
       const accumulator = createModelUsageAccumulator();
 
       accumulateModelFeature(accumulator, '2024-01-15', 'totally-unknown-xyz', 10);
 
       const results = computeDailyModelUsageData(accumulator);
 
-      expect(results[0].pruModels).toBe(10);
+      expect(results[0].modelInteractions).toBe(10);
+      expect(results[0].unknownModels).toBe(0);
     });
   });
 });
