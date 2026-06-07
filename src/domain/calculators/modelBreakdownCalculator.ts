@@ -67,7 +67,7 @@ export function accumulateModelBreakdown(
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
     accumulator.cliTotal += interactionCount;
-    accumulateModelEntry(accumulator.cliModels, normalizedModel, date, interactionCount);
+    accumulateModelEntry(accumulator.cliModels, normalizedModel || 'unknown', date, interactionCount);
   }
 
   if (isActiveAutoModeFeature(modelFeature)) {

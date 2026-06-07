@@ -90,7 +90,7 @@ export function isUnknownModelName(modelName: string): boolean {
 
 export function isKnownModelName(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
-  return normalized !== '' && KNOWN_MODEL_NAMES.has(normalized);
+  return normalized !== '' && normalized !== UNKNOWN_MODEL_NAME && KNOWN_MODEL_NAMES.has(normalized);
 }
 
 export function classifyModelRequest(modelName: string): ModelRequestClassification {
@@ -99,6 +99,6 @@ export function classifyModelRequest(modelName: string): ModelRequestClassificat
   return {
     normalizedModel,
     isUnknown,
-    isKnownModel: normalizedModel !== '' && KNOWN_MODEL_NAMES.has(normalizedModel),
+    isKnownModel: normalizedModel !== '' && normalizedModel !== UNKNOWN_MODEL_NAME && KNOWN_MODEL_NAMES.has(normalizedModel),
   };
 }

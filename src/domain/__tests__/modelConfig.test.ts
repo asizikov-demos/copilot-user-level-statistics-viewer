@@ -40,6 +40,7 @@ describe('modelConfig', () => {
 
     it('should not treat arbitrary non-empty model names as known models', () => {
       expect(isKnownModelName('totally-made-up')).toBe(false);
+      expect(isKnownModelName('unknown')).toBe(false);
       expect(isKnownModelName('')).toBe(false);
     });
   });
@@ -67,7 +68,7 @@ describe('modelConfig', () => {
       expect(classifyModelRequest('unknown')).toEqual({
         normalizedModel: 'unknown',
         isUnknown: true,
-        isKnownModel: true,
+        isKnownModel: false,
       });
       expect(classifyModelRequest('')).toEqual({
         normalizedModel: '',
