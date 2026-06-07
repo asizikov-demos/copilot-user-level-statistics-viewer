@@ -2,6 +2,10 @@
  * Shared configuration for model classification and cost calculations.
  * Keep this list in sync with GitHub Copilot pricing and entitlement docs.
  */
+import { normalizeModelName } from './autoMode';
+
+export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
+
 export class Model {
   constructor(
     public readonly name: string,
@@ -77,14 +81,6 @@ export const KNOWN_MODELS: Model[] = [
   // Default multiplier for unknown models
   new Model('unknown', 1, true),
 ];
-
-export const normalizeModelName = (name: string): string =>
-  name
-    .trim()
-    .toLowerCase()
-    .replace(/[()]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-');
 
 /**
  * Multiplier map keyed by model name for quick lookups.
