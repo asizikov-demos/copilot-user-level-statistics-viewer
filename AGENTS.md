@@ -26,7 +26,7 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 
 ## Key Domain File
 
-`src/domain/modelConfig.ts` contains legacy Copilot model multipliers retained for backward compatibility.
+`src/domain/modelConfig.ts` contains Copilot model normalization and known-model catalog helpers.
 
 ## UX Patterns
 

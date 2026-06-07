@@ -46,9 +46,9 @@ export function accumulateModelFeature(
     });
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
-  const { bucket } = classifyModelRequest(model);
+  const { isUnknown } = classifyModelRequest(model);
   dmu.modelInteractions += interactions;
-  if (bucket === 'unknown') {
+  if (isUnknown) {
     dmu.unknownModels += interactions;
   }
 }

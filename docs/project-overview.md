@@ -60,7 +60,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ### 3.3. Model Configuration
 
-`src/domain/modelConfig.ts` contains a curated catalog of known LLM models with legacy PRU multipliers and premium flags retained for backward compatibility. Calculators may still use model classification helpers for normalization and unknown-model detection; multiplier helpers remain for legacy compatibility.
+`src/domain/modelConfig.ts` contains a curated catalog of known LLM models. Calculators use model helpers for normalization, known-model alias recognition, and explicit unknown/empty model detection.
 
 ---
 

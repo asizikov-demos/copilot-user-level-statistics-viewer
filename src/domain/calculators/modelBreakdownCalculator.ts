@@ -62,7 +62,7 @@ export function accumulateModelBreakdown(
 ): void {
   const interactionCount = modelFeature.user_initiated_interaction_count || 0;
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
-  const { normalizedModel, bucket } = classifyModelRequest(modelFeature.model);
+  const { normalizedModel, isUnknown } = classifyModelRequest(modelFeature.model);
 
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
@@ -90,7 +90,7 @@ export function accumulateModelBreakdown(
   accumulator.modelTotal += interactionCount;
   accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount);
 
-  if (bucket === 'unknown') {
+  if (isUnknown) {
     accumulator.unknownTotal += interactionCount;
   }
 }
