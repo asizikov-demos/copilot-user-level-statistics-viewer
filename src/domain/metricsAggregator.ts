@@ -98,7 +98,6 @@ import {
   computeDailyCliTokenData,
   computeCliAdoptionTrend,
 } from './calculators';
-import { scanAllUserFlags } from './calculators/userFlagScanner';
 import { isActiveAutoModeFeature } from './autoMode';
 
 export interface AggregatedMetrics {
@@ -173,7 +172,6 @@ function accumulateUserSummary(
       used_cli: false,
       used_copilot_coding_agent: false,
       used_auto_mode: false,
-      flags: [],
     });
     accumulator.userActiveDays.set(userId, new Set());
   }
@@ -331,9 +329,7 @@ export function aggregateMetrics(
 
     accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);
   }
-
   const userSummaries = computeUserSummaries(userSummaryAccumulator);
-  scanAllUserFlags(userDetailAccumulator, userSummaries);
 
   return {
     aggregated: {
