@@ -16,8 +16,8 @@ describe('userDetailCalculator', () => {
     });
   });
 
-  describe('accumulateUserDetail — model request classification', () => {
-    it('should count standard model requests (multiplier 0)', () => {
+  describe('accumulateUserDetail — model request totals', () => {
+    it('should count known model requests in the neutral total', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -33,12 +33,10 @@ describe('userDetailCalculator', () => {
       }));
 
       const state = acc.users.get(1)!;
-      expect(state.totalStandardModelRequests).toBe(20);
-      expect(state.totalPremiumModelRequests).toBe(0);
       expect(state.totalModelRequests).toBe(20);
     });
 
-    it('should count unknown models as premium', () => {
+    it('should count unknown model requests in the neutral total', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -54,12 +52,10 @@ describe('userDetailCalculator', () => {
       }));
 
       const state = acc.users.get(1)!;
-      expect(state.totalStandardModelRequests).toBe(0);
-      expect(state.totalPremiumModelRequests).toBe(10);
       expect(state.totalModelRequests).toBe(10);
     });
 
-    it('should count empty model names as premium', () => {
+    it('should count empty model names in the neutral total', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -75,12 +71,10 @@ describe('userDetailCalculator', () => {
       }));
 
       const state = acc.users.get(1)!;
-      expect(state.totalStandardModelRequests).toBe(0);
-      expect(state.totalPremiumModelRequests).toBe(5);
       expect(state.totalModelRequests).toBe(5);
     });
 
-    it('should classify normalized aliases as premium', () => {
+    it('should count decorated model names in the neutral total', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -96,12 +90,10 @@ describe('userDetailCalculator', () => {
       }));
 
       const state = acc.users.get(1)!;
-      expect(state.totalStandardModelRequests).toBe(0);
-      expect(state.totalPremiumModelRequests).toBe(7);
       expect(state.totalModelRequests).toBe(7);
     });
 
-    it('should expose neutral total model requests as the legacy bucket sum', () => {
+    it('should expose neutral total model requests in the user detail payload', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
       acc.reportEndDay = '2024-01-31';
@@ -135,9 +127,24 @@ describe('userDetailCalculator', () => {
 
       const result = computeSingleUserDetailedMetrics(acc, 1);
       expect(result!.totalModelRequests).toBe(25);
-      expect(result!.totalModelRequests).toBe(
-        result!.totalStandardModelRequests + result!.totalPremiumModelRequests
-      );
+      expect(Object.keys(result!).sort()).toEqual([
+        'cliVersions',
+        'dailyAgentImpact',
+        'dailyAskModeImpact',
+        'dailyCliImpact',
+        'dailyCombinedImpact',
+        'dailyCompletionImpact',
+        'dailyModelUsage',
+        'days',
+        'featureAggregates',
+        'ideAggregates',
+        'languageFeatureAggregates',
+        'modelFeatureAggregates',
+        'pluginVersions',
+        'reportEndDay',
+        'reportStartDay',
+        'totalModelRequests',
+      ].sort());
     });
   });
 
