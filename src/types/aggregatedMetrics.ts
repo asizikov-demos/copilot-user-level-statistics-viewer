@@ -8,8 +8,6 @@ import type {
 
 export interface UserDetailedMetrics {
   totalModelRequests: number;
-  totalStandardModelRequests: number;
-  totalPremiumModelRequests: number;
   featureAggregates: Array<{
     feature: string;
     user_initiated_interaction_count: number;
