@@ -35,6 +35,7 @@ describe('userDetailCalculator', () => {
       const state = acc.users.get(1)!;
       expect(state.totalStandardModelRequests).toBe(20);
       expect(state.totalPremiumModelRequests).toBe(0);
+      expect(state.totalModelRequests).toBe(20);
     });
 
     it('should count unknown models as premium', () => {
@@ -55,6 +56,7 @@ describe('userDetailCalculator', () => {
       const state = acc.users.get(1)!;
       expect(state.totalStandardModelRequests).toBe(0);
       expect(state.totalPremiumModelRequests).toBe(10);
+      expect(state.totalModelRequests).toBe(10);
     });
 
     it('should count empty model names as premium', () => {
@@ -75,6 +77,7 @@ describe('userDetailCalculator', () => {
       const state = acc.users.get(1)!;
       expect(state.totalStandardModelRequests).toBe(0);
       expect(state.totalPremiumModelRequests).toBe(5);
+      expect(state.totalModelRequests).toBe(5);
     });
 
     it('should classify normalized aliases as premium', () => {
@@ -95,6 +98,46 @@ describe('userDetailCalculator', () => {
       const state = acc.users.get(1)!;
       expect(state.totalStandardModelRequests).toBe(0);
       expect(state.totalPremiumModelRequests).toBe(7);
+      expect(state.totalModelRequests).toBe(7);
+    });
+
+    it('should expose neutral total model requests as the legacy bucket sum', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_model_feature: [
+          {
+            model: 'gpt-4o',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 20,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'unknown',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 5,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result!.totalModelRequests).toBe(25);
+      expect(result!.totalModelRequests).toBe(
+        result!.totalStandardModelRequests + result!.totalPremiumModelRequests
+      );
     });
   });
 

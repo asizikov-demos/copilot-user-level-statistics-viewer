@@ -252,6 +252,60 @@ describe('metricsAggregator', () => {
 
       expect(aggregated.modelUsageData).toBeDefined();
       expect(aggregated.modelUsageData.length).toBeGreaterThan(0);
+      expect(aggregated.modelUsageData[0].modelInteractions).toBe(
+        aggregated.modelUsageData[0].pruModels
+        + aggregated.modelUsageData[0].standardModels
+        + aggregated.modelUsageData[0].unknownModels
+      );
+    });
+
+    it('should expose neutral model totals alongside legacy model buckets', () => {
+      const metric = createBasicMetric({
+        totals_by_model_feature: [
+          {
+            model: 'gpt-4o',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 10,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'gpt-5',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 7,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            model: 'unknown',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 3,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+      const { modelBreakdownData } = aggregated;
+
+      expect(modelBreakdownData.modelTotal).toBe(20);
+      expect(modelBreakdownData.modelTotal).toBe(
+        modelBreakdownData.premiumTotal + modelBreakdownData.standardTotal + modelBreakdownData.unknownTotal
+      );
+      expect(modelBreakdownData.allModels.map(entry => entry.model)).toEqual(['gpt-4o', 'gpt-5', 'unknown']);
     });
 
     it('should compute Auto mode adoption trend from auto model usage', () => {

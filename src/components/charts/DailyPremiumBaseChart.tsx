@@ -55,6 +55,7 @@ export default function DailyPremiumBaseChart({
       const dailyUsageByDate = new Map((dailyModelUsageData ?? []).map(d => [d.date, d]));
       const paddedUsage = padSeriesWithDefaults(dates, dailyUsageByDate, date => ({
         date,
+        modelInteractions: 0,
         pruModels: 0,
         standardModels: 0,
         unknownModels: 0,
