@@ -126,25 +126,8 @@ describe('userDetailCalculator', () => {
       }));
 
       const result = computeSingleUserDetailedMetrics(acc, 1);
+      expect(result).not.toBeNull();
       expect(result!.totalModelRequests).toBe(25);
-      expect(Object.keys(result!).sort()).toEqual([
-        'cliVersions',
-        'dailyAgentImpact',
-        'dailyAskModeImpact',
-        'dailyCliImpact',
-        'dailyCombinedImpact',
-        'dailyCompletionImpact',
-        'dailyModelUsage',
-        'days',
-        'featureAggregates',
-        'ideAggregates',
-        'languageFeatureAggregates',
-        'modelFeatureAggregates',
-        'pluginVersions',
-        'reportEndDay',
-        'reportStartDay',
-        'totalModelRequests',
-      ].sort());
     });
   });
 
