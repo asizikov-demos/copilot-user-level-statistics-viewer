@@ -115,7 +115,6 @@ const ViewRouter: React.FC = () => {
     chatUsersData, 
     chatRequestsData, 
     languageStats,
-    modelUsageData,
     featureAdoptionData,
     agentModeHeatmapData,
     agentImpactData,
@@ -146,7 +145,6 @@ const ViewRouter: React.FC = () => {
           stats={stats}
           enterpriseName={enterpriseName}
           joinedImpactData={joinedImpactData}
-          modelUsageData={modelUsageData}
           agentImpactData={agentImpactData}
           codeCompletionImpactData={codeCompletionImpactData}
           featureAdoptionData={featureAdoptionData}

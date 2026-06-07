@@ -17,7 +17,7 @@ import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLangua
 import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndFeatureChart';
 import ActivityCalendar from './ui/ActivityCalendar';
 import DayDetailsModal from './ui/DayDetailsModal';
-import { DashboardStatsCardGroup, ViewPanel } from './ui';
+import { ViewPanel } from './ui';
 import { VIEW_MODES } from '../types/navigation';
 import { useNavigation } from '../state/NavigationContext';
 import type { ModeImpactData } from '../domain/calculators/metricCalculators';
@@ -479,24 +479,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const hasCliActivity = userDetails.days.some(d => d.totals_by_cli);
 
-  const hasFlags = userSummary.flags.length > 0;
-
-  const summaryCards = [
-    ...(hasFlags ? [{
-      value: 'Requires Attention',
-      label: userSummary.flags.map(f => f.label).join('; '),
-      accent: 'orange' as const,
-      tone: 'tint' as const,
-      size: 'md' as const,
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6">
-          <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-        </svg>
-      ),
-    }] : []),
-  ];
-
-
   return (
     <ViewPanel
       header={(
@@ -545,14 +527,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       )}
       contentClassName="space-y-8"
     >
-      {/* Summary Stats */}
-      <DashboardStatsCardGroup
-        className="mb-6"
-        columns={{ base: 1 }}
-        gapClassName="gap-4"
-        items={summaryCards}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <ActivityCalendar
