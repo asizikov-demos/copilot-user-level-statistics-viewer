@@ -11,32 +11,14 @@ interface ModelDetailsViewProps {
 }
 
 export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsViewProps) {
+  const modelEntries = modelBreakdownData.allModels;
+  const modelTotal = modelBreakdownData.modelTotal;
   const autoModels = modelBreakdownData.autoModels ?? [];
   const autoModeAdoptionTrend = modelBreakdownData.autoModeAdoptionTrend ?? [];
 
-  const autoModelEntries = useMemo(
-    () => autoModels,
-    [autoModels]
-  );
-
-  const premiumModelEntries = useMemo(
-    () => modelBreakdownData.premiumModels.filter(entry => entry.model !== 'auto'),
-    [modelBreakdownData.premiumModels]
-  );
-
-  const modelEntries = useMemo(
-    () => [...modelBreakdownData.standardModels, ...premiumModelEntries],
-    [modelBreakdownData.standardModels, premiumModelEntries]
-  );
-
   const autoTotal = useMemo(
-    () => autoModelEntries.reduce((sum, entry) => sum + entry.total, 0),
-    [autoModelEntries]
-  );
-
-  const modelTotal = useMemo(
-    () => modelEntries.reduce((sum, entry) => sum + entry.total, 0),
-    [modelEntries]
+    () => autoModels.reduce((sum, entry) => sum + entry.total, 0),
+    [autoModels]
   );
 
   return (
@@ -57,11 +39,10 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
             className="font-medium underline decoration-blue-400 underline-offset-2 hover:text-blue-700"
           >
             Read the announcement.
-          </a>{' '}
-          Premium vs standard model separation is no longer applicable.
+          </a>
         </div>
         <ModelsUsageChart modelEntries={modelEntries} dates={modelBreakdownData.dates} totalInteractions={modelTotal} variant="all" />
-        <ModelsUsageChart modelEntries={autoModelEntries} dates={modelBreakdownData.dates} totalInteractions={autoTotal} variant="auto" />
+        <ModelsUsageChart modelEntries={autoModels} dates={modelBreakdownData.dates} totalInteractions={autoTotal} variant="auto" />
         <AutoModeAdoptionTrendChart data={autoModeAdoptionTrend} />
       </div>
     </ViewPanel>
