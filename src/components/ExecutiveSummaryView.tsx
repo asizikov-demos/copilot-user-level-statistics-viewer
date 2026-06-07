@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { ViewPanel } from './ui';
-import DailyPremiumBaseChart from './charts/DailyPremiumBaseChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
 import type {
@@ -11,13 +10,11 @@ import type {
   CodeCompletionImpactData,
   FeatureAdoptionData,
 } from '../domain/calculators/metricCalculators';
-import type { DailyModelUsageData } from '../domain/calculators/metricCalculators';
 import type { MetricsStats } from '../types/metrics';
 interface ExecutiveSummaryViewProps {
   stats: MetricsStats;
   enterpriseName: string | null;
   joinedImpactData: ModeImpactData[];
-  modelUsageData: DailyModelUsageData[];
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
   featureAdoptionData: FeatureAdoptionData;
@@ -50,7 +47,6 @@ export default function ExecutiveSummaryView({
   stats,
   enterpriseName,
   joinedImpactData,
-  modelUsageData,
   agentImpactData,
   codeCompletionImpactData,
   featureAdoptionData,
@@ -141,13 +137,6 @@ export default function ExecutiveSummaryView({
           </div>
         </dl>
       </div>
-
-      <DailyPremiumBaseChart
-        dailyModelUsageData={modelUsageData || []}
-        reportStartDay={stats.reportStartDay}
-        reportEndDay={stats.reportEndDay}
-        hideInsights
-      />
 
       <div className="border border-gray-200 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-900 print:border-black print:bg-white print:text-black print:text-xs">
         <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 print:text-black">
