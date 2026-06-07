@@ -12,7 +12,6 @@ import { formatShortDate } from '../../utils/formatters';
 import { sortBySelector } from '../../utils/sorting';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
-import InsightsCard from '../ui/InsightsCard';
 
 registerChartJS();
 
@@ -20,22 +19,16 @@ interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
   dates: string[];
   totalInteractions: number;
-  variant: 'standard' | 'premium' | 'auto' | 'cli' | 'all';
+  variant: 'auto' | 'cli' | 'all';
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
-  const isPremium = variant === 'premium';
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
-  const isAll = variant === 'all';
 
-  const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
+  const { labels, datasets } = useMemo(() => {
     const sortedModels = sortBySelector(modelEntries, e => e.total, 'desc');
     const modelOrder = sortedModels.map(e => e.model);
-    const modelTotals: Record<string, number> = {};
-    for (const entry of sortedModels) {
-      modelTotals[entry.model] = entry.total;
-    }
 
     const UNKNOWN_COLOR = 'hsl(0, 70%, 50%)';
     const modelsWithoutUnknown = modelOrder.filter(m => m !== 'unknown');
@@ -53,8 +46,8 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         return UNKNOWN_COLOR;
       }
       const adjustedIndex = modelIndexMap.get(model) ?? 0;
-      const hueStep = isPremium ? 45 : 55;
       const startHue = 30;
+      const hueStep = 55;
       const hue = (startHue + adjustedIndex * hueStep) % 360;
       if (hue >= 350 || hue <= 10) {
         return `hsl(${(hue + 50) % 360}, 70%, 55%)`;
@@ -65,96 +58,39 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     const datasets = sortedModels.map((entry) => {
       const color = getModelColor(entry.model);
       return createBarDataset(color, entry.model, dates.map(d => entry.dailyData[d] || 0), {
-        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : isAll ? 'models' : isPremium ? 'premium-models' : 'standard-models'
+        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : 'models'
       });
     });
 
     return {
       labels: dates.map(d => formatShortDate(d)),
-      datasets,
-      modelTotals,
-      modelOrder
+      datasets
     };
-  }, [modelEntries, dates, isPremium, isAuto, isCli, isAll]);
-
-  const insights = useMemo(() => {
-    if (!isPremium) return null;
-    if (!totalInteractions || !modelOrder.length) return null;
-
-    const shares = modelOrder.map(m => ({
-      model: m,
-      count: modelTotals[m] || 0,
-      share: (modelTotals[m] || 0) / totalInteractions
-    }));
-
-    const top = shares[0];
-    const second = shares[1];
-    const dominantThreshold = 0.5;
-    const strongDominanceThreshold = 0.7;
-
-    let insightVariant: 'green' | 'blue' | 'red' | 'orange' | 'purple';
-    const paragraphs: string[] = [];
-    const title = 'Premium Model Usage Insights';
-    let showDocLink = false;
-
-    if (top.share >= strongDominanceThreshold) {
-      insightVariant = 'red';
-      paragraphs.push(
-        `One model (${top.model}) accounts for ${(top.share * 100).toFixed(1)}% of all interactions, indicating a heavy concentration. This may suggest teams are defaulting to a single model and could benefit from deeper awareness of alternatives.`
-      );
-      showDocLink = true;
-    } else if (top.share >= dominantThreshold) {
-      insightVariant = 'orange';
-      paragraphs.push(
-        `A single model (${top.model}) holds ${(top.share * 100).toFixed(1)}% share. A moderate skew like this can mean users are comfortable with that model but may be overlooking scenarios where other models perform better.`
-      );
-      showDocLink = true;
-    } else {
-      const cumulativeTop3 = shares.slice(0, 3).reduce((s, x) => s + x.share, 0);
-      if (top.share < 0.4 && shares.length >= 3 && cumulativeTop3 <= 0.8) {
-        insightVariant = 'green';
-        paragraphs.push(
-          `Usage is well distributed. The leading model (${top.model}) is at ${(top.share * 100).toFixed(1)}% with good variability across ${shares.length} models, suggesting teams select models based on their strengths.`
-        );
-      } else {
-        insightVariant = 'blue';
-        paragraphs.push(
-          `Distribution is moderately diversified. The top model (${top.model}) sits at ${(top.share * 100).toFixed(1)}%${second ? ` and the second at ${(second.share * 100).toFixed(1)}%` : ''}. Continued experimentation could further optimize fit for specific tasks.`
-        );
-        showDocLink = true;
-      }
-    }
-
-    const summary = shares.slice(0, 5).map(s => `${s.model}: ${(s.share * 100).toFixed(1)}%`).join(', ');
-    paragraphs.push(`Top model share summary: ${summary}${shares.length > 5 ? ', ...' : ''}.`);
-
-    return { title, variant: insightVariant, paragraphs, showDocLink };
-  }, [modelTotals, modelOrder, totalInteractions, isPremium]);
+  }, [modelEntries, dates, isAuto, isCli]);
 
   const chartTitle = isCli
     ? 'CLI Models Daily Usage'
     : isAuto
       ? 'Auto Model Daily Usage'
-      : isAll
-        ? 'Models Daily Usage'
-        : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`;
+      : 'Models Daily Usage';
   const chartDescription = isCli
     ? 'Daily Copilot CLI user-initiated interactions grouped by model.'
     : isAuto
       ? 'Daily interactions routed through Copilot Auto mode.'
-      : isAll
-        ? 'Daily user-initiated interactions grouped by model.'
-        : undefined;
-  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : isAll ? 'Tracked' : isPremium ? 'Premium' : 'Standard';
-  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : isAll ? 'text-indigo-600' : isPremium ? 'text-purple-600' : 'text-blue-600';
-  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : isAll ? 'text-indigo-600' : isPremium ? 'text-red-600' : 'text-green-600';
+      : 'Daily user-initiated interactions grouped by model.';
+  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : 'Tracked';
+  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : 'text-indigo-600';
+  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : 'text-indigo-600';
   const emptyState = isCli
     ? 'No CLI model usage data available'
     : isAuto
       ? 'No auto model usage data available'
-      : isAll
-        ? 'No model usage data available'
-        : `No ${isPremium ? 'premium' : 'standard'} model usage data available`;
+      : 'No model usage data available';
+  const footerDescription = isCli
+    ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
+    : isAuto
+      ? 'Counts aggregate user-initiated interactions routed through Copilot Auto mode per model per day.'
+      : 'Counts aggregate user-initiated interactions across all tracked models per day.';
 
   const chartData = { labels, datasets };
 
@@ -182,33 +118,8 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       footer={
         <>
           <p className="text-xs text-gray-600 mb-4">
-            {isCli
-              ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
-              : isAll
-                ? 'Counts aggregate user-initiated interactions across all tracked models per day.'
-                : `Counts aggregate user-initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
+            {footerDescription}
           </p>
-          {insights && (
-            <InsightsCard title={insights.title} variant={insights.variant}>
-              {insights.paragraphs.map((p, i) => (
-                <p key={i} className={i > 0 ? 'mt-2' : ''}>{p}</p>
-              ))}
-              {insights.showDocLink && (
-                <p className="mt-3">
-                  Learn more in the{' '}
-                  <a
-                    href="https://docs.github.com/en/copilot/reference/ai-models/model-comparison"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline font-medium"
-                  >
-                    model comparison guide
-                  </a>
-                  .
-                </p>
-              )}
-            </InsightsCard>
-          )}
         </>
       }
     >
