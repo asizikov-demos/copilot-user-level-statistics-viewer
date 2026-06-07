@@ -13,7 +13,7 @@ Visualize GitHub Copilot usage metrics from your organization. Upload metrics ND
 - User breakdowns: unique users, chat users, agent users, CLI users, completion-only users
 - Interactive charts for usage patterns and trends
 - Drill down into individual user activity with feature adoption radar charts
-- Model usage and premium request analysis
+- Model usage analysis
 - CLI adoption trends, sessions, and token usage
 - IDE and VS Code extension version analysis
 - Statistics by programming language and Copilot feature
