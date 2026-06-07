@@ -95,9 +95,10 @@ export function isKnownModelName(modelName: string): boolean {
 
 export function classifyModelRequest(modelName: string): ModelRequestClassification {
   const normalizedModel = normalizeModelName(modelName);
+  const isUnknown = normalizedModel === '' || normalizedModel === UNKNOWN_MODEL_NAME;
   return {
     normalizedModel,
-    isUnknown: isUnknownModelName(normalizedModel),
-    isKnownModel: isKnownModelName(normalizedModel),
+    isUnknown,
+    isKnownModel: normalizedModel !== '' && KNOWN_MODEL_NAMES.has(normalizedModel),
   };
 }
