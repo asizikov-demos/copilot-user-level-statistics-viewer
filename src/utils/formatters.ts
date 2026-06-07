@@ -121,15 +121,6 @@ export function formatSignedNumber(value: number): string {
 }
 
 /**
- * Format PRU (Premium Request Units) value.
- * @param value - PRU value
- * @returns Formatted PRU string
- */
-export function formatPRU(value: number): string {
-  return formatNumber(value, 2);
-}
-
-/**
  * Round a number to specified decimal places.
  * @param value - Number to round
  * @param decimals - Number of decimal places (default: 2)

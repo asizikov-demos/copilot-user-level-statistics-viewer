@@ -20,13 +20,14 @@ interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
   dates: string[];
   totalInteractions: number;
-  variant: 'standard' | 'premium' | 'auto' | 'cli';
+  variant: 'standard' | 'premium' | 'auto' | 'cli' | 'all';
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isPremium = variant === 'premium';
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
+  const isAll = variant === 'all';
 
   const { labels, datasets, modelTotals, modelOrder } = useMemo(() => {
     const sortedModels = sortBySelector(modelEntries, e => e.total, 'desc');
@@ -64,7 +65,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     const datasets = sortedModels.map((entry) => {
       const color = getModelColor(entry.model);
       return createBarDataset(color, entry.model, dates.map(d => entry.dailyData[d] || 0), {
-        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : isPremium ? 'premium-models' : 'standard-models'
+        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : isAll ? 'models' : isPremium ? 'premium-models' : 'standard-models'
       });
     });
 
@@ -74,7 +75,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       modelTotals,
       modelOrder
     };
-  }, [modelEntries, dates, isPremium, isAuto, isCli]);
+  }, [modelEntries, dates, isPremium, isAuto, isCli, isAll]);
 
   const insights = useMemo(() => {
     if (!isPremium) return null;
@@ -134,15 +135,26 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     ? 'CLI Models Daily Usage'
     : isAuto
       ? 'Auto Model Daily Usage'
-      : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`;
+      : isAll
+        ? 'Models Daily Usage'
+        : `${isPremium ? 'Premium' : 'Standard'} Models Daily Usage`;
   const chartDescription = isCli
     ? 'Daily Copilot CLI user-initiated interactions grouped by model.'
     : isAuto
       ? 'Daily interactions routed through Copilot Auto mode.'
-      : undefined;
-  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : isPremium ? 'Premium' : 'Standard';
-  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : isPremium ? 'text-purple-600' : 'text-blue-600';
-  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : isPremium ? 'text-red-600' : 'text-green-600';
+      : isAll
+        ? 'Daily user-initiated interactions grouped by model.'
+        : undefined;
+  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : isAll ? 'Tracked' : isPremium ? 'Premium' : 'Standard';
+  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : isAll ? 'text-indigo-600' : isPremium ? 'text-purple-600' : 'text-blue-600';
+  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : isAll ? 'text-indigo-600' : isPremium ? 'text-red-600' : 'text-green-600';
+  const emptyState = isCli
+    ? 'No CLI model usage data available'
+    : isAuto
+      ? 'No auto model usage data available'
+      : isAll
+        ? 'No model usage data available'
+        : `No ${isPremium ? 'premium' : 'standard'} model usage data available`;
 
   const chartData = { labels, datasets };
 
@@ -161,7 +173,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       title={chartTitle}
       description={chartDescription}
       isEmpty={dates.length === 0 || datasets.length === 0}
-      emptyState={`No ${isCli ? 'CLI' : isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model usage data available`}
+      emptyState={emptyState}
       summaryStats={[
         { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: primaryColorClass },
         { value: totalInteractions, label: 'Total Interactions', colorClass: totalColorClass },
@@ -172,7 +184,9 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
           <p className="text-xs text-gray-600 mb-4">
             {isCli
               ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
-              : `Counts aggregate user-initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
+              : isAll
+                ? 'Counts aggregate user-initiated interactions across all tracked models per day.'
+                : `Counts aggregate user-initiated interactions across all features per ${isAuto ? 'auto' : isPremium ? 'premium' : 'standard'} model per day.`}
           </p>
           {insights && (
             <InsightsCard title={insights.title} variant={insights.variant}>
