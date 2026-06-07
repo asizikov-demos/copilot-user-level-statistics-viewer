@@ -10,7 +10,7 @@ A **client-side single-page analytics dashboard** for exploring **GitHub Copilot
 
 The app runs entirely in the browser — uploaded metrics files are parsed client-side and never sent to a backend.
 
-Key analysis dimensions: **user**, **IDE**, **language**, **feature**, **model**, and premium/standard model usage.
+Key analysis dimensions: **user**, **IDE**, **language**, **feature**, and **model** usage.
 
 ---
 
@@ -84,11 +84,11 @@ flowchart LR
 
 ### 4.2. Aggregation
 
-`metricsAggregator.ts` orchestrates all calculators in `src/domain/calculators/` to produce the `AggregatedMetrics` object. This includes user summaries, daily time series, language/IDE/model breakdowns, premium/standard model usage, feature adoption, and LOC impact by mode. See the calculator files for specifics.
+`metricsAggregator.ts` orchestrates all calculators in `src/domain/calculators/` to produce the `AggregatedMetrics` object. This includes user summaries, daily time series, language/IDE/model breakdowns, model usage analysis, feature adoption, and LOC impact by mode. See the calculator files for specifics.
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, premium model usage, adoption, and model details.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, model usage analysis, adoption, and model details.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 
