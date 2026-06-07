@@ -21,6 +21,7 @@ describe('modelUsageCalculator', () => {
       expect(results[0].standardModels).toBe(100);
       expect(results[0].pruModels).toBe(50);
       expect(results[0].unknownModels).toBe(10);
+      expect(results[0].modelInteractions).toBe(160);
     });
 
     it('should classify normalized aliases in the premium bucket', () => {
@@ -95,6 +96,7 @@ describe('modelUsageCalculator', () => {
       const results = computeDailyModelUsageData(accumulator);
 
       expect(results[0].unknownModels).toBe(15); // 10 + 5
+      expect(results[0].modelInteractions).toBe(15);
     });
 
     it('should classify unrecognized model names as premium by default', () => {

@@ -7,6 +7,7 @@ import type {
 } from '../domain/calculators/metricCalculators';
 
 export interface UserDetailedMetrics {
+  totalModelRequests: number;
   totalStandardModelRequests: number;
   totalPremiumModelRequests: number;
   featureAggregates: Array<{

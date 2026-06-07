@@ -21,6 +21,8 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.standardTotal).toBe(0);
       expect(acc.cliTotal).toBe(0);
       expect(acc.unknownTotal).toBe(0);
+      expect(acc.modelTotal).toBe(0);
+      expect(acc.allModels.size).toBe(0);
       expect(acc.premiumModels.size).toBe(0);
       expect(acc.standardModels.size).toBe(0);
     });
@@ -71,6 +73,8 @@ describe('modelBreakdownCalculator', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('unknown'));
       expect(acc.unknownTotal).toBe(10);
+      expect(acc.modelTotal).toBe(10);
+      expect(acc.allModels.get('unknown')?.total).toBe(10);
       expect(acc.premiumTotal).toBe(0);
       expect(acc.standardTotal).toBe(0);
     });
@@ -79,6 +83,8 @@ describe('modelBreakdownCalculator', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature(''));
       expect(acc.unknownTotal).toBe(10);
+      expect(acc.modelTotal).toBe(10);
+      expect(acc.allModels.get('unknown')?.total).toBe(10);
       expect(acc.premiumTotal).toBe(0);
       expect(acc.standardTotal).toBe(0);
     });
@@ -156,6 +162,24 @@ describe('modelBreakdownCalculator', () => {
       expect(data.dates).toEqual(['2024-01-15', '2024-01-16']);
       expect(data.premiumTotal).toBe(10);
       expect(data.standardTotal).toBe(10);
+      expect(data.modelTotal).toBe(data.premiumTotal + data.standardTotal + data.unknownTotal);
+      expect(data.allModels.map(entry => entry.model)).toEqual(['gpt-5', 'gpt-4o']);
+    });
+
+    it('should include unknown models in neutral model totals and entries', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5', 'code_completion', 10));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o', 'code_completion', 20));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('unknown', 'code_completion', 5));
+      const data = computeModelBreakdownData(acc);
+
+      expect(data.modelTotal).toBe(35);
+      expect(data.modelTotal).toBe(data.premiumTotal + data.standardTotal + data.unknownTotal);
+      expect(data.allModels).toEqual([
+        { model: 'gpt-4o', total: 20, dailyData: { '2024-01-15': 20 } },
+        { model: 'gpt-5', total: 10, dailyData: { '2024-01-15': 10 } },
+        { model: 'unknown', total: 5, dailyData: { '2024-01-15': 5 } },
+      ]);
     });
   });
 });

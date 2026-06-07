@@ -4,6 +4,7 @@ import { compareByDateAsc } from './statsCalculators';
 
 export interface DailyModelUsageData {
   date: string;
+  modelInteractions: number;
   pruModels: number;
   standardModels: number;
   unknownModels: number;
@@ -82,6 +83,7 @@ export function computeDailyModelUsageData(
   return Array.from(accumulator.dailyModelUsage.entries())
     .map(([date, data]) => ({
       date,
+      modelInteractions: data.pruModels + data.standardModels + data.unknownModels,
       pruModels: data.pruModels,
       standardModels: data.standardModels,
       unknownModels: data.unknownModels,

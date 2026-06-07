@@ -67,6 +67,7 @@ interface CliVersionEntry {
 }
 
 interface UserAccState {
+  totalModelRequests: number;
   totalStandardModelRequests: number;
   totalPremiumModelRequests: number;
   featureMap: Map<string, FeatureAgg>;
@@ -96,6 +97,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   let state = accumulator.users.get(userId);
   if (!state) {
     state = {
+      totalModelRequests: 0,
       totalStandardModelRequests: 0,
       totalPremiumModelRequests: 0,
       featureMap: new Map(),
@@ -175,6 +177,7 @@ export function accumulateUserDetail(
 
   for (const mf of metric.totals_by_model_feature) {
     const { bucket } = classifyModelRequest(mf.model);
+    state.totalModelRequests += mf.user_initiated_interaction_count;
     if (bucket === 'standard') {
       state.totalStandardModelRequests += mf.user_initiated_interaction_count;
     } else {
@@ -327,6 +330,7 @@ export function computeSingleUserDetailedMetrics(
   );
 
   return {
+    totalModelRequests: state.totalModelRequests,
     totalStandardModelRequests: state.totalStandardModelRequests,
     totalPremiumModelRequests: state.totalPremiumModelRequests,
     featureAggregates: Array.from(state.featureMap.values()),

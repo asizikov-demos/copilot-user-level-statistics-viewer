@@ -11,11 +11,13 @@ interface ModelAccEntry {
 }
 
 export interface ModelBreakdownAccumulator {
+  allModels: Map<string, ModelAccEntry>;
   premiumModels: Map<string, ModelAccEntry>;
   standardModels: Map<string, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
   cliModels: Map<string, ModelAccEntry>;
   autoModeUsersByDate: Map<string, Set<number>>;
+  modelTotal: number;
   premiumTotal: number;
   standardTotal: number;
   cliTotal: number;
@@ -25,11 +27,13 @@ export interface ModelBreakdownAccumulator {
 
 export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
   return {
+    allModels: new Map(),
     premiumModels: new Map(),
     standardModels: new Map(),
     autoModels: new Map(),
     cliModels: new Map(),
     autoModeUsersByDate: new Map(),
+    modelTotal: 0,
     premiumTotal: 0,
     standardTotal: 0,
     cliTotal: 0,
@@ -91,6 +95,8 @@ export function accumulateModelBreakdown(
   }
 
   accumulator.allDates.add(date);
+  accumulator.modelTotal += interactionCount;
+  accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount);
 
   if (bucket === 'premium') {
     accumulator.premiumTotal += interactionCount;
@@ -140,12 +146,14 @@ export function computeModelBreakdownData(
   );
 
   return {
+    allModels: buildModelEntries(accumulator.allModels),
     premiumModels: buildModelEntries(accumulator.premiumModels),
     standardModels: buildModelEntries(accumulator.standardModels),
     autoModels: buildModelEntries(accumulator.autoModels),
     cliModels: buildModelEntries(accumulator.cliModels),
     autoModeAdoptionTrend: computeAutoModeAdoptionTrend(dates, accumulator.autoModeUsersByDate),
     dates,
+    modelTotal: accumulator.modelTotal,
     premiumTotal: accumulator.premiumTotal,
     standardTotal: accumulator.standardTotal,
     cliTotal: accumulator.cliTotal,
