@@ -5,8 +5,6 @@ import { compareByDateAsc } from './statsCalculators';
 export interface DailyModelUsageData {
   date: string;
   modelInteractions: number;
-  pruModels: number;
-  standardModels: number;
   unknownModels: number;
 }
 
@@ -19,8 +17,7 @@ export interface AgentModeHeatmapData {
 
 export interface ModelUsageAccumulator {
   dailyModelUsage: Map<string, {
-    pruModels: number;
-    standardModels: number;
+    modelInteractions: number;
     unknownModels: number;
   }>;
   dailyAgentHeatmap: Map<string, {
@@ -44,19 +41,15 @@ export function accumulateModelFeature(
 ): void {
   if (!accumulator.dailyModelUsage.has(date)) {
     accumulator.dailyModelUsage.set(date, {
-      pruModels: 0,
-      standardModels: 0,
+      modelInteractions: 0,
       unknownModels: 0,
     });
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
   const { bucket } = classifyModelRequest(model);
+  dmu.modelInteractions += interactions;
   if (bucket === 'unknown') {
     dmu.unknownModels += interactions;
-  } else if (bucket === 'standard') {
-    dmu.standardModels += interactions;
-  } else {
-    dmu.pruModels += interactions;
   }
 }
 
@@ -83,9 +76,7 @@ export function computeDailyModelUsageData(
   return Array.from(accumulator.dailyModelUsage.entries())
     .map(([date, data]) => ({
       date,
-      modelInteractions: data.pruModels + data.standardModels + data.unknownModels,
-      pruModels: data.pruModels,
-      standardModels: data.standardModels,
+      modelInteractions: data.modelInteractions,
       unknownModels: data.unknownModels,
     }))
     .sort(compareByDateAsc);
