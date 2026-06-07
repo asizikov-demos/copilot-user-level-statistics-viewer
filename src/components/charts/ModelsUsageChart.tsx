@@ -25,7 +25,6 @@ interface ModelsUsageChartProps {
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
-  const isAll = variant === 'all';
 
   const { labels, datasets } = useMemo(() => {
     const sortedModels = sortBySelector(modelEntries, e => e.total, 'desc');
@@ -87,6 +86,11 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     : isAuto
       ? 'No auto model usage data available'
       : 'No model usage data available';
+  const footerDescription = isCli
+    ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
+    : isAuto
+      ? 'Counts aggregate user-initiated interactions routed through Copilot Auto mode per model per day.'
+      : 'Counts aggregate user-initiated interactions across all tracked models per day.';
 
   const chartData = { labels, datasets };
 
@@ -114,11 +118,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       footer={
         <>
           <p className="text-xs text-gray-600 mb-4">
-            {isCli
-              ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
-              : isAll
-                ? 'Counts aggregate user-initiated interactions across all tracked models per day.'
-                : 'Counts aggregate user-initiated interactions across all features per auto model per day.'}
+            {footerDescription}
           </p>
         </>
       }
