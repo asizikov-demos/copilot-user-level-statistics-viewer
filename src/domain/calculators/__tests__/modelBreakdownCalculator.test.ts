@@ -136,6 +136,12 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.cliTotal).toBe(10);
       expect(acc.cliModels.size).toBe(1);
     });
+
+    it('should coerce empty CLI model names to unknown', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('', 'copilot_cli'));
+      expect(Array.from(acc.cliModels.keys())).toEqual(['unknown']);
+    });
   });
 
   describe('computeModelBreakdownData', () => {

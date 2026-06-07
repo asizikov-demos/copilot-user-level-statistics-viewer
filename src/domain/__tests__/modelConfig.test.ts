@@ -1,180 +1,88 @@
 import { describe, it, expect } from 'vitest';
-import { getModelMultiplier, isPremiumModel, classifyModelBucket, classifyModelRequest, MODEL_MULTIPLIERS, KNOWN_MODELS, isActiveAutoModeFeature } from '../modelConfig';
+import {
+  classifyModelRequest,
+  isActiveAutoModeFeature,
+  isKnownModelName,
+  isUnknownModelName,
+  KNOWN_MODELS,
+  normalizeModelName,
+} from '../modelConfig';
 
 describe('modelConfig', () => {
-  describe('getModelMultiplier', () => {
-    it('should return correct multiplier for exact model name match', () => {
-      const testCases = [
-        { model: 'gpt-4o', expected: 0 },
-        { model: 'gpt-5', expected: 1 },
-        { model: 'claude-3.5-sonnet', expected: 1 },
-        { model: 'claude-opus-4.7', expected: 15 },
-        { model: 'claude-opus-4.6-fast-mode', expected: 30 },
-        { model: 'claude-opus-4.6-fast-mode-preview', expected: 30 },
-        { model: 'o3-mini', expected: 0.33 },
-        { model: 'gemini-2.0-flash', expected: 0.25 },
-        { model: 'gemini-3.5-flash', expected: 14 },
-        { model: 'gpt-5.4-nano', expected: 0.25 },
-      ];
-
-      testCases.forEach(({ model, expected }) => {
-        expect(getModelMultiplier(model)).toBe(expected);
-      });
+  describe('normalizeModelName', () => {
+    it('should normalize casing, whitespace, underscores, and parentheses', () => {
+      expect(normalizeModelName('  Claude Opus 4.6 (fast mode)  ')).toBe('claude-opus-4.6-fast-mode');
+      expect(normalizeModelName('GPT_4O')).toBe('gpt-4o');
+      expect(normalizeModelName('Gemini   3.5   Flash')).toBe('gemini-3.5-flash');
     });
 
-    it('should handle display names with parentheses (fast mode / preview)', () => {
-      const testCases = [
-        { model: 'Claude Opus 4.6 (fast mode) (preview)', expected: 30 },
-        { model: 'Claude Opus 4.6 (fast mode)', expected: 30 },
-      ];
-
-      testCases.forEach(({ model, expected }) => {
-        expect(getModelMultiplier(model)).toBe(expected);
-      });
-    });
-
-    it('should handle case-insensitive matching', () => {
-      const testCases = [
-        { model: 'GPT-4O', expected: 0 },
-        { model: 'Claude-3.5-Sonnet', expected: 1 },
-        { model: 'Claude Opus 4.7', expected: 15 },
-        { model: 'GEMINI-2.0-FLASH', expected: 0.25 },
-        { model: 'Gemini 3.5 Flash', expected: 14 },
-      ];
-
-      testCases.forEach(({ model, expected }) => {
-        expect(getModelMultiplier(model)).toBe(expected);
-      });
-    });
-
-    it('should handle trailing/leading spaces', () => {
-      expect(getModelMultiplier('  gpt-4o  ')).toBe(0);
-      expect(getModelMultiplier(' claude-3.5-sonnet ')).toBe(1);
-    });
-
-    it('should use partial matching for model name variations', () => {
-      // Fuzzy matching should find models by substring
-      // For example, a model name containing "claude-opus-4" should match "claude-opus-4"
-      const testCases = [
-        { model: 'claude-opus-4-special', expected: 10 }, // Should match claude-opus-4
-        { model: 'claude-opus-4.6-custom', expected: 3 }, // Should prefer claude-opus-4.6 over claude-opus-4
-        { model: 'claude-opus-4.7-custom', expected: 15 }, // Should prefer claude-opus-4.7 over claude-opus-4
-        { model: 'gpt-4o-special-edition', expected: 0 }, // Should match gpt-4o
-      ];
-
-      testCases.forEach(({ model, expected }) => {
-        expect(getModelMultiplier(model)).toBe(expected);
-      });
-    });
-
-    it('should return unknown multiplier for completely unknown models', () => {
-      const unknownMultiplier = MODEL_MULTIPLIERS['unknown'];
-
-      expect(getModelMultiplier('some-random-model-xyz')).toBe(unknownMultiplier);
-      expect(getModelMultiplier('totally-made-up-123')).toBe(unknownMultiplier);
-    });
-
-    it('should not match unknown during fuzzy search', () => {
-      // A model containing "unknown" shouldn't get special treatment
-      const result = getModelMultiplier('my-unknown-model');
-      // It should get the unknown multiplier through fallback, not fuzzy match
-      expect(result).toBe(MODEL_MULTIPLIERS['unknown']);
-    });
-
-    it('should handle empty string gracefully', () => {
-      const unknownMultiplier = MODEL_MULTIPLIERS['unknown'];
-      expect(getModelMultiplier('')).toBe(unknownMultiplier);
+    it('should collapse repeated separators', () => {
+      expect(normalizeModelName('claude---opus___4.7')).toBe('claude-opus-4.7');
     });
   });
 
-  describe('isPremiumModel', () => {
-    it('should correctly identify premium models', () => {
-      const modelsExpectedPremium = [
-        'gpt-5',
-        'claude-3.5-sonnet',
-        'claude-opus-4',
-        'o3',
-        'gemini-2.5-pro',
-        'gemini-3.5-flash',
-        'gpt-5.4-nano',
-        'auto',
-      ];
+  describe('known model catalog', () => {
+    it('should keep model entries name-only', () => {
+      const model = KNOWN_MODELS.find(entry => entry.name === 'gpt-5');
 
-      modelsExpectedPremium.forEach((model) => {
-        expect(isPremiumModel(model)).toBe(true);
-      });
+      expect(model).toEqual({ name: 'gpt-5' });
     });
 
-    it('should correctly identify non-premium (included) models', () => {
-      const includedModels = [
-        'gpt-4.0',
-        'gpt-4o',
-        'gpt-4o-mini',
-        'gpt-3.5',
-        'grok-code-fast',
-      ];
-
-      includedModels.forEach((model) => {
-        expect(isPremiumModel(model)).toBe(false);
-      });
+    it('should include the unknown sentinel', () => {
+      expect(KNOWN_MODELS.some(model => model.name === 'unknown')).toBe(true);
     });
 
-    it('should treat zero-multiplier models as non-premium', () => {
-      // Zero multiplier means included in base tier
-      expect(isPremiumModel('gpt-4o')).toBe(false);
-      expect(getModelMultiplier('gpt-4o')).toBe(0);
+    it('should recognize known models after normalization', () => {
+      expect(isKnownModelName('GPT-5')).toBe(true);
+      expect(isKnownModelName('Claude Opus 4.6 (fast mode)')).toBe(true);
+      expect(isKnownModelName('Gemini 3.5 Flash')).toBe(true);
     });
 
-    it('should treat unknown models as premium (conservative default)', () => {
-      expect(isPremiumModel('totally-unknown-model')).toBe(true);
-      expect(isPremiumModel('xyz-123')).toBe(true);
-    });
-
-    it('should handle case-insensitive matching for premium detection', () => {
-      expect(isPremiumModel('GPT-5')).toBe(true);
-      expect(isPremiumModel('Claude Opus 4.7')).toBe(true);
-      expect(isPremiumModel('GPT-4O')).toBe(false);
-    });
-
-    it('should use partial matching for premium detection', () => {
-      // Should match by partial name
-      expect(isPremiumModel('claude-opus-4-custom')).toBe(true);
+    it('should not treat arbitrary non-empty model names as known models', () => {
+      expect(isKnownModelName('totally-made-up')).toBe(false);
+      expect(isKnownModelName('unknown')).toBe(false);
+      expect(isKnownModelName('')).toBe(false);
     });
   });
 
-  describe('MODEL_MULTIPLIERS and KNOWN_MODELS consistency', () => {
-    it('should have consistent multiplier values between Model class and multiplier map', () => {
-      KNOWN_MODELS.forEach((model) => {
-        const mapValue = MODEL_MULTIPLIERS[model.name.toLowerCase().trim()];
-        expect(mapValue).toBe(model.multiplier);
-      });
-    });
-
-    it('should have unknown model defined', () => {
-      const unknownModel = KNOWN_MODELS.find(m => m.name === 'unknown');
-      expect(unknownModel).toBeDefined();
-      expect(unknownModel?.multiplier).toBeDefined();
+  describe('unknown model detection', () => {
+    it('should identify only empty model names and the unknown sentinel as unknown', () => {
+      expect(isUnknownModelName('unknown')).toBe(true);
+      expect(isUnknownModelName(' UNKNOWN ')).toBe(true);
+      expect(isUnknownModelName('')).toBe(true);
+      expect(isUnknownModelName('totally-unknown-model')).toBe(false);
+      expect(isUnknownModelName('gpt-5')).toBe(false);
     });
   });
 
-  describe('classifyModelBucket', () => {
-    it('should classify standard models', () => {
-      expect(classifyModelBucket('gpt-4o')).toBe('standard');
+  describe('classifyModelRequest', () => {
+    it('should return normalized model metadata for known aliases', () => {
+      expect(classifyModelRequest('Claude Opus 4.6 (fast mode)')).toEqual({
+        normalizedModel: 'claude-opus-4.6-fast-mode',
+        isUnknown: false,
+        isKnownModel: true,
+      });
     });
 
-    it('should classify premium models', () => {
-      expect(classifyModelBucket('claude-3.5-sonnet')).toBe('premium');
-      expect(classifyModelBucket('Gemini 3.5 Flash')).toBe('premium');
-      expect(classifyModelBucket('gpt-5')).toBe('premium');
+    it('should preserve unknown and empty detection for aggregation', () => {
+      expect(classifyModelRequest('unknown')).toEqual({
+        normalizedModel: 'unknown',
+        isUnknown: true,
+        isKnownModel: false,
+      });
+      expect(classifyModelRequest('')).toEqual({
+        normalizedModel: '',
+        isUnknown: true,
+        isKnownModel: false,
+      });
     });
 
-    it('should classify unknown models', () => {
-      expect(classifyModelBucket('unknown')).toBe('unknown');
-      expect(classifyModelBucket('')).toBe('unknown');
-    });
-
-    it('should treat unrecognized models as premium', () => {
-      expect(classifyModelBucket('totally-made-up')).toBe('premium');
+    it('should leave unrecognized non-empty models out of unknown totals', () => {
+      expect(classifyModelRequest('some-random-model')).toEqual({
+        normalizedModel: 'some-random-model',
+        isUnknown: false,
+        isKnownModel: false,
+      });
     });
   });
 
@@ -216,20 +124,6 @@ describe('modelConfig', () => {
 
     it('should return false when auto activity counts are negative', () => {
       expect(isActiveAutoModeFeature(makeFeature('auto', -1, -2, -3))).toBe(false);
-    });
-  });
-
-  describe('classifyModelRequest', () => {
-    it('should return normalized model and bucket for aliases', () => {
-      expect(classifyModelRequest('Claude Opus 4.6 (fast mode)')).toEqual({
-        normalizedModel: 'claude-opus-4.6-fast-mode',
-        bucket: 'premium',
-      });
-    });
-
-    it('should preserve unknown and empty buckets', () => {
-      expect(classifyModelRequest('unknown')).toEqual({ normalizedModel: 'unknown', bucket: 'unknown' });
-      expect(classifyModelRequest('')).toEqual({ normalizedModel: '', bucket: 'unknown' });
     });
   });
 });

@@ -1,168 +1,104 @@
 /**
- * Shared configuration for model classification and cost calculations.
- * Keep this list in sync with GitHub Copilot pricing and entitlement docs.
+ * Shared configuration for model normalization and known-model recognition.
  */
 import { normalizeModelName } from './autoMode';
 
 export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
 
 export class Model {
-  constructor(
-    public readonly name: string,
-    public readonly multiplier: number,
-    public readonly isPremium: boolean
-  ) {}
+  constructor(public readonly name: string) {}
 }
 
 /**
- * Canonical list of known models with associated PRU multipliers and premium flags.
+ * Canonical list of known models.
  */
 export const KNOWN_MODELS: Model[] = [
-  // Included models (0 PRUs for paid plans)
-  new Model('goldeneye', 0, false),
-  new Model('gpt-4.0', 0, false),
-  new Model('gpt-4.1', 0, false),
-  new Model('gpt-3.5', 0, false),
-  new Model('gpt-4o', 0, false),
-  new Model('gpt-4o-mini', 0, false),
-  new Model('gpt-4o-latest', 0, false),
-  new Model('gpt-5-mini', 0, false),
-  new Model('grok-code-fast', 0, false),
-  new Model('raptor-mini', 0, false),
-
-  // Premium models with multipliers
-  new Model('gpt-5', 1, true),
-  new Model('gpt-5.0', 1, true),
-  new Model('gpt-5.1', 1, true),
-  new Model('gpt-5.2', 1, true),
-  new Model('gpt-5.4', 1, true),
-  new Model('gpt-5.5', 7.5, true),
-  new Model('gpt-5.3-codex', 1, true),
-  new Model('gpt-5-codex', 1, true),
-  new Model('gpt-5.2-codex', 1, true),
-  new Model('gpt-5.1-codex', 1, true),
-  new Model('gpt-5.1-codex-max', 1, true),
-  new Model('gpt-5.1-codex-mini', 0.33, true),
-  new Model('gpt-5.4-mini', 0.33, true),
-  new Model('gpt-5.4-nano', 0.25, true),
-  new Model('grok-code-fast-1', 0.25, true),
-  new Model('o3', 1, true),
-  new Model('o3-mini', 0.33, true),
-  new Model('o4-mini', 0.33, true),
-  new Model('claude-3.5-sonnet', 1, true),
-  new Model('claude-3.7-sonnet', 1, true),
-  new Model('claude-3.7-sonnet-thought', 1.25, true),
-  new Model('claude-4.0-sonnet', 1, true),
-  new Model('claude-4.5-sonnet', 1, true),
-  new Model('claude-4.6-sonnet', 1, true),
-  new Model('claude-opus-4', 10, true),
-  new Model('claude-opus-4.1', 10, true),
-  new Model('claude-opus-4.5', 3, true),
-  new Model('claude-opus-4.6', 3, true),
-  new Model('claude-opus-4.7', 15, true),
-  new Model('claude-opus-4.8', 15, true),
-  new Model('claude-opus-4.6-fast-mode', 30, true),
-  new Model('claude-opus-4.6-fast-mode-preview', 30, true),
-  new Model('claude-4.5-haiku', 0.33, true),
-  new Model('claude-haiku-4.5', 0.33, true),
-  new Model('claude-sonnet-4', 1, true),
-  new Model('claude-sonnet-4.5', 1, true),
-  new Model('claude-sonnet-4.6', 1, true),
-  new Model('gemini-2.0-flash', 0.25, true),
-  new Model('gemini-2.5-pro', 1, true),
-  new Model('gemini-3.0-pro', 1, true),
-  new Model('gemini-3.1-pro', 1, true),
-  new Model('gemini-3.0-flash', 0.33, true),
-  new Model('gemini-3-flash', 0.33, true),
-  new Model('gemini-3.5-flash', 14, true),
-
-  new Model('auto', 0.7, true), // a temp hack for auto premium models, we don't know the actual model behind it yet.
-
-  // Default multiplier for unknown models
-  new Model('unknown', 1, true),
+  new Model('goldeneye'),
+  new Model('gpt-4.0'),
+  new Model('gpt-4.1'),
+  new Model('gpt-3.5'),
+  new Model('gpt-4o'),
+  new Model('gpt-4o-mini'),
+  new Model('gpt-4o-latest'),
+  new Model('gpt-5-mini'),
+  new Model('grok-code-fast'),
+  new Model('raptor-mini'),
+  new Model('gpt-5'),
+  new Model('gpt-5.0'),
+  new Model('gpt-5.1'),
+  new Model('gpt-5.2'),
+  new Model('gpt-5.4'),
+  new Model('gpt-5.5'),
+  new Model('gpt-5.3-codex'),
+  new Model('gpt-5-codex'),
+  new Model('gpt-5.2-codex'),
+  new Model('gpt-5.1-codex'),
+  new Model('gpt-5.1-codex-max'),
+  new Model('gpt-5.1-codex-mini'),
+  new Model('gpt-5.4-mini'),
+  new Model('gpt-5.4-nano'),
+  new Model('grok-code-fast-1'),
+  new Model('o3'),
+  new Model('o3-mini'),
+  new Model('o4-mini'),
+  new Model('claude-3.5-sonnet'),
+  new Model('claude-3.7-sonnet'),
+  new Model('claude-3.7-sonnet-thought'),
+  new Model('claude-4.0-sonnet'),
+  new Model('claude-4.5-sonnet'),
+  new Model('claude-4.6-sonnet'),
+  new Model('claude-opus-4'),
+  new Model('claude-opus-4.1'),
+  new Model('claude-opus-4.5'),
+  new Model('claude-opus-4.6'),
+  new Model('claude-opus-4.7'),
+  new Model('claude-opus-4.8'),
+  new Model('claude-opus-4.6-fast-mode'),
+  new Model('claude-opus-4.6-fast-mode-preview'),
+  new Model('claude-4.5-haiku'),
+  new Model('claude-haiku-4.5'),
+  new Model('claude-sonnet-4'),
+  new Model('claude-sonnet-4.5'),
+  new Model('claude-sonnet-4.6'),
+  new Model('gemini-2.0-flash'),
+  new Model('gemini-2.5-pro'),
+  new Model('gemini-3.0-pro'),
+  new Model('gemini-3.1-pro'),
+  new Model('gemini-3.0-flash'),
+  new Model('gemini-3-flash'),
+  new Model('gemini-3.5-flash'),
+  new Model('auto'),
+  new Model('unknown'),
 ];
 
-/**
- * Multiplier map keyed by model name for quick lookups.
- */
-export const MODEL_MULTIPLIERS: Record<string, number> = KNOWN_MODELS.reduce(
-  (acc, model) => {
-    acc[normalizeModelName(model.name)] = model.multiplier;
-    return acc;
-  },
-  {} as Record<string, number>
+const UNKNOWN_MODEL_NAME = 'unknown';
+
+const KNOWN_MODEL_NAMES = new Set(
+  KNOWN_MODELS.map(model => normalizeModelName(model.name))
 );
-
-const UNKNOWN_MULTIPLIER = MODEL_MULTIPLIERS['unknown'] ?? 1;
-
-/**
- * Resolve the PRU multiplier for a model name using exact or partial matching.
- */
-export function getModelMultiplier(modelName: string): number {
-  const normalized = normalizeModelName(modelName);
-
-  if (!normalized) {
-    return UNKNOWN_MULTIPLIER;
-  }
-
-  if (normalized in MODEL_MULTIPLIERS) {
-    return MODEL_MULTIPLIERS[normalized];
-  }
-
-  const bestPartialMatch = Object.entries(MODEL_MULTIPLIERS).reduce<[string, number] | undefined>(
-    (best, [key, multiplier]) => {
-      if (key === 'unknown' || !normalized.includes(key)) return best;
-      if (!best || key.length > best[0].length) return [key, multiplier];
-      return best;
-    },
-    undefined
-  );
-
-  if (bestPartialMatch) {
-    return bestPartialMatch[1];
-  }
-
-  return UNKNOWN_MULTIPLIER;
-}
-
-/**
- * Determine if a model should be treated as premium (incurs PRU consumption beyond included tier).
- * Uses the canonical KNOWN_MODELS list. Unknown models inherit the flag from the 'unknown' entry.
- */
-export type ModelBucket = 'premium' | 'standard' | 'unknown';
-
-export function classifyModelBucket(modelName: string): ModelBucket {
-  const normalized = normalizeModelName(modelName);
-  if (normalized === 'unknown' || normalized === '') return 'unknown';
-  return getModelMultiplier(normalized) === 0 ? 'standard' : 'premium';
-}
 
 export interface ModelRequestClassification {
   normalizedModel: string;
-  bucket: ModelBucket;
+  isUnknown: boolean;
+  isKnownModel: boolean;
+}
+
+export function isUnknownModelName(modelName: string): boolean {
+  const normalized = normalizeModelName(modelName);
+  return normalized === '' || normalized === UNKNOWN_MODEL_NAME;
+}
+
+export function isKnownModelName(modelName: string): boolean {
+  const normalized = normalizeModelName(modelName);
+  return normalized !== '' && normalized !== UNKNOWN_MODEL_NAME && KNOWN_MODEL_NAMES.has(normalized);
 }
 
 export function classifyModelRequest(modelName: string): ModelRequestClassification {
   const normalizedModel = normalizeModelName(modelName);
+  const isUnknown = normalizedModel === '' || normalizedModel === UNKNOWN_MODEL_NAME;
   return {
     normalizedModel,
-    bucket: classifyModelBucket(normalizedModel),
+    isUnknown,
+    isKnownModel: normalizedModel !== '' && normalizedModel !== UNKNOWN_MODEL_NAME && KNOWN_MODEL_NAMES.has(normalizedModel),
   };
-}
-
-export function isPremiumModel(modelName: string): boolean {
-  const normalized = normalizeModelName(modelName);
-  // Exact match first
-  const direct = KNOWN_MODELS.find(m => normalizeModelName(m.name) === normalized);
-  if (direct) return direct.isPremium;
-  // Partial match fallback (mirrors multiplier resolution logic, excluding 'unknown')
-  for (const model of KNOWN_MODELS) {
-    if (normalizeModelName(model.name) === 'unknown') continue;
-    if (normalized.includes(normalizeModelName(model.name))) {
-      return model.isPremium;
-    }
-  }
-  // Fallback to 'unknown' model's premium flag
-  const unknown = KNOWN_MODELS.find(m => normalizeModelName(m.name) === 'unknown');
-  return unknown ? unknown.isPremium : true;
 }

@@ -86,7 +86,7 @@ Pay special attention to this app's architecture:
 - Parsing and aggregation run through the Web Worker `parseAndAggregate` flow.
 - Raw `CopilotMetrics[]` records should not be persisted on the main thread; UI code should consume the pre-aggregated `AggregatedMetrics` contract.
 - Only the new LOC schema (`loc_added_sum`, `loc_deleted_sum`, `loc_suggested_*`) is supported. Deprecated `generated_loc_sum` / `accepted_loc_sum` inputs are intentionally skipped.
-- Premium Request Unit (PRU) model multipliers belong in `src/domain/modelConfig.ts`.
+- Model normalization, known-model recognition, and unknown-model detection belong in `src/domain/modelConfig.ts`.
 - Chart components should use the shared Chart.js registration, chart option, dataset, color, and `ChartContainer` patterns documented in `.github/instructions/charts.instructions.md`.
 
 ## Scan protocol
@@ -110,8 +110,8 @@ Pay special attention to this app's architecture:
 4. Look for repeated:
    - NDJSON line parsing, validation, warning, and skipped-record handling
    - LOC field handling and deprecated-schema detection
-   - user, feature, IDE, language, model, CLI, and PRU aggregation loops
-   - model name normalization, premium-model checks, and multiplier lookups
+   - user, feature, IDE, language, model, and CLI aggregation loops
+   - model name normalization, known-model checks, and unknown-model detection
    - feature category or translation logic
    - language normalization and IDE/plugin version classification
    - date bucketing, report date range, and zero-fill logic
@@ -129,7 +129,7 @@ Good atomic groups:
 
 - "Centralize deprecated LOC schema detection"
 - "Extract shared report-date zero-fill helper for charts"
-- "Reuse model premium/multiplier helpers in calculators"
+- "Reuse model normalization helpers in calculators"
 - "Share top-N expandable table behavior across dashboard views"
 
 Bad groups:
@@ -174,7 +174,7 @@ For each issue, use the `create_issue` safe output with this body structure:
 - [ ] Parsing and aggregation still run through the Web Worker `parseAndAggregate` flow when applicable.
 - [ ] Raw metrics are not persisted on the main thread.
 - [ ] Deprecated LOC schema records remain skipped, and new LOC schema fields remain supported.
-- [ ] PRU calculations continue to use `src/domain/modelConfig.ts` when model multipliers are involved.
+- [ ] Model normalization and unknown-model detection continue to use `src/domain/modelConfig.ts`.
 - [ ] Chart changes follow `.github/instructions/charts.instructions.md` when chart components are involved.
 - [ ] Relevant tests are updated or added.
 
