@@ -3,7 +3,11 @@
  */
 
 export class Model {
-  constructor(public readonly name: string) {}
+  public readonly name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
 }
 
 export const normalizeModelName = (name: string): string =>
