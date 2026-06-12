@@ -3,7 +3,7 @@ import { aggregateMetrics } from '../domain/metricsAggregator';
 import { computeSingleUserDetailedMetrics } from '../domain/calculators';
 import type { CopilotMetrics } from '../types/metrics';
 import type { UserDetailAccumulator } from '../domain/calculators';
-import type { WorkerRequest, WorkerResponse, WorkerParseResult } from './types';
+import type { WorkerRequest, WorkerResponse } from './types';
 
 interface WorkerContext {
   onmessage: ((event: MessageEvent) => void) | null;
@@ -33,42 +33,6 @@ function extractEnterpriseName(metrics: CopilotMetrics[]): string | null {
 ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const msg = event.data;
   switch (msg.type) {
-    case 'parseFiles': {
-      try {
-        const multiFileResult = await parseMultipleMetricsStreams(msg.files, (progress) => {
-          postResponse({ type: 'parseProgress', id: msg.id, progress });
-        });
-        const result: WorkerParseResult = {
-          enterpriseName: extractEnterpriseName(multiFileResult.metrics),
-          recordCount: multiFileResult.metrics.length,
-          metrics: multiFileResult.metrics,
-          errors: multiFileResult.errors,
-        };
-        postResponse({ type: 'parseResult', id: msg.id, result });
-      } catch (err) {
-        postResponse({
-          type: 'error',
-          id: msg.id,
-          error: err instanceof Error ? err.message : 'Parse failed',
-        });
-      }
-      break;
-    }
-    case 'aggregate': {
-      try {
-        storedUserDetailAccumulator = null;
-        const { aggregated, userDetailAccumulator } = aggregateMetrics(msg.metrics);
-        storedUserDetailAccumulator = userDetailAccumulator;
-        postResponse({ type: 'aggregateResult', id: msg.id, result: aggregated });
-      } catch (err) {
-        postResponse({
-          type: 'error',
-          id: msg.id,
-          error: err instanceof Error ? err.message : 'Aggregation failed',
-        });
-      }
-      break;
-    }
     case 'parseAndAggregate': {
       try {
         storedUserDetailAccumulator = null;
@@ -91,7 +55,6 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           result: aggregated,
           enterpriseName: extractEnterpriseName(parseResult.metrics),
           recordCount: parseResult.metrics.length,
-          metrics: parseResult.metrics,
           errors: parseResult.errors,
         });
       } catch (err) {
