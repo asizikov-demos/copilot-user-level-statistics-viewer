@@ -1,5 +1,6 @@
 import { Key, ReactNode } from 'react';
 import type { SortDirection } from '../../types/sort';
+import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
 
 export type { SortDirection };
 
@@ -31,25 +32,6 @@ export interface MetricsTableProps<T> {
   getRowKey?: (item: T, index: number) => Key;
 }
 
-function SortIndicator({ active, direction }: { active: boolean; direction: SortDirection }) {
-  if (!active) {
-    return (
-      <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-      </svg>
-    );
-  }
-
-  return direction === 'asc' ? (
-    <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4l9 16 9-16H3z" />
-    </svg>
-  ) : (
-    <svg className="w-4 h-4 ml-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 20L12 4 3 20h18z" />
-    </svg>
-  );
-}
 
 export function MetricsTable<T>({
   data,
@@ -75,7 +57,7 @@ export function MetricsTable<T>({
             const isActive = Boolean(sortState && sortState.field === column.id);
             const headerClassName = column.headerClassName ?? headerBaseClass;
             const ariaSortValue = isSortable
-              ? (isActive ? (sortState?.direction === 'asc' ? 'ascending' : 'descending') : 'none')
+              ? getSortIndicatorAriaSort(isActive, sortState?.direction ?? 'asc')
               : undefined;
 
             if (!isSortable) {
