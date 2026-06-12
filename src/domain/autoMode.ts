@@ -1,17 +1,11 @@
+import { normalizeModelName } from './modelConfig';
+
 export interface ModelFeatureActivity {
   model: string;
   user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
 }
-
-export const normalizeModelName = (name: string): string =>
-  name
-    .trim()
-    .toLowerCase()
-    .replace(/[()]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-');
 
 /**
  * Returns true when a model-feature record represents active Auto mode usage.

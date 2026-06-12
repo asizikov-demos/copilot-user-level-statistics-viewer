@@ -1,13 +1,19 @@
 /**
  * Shared configuration for model normalization and known-model recognition.
  */
-import { normalizeModelName } from './autoMode';
-
-export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
 
 export class Model {
   constructor(public readonly name: string) {}
 }
+
+export const normalizeModelName = (name: string): string =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/[()]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 /**
  * Canonical list of known models.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { isActiveAutoModeFeature } from '../autoMode';
 import {
   classifyModelRequest,
-  isActiveAutoModeFeature,
   isKnownModelName,
   isUnknownModelName,
   KNOWN_MODELS,
@@ -18,6 +18,11 @@ describe('modelConfig', () => {
 
     it('should collapse repeated separators', () => {
       expect(normalizeModelName('claude---opus___4.7')).toBe('claude-opus-4.7');
+    });
+
+    it('should preserve empty models and strip wrapper punctuation from unknown aliases', () => {
+      expect(normalizeModelName('   ')).toBe('');
+      expect(normalizeModelName(' ( UNKNOWN ) ')).toBe('unknown');
     });
   });
 
@@ -72,6 +77,11 @@ describe('modelConfig', () => {
       });
       expect(classifyModelRequest('')).toEqual({
         normalizedModel: '',
+        isUnknown: true,
+        isKnownModel: false,
+      });
+      expect(classifyModelRequest(' ( unknown ) ')).toEqual({
+        normalizedModel: 'unknown',
         isUnknown: true,
         isKnownModel: false,
       });

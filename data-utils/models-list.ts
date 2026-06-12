@@ -4,6 +4,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeModelName } from '../src/domain/modelConfig';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,7 +82,7 @@ function parseJsonContent(content: string, fileName: string): JsonValue[] {
   }
 }
 
-function collectModelsFromValue(value: JsonValue, models: Set<string>): void {
+export function collectModelsFromValue(value: JsonValue, models: Set<string>): void {
   if (value == null) return;
 
   if (Array.isArray(value)) {
@@ -92,7 +93,7 @@ function collectModelsFromValue(value: JsonValue, models: Set<string>): void {
   if (typeof value === 'object') {
     for (const [key, nestedValue] of Object.entries(value as Record<string, JsonValue>)) {
       if (key.toLowerCase() === 'model' && typeof nestedValue === 'string') {
-        const normalized = nestedValue.trim();
+        const normalized = normalizeModelName(nestedValue);
         if (normalized) {
           models.add(normalized);
         }
@@ -149,7 +150,9 @@ async function main(): Promise<void> {
   console.log(`Wrote list to ${path.relative(ROOT_DIR, OUTPUT_PATH)}`);
 }
 
-main().catch(error => {
-  console.error('Failed to generate model list:', error);
-  process.exitCode = 1;
-});
+if (process.argv[1] === __filename) {
+  main().catch(error => {
+    console.error('Failed to generate model list:', error);
+    process.exitCode = 1;
+  });
+}
