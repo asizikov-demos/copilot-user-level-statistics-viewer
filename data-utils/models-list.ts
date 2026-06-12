@@ -49,6 +49,23 @@ async function collectModelNames(customPaths?: string[]): Promise<string[]> {
   return Array.from(models).sort((a, b) => a.localeCompare(b));
 }
 
+function parseNdjsonLines(text: string, fileName: string): JsonValue[] {
+  const records: JsonValue[] = [];
+  const parts = text.split(/\r?\n/);
+  for (let i = 0; i < parts.length; i++) {
+    const trimmed = parts[i].trim();
+    if (!trimmed) continue;
+    try {
+      records.push(JSON.parse(trimmed));
+    } catch (error) {
+      console.warn(
+        `Skipping invalid JSON in ${fileName} (line ${i + 1}): ${(error as Error).message}`
+      );
+    }
+  }
+  return records;
+}
+
 function parseJsonContent(content: string, fileName: string): JsonValue[] {
   const trimmed = content.trim();
 
@@ -60,24 +77,8 @@ function parseJsonContent(content: string, fileName: string): JsonValue[] {
   try {
     const parsed = JSON.parse(trimmed);
     return Array.isArray(parsed) ? parsed : [parsed];
-  } catch (error) {
-    const lines = trimmed.split(/\r?\n/);
-    const records: JsonValue[] = [];
-
-    lines.forEach((line, index) => {
-      const lineTrimmed = line.trim();
-      if (!lineTrimmed) return;
-
-      try {
-        records.push(JSON.parse(lineTrimmed));
-      } catch (lineError) {
-        console.warn(
-          `Skipping invalid JSON in ${fileName} (line ${index + 1}): ${(lineError as Error).message}`
-        );
-      }
-    });
-
-    return records;
+  } catch {
+    return parseNdjsonLines(trimmed, fileName);
   }
 }
 

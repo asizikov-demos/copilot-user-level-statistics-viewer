@@ -1,5 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
+import { splitNdjsonLines } from '../utils/ndjsonParser';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { normalizeLanguage } from './languageNormalizer';
 
@@ -80,12 +81,11 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
 }
 
 export function parseMetricsFile(fileContent: string): CopilotMetrics[] {
-  const lines = fileContent.split('\n').filter(line => line.trim());
   const metrics: CopilotMetrics[] = [];
   const pool = new StringPool();
 
-  for (const line of lines) {
-    const metric = parseMetricsLine(line.trim(), pool);
+  for (const { line } of splitNdjsonLines(fileContent)) {
+    const metric = parseMetricsLine(line, pool);
     if (metric) {
       metrics.push(metric);
     }
