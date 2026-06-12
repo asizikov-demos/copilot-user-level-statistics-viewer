@@ -1,5 +1,6 @@
 import { CopilotMetrics } from '../../types/metrics';
 import {
+  getChatModeBucket,
   isAgentFeature,
   isCliFeature,
   isCodeCompletionFeature,
@@ -120,7 +121,7 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (feature === 'chat_panel_edit_mode' && hasLoc) {
+    if (getChatModeBucket(feature) === 'edit' && hasLoc) {
       accumulateToMap(
         accumulator.dailyEditModeImpact,
         date,
@@ -130,7 +131,7 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (feature === 'chat_inline' && hasLoc) {
+    if (getChatModeBucket(feature) === 'inline' && hasLoc) {
       accumulateToMap(
         accumulator.dailyInlineModeImpact,
         date,
@@ -140,7 +141,7 @@ export function accumulateFeatureImpacts(
       );
     }
 
-    if (feature === 'chat_panel_ask_mode' && hasLoc) {
+    if (getChatModeBucket(feature) === 'ask' && hasLoc) {
       accumulateToMap(
         accumulator.dailyAskModeImpact,
         date,

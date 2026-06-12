@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   createModelUsageAccumulator,
   accumulateModelFeature,
+  accumulateAgentHeatmapFromFeature,
   computeDailyModelUsageData,
+  computeAgentModeHeatmapData,
 } from '../modelUsageCalculator';
 
 describe('modelUsageCalculator', () => {
@@ -93,6 +95,48 @@ describe('modelUsageCalculator', () => {
 
       expect(results[0].modelInteractions).toBe(10);
       expect(results[0].unknownModels).toBe(0);
+    });
+  });
+
+  describe('Agent mode heatmap accumulation', () => {
+    it('routes chat_panel_agent_mode via taxonomy to agent heatmap', () => {
+      const accumulator = createModelUsageAccumulator();
+
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 1, 'chat_panel_agent_mode', 5);
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 2, 'chat_panel_agent_mode', 3);
+
+      const results = computeAgentModeHeatmapData(accumulator);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].date).toBe('2024-01-15');
+      expect(results[0].agentModeRequests).toBe(8);
+      expect(results[0].uniqueUsers).toBe(2);
+    });
+
+    it('does not route non-agent-mode features to agent heatmap', () => {
+      const accumulator = createModelUsageAccumulator();
+
+      // ask mode: not an agent mode feature
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 1, 'chat_panel_ask_mode', 5);
+      // code completion: not a chat mode feature at all
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 2, 'code_completion', 10);
+      // agent_edit is an agent feature but has no chatModeBucket in the taxonomy,
+      // so getChatModeBucket returns undefined and it is excluded from the heatmap
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 3, 'agent_edit', 3);
+
+      const results = computeAgentModeHeatmapData(accumulator);
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('ignores agent mode entries with zero interaction count', () => {
+      const accumulator = createModelUsageAccumulator();
+
+      accumulateAgentHeatmapFromFeature(accumulator, '2024-01-15', 1, 'chat_panel_agent_mode', 0);
+
+      const results = computeAgentModeHeatmapData(accumulator);
+
+      expect(results).toHaveLength(0);
     });
   });
 });

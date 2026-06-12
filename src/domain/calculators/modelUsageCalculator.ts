@@ -1,5 +1,6 @@
 import { classifyModelRequest } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
+import { getChatModeBucket } from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
 
 export interface DailyModelUsageData {
@@ -60,7 +61,7 @@ export function accumulateAgentHeatmapFromFeature(
   feature: string,
   interactionCount: number
 ): void {
-  if (feature === 'chat_panel_agent_mode' && interactionCount > 0) {
+  if (getChatModeBucket(feature) === 'agent' && interactionCount > 0) {
     if (!accumulator.dailyAgentHeatmap.has(date)) {
       accumulator.dailyAgentHeatmap.set(date, { requests: 0, users: new Set() });
     }
