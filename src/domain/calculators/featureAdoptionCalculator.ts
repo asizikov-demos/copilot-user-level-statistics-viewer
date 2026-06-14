@@ -1,4 +1,5 @@
 import {
+  getChatModeBucket,
   isAgentFeature,
   isChatFeature,
   isCodeCompletionFeature,
@@ -96,20 +97,33 @@ export function computeFeatureAdoptionData(
     let hasCompletionFeature = false;
     let hasChatFeature = false;
     let hasAgentFeature = false;
+    let hasAskMode = false;
+    let hasEditMode = false;
+    let hasInlineMode = false;
+    let hasPlanMode = false;
 
     for (const feature of features) {
       if (isCodeCompletionFeature(feature)) hasCompletionFeature = true;
       if (isChatFeature(feature)) hasChatFeature = true;
       if (isAgentFeature(feature)) hasAgentFeature = true;
+      const bucket = getChatModeBucket(feature);
+      if (bucket !== undefined) {
+        switch (bucket) {
+          case 'ask': hasAskMode = true; break;
+          case 'edit': hasEditMode = true; break;
+          case 'inline': hasInlineMode = true; break;
+          case 'plan': hasPlanMode = true; break;
+        }
+      }
     }
 
     if (hasCompletionFeature) completionUsers++;
     if (hasChatFeature) chatUsers++;
     if (hasAgentFeature) agentModeUsers++;
-    if (features.has('chat_panel_ask_mode')) askModeUsers++;
-    if (features.has('chat_panel_edit_mode')) editModeUsers++;
-    if (features.has('chat_inline')) inlineModeUsers++;
-    if (features.has('chat_panel_plan_mode')) planModeUsers++;
+    if (hasAskMode) askModeUsers++;
+    if (hasEditMode) editModeUsers++;
+    if (hasInlineMode) inlineModeUsers++;
+    if (hasPlanMode) planModeUsers++;
     if (isCliUser) cliUsers++;
     if (isCodingAgentUser) codingAgentUsers++;
     if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
