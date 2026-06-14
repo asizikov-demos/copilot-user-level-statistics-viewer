@@ -1,20 +1,8 @@
-import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../domain/metricsAggregator';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
-import type { WorkerResponse, WorkerParseResult } from './types';
+import type { WorkerResponse } from './types';
 import { getBasePath } from '../utils/basePath';
-
-interface PendingParseRequest {
-  resolve: (value: WorkerParseResult) => void;
-  reject: (error: Error) => void;
-  onProgress?: (progress: MultiFileProgress) => void;
-}
-
-interface PendingAggregateRequest {
-  resolve: (value: AggregatedMetrics) => void;
-  reject: (error: Error) => void;
-}
 
 interface PendingParseAndAggregateRequest {
   resolve: (value: { result: AggregatedMetrics; enterpriseName: string | null; recordCount: number; errors: MultiFileResult['errors'] }) => void;
@@ -28,8 +16,6 @@ interface PendingUserDetailsRequest {
 }
 
 type PendingRequest =
-  | ({ kind: 'parse' } & PendingParseRequest)
-  | ({ kind: 'aggregate' } & PendingAggregateRequest)
   | ({ kind: 'parseAndAggregate' } & PendingParseAndAggregateRequest)
   | ({ kind: 'computeUserDetails' } & PendingUserDetailsRequest);
 
@@ -49,24 +35,8 @@ function getWorker(): Worker {
 
     switch (msg.type) {
       case 'parseProgress':
-        if (pending.kind === 'parse' || pending.kind === 'parseAndAggregate') {
+        if (pending.kind === 'parseAndAggregate') {
           pending.onProgress?.(msg.progress);
-        }
-        break;
-      case 'parseResult':
-        pendingRequests.delete(msg.id);
-        if (pending.kind === 'parse') {
-          pending.resolve(msg.result);
-        } else {
-          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
-        }
-        break;
-      case 'aggregateResult':
-        pendingRequests.delete(msg.id);
-        if (pending.kind === 'aggregate') {
-          pending.resolve(msg.result);
-        } else {
-          pending.reject(new Error(`Unexpected response type '${msg.type}' for '${pending.kind}' request`));
         }
         break;
       case 'parseAndAggregateResult':
@@ -118,37 +88,6 @@ function getWorker(): Worker {
 
 function nextId(): string {
   return `req-${++requestCounter}`;
-}
-
-export function parseFilesInWorker(
-  files: File[],
-  onProgress?: (progress: MultiFileProgress) => void
-): Promise<WorkerParseResult> {
-  const id = nextId();
-  return new Promise((resolve, reject) => {
-    pendingRequests.set(id, { kind: 'parse', resolve, reject, onProgress });
-    try {
-      getWorker().postMessage({ type: 'parseFiles', id, files });
-    } catch (err) {
-      pendingRequests.delete(id);
-      reject(err instanceof Error ? err : new Error(String(err)));
-    }
-  });
-}
-
-export function aggregateMetricsInWorker(
-  metrics: CopilotMetrics[]
-): Promise<AggregatedMetrics> {
-  const id = nextId();
-  return new Promise((resolve, reject) => {
-    pendingRequests.set(id, { kind: 'aggregate', resolve, reject });
-    try {
-      getWorker().postMessage({ type: 'aggregate', id, metrics });
-    } catch (err) {
-      pendingRequests.delete(id);
-      reject(err instanceof Error ? err : new Error(String(err)));
-    }
-  });
 }
 
 export function parseAndAggregateInWorker(
