@@ -481,35 +481,35 @@ describe('metricsParser', () => {
   });
 
   describe('parseMetricsFile', () => {
-    it('should parse multiple valid lines and filter invalid ones', () => {
-      const validLine1 = {
-        report_start_day: '2024-01-01',
-        report_end_day: '2024-01-31',
-        day: '2024-01-15',
-        enterprise_id: 'test-enterprise',
-        user_id: 123,
-        user_login: 'user1',
-        user_initiated_interaction_count: 10,
-        code_generation_activity_count: 5,
-        code_acceptance_activity_count: 3,
-        loc_added_sum: 100,
-        loc_deleted_sum: 20,
-        loc_suggested_to_add_sum: 150,
-        loc_suggested_to_delete_sum: 30,
-        totals_by_ide: [],
-        totals_by_feature: [],
-        totals_by_language_feature: [],
-        totals_by_language_model: [],
-        totals_by_model_feature: [],
-        used_agent: false,
-        used_chat: true,
-      };
+    const baseRecord = {
+      report_start_day: '2024-01-01',
+      report_end_day: '2024-01-31',
+      day: '2024-01-15',
+      enterprise_id: 'test-enterprise',
+      user_id: 123,
+      user_login: 'user1',
+      user_initiated_interaction_count: 10,
+      code_generation_activity_count: 5,
+      code_acceptance_activity_count: 3,
+      loc_added_sum: 100,
+      loc_deleted_sum: 20,
+      loc_suggested_to_add_sum: 150,
+      loc_suggested_to_delete_sum: 30,
+      totals_by_ide: [],
+      totals_by_feature: [],
+      totals_by_language_feature: [],
+      totals_by_language_model: [],
+      totals_by_model_feature: [],
+      used_agent: false,
+      used_chat: true,
+    };
 
-      const validLine2 = { ...validLine1, user_id: 456, user_login: 'user2' };
-      const deprecatedLine = { ...validLine1, generated_loc_sum: 100 };
+    it('should parse multiple valid lines and filter invalid ones', () => {
+      const validLine2 = { ...baseRecord, user_id: 456, user_login: 'user2' };
+      const deprecatedLine = { ...baseRecord, generated_loc_sum: 100 };
 
       const fileContent = [
-        JSON.stringify(validLine1),
+        JSON.stringify(baseRecord),
         '', // empty line
         JSON.stringify(validLine2),
         'invalid json',
@@ -521,6 +521,71 @@ describe('metricsParser', () => {
       expect(results).toHaveLength(2);
       expect(results[0].user_id).toBe(123);
       expect(results[1].user_id).toBe(456);
+    });
+
+    it('should handle CRLF line endings', () => {
+      const validLine2 = { ...baseRecord, user_id: 456, user_login: 'user2' };
+
+      const fileContent = [
+        JSON.stringify(baseRecord),
+        JSON.stringify(validLine2),
+      ].join('\r\n');
+
+      const results = parseMetricsFile(fileContent);
+
+      expect(results).toHaveLength(2);
+      expect(results[0].user_id).toBe(123);
+      expect(results[1].user_id).toBe(456);
+    });
+
+    it('should handle file without trailing newline', () => {
+      const validLine2 = { ...baseRecord, user_id: 456, user_login: 'user2' };
+
+      // join('\n') produces no trailing newline
+      const fileContent = [JSON.stringify(baseRecord), JSON.stringify(validLine2)].join('\n');
+
+      const results = parseMetricsFile(fileContent);
+
+      expect(results).toHaveLength(2);
+    });
+
+    it('should skip deprecated LOC schema records', () => {
+      const deprecatedRoot = { ...baseRecord, generated_loc_sum: 200 };
+      const deprecatedNested = {
+        ...baseRecord,
+        user_id: 999,
+        totals_by_feature: [{ feature: 'code_completion', generated_loc_sum: 10 }],
+      };
+
+      const fileContent = [
+        JSON.stringify(baseRecord),
+        JSON.stringify(deprecatedRoot),
+        JSON.stringify(deprecatedNested),
+      ].join('\n');
+
+      const results = parseMetricsFile(fileContent);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].user_id).toBe(123);
+    });
+
+    it('should skip records missing new LOC fields', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const missingLoc = { ...baseRecord } as any;
+      delete missingLoc.loc_added_sum;
+
+      const fileContent = [JSON.stringify(baseRecord), JSON.stringify(missingLoc)].join('\n');
+
+      const results = parseMetricsFile(fileContent);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].user_id).toBe(123);
+    });
+
+    it('should return empty array for empty input', () => {
+      expect(parseMetricsFile('')).toEqual([]);
+      expect(parseMetricsFile('   ')).toEqual([]);
+      expect(parseMetricsFile('\n\n')).toEqual([]);
     });
   });
 });
