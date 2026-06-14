@@ -95,6 +95,39 @@ describe('createAdoptionTrendChartConfig', () => {
   });
 });
 
+describe('padAdoptionTrendData for CLI report range', () => {
+  it('includes inactive report days in display series while raw metrics are unaffected by padding', () => {
+    const rawData = [
+      { date: '2024-01-01', newUsers: 2, returningUsers: 0, totalActiveUsers: 2, cumulativeUsers: 2 },
+      { date: '2024-01-03', newUsers: 1, returningUsers: 1, totalActiveUsers: 2, cumulativeUsers: 3 },
+    ];
+
+    const paddedData = padAdoptionTrendData(rawData, '2024-01-01', '2024-01-03');
+
+    // Display series includes the inactive day
+    expect(paddedData).toHaveLength(3);
+    expect(paddedData[1]).toEqual({
+      date: '2024-01-02',
+      newUsers: 0,
+      returningUsers: 0,
+      totalActiveUsers: 0,
+      cumulativeUsers: 2,
+    });
+
+    // Summary metrics computed from raw data are not diluted by padded zeros
+    const metricsFromRaw = getAdoptionTrendMetrics(rawData);
+    const metricsFromPadded = getAdoptionTrendMetrics(paddedData);
+
+    expect(metricsFromRaw.totalNewUsers).toBe(3);
+    expect(metricsFromRaw.avgDailyActive).toBe(2);
+    // Padded version includes the zero-filled day so avgDailyActive is lower
+    expect(metricsFromPadded.avgDailyActive).toBeCloseTo(4 / 3, 5);
+    // totalNewUsers and cumulativeTotal are unaffected since zeros don't add users
+    expect(metricsFromRaw.totalNewUsers).toBe(metricsFromPadded.totalNewUsers);
+    expect(metricsFromRaw.cumulativeTotal).toBe(metricsFromPadded.cumulativeTotal);
+  });
+});
+
 describe('createAdoptionTrendSummaryStats', () => {
   it('returns consistent summary stat wiring', () => {
     const summary = createAdoptionTrendSummaryStats(

@@ -1,8 +1,9 @@
 'use client';
 
 import { Chart } from 'react-chartjs-2';
+import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
-import { createAdoptionTrendChartConfig, createAdoptionTrendSummaryStats, getAdoptionTrendMetrics } from './utils/adoptionTrendChart';
+import { createAdoptionTrendChartConfig, createAdoptionTrendSummaryStats, getAdoptionTrendMetrics, padAdoptionTrendData } from './utils/adoptionTrendChart';
 import { computeCliInsights } from '../../domain/cliAdoptionInsights';
 import type { DailyCliAdoptionTrend } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
@@ -19,8 +20,12 @@ interface CLIAdoptionTrendChartProps {
 export default function CLIAdoptionTrendChart({ data, stats }: CLIAdoptionTrendChartProps) {
   const metrics = getAdoptionTrendMetrics(data);
   const insights = computeCliInsights(stats, data);
+  const paddedData = useMemo(
+    () => padAdoptionTrendData(data, stats.reportStartDay, stats.reportEndDay),
+    [data, stats.reportStartDay, stats.reportEndDay]
+  );
   const { chartData, options } = createAdoptionTrendChartConfig({
-    data,
+    data: paddedData,
     yAxisLabel: 'Daily Active Users',
     y1AxisLabel: 'Cumulative Users',
     yStepSize: 1,
