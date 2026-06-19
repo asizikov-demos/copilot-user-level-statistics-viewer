@@ -1,13 +1,21 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import {
-  calculateJoinedImpactData,
-  calculateDailyModelUsage,
-  calculateAgentImpactData,
-  calculateAskModeImpactData,
-  calculateCodeCompletionImpactData,
-  calculateCliImpactData,
-} from './metricCalculators';
+  createImpactAccumulator,
+  ensureImpactDates,
+  accumulateFeatureImpacts,
+  computeAgentImpactData,
+  computeAskModeImpactData,
+  computeCodeCompletionImpactData,
+  computeCliImpactData,
+  computeJoinedImpactData,
+  type FeatureImpactInput,
+} from './impactCalculator';
+import {
+  createModelUsageAccumulator,
+  accumulateModelFeature,
+  computeDailyModelUsageData,
+} from './modelUsageCalculator';
 
 interface FeatureAgg {
   feature: string;
@@ -256,34 +264,6 @@ export function accumulateUserDetail(
   });
 }
 
-function adaptDaysAsMetrics(days: UserDayData[], userId: number, reportStartDay: string, reportEndDay: string): CopilotMetrics[] {
-  return days.map(day => ({
-    report_start_day: reportStartDay,
-    report_end_day: reportEndDay,
-    day: day.day,
-    enterprise_id: '',
-    user_id: userId,
-    user_login: '',
-    user_initiated_interaction_count: day.user_initiated_interaction_count,
-    code_generation_activity_count: day.code_generation_activity_count,
-    code_acceptance_activity_count: day.code_acceptance_activity_count,
-    loc_added_sum: day.loc_added_sum,
-    loc_deleted_sum: day.loc_deleted_sum,
-    loc_suggested_to_add_sum: day.loc_suggested_to_add_sum,
-    loc_suggested_to_delete_sum: day.loc_suggested_to_delete_sum,
-    totals_by_ide: day.totals_by_ide,
-    totals_by_feature: day.totals_by_feature,
-    totals_by_language_feature: day.totals_by_language_feature,
-    totals_by_language_model: day.totals_by_language_model,
-    totals_by_model_feature: day.totals_by_model_feature,
-    totals_by_cli: day.totals_by_cli,
-    used_agent: false,
-    used_chat: false,
-    used_cli: !!day.totals_by_cli,
-    used_copilot_coding_agent: false,
-  }));
-}
-
 export function computeUserDetailedMetrics(
   accumulator: UserDetailAccumulator
 ): Map<number, UserDetailedMetrics> {
@@ -314,9 +294,28 @@ export function computeSingleUserDetailedMetrics(
     (a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()
   );
 
-  const adaptedMetrics = adaptDaysAsMetrics(
-    state.days, userId, accumulator.reportStartDay, accumulator.reportEndDay
-  );
+  const impactAccumulator = createImpactAccumulator();
+  const modelUsageAccumulator = createModelUsageAccumulator();
+
+  for (const day of state.days) {
+    ensureImpactDates(impactAccumulator, day.day);
+
+    const featureImpacts: FeatureImpactInput[] = day.totals_by_feature.map(f => ({
+      feature: f.feature,
+      locAdded: f.loc_added_sum || 0,
+      locDeleted: f.loc_deleted_sum || 0,
+    }));
+    accumulateFeatureImpacts(impactAccumulator, day.day, userId, featureImpacts);
+
+    for (const mf of day.totals_by_model_feature) {
+      accumulateModelFeature(
+        modelUsageAccumulator,
+        day.day,
+        mf.model,
+        mf.user_initiated_interaction_count
+      );
+    }
+  }
 
   return {
     totalModelRequests: state.totalModelRequests,
@@ -326,12 +325,12 @@ export function computeSingleUserDetailedMetrics(
     modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
     pluginVersions,
     cliVersions,
-    dailyCombinedImpact: calculateJoinedImpactData(adaptedMetrics),
-    dailyModelUsage: calculateDailyModelUsage(adaptedMetrics),
-    dailyAgentImpact: calculateAgentImpactData(adaptedMetrics),
-    dailyAskModeImpact: calculateAskModeImpactData(adaptedMetrics),
-    dailyCompletionImpact: calculateCodeCompletionImpactData(adaptedMetrics),
-    dailyCliImpact: calculateCliImpactData(adaptedMetrics),
+    dailyCombinedImpact: computeJoinedImpactData(impactAccumulator),
+    dailyModelUsage: computeDailyModelUsageData(modelUsageAccumulator),
+    dailyAgentImpact: computeAgentImpactData(impactAccumulator),
+    dailyAskModeImpact: computeAskModeImpactData(impactAccumulator),
+    dailyCompletionImpact: computeCodeCompletionImpactData(impactAccumulator),
+    dailyCliImpact: computeCliImpactData(impactAccumulator),
     days: state.days,
     reportStartDay: accumulator.reportStartDay,
     reportEndDay: accumulator.reportEndDay,
