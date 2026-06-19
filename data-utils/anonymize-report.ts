@@ -5,6 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomInt } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
+import { splitNdjsonLines } from '../src/utils/ndjsonParser';
 
 type JsonRecord = Record<string, unknown>;
 interface ParsedRecord {
@@ -322,16 +323,12 @@ export async function main(): Promise<void> {
   );
 
   const content = await readFile(inputPath, 'utf8');
-  const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
+  const ndjsonLines = splitNdjsonLines(content);
 
   const records: ParsedRecord[] = [];
   const uniqueLogins = new Set<string>();
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line === undefined) {
-      continue;
-    }
+  for (const { line, lineNumber } of ndjsonLines) {
     try {
       const parsed = JSON.parse(line) as unknown;
       if (parsed && typeof parsed === 'object') {
@@ -340,11 +337,11 @@ export async function main(): Promise<void> {
         if (typeof login === 'string' && login.trim().length > 0) {
           uniqueLogins.add(login);
         }
-        records.push({ lineNumber: i + 1, record: rec });
+        records.push({ lineNumber, record: rec });
       }
     } catch (e) {
       throw new Error(
-        `Invalid JSON on line ${i + 1}: ${e instanceof Error ? e.message : String(e)}`,
+        `Invalid JSON on line ${lineNumber}: ${e instanceof Error ? e.message : String(e)}`,
       );
     }
   }
