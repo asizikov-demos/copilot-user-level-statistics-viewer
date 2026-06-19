@@ -12,6 +12,7 @@ permissions:
   contents: read
   actions: read
   pull-requests: read
+  copilot-requests: write
 
 concurrency:
   group: dependency-audit
@@ -44,6 +45,8 @@ timeout-minutes: 30
 steps:
   - name: Checkout
     uses: actions/checkout@v5
+    with:
+      persist-credentials: false
 
   - name: Install dependencies
     run: npm ci

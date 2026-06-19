@@ -10,6 +10,7 @@ permissions:
   contents: read
   issues: read
   actions: read
+  copilot-requests: write
 
 concurrency:
   group: code-duplication-scan
