@@ -41,3 +41,33 @@ describe('table state primitives', () => {
     expect(resolveExpandableToggleLabel(true, 10, undefined, 'Collapse')).toBe('Collapse');
   });
 });
+
+describe('MetricsTable initialCount opt-in expansion', () => {
+  it('shows all rows when initialCount is not provided (resolvedInitialCount defaults to data.length)', () => {
+    const items = [1, 2, 3, 4, 5];
+    // MetricsTable sets resolvedInitialCount = initialCount ?? data.length
+    // When initialCount is omitted, resolvedInitialCount === items.length → no truncation
+    const resolvedInitialCount = items.length;
+    expect(getExpandableVisibleItems(items, false, resolvedInitialCount)).toBe(items);
+  });
+
+  it('limits visible rows when initialCount is less than data.length', () => {
+    const items = ['a', 'b', 'c', 'd', 'e'];
+    expect(getExpandableVisibleItems(items, false, 3)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('shows all rows after expand is toggled', () => {
+    const items = ['a', 'b', 'c', 'd', 'e'];
+    expect(getExpandableVisibleItems(items, true, 3)).toBe(items);
+  });
+
+  it('resolves custom collapsed label with total count', () => {
+    expect(resolveExpandableToggleLabel(false, 7, (n) => `Show All ${n} Client Versions`)).toBe(
+      'Show All 7 Client Versions',
+    );
+  });
+
+  it('resolves custom expanded label', () => {
+    expect(resolveExpandableToggleLabel(true, 7, undefined, 'Show Less')).toBe('Show Less');
+  });
+});

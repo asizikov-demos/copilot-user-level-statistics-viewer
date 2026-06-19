@@ -10,7 +10,7 @@ import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
 import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
-import ExpandableTableSection from '../ui/ExpandableTableSection';
+import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
 import type { UserDayData } from '../../types/metrics';
 
 registerChartJS();
@@ -42,6 +42,14 @@ interface ClientActivityChartProps {
     sampled_at: string;
   }[];
 }
+
+type VersionEntry = { name: string; version: string; sampled_at: string };
+
+const versionColumns: TableColumn<VersionEntry>[] = [
+  { id: 'name', header: 'Client', headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900', renderCell: (r) => r.name },
+  { id: 'version', header: 'Version', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right', renderCell: (r) => r.version },
+  { id: 'sampled_at', header: 'Last Seen', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right', renderCell: (r) => formatShortDate(r.sampled_at) },
+];
 
 /**
  * ClientActivityChart
@@ -213,35 +221,16 @@ export default function ClientActivityChart({
       {allVersions.length > 0 && (
         <div className="mt-8">
           <h4 className="text-md font-semibold text-gray-900 mb-4">Client Versions</h4>
-          <ExpandableTableSection
-            items={allVersions}
-            initialCount={1}
-            buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
-            buttonExpandedLabel="Show Less"
-          >
-            {({ visibleItems }) => (
-              <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visibleItems.map((entry, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{entry.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{entry.version}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{formatShortDate(entry.sampled_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </ExpandableTableSection>
+          <div className="overflow-x-auto border border-gray-200">
+            <MetricsTable
+              data={allVersions}
+              columns={versionColumns}
+              getRowKey={(_, i) => i}
+              initialCount={1}
+              buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
+              buttonExpandedLabel="Show Less"
+            />
+          </div>
         </div>
       )}
     </>

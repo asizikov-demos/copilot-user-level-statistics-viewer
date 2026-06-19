@@ -2,7 +2,6 @@
 
 import { LanguageStats } from '../domain/calculators/metricCalculators';
 import { useMemo, useState } from 'react';
-import ExpandableTableSection from './ui/ExpandableTableSection';
 import MetricsTable, { SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
 import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types/metrics';
@@ -443,47 +442,35 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
         {/* Languages by Number of Generations */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Code Generations</h3>
-          <ExpandableTableSection
-            items={languagesByGenerations}
-            initialCount={maxItemsToShow}
-            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-            buttonExpandedLabel="Show Less"
-          >
-            {({ visibleItems }) => (
-              <div className="overflow-x-auto border border-gray-200">
-                <MetricsTable
-                  data={visibleItems}
-                  columns={languagesByGenerationsColumns}
-                  rowClassName={tableRowClassName}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  theadClassName="bg-gray-50"
-                />
-              </div>
-            )}
-          </ExpandableTableSection>
+          <div className="overflow-x-auto border border-gray-200">
+            <MetricsTable
+              data={languagesByGenerations}
+              columns={languagesByGenerationsColumns}
+              rowClassName={tableRowClassName}
+              tableClassName="w-full divide-y divide-gray-200"
+              theadClassName="bg-gray-50"
+              initialCount={maxItemsToShow}
+              buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+              buttonExpandedLabel="Show Less"
+            />
+          </div>
         </div>
 
         {/* Languages by Number of Users */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Number of Users</h3>
-          <ExpandableTableSection
-            items={languagesByUsers}
-            initialCount={maxItemsToShow}
-            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-            buttonExpandedLabel="Show Less"
-          >
-            {({ visibleItems }) => (
-              <div className="overflow-x-auto border border-gray-200">
-                <MetricsTable
-                  data={visibleItems}
-                  columns={languagesByUsersColumns}
-                  rowClassName={tableRowClassName}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  theadClassName="bg-gray-50"
-                />
-              </div>
-            )}
-          </ExpandableTableSection>
+          <div className="overflow-x-auto border border-gray-200">
+            <MetricsTable
+              data={languagesByUsers}
+              columns={languagesByUsersColumns}
+              rowClassName={tableRowClassName}
+              tableClassName="w-full divide-y divide-gray-200"
+              theadClassName="bg-gray-50"
+              initialCount={maxItemsToShow}
+              buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+              buttonExpandedLabel="Show Less"
+            />
+          </div>
         </div>
       </div>
 
@@ -493,49 +480,37 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
         <p className="text-sm text-gray-500 mb-4">
           Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
         </p>
-        <ExpandableTableSection
-          items={languagesByNetLocImpact}
-          initialCount={maxItemsToShow}
-          buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-          buttonExpandedLabel="Show Less"
-        >
-          {({ visibleItems }) => (
-            <div className="overflow-x-auto border border-gray-200">
-              <MetricsTable
-                data={visibleItems}
-                columns={languagesByNetImpactColumns}
-                rowClassName={tableRowClassName}
-                tableClassName="w-full divide-y divide-gray-200"
-                theadClassName="bg-gray-50"
-              />
-            </div>
-          )}
-        </ExpandableTableSection>
+        <div className="overflow-x-auto border border-gray-200">
+          <MetricsTable
+            data={languagesByNetLocImpact}
+            columns={languagesByNetImpactColumns}
+            rowClassName={tableRowClassName}
+            tableClassName="w-full divide-y divide-gray-200"
+            theadClassName="bg-gray-50"
+            initialCount={maxItemsToShow}
+            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+            buttonExpandedLabel="Show Less"
+          />
+        </div>
       </div>
 
       {/* Full Languages Table */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
-        <ExpandableTableSection
-          items={sortedLanguages}
-          initialCount={maxItemsToShow}
-          buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-          buttonExpandedLabel="Show Less"
-        >
-          {({ visibleItems }) => (
-            <div className="overflow-x-auto border border-gray-200">
-              <MetricsTable
-                data={visibleItems}
-                columns={completeLanguagesColumns}
-                sortState={tableSortState}
-                onSortChange={handleTableSortChange}
-                rowClassName={tableRowClassName}
-                tableClassName="w-full divide-y divide-gray-200"
-                theadClassName="bg-gray-50"
-              />
-            </div>
-          )}
-        </ExpandableTableSection>
+        <div className="overflow-x-auto border border-gray-200">
+          <MetricsTable
+            data={sortedLanguages}
+            columns={completeLanguagesColumns}
+            sortState={tableSortState}
+            onSortChange={handleTableSortChange}
+            rowClassName={tableRowClassName}
+            tableClassName="w-full divide-y divide-gray-200"
+            theadClassName="bg-gray-50"
+            initialCount={maxItemsToShow}
+            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+            buttonExpandedLabel="Show Less"
+          />
+        </div>
 
         {languages.length === 0 && (
           <div className="text-center py-8">

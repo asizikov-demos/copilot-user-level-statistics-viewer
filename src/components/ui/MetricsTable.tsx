@@ -1,6 +1,16 @@
+'use client';
+
 import { Key, ReactNode } from 'react';
 import type { SortDirection } from '../../types/sort';
+import type { ToggleCallback } from '../../types/events';
 import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
+import {
+  useExpandableList,
+  type ExpandableLabelResolver,
+  type ExpandButtonAlignment,
+  EXPAND_BUTTON_ALIGNMENT_CLASS,
+  resolveExpandableToggleLabel,
+} from '../../hooks/useExpandableList';
 
 export type { SortDirection };
 
@@ -30,8 +40,23 @@ export interface MetricsTableProps<T> {
   tbodyClassName?: string;
   onRowClick?: (item: T, index: number) => void;
   getRowKey?: (item: T, index: number) => Key;
+  /** When set, enables progressive disclosure: only this many rows are shown initially. */
+  initialCount?: number;
+  defaultExpanded?: boolean;
+  buttonCollapsedLabel?: ExpandableLabelResolver;
+  buttonExpandedLabel?: ExpandableLabelResolver;
+  buttonClassName?: string;
+  buttonContainerClassName?: string;
+  buttonAlignment?: ExpandButtonAlignment;
+  buttonAriaLabel?: string;
+  buttonTestId?: string;
+  onToggle?: ToggleCallback;
+  /** Content rendered when data is empty. */
+  emptyState?: ReactNode;
 }
 
+const DEFAULT_EXPAND_BUTTON_CLASS =
+  'px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors';
 
 export function MetricsTable<T>({
   data,
@@ -44,92 +69,141 @@ export function MetricsTable<T>({
   tbodyClassName,
   onRowClick,
   getRowKey,
+  initialCount,
+  defaultExpanded = false,
+  buttonCollapsedLabel,
+  buttonExpandedLabel,
+  buttonClassName,
+  buttonContainerClassName,
+  buttonAlignment = 'center',
+  buttonAriaLabel,
+  buttonTestId,
+  onToggle,
+  emptyState,
 }: MetricsTableProps<T>) {
   const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const cellBaseClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
 
-  return (
-    <table className={tableClassName ?? 'w-full divide-y divide-gray-200'}>
-      <thead className={theadClassName ?? 'bg-gray-50'}>
-        <tr>
-          {columns.map((column) => {
-            const isSortable = Boolean(onSortChange && column.sortable);
-            const isActive = Boolean(sortState && sortState.field === column.id);
-            const headerClassName = column.headerClassName ?? headerBaseClass;
-            const ariaSortValue = isSortable
-              ? getSortIndicatorAriaSort(isActive, sortState?.direction ?? 'asc')
-              : undefined;
+  const resolvedInitialCount = initialCount ?? data.length;
+  const {
+    visibleItems,
+    isExpanded,
+    canExpand,
+    totalCount,
+    toggleExpanded,
+  } = useExpandableList(data as T[], resolvedInitialCount, { defaultExpanded, onToggle });
 
-            if (!isSortable) {
+  const toggleLabel = resolveExpandableToggleLabel(
+    isExpanded,
+    totalCount,
+    buttonCollapsedLabel,
+    buttonExpandedLabel,
+  );
+
+  const expandButtonContainerClass = `${buttonContainerClassName ?? 'mt-4'} ${EXPAND_BUTTON_ALIGNMENT_CLASS[buttonAlignment]}`;
+
+  if (data.length === 0 && emptyState) {
+    return <>{emptyState}</>;
+  }
+
+  return (
+    <>
+      <table className={tableClassName ?? 'w-full divide-y divide-gray-200'}>
+        <thead className={theadClassName ?? 'bg-gray-50'}>
+          <tr>
+            {columns.map((column) => {
+              const isSortable = Boolean(onSortChange && column.sortable);
+              const isActive = Boolean(sortState && sortState.field === column.id);
+              const headerClassName = column.headerClassName ?? headerBaseClass;
+              const ariaSortValue = isSortable
+                ? getSortIndicatorAriaSort(isActive, sortState?.direction ?? 'asc')
+                : undefined;
+
+              if (!isSortable) {
+                return (
+                  <th key={column.id} scope="col" className={headerClassName}>
+                    {column.header}
+                  </th>
+                );
+              }
+
+              const nextDirection: SortDirection = isActive && sortState?.direction === 'asc' ? 'desc' : 'asc';
+
+              const isRightAligned = headerClassName.includes('text-right');
+              const sortButtonClassName = isRightAligned
+                ? 'flex items-center w-full justify-end hover:text-gray-700 focus:outline-none uppercase tracking-wider'
+                : 'flex items-center hover:text-gray-700 focus:outline-none uppercase tracking-wider';
+
               return (
-                <th key={column.id} scope="col" className={headerClassName}>
-                  {column.header}
+                <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
+                  <button
+                    type="button"
+                    onClick={() => onSortChange?.({ field: column.id, direction: nextDirection })}
+                    className={sortButtonClassName}
+                  >
+                    {column.header}
+                    <SortIndicator active={isActive} direction={sortState?.direction ?? 'asc'} />
+                  </button>
                 </th>
               );
-            }
-
-            const nextDirection: SortDirection = isActive && sortState?.direction === 'asc' ? 'desc' : 'asc';
-
-            const isRightAligned = headerClassName.includes('text-right');
-            const buttonClassName = isRightAligned
-              ? 'flex items-center w-full justify-end hover:text-gray-700 focus:outline-none uppercase tracking-wider'
-              : 'flex items-center hover:text-gray-700 focus:outline-none uppercase tracking-wider';
+            })}
+          </tr>
+        </thead>
+        <tbody className={tbodyClassName ?? 'bg-white divide-y divide-gray-200'}>
+          {visibleItems.map((item, index) => {
+            const rowClass = rowClassName?.(item, index) ?? '';
+            const rowKey = getRowKey?.(item, index) ?? index;
 
             return (
-              <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
-                <button
-                  type="button"
-                  onClick={() => onSortChange?.({ field: column.id, direction: nextDirection })}
-                  className={buttonClassName}
-                >
-                  {column.header}
-                  <SortIndicator active={isActive} direction={sortState?.direction ?? 'asc'} />
-                </button>
-              </th>
+              <tr
+                key={rowKey}
+                className={rowClass}
+                onClick={onRowClick ? () => onRowClick(item, index) : undefined}
+              >
+                {columns.map((column) => {
+                  const cellClassName = column.className ?? cellBaseClass;
+
+                  if (column.renderCell) {
+                    return (
+                      <td key={column.id} className={cellClassName}>
+                        {column.renderCell(item, index)}
+                      </td>
+                    );
+                  }
+
+                  if (column.accessor) {
+                    const value = item[column.accessor];
+                    return (
+                      <td key={column.id} className={cellClassName}>
+                        {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                      </td>
+                    );
+                  }
+
+                  return (
+                    <td key={column.id} className={cellClassName} />
+                  );
+                })}
+              </tr>
             );
           })}
-        </tr>
-      </thead>
-      <tbody className={tbodyClassName ?? 'bg-white divide-y divide-gray-200'}>
-        {data.map((item, index) => {
-          const rowClass = rowClassName?.(item, index) ?? '';
-          const rowKey = getRowKey?.(item, index) ?? index;
-
-          return (
-            <tr
-              key={rowKey}
-              className={rowClass}
-              onClick={onRowClick ? () => onRowClick(item, index) : undefined}
-            >
-              {columns.map((column) => {
-                const cellClassName = column.className ?? cellBaseClass;
-
-                if (column.renderCell) {
-                  return (
-                    <td key={column.id} className={cellClassName}>
-                      {column.renderCell(item, index)}
-                    </td>
-                  );
-                }
-
-                if (column.accessor) {
-                  const value = item[column.accessor];
-                  return (
-                    <td key={column.id} className={cellClassName}>
-                      {typeof value === 'number' ? value.toLocaleString() : String(value)}
-                    </td>
-                  );
-                }
-
-                return (
-                  <td key={column.id} className={cellClassName} />
-                );
-              })}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+      {canExpand && (
+        <div className={expandButtonContainerClass}>
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            className={buttonClassName ?? DEFAULT_EXPAND_BUTTON_CLASS}
+            aria-expanded={isExpanded}
+            aria-label={buttonAriaLabel ?? toggleLabel}
+            data-testid={buttonTestId}
+          >
+            {toggleLabel}
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
