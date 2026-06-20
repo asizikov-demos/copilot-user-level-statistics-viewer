@@ -558,7 +558,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
             days={userDetails.days}
             reportStartDay={userDetails.reportStartDay}
             reportEndDay={userDetails.reportEndDay}
-            title={`Activity Calendar (${daysActive} active ${daysActive === 1 ? 'day' : 'days'})`}
+            title="Activity Calendar"
+            activeDaysCount={daysActive}
             onDayClick={handleDayClick}
           />
         </div>
