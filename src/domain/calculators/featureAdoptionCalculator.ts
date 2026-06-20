@@ -12,11 +12,11 @@ export interface FeatureAdoptionData {
   chatUsers: number;
   agentModeUsers: number;
   askModeUsers: number;
-  editModeUsers: number;
   inlineModeUsers: number;
   planModeUsers: number;
   cliUsers: number;
   codingAgentUsers: number;
+  codeReviewUsers: number;
   advancedUsers: number;
 }
 
@@ -24,6 +24,7 @@ export interface FeatureAdoptionAccumulator {
   userFeatures: Map<number, Set<string>>;
   cliUsers: Set<number>;
   codingAgentUsers: Set<number>;
+  codeReviewUsers: Set<number>;
 }
 
 export function createFeatureAdoptionAccumulator(): FeatureAdoptionAccumulator {
@@ -31,6 +32,7 @@ export function createFeatureAdoptionAccumulator(): FeatureAdoptionAccumulator {
     userFeatures: new Map(),
     cliUsers: new Set(),
     codingAgentUsers: new Set(),
+    codeReviewUsers: new Set(),
   };
 }
 
@@ -69,6 +71,16 @@ export function accumulateCodingAgentAdoption(
   accumulator.codingAgentUsers.add(userId);
 }
 
+export function accumulateCodeReviewAdoption(
+  accumulator: FeatureAdoptionAccumulator,
+  userId: number,
+  usedCodeReview: boolean
+): void {
+  if (!usedCodeReview) return;
+
+  accumulator.codeReviewUsers.add(userId);
+}
+
 export function computeFeatureAdoptionData(
   accumulator: FeatureAdoptionAccumulator
 ): FeatureAdoptionData {
@@ -77,28 +89,29 @@ export function computeFeatureAdoptionData(
   let chatUsers = 0;
   let agentModeUsers = 0;
   let askModeUsers = 0;
-  let editModeUsers = 0;
   let inlineModeUsers = 0;
   let planModeUsers = 0;
   let cliUsers = 0;
   let codingAgentUsers = 0;
+  let codeReviewUsers = 0;
   let advancedUsers = 0;
 
   const userIds = new Set<number>([
     ...accumulator.userFeatures.keys(),
     ...accumulator.cliUsers.values(),
     ...accumulator.codingAgentUsers.values(),
+    ...accumulator.codeReviewUsers.values(),
   ]);
 
   for (const userId of userIds) {
     const features = accumulator.userFeatures.get(userId) || new Set<string>();
     const isCliUser = accumulator.cliUsers.has(userId);
     const isCodingAgentUser = accumulator.codingAgentUsers.has(userId);
+    const isCodeReviewUser = accumulator.codeReviewUsers.has(userId);
     let hasCompletionFeature = false;
     let hasChatFeature = false;
     let hasAgentFeature = false;
     let hasAskMode = false;
-    let hasEditMode = false;
     let hasInlineMode = false;
     let hasPlanMode = false;
 
@@ -110,7 +123,6 @@ export function computeFeatureAdoptionData(
       if (bucket !== undefined) {
         switch (bucket) {
           case 'ask': hasAskMode = true; break;
-          case 'edit': hasEditMode = true; break;
           case 'inline': hasInlineMode = true; break;
           case 'plan': hasPlanMode = true; break;
         }
@@ -121,14 +133,14 @@ export function computeFeatureAdoptionData(
     if (hasChatFeature) chatUsers++;
     if (hasAgentFeature) agentModeUsers++;
     if (hasAskMode) askModeUsers++;
-    if (hasEditMode) editModeUsers++;
     if (hasInlineMode) inlineModeUsers++;
     if (hasPlanMode) planModeUsers++;
     if (isCliUser) cliUsers++;
     if (isCodingAgentUser) codingAgentUsers++;
+    if (isCodeReviewUser) codeReviewUsers++;
     if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser) {
+    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser && !isCodeReviewUser) {
       completionOnlyUsers++;
     }
   }
@@ -140,11 +152,11 @@ export function computeFeatureAdoptionData(
     chatUsers,
     agentModeUsers,
     askModeUsers,
-    editModeUsers,
     inlineModeUsers,
     planModeUsers,
     cliUsers,
     codingAgentUsers,
+    codeReviewUsers,
     advancedUsers,
   };
 }

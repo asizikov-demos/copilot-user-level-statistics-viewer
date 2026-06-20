@@ -48,12 +48,12 @@ describe('featureCategories taxonomy', () => {
       'completionUsers',
       'chatUsers',
       'askModeUsers',
-      'editModeUsers',
       'agentModeUsers',
       'planModeUsers',
       'cliUsers',
       'inlineModeUsers',
       'codingAgentUsers',
+      'codeReviewUsers',
     ]);
   });
 

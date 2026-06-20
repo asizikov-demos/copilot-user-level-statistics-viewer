@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accumulateCliAdoption,
+  accumulateCodeReviewAdoption,
   accumulateCodingAgentAdoption,
   accumulateFeatureAdoption,
   computeFeatureAdoptionData,
@@ -20,16 +21,34 @@ describe('featureAdoptionCalculator', () => {
     accumulateFeatureAdoption(accumulator, 3, 'chat_panel_custom_mode', 1, 0);
     accumulateCodingAgentAdoption(accumulator, 3, true);
 
+    accumulateCodeReviewAdoption(accumulator, 4, true);
+
     const result = computeFeatureAdoptionData(accumulator);
 
-    expect(result.totalUsers).toBe(3);
+    expect(result.totalUsers).toBe(4);
     expect(result.completionUsers).toBe(1);
     expect(result.chatUsers).toBe(1);
     expect(result.agentModeUsers).toBe(1);
     expect(result.cliUsers).toBe(1);
     expect(result.codingAgentUsers).toBe(1);
+    expect(result.codeReviewUsers).toBe(1);
     expect(result.advancedUsers).toBe(2);
     expect(result.completionOnlyUsers).toBe(0);
+  });
+
+  it('does not count code review users as completion-only', () => {
+    const accumulator = createFeatureAdoptionAccumulator();
+
+    accumulateFeatureAdoption(accumulator, 1, 'code_completion', 2, 0);
+
+    accumulateFeatureAdoption(accumulator, 2, 'code_completion', 2, 0);
+    accumulateCodeReviewAdoption(accumulator, 2, true);
+
+    const result = computeFeatureAdoptionData(accumulator);
+
+    expect(result.completionUsers).toBe(2);
+    expect(result.codeReviewUsers).toBe(1);
+    expect(result.completionOnlyUsers).toBe(1);
   });
 
   it('derives chat mode bucket users from taxonomy instead of hard-coded feature names', () => {
@@ -44,7 +63,6 @@ describe('featureAdoptionCalculator', () => {
     const result = computeFeatureAdoptionData(accumulator);
 
     expect(result.askModeUsers).toBe(1);
-    expect(result.editModeUsers).toBe(1);
     expect(result.inlineModeUsers).toBe(1);
     expect(result.planModeUsers).toBe(1);
     expect(result.agentModeUsers).toBe(1);

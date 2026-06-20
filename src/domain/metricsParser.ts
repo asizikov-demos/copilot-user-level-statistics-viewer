@@ -61,6 +61,8 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
     // We rely on upstream schema conformity; at runtime we only soft-validated key fields
     const metric = parsedRaw as unknown as CopilotMetrics;
     metric.used_cli = metric.used_cli ?? false;
+    metric.used_copilot_code_review_active = metric.used_copilot_code_review_active ?? false;
+    metric.used_copilot_code_review_passive = metric.used_copilot_code_review_passive ?? false;
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
     metric.used_copilot_coding_agent = usedCopilotCloudAgent;
     metric.used_copilot_cloud_agent = usedCopilotCloudAgent;

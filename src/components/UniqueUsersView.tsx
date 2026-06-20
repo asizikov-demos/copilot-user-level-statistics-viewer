@@ -14,7 +14,7 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'total_loc_added' | 'total_loc_deleted';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days';
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
@@ -58,6 +58,14 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       ),
     },
     {
+      id: 'days_active',
+      header: 'DAYS ACTIVE',
+      sortable: true,
+      accessor: 'days_active',
+      headerClassName: `${headerRightClass} w-1/8`,
+      className: valueCellClass,
+    },
+    {
       id: 'total_user_initiated_interactions',
       header: 'INTERACTIONS',
       sortable: true,
@@ -74,33 +82,39 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       className: valueCellClass,
     },
     {
-      id: 'total_loc_added',
-      header: 'LOC ADDED',
+      id: 'net_loc_contribution',
+      header: 'LOC IMPACT',
       sortable: true,
-      accessor: 'total_loc_added',
+      headerClassName: `${headerRightClass} w-1/8`,
+      className: valueCellClass,
+      renderCell: (user) => (
+        <span className="whitespace-nowrap tabular-nums">
+          <span className="text-green-600">+{user.total_loc_added.toLocaleString()}</span>
+          <span className="text-gray-400">/</span>
+          <span className="text-red-600">-{user.total_loc_deleted.toLocaleString()}</span>
+        </span>
+      ),
+    },
+    {
+      id: 'cloud_agent_days',
+      header: 'CLOUD AGENT',
+      sortable: true,
+      accessor: 'cloud_agent_days',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
-      id: 'total_loc_deleted',
-      header: 'LOC DELETED',
+      id: 'code_review_days',
+      header: 'CODE REVIEW',
       sortable: true,
-      accessor: 'total_loc_deleted',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
-    },
-    {
-      id: 'days_active',
-      header: 'DAYS ACTIVE',
-      sortable: true,
-      accessor: 'days_active',
+      accessor: 'code_review_days',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
     {
       id: 'ai_adoption_phase',
       header: 'AI ADOPTION',
-      headerClassName: `${headerRightClass} w-[12.5%]`,
+      headerClassName: `${headerRightClass} w-[15%] whitespace-nowrap`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
       renderCell: (user) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -135,6 +149,11 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
               Cloud Agent
             </span>
           )}
+          {(user.used_copilot_code_review_active || user.used_copilot_code_review_passive) && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
+              Code Review
+            </span>
+          )}
           {user.used_auto_mode && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
               Auto Mode
@@ -151,6 +170,7 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
   ];
   const chatUsers = users.filter(user => user.used_chat).length;
   const agentUsers = users.filter(user => user.used_agent).length;
+  const codeReviewUsers = users.filter(user => user.used_copilot_code_review_active || user.used_copilot_code_review_passive).length;
   const cliUsers = users.filter(user => user.used_cli).length;
   const completionUsers = users.filter(user => user.total_code_generation_activities > 0).length;
 
@@ -162,10 +182,11 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       contentClassName="space-y-6"
     >
       {/* Summary Stats */}
-      <StatsGrid className="mb-6" columns={{ base: 2, md: 5 }} gapClassName="gap-4">
+      <StatsGrid className="mb-6" columns={{ base: 2, md: 6 }} gapClassName="gap-4">
         <DashboardStatsCard value={users.length} label="Total Users" accent="blue" />
         <DashboardStatsCard value={chatUsers} label="Chat Users" accent="teal" />
         <DashboardStatsCard value={agentUsers} label="Agent Users" accent="indigo" />
+        <DashboardStatsCard value={codeReviewUsers} label="Code Review Users" accent="cyan" />
         <DashboardStatsCard value={cliUsers} label="CLI Users" accent="rose" />
         <DashboardStatsCard value={completionUsers} label="Completion Users" accent="amber" />
       </StatsGrid>

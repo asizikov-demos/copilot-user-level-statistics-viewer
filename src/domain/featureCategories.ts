@@ -96,12 +96,12 @@ export const FEATURE_ADOPTION_CHART_METADATA = [
   { key: 'completionUsers', label: 'Code Completion', description: 'Users who used code completion' },
   { key: 'chatUsers', label: 'Chat Features', description: 'Users who used any chat feature (Ask/Edit/Agent/Plan/Inline)' },
   { key: 'askModeUsers', label: 'Ask Mode', description: 'Users who used chat ask mode' },
-  { key: 'editModeUsers', label: 'Edit Mode', description: 'Users who used chat edit mode' },
   { key: 'agentModeUsers', label: 'IDE Agent Mode', description: 'Users who used Agent Mode in the IDE' },
   { key: 'planModeUsers', label: 'Plan Mode', description: 'Users who used Plan Mode' },
   { key: 'cliUsers', label: 'Copilot CLI', description: 'Users who used Copilot CLI' },
   { key: 'inlineModeUsers', label: 'Inline Chat', description: 'Users who used inline chat' },
   { key: 'codingAgentUsers', label: 'Copilot Cloud Agent', description: 'Users who used Copilot Cloud Agent' },
+  { key: 'codeReviewUsers', label: 'Copilot Code Review', description: 'Users who used Copilot code review (active or passive)' },
 ] as const;
 
 export const FEATURE_ADOPTION_RADAR_METADATA = [

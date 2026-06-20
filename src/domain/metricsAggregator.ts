@@ -49,6 +49,7 @@ import {
   accumulateFeatureAdoption,
   accumulateCliAdoption,
   accumulateCodingAgentAdoption,
+  accumulateCodeReviewAdoption,
   computeFeatureAdoptionData,
 
   AgentImpactData,
@@ -134,6 +135,8 @@ export interface AggregatedMetrics {
 interface UserSummaryAccumulator {
   userMap: Map<number, UserSummary>;
   userActiveDays: Map<number, Set<string>>;
+  userCloudAgentDays: Map<number, Set<string>>;
+  userCodeReviewDays: Map<number, Set<string>>;
   userAiAdoptionPhaseDays: Map<number, string>;
 }
 
@@ -141,6 +144,8 @@ function createUserSummaryAccumulator(): UserSummaryAccumulator {
   return {
     userMap: new Map(),
     userActiveDays: new Map(),
+    userCloudAgentDays: new Map(),
+    userCodeReviewDays: new Map(),
     userAiAdoptionPhaseDays: new Map(),
   };
 }
@@ -168,14 +173,21 @@ function accumulateUserSummary(
       total_loc_deleted: 0,
       total_loc_suggested_to_add: 0,
       total_loc_suggested_to_delete: 0,
+      net_loc_contribution: 0,
       days_active: 0,
+      cloud_agent_days: 0,
+      code_review_days: 0,
       used_agent: false,
       used_chat: false,
       used_cli: false,
       used_copilot_coding_agent: false,
+      used_copilot_code_review_active: false,
+      used_copilot_code_review_passive: false,
       used_auto_mode: false,
     });
     accumulator.userActiveDays.set(userId, new Set());
+    accumulator.userCloudAgentDays.set(userId, new Set());
+    accumulator.userCodeReviewDays.set(userId, new Set());
   }
 
   const userSummary = accumulator.userMap.get(userId)!;
@@ -190,7 +202,15 @@ function accumulateUserSummary(
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
   userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || usedCopilotCloudAgent;
+  userSummary.used_copilot_code_review_active = userSummary.used_copilot_code_review_active || (metric.used_copilot_code_review_active ?? false);
+  userSummary.used_copilot_code_review_passive = userSummary.used_copilot_code_review_passive || (metric.used_copilot_code_review_passive ?? false);
   userSummary.used_auto_mode = userSummary.used_auto_mode || hasAutoModeActivity(metric);
+  if (usedCopilotCloudAgent) {
+    accumulator.userCloudAgentDays.get(userId)!.add(date);
+  }
+  if ((metric.used_copilot_code_review_active ?? false) || (metric.used_copilot_code_review_passive ?? false)) {
+    accumulator.userCodeReviewDays.get(userId)!.add(date);
+  }
   if (metric.ai_adoption_phase) {
     const latestPhaseDay = accumulator.userAiAdoptionPhaseDays.get(userId);
     if (!latestPhaseDay || metric.day >= latestPhaseDay) {
@@ -206,6 +226,9 @@ function computeUserSummaries(accumulator: UserSummaryAccumulator): UserSummary[
     .map(user => ({
       ...user,
       days_active: accumulator.userActiveDays.get(user.user_id)?.size || 0,
+      cloud_agent_days: accumulator.userCloudAgentDays.get(user.user_id)?.size || 0,
+      code_review_days: accumulator.userCodeReviewDays.get(user.user_id)?.size || 0,
+      net_loc_contribution: user.total_loc_added - user.total_loc_deleted,
     }))
     .sort((a, b) => b.total_user_initiated_interactions - a.total_user_initiated_interactions);
 }
@@ -302,6 +325,11 @@ export function aggregateMetrics(
 
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
     accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, usedCopilotCloudAgent);
+    accumulateCodeReviewAdoption(
+      featureAdoptionAccumulator,
+      userId,
+      (metric.used_copilot_code_review_active ?? false) || (metric.used_copilot_code_review_passive ?? false)
+    );
     accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
 
     for (const feature of metric.totals_by_feature) {

@@ -10,6 +10,7 @@ import { padSeriesWithDefaults } from '../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
+import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
 import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
@@ -135,6 +136,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const usedChat = userSummary.used_chat;
   const usedCli = userSummary.used_cli;
   const usedCodingAgent = userSummary.used_copilot_coding_agent;
+  const usedCodeReviewActive = userSummary.used_copilot_code_review_active;
+  const usedCodeReviewPassive = userSummary.used_copilot_code_review_passive;
+  const usedCodeReview = usedCodeReviewActive || usedCodeReviewPassive;
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
   const usedAutoMode = userSummary.used_auto_mode ?? modelFeatureAggregates.some(isActiveAutoModeFeature);
@@ -480,6 +484,22 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const hasCliActivity = userDetails.days.some(d => d.totals_by_cli);
 
+  const cloudAgentsUsageData = useMemo(() => {
+    const dates = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
+    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
+    return dates.map(date => {
+      const day = dayMap.get(date);
+      return {
+        date,
+        cloudAgent: day?.used_copilot_coding_agent ? 1 : 0,
+        codeReviewActive: day?.used_copilot_code_review_active ? 1 : 0,
+        codeReviewPassive: day?.used_copilot_code_review_passive ? 1 : 0,
+      };
+    });
+  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
+
+  const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
+
   return (
     <ViewPanel
       header={(
@@ -561,17 +581,6 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         emptyStateMessage="No combined impact data available."
       />
 
-      {/* Copilot CLI Usage */}
-      {hasCliActivity && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Usage</h3>
-          <div className="space-y-8">
-            <CLITokensChart data={dailyCliTokenData} />
-            <CLISessionChart data={dailyCliSessionData} />
-          </div>
-        </div>
-      )}
-
       {/* Impact Breakdown Section */}
       <div className="border-t border-gray-200 pt-6">
         <div className="flex items-center justify-between mb-4">
@@ -616,18 +625,34 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
           </div>
         )}
       </div>
+
+      {/* Copilot CLI Usage */}
+      {hasCliActivity && (
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Usage</h3>
+          <div className="space-y-8">
+            <CLITokensChart data={dailyCliTokenData} />
+            <CLISessionChart data={dailyCliSessionData} />
+          </div>
+        </div>
+      )}
       
       <UserSummaryChart
         usedChat={usedChat}
         usedAgent={usedAgent}
         usedCli={usedCli}
         usedCodingAgent={usedCodingAgent}
+        usedCodeReview={usedCodeReview}
         usedAutoMode={usedAutoMode}
         ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
         languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
         modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
         chartOptions={chartOptions}
       />
+
+      {showCloudAgentsUsage && (
+        <CloudAgentsUsageChart data={cloudAgentsUsageData} />
+      )}
 
       <ClientActivityChart
         ideAggregates={ideAggregates}

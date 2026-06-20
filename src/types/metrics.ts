@@ -82,6 +82,8 @@ export interface CopilotMetrics {
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
   used_copilot_cloud_agent?: boolean;
+  used_copilot_code_review_active?: boolean | null;
+  used_copilot_code_review_passive?: boolean | null;
   ai_adoption_phase?: AIAdoptionPhase;
   totals_by_cli?: {
     session_count: number;
@@ -124,11 +126,16 @@ export interface UserSummary {
   total_loc_deleted: number;
   total_loc_suggested_to_add: number;
   total_loc_suggested_to_delete: number;
+  net_loc_contribution: number;
   days_active: number;
+  cloud_agent_days: number;
+  code_review_days: number;
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
+  used_copilot_code_review_active: boolean;
+  used_copilot_code_review_passive: boolean;
   used_auto_mode?: boolean;
   ai_adoption_phase?: AIAdoptionPhase;
 }
@@ -219,6 +226,9 @@ export interface UserDayData {
   loc_deleted_sum: number;
   loc_suggested_to_add_sum: number;
   loc_suggested_to_delete_sum: number;
+  used_copilot_coding_agent: boolean;
+  used_copilot_code_review_active: boolean;
+  used_copilot_code_review_passive: boolean;
   totals_by_feature: Array<{
     feature: string;
     user_initiated_interaction_count: number;
