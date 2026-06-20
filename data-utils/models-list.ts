@@ -3,7 +3,7 @@
 
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { splitNdjsonLines } from '../src/utils/ndjsonParser';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -148,7 +148,10 @@ async function main(): Promise<void> {
   console.log(`Wrote list to ${path.relative(ROOT_DIR, OUTPUT_PATH)}`);
 }
 
-main().catch(error => {
-  console.error('Failed to generate model list:', error);
-  process.exitCode = 1;
-});
+const entryPoint = process.argv[1];
+if (entryPoint && import.meta.url === pathToFileURL(path.resolve(entryPoint)).href) {
+  main().catch(error => {
+    console.error('Failed to generate model list:', error);
+    process.exitCode = 1;
+  });
+}

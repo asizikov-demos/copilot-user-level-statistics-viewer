@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { parseNdjsonLines } from './models-list';
 
 beforeEach(() => {
   vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe('parseNdjsonLines', () => {
@@ -53,18 +57,16 @@ describe('parseNdjsonLines', () => {
 
   describe('invalid JSON diagnostics', () => {
     it('warns with correct 1-based line number for invalid JSON', () => {
-      const warnSpy = vi.spyOn(console, 'warn');
       parseNdjsonLines('{"a":1}\nNOT_JSON', 'test.ndjson');
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('line 2'),
       );
     });
 
     it('reports original line number when blank lines precede the invalid line', () => {
-      const warnSpy = vi.spyOn(console, 'warn');
       // blank line 2, invalid JSON on original line 3
       parseNdjsonLines('{"a":1}\n\nNOT_JSON', 'test.ndjson');
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('line 3'),
       );
     });
@@ -75,9 +77,8 @@ describe('parseNdjsonLines', () => {
     });
 
     it('includes the file name in the warning message', () => {
-      const warnSpy = vi.spyOn(console, 'warn');
       parseNdjsonLines('NOT_JSON', 'my-report.ndjson');
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('my-report.ndjson'),
       );
     });
