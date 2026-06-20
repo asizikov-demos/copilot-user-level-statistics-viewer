@@ -16,13 +16,13 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   const startDate = new Date(reportStartDay);
   const endDate = new Date(reportEndDay);
 
-  const spansMultipleYears = startDate.getFullYear() !== endDate.getFullYear();
+  const spansMultipleYears = startDate.getUTCFullYear() !== endDate.getUTCFullYear();
   const monthNameOptions: Intl.DateTimeFormatOptions = spansMultipleYears
-    ? { month: 'long', year: 'numeric' }
-    : { month: 'long' };
+    ? { month: 'long', year: 'numeric', timeZone: 'UTC' }
+    : { month: 'long', timeZone: 'UTC' };
   const sameMonth =
-    startDate.getFullYear() === endDate.getFullYear() &&
-    startDate.getMonth() === endDate.getMonth();
+    startDate.getUTCFullYear() === endDate.getUTCFullYear() &&
+    startDate.getUTCMonth() === endDate.getUTCMonth();
   const monthLabel = sameMonth
     ? startDate.toLocaleDateString('en-US', monthNameOptions)
     : `${startDate.toLocaleDateString('en-US', monthNameOptions)} – ${endDate.toLocaleDateString('en-US', monthNameOptions)}`;
@@ -38,7 +38,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
     
     while (current <= endDate) {
       dates.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+      current.setUTCDate(current.getUTCDate() + 1);
     }
     
     return dates;
@@ -76,7 +76,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   const weeks = groupDatesByWeek(allDates);
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const monthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`;
+  const monthKey = (date: Date) => `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
   const orderedMonths = Array.from(new Set(allDates.map(monthKey)));
   const hasMultipleMonths = orderedMonths.length > 1;
   const monthTints = [
@@ -169,7 +169,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
                 const activityLevel = getActivityLevel(dateKey);
                 const isPlaceholder = date.getTime() === 0;
                 const hasData = metricsMap.has(dateKey);
-                const isMonthStart = !isPlaceholder && hasMultipleMonths && date.getDate() === 1;
+                const isMonthStart = !isPlaceholder && hasMultipleMonths && date.getUTCDate() === 1;
                 
                 return (
                   <div
@@ -194,8 +194,8 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
                     }
                   >
                     {isMonthStart
-                      ? `${date.toLocaleDateString('en-US', { month: 'short' })} 1`
-                      : !isPlaceholder && date.getDate()}
+                      ? `${date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })} 1`
+                      : !isPlaceholder && date.getUTCDate()}
                   </div>
                 );
               })}
