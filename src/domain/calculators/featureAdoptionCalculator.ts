@@ -140,7 +140,7 @@ export function computeFeatureAdoptionData(
     if (isCodeReviewUser) codeReviewUsers++;
     if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser) {
+    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser && !isCodeReviewUser) {
       completionOnlyUsers++;
     }
   }
