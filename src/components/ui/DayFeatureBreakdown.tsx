@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useId, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import type { UserDayData } from '../../types/metrics';
 import { translateFeature } from '../../domain/featureTranslations';
 
@@ -90,6 +90,8 @@ function FeatureCard({
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -118,35 +120,53 @@ export default function DayFeatureBreakdown({
   totalsByLanguageFeature,
   totalsByModelFeature,
 }: DayFeatureBreakdownProps) {
-  const features = [...totalsByFeature].sort(
-    (a, b) =>
-      b.user_initiated_interaction_count - a.user_initiated_interaction_count ||
-      b.code_generation_activity_count - a.code_generation_activity_count
+  const features = useMemo(
+    () =>
+      [...totalsByFeature].sort(
+        (a, b) =>
+          b.user_initiated_interaction_count - a.user_initiated_interaction_count ||
+          b.code_generation_activity_count - a.code_generation_activity_count
+      ),
+    [totalsByFeature]
   );
 
-  const languagesFor = (feature: string): BreakdownItem[] =>
-    totalsByLanguageFeature
-      .filter((row) => row.feature === feature)
-      .map((row) => ({
+  const languagesByFeature = useMemo(() => {
+    const map = new Map<string, BreakdownItem[]>();
+    for (const row of totalsByLanguageFeature) {
+      const list = map.get(row.feature) ?? [];
+      list.push({
         name: row.language || 'Unknown',
         generation: row.code_generation_activity_count,
         acceptance: row.code_acceptance_activity_count,
         locAdded: row.loc_added_sum,
         locDeleted: row.loc_deleted_sum,
-      }))
-      .sort((a, b) => b.generation - a.generation || b.acceptance - a.acceptance);
+      });
+      map.set(row.feature, list);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => b.generation - a.generation || b.acceptance - a.acceptance);
+    }
+    return map;
+  }, [totalsByLanguageFeature]);
 
-  const modelsFor = (feature: string): BreakdownItem[] =>
-    totalsByModelFeature
-      .filter((row) => row.feature === feature)
-      .map((row) => ({
+  const modelsByFeature = useMemo(() => {
+    const map = new Map<string, BreakdownItem[]>();
+    for (const row of totalsByModelFeature) {
+      const list = map.get(row.feature) ?? [];
+      list.push({
         name: row.model || 'Unknown',
         generation: row.code_generation_activity_count,
         acceptance: row.code_acceptance_activity_count,
         locAdded: row.loc_added_sum,
         locDeleted: row.loc_deleted_sum,
-      }))
-      .sort((a, b) => b.generation - a.generation || b.acceptance - a.acceptance);
+      });
+      map.set(row.feature, list);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => b.generation - a.generation || b.acceptance - a.acceptance);
+    }
+    return map;
+  }, [totalsByModelFeature]);
 
   if (features.length === 0) {
     return <p className="text-sm text-gray-400">No feature activity recorded</p>;
@@ -158,8 +178,8 @@ export default function DayFeatureBreakdown({
         <FeatureCard
           key={feature.feature}
           feature={feature}
-          languages={languagesFor(feature.feature)}
-          models={modelsFor(feature.feature)}
+          languages={languagesByFeature.get(feature.feature) ?? []}
+          models={modelsByFeature.get(feature.feature) ?? []}
         />
       ))}
     </div>
