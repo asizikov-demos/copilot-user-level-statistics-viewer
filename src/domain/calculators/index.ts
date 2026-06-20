@@ -63,6 +63,7 @@ export {
   accumulateFeatureAdoption,
   accumulateCliAdoption,
   accumulateCodingAgentAdoption,
+  accumulateCodeReviewAdoption,
   computeFeatureAdoptionData,
 } from './featureAdoptionCalculator';
 
