@@ -1,3 +1,9 @@
+export interface AIAdoptionPhase {
+  phase_number: number;
+  phase: string;
+  version: string;
+}
+
 export interface CopilotMetrics {
   report_start_day: string;
   report_end_day: string;
@@ -76,6 +82,7 @@ export interface CopilotMetrics {
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
   used_copilot_cloud_agent?: boolean;
+  ai_adoption_phase?: AIAdoptionPhase;
   totals_by_cli?: {
     session_count: number;
     request_count: number;
@@ -123,6 +130,7 @@ export interface UserSummary {
   used_cli: boolean;
   used_copilot_coding_agent: boolean;
   used_auto_mode?: boolean;
+  ai_adoption_phase?: AIAdoptionPhase;
 }
 
 // ==========================================

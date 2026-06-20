@@ -1,6 +1,7 @@
 /**
  * Centralized formatting utilities for consistent display across the application.
  */
+import type { AIAdoptionPhase } from '../types/metrics';
 
 /**
  * Format a date string for display.
@@ -150,6 +151,11 @@ export function truncateString(str: string, maxLength: number): string {
 export function formatModelDisplayName(modelName: string): string {
   if (!modelName || modelName === 'unknown') return 'Unknown Model';
   return modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/-/g, ' ');
+}
+
+export function formatAiAdoptionPhase(aiAdoptionPhase?: AIAdoptionPhase): string {
+  if (!aiAdoptionPhase) return 'N/A';
+  return aiAdoptionPhase.phase || `Phase ${aiAdoptionPhase.phase_number}`;
 }
 
 export function generateDateRange(startDay: string, endDay: string): string[] {

@@ -134,6 +134,35 @@ describe('metricsAggregator', () => {
       expect(summaries.find(u => u.user_id === 4)?.used_auto_mode).toBe(true);
     });
 
+    it('should keep the latest AI adoption phase per user', () => {
+      const earlierPhase = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-15',
+        ai_adoption_phase: {
+          phase_number: 1,
+          phase: 'Phase 1',
+          version: 'v1',
+        },
+      });
+      const laterPhase = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-16',
+        ai_adoption_phase: {
+          phase_number: 2,
+          phase: 'Phase 2',
+          version: 'v1',
+        },
+      });
+
+      const { aggregated } = aggregateMetrics([earlierPhase, laterPhase]);
+
+      expect(aggregated.userSummaries[0].ai_adoption_phase).toEqual({
+        phase_number: 2,
+        phase: 'Phase 2',
+        version: 'v1',
+      });
+    });
+
     it('should accumulate user flags across multiple days (OR logic)', () => {
       // User uses chat on day 1, agent on day 2
       const day1 = createBasicMetric({

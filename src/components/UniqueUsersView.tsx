@@ -3,6 +3,7 @@
 import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
+import { formatAiAdoptionPhase } from '../utils/formatters';
 import { ViewPanel } from './ui';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import StatsGrid from './ui/StatsGrid';
@@ -95,6 +96,17 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       accessor: 'days_active',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
+    },
+    {
+      id: 'ai_adoption_phase',
+      header: 'AI ADOPTION',
+      headerClassName: `${headerRightClass} w-[12.5%]`,
+      className: 'px-6 py-4 whitespace-nowrap text-right',
+      renderCell: (user) => (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+          {formatAiAdoptionPhase(user.ai_adoption_phase)}
+        </span>
+      ),
     },
     {
       id: 'features_used',
