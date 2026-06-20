@@ -235,6 +235,9 @@ export function accumulateUserDetail(
     loc_deleted_sum: metric.loc_deleted_sum,
     loc_suggested_to_add_sum: metric.loc_suggested_to_add_sum,
     loc_suggested_to_delete_sum: metric.loc_suggested_to_delete_sum,
+    used_copilot_coding_agent: metric.used_copilot_coding_agent ?? false,
+    used_copilot_code_review_active: metric.used_copilot_code_review_active ?? false,
+    used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
     totals_by_feature: metric.totals_by_feature.map((f) => ({ ...f })),
     totals_by_ide: metric.totals_by_ide.map((ide) => ({
       ide: ide.ide,

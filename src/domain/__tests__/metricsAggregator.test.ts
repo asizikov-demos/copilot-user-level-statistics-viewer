@@ -29,6 +29,39 @@ describe('metricsAggregator', () => {
       expect(aggregated.engagementData).toHaveLength(0);
     });
 
+    it('should count distinct cloud-agent and code-review days and net LOC per user', () => {
+      const day1 = createBasicMetric({
+        day: '2024-01-15',
+        loc_added_sum: 100,
+        loc_deleted_sum: 40,
+        used_copilot_coding_agent: true,
+        used_copilot_code_review_active: true,
+      });
+      const day2 = createBasicMetric({
+        day: '2024-01-16',
+        loc_added_sum: 50,
+        loc_deleted_sum: 10,
+        used_copilot_coding_agent: true,
+        used_copilot_code_review_passive: true,
+      });
+      const day3 = createBasicMetric({
+        day: '2024-01-17',
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        used_copilot_coding_agent: false,
+        used_copilot_code_review_active: false,
+        used_copilot_code_review_passive: false,
+      });
+
+      const { aggregated } = aggregateMetrics([day1, day2, day3]);
+      const summary = aggregated.userSummaries[0];
+
+      expect(summary.cloud_agent_days).toBe(2);
+      expect(summary.code_review_days).toBe(2);
+      expect(summary.days_active).toBe(3);
+      expect(summary.net_loc_contribution).toBe(150 - 50);
+    });
+
     it('should extract report date range from first record', () => {
       const metric1 = createBasicMetric({
         report_start_day: '2024-01-01',
@@ -564,6 +597,34 @@ describe('metricsAggregator', () => {
       expect(aggregated.featureAdoptionData.totalUsers).toBe(1);
       expect(aggregated.featureAdoptionData.codingAgentUsers).toBe(1);
       expect(aggregated.featureAdoptionData.advancedUsers).toBe(1);
+    });
+
+    it('should count code-review users from combined active or passive flags', () => {
+      const activeOnly = createBasicMetric({
+        user_id: 1,
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: false,
+        used_copilot_code_review_active: true,
+        used_copilot_code_review_passive: false,
+        totals_by_feature: [],
+      });
+      const passiveOnly = createBasicMetric({
+        user_id: 2,
+        used_chat: false,
+        used_agent: false,
+        used_cli: false,
+        used_copilot_coding_agent: false,
+        used_copilot_code_review_active: false,
+        used_copilot_code_review_passive: true,
+        totals_by_feature: [],
+      });
+
+      const { aggregated } = aggregateMetrics([activeOnly, passiveOnly]);
+
+      expect(aggregated.featureAdoptionData.codeReviewUsers).toBe(2);
+      expect(aggregated.featureAdoptionData.totalUsers).toBe(2);
     });
 
     it('should count cloud-agent-only users from the new cloud-agent flag', () => {
