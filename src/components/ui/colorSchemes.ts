@@ -12,6 +12,7 @@ export type AccentColor =
   | 'indigo'
   | 'amber'
   | 'rose'
+  | 'cyan'
   | 'emerald'
   | 'violet'
   | 'red';
@@ -95,6 +96,19 @@ export const COLOR_PALETTE: Record<AccentColor, ColorTokens> = {
     ring500: 'focus-visible:ring-teal-500',
     groupHoverText600: 'group-hover:text-teal-600',
     groupHoverText700: 'group-hover:text-teal-700',
+  },
+  cyan: {
+    bg50: 'bg-cyan-50',
+    border200: 'border-cyan-200',
+    text500: 'text-cyan-500',
+    text600: 'text-cyan-600',
+    text700: 'text-cyan-700',
+    text800: 'text-cyan-800',
+    text900: 'text-cyan-900',
+    hoverBg100: 'hover:bg-cyan-100',
+    ring500: 'focus-visible:ring-cyan-500',
+    groupHoverText600: 'group-hover:text-cyan-600',
+    groupHoverText700: 'group-hover:text-cyan-700',
   },
   indigo: {
     bg50: 'bg-indigo-50',
