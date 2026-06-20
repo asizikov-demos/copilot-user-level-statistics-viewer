@@ -192,86 +192,81 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               {/* Features Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h4>
-                <div className="overflow-x-auto">
-                  <MetricsTable
-                    data={dayMetrics.totals_by_feature}
-                    columns={featureColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={5}
-                  />
-                </div>
+                <MetricsTable
+                  data={dayMetrics.totals_by_feature}
+                  columns={featureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={5}
+                />
               </div>
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
-                <div className="overflow-x-auto">
-                  <MetricsTable
-                    data={clientRows}
-                    columns={clientColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={5}
-                  />
-                </div>
+                <MetricsTable
+                  data={clientRows}
+                  columns={clientColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={5}
+                />
               </div>
 
               {/* Language + Feature Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Feature</h4>
-                <div className="overflow-x-auto">
-                  <MetricsTable
-                    data={dayMetrics.totals_by_language_feature}
-                    columns={languageFeatureColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={10}
-                  />
-                </div>
+                <MetricsTable
+                  data={dayMetrics.totals_by_language_feature}
+                  columns={languageFeatureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={10}
+                />
               </div>
 
               {/* Language + Model Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
-                <div className="overflow-x-auto">
-                  <MetricsTable
-                    data={dayMetrics.totals_by_language_model}
-                    columns={languageModelColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={10}
-                  />
-                </div>
+                <MetricsTable
+                  data={dayMetrics.totals_by_language_model}
+                  columns={languageModelColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={10}
+                />
               </div>
 
               {/* Model + Feature Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Model &amp; Feature</h4>
-                <div className="overflow-x-auto">
-                  <MetricsTable
-                    data={dayMetrics.totals_by_model_feature}
-                    columns={modelFeatureColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={10}
-                  />
-                </div>
+                <MetricsTable
+                  data={dayMetrics.totals_by_model_feature}
+                  columns={modelFeatureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={10}
+                />
               </div>
             </div>
           )}
@@ -280,4 +275,3 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
     </div>
   );
 }
-

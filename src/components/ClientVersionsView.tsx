@@ -390,18 +390,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                 Plugin versions that are not among the latest 20 stable releases. Users with outdated plugins may be missing important features and security updates.
               </p>
               {outdatedPlugins.length > 0 ? (
-                <div className="overflow-x-auto border border-gray-200">
-                  <MetricsTable
-                    data={outdatedPlugins}
-                    columns={outdatedPluginsColumns}
-                    tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                    theadClassName="bg-red-50"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    initialCount={5}
-                    buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                    buttonExpandedLabel="Show Less"
-                  />
-                </div>
+                <MetricsTable
+                  data={outdatedPlugins}
+                  columns={outdatedPluginsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-red-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  initialCount={5}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                />
               ) : (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                   <div className="text-green-800 font-medium">✓ All users are on recent plugin versions!</div>
@@ -425,18 +424,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                   <div className="px-4 py-3 text-gray-500">No version data available.</div>
                 </div>
               ) : (
-                <div className="overflow-x-auto border border-gray-200">
-                  <MetricsTable
-                    data={latestTwentyUpdates}
-                    columns={jetbrainsVersionsColumns}
-                    tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                    theadClassName="bg-gray-50"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    initialCount={2}
-                    buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                    buttonExpandedLabel="Show Less"
-                  />
-                </div>
+                <MetricsTable
+                  data={latestTwentyUpdates}
+                  columns={jetbrainsVersionsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-gray-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  initialCount={2}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                />
               )}
             </div>
 
@@ -592,18 +590,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                 Unable to classify versions — release metadata unavailable for this report window.
               </div>
             ) : outdatedVsCodePlugins.length > 0 ? (
-              <div className="overflow-x-auto border border-gray-200">
-                <MetricsTable
-                  data={outdatedVsCodePlugins}
-                  columns={outdatedVsCodePluginsColumns}
-                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                  theadClassName="bg-red-50"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  initialCount={5}
-                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                  buttonExpandedLabel="Show Less"
-                />
-              </div>
+              <MetricsTable
+                data={outdatedVsCodePlugins}
+                columns={outdatedVsCodePluginsColumns}
+                tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                tableContainerClassName="overflow-x-auto border border-gray-200"
+                theadClassName="bg-red-50"
+                rowClassName={() => 'hover:bg-gray-50'}
+                initialCount={5}
+                buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                buttonExpandedLabel="Show Less"
+              />
             ) : (
               <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                 <div className="text-green-800 font-medium">✓ All users are on recent extension versions!</div>
@@ -626,18 +623,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                   <div className="px-4 py-3 text-gray-500">No version data available.</div>
                 </div>
               ) : (
-                <div className="overflow-x-auto border border-gray-200">
-                  <MetricsTable
-                    data={latestTwentyVsCodeReleases}
-                    columns={vsCodeVersionsColumns}
-                    tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                    theadClassName="bg-gray-50"
-                    rowClassName={() => 'hover:bg-gray-50'}
-                    initialCount={2}
-                    buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                    buttonExpandedLabel="Show Less"
-                  />
-                </div>
+                <MetricsTable
+                  data={latestTwentyVsCodeReleases}
+                  columns={vsCodeVersionsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-gray-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  initialCount={2}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                />
               )}
             </div>
 

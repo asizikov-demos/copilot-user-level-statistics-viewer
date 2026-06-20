@@ -442,35 +442,33 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
         {/* Languages by Number of Generations */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Code Generations</h3>
-          <div className="overflow-x-auto border border-gray-200">
-            <MetricsTable
-              data={languagesByGenerations}
-              columns={languagesByGenerationsColumns}
-              rowClassName={tableRowClassName}
-              tableClassName="w-full divide-y divide-gray-200"
-              theadClassName="bg-gray-50"
-              initialCount={maxItemsToShow}
-              buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-              buttonExpandedLabel="Show Less"
-            />
-          </div>
+          <MetricsTable
+            data={languagesByGenerations}
+            columns={languagesByGenerationsColumns}
+            rowClassName={tableRowClassName}
+            tableClassName="w-full divide-y divide-gray-200"
+            tableContainerClassName="overflow-x-auto border border-gray-200"
+            theadClassName="bg-gray-50"
+            initialCount={maxItemsToShow}
+            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+            buttonExpandedLabel="Show Less"
+          />
         </div>
 
         {/* Languages by Number of Users */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Number of Users</h3>
-          <div className="overflow-x-auto border border-gray-200">
-            <MetricsTable
-              data={languagesByUsers}
-              columns={languagesByUsersColumns}
-              rowClassName={tableRowClassName}
-              tableClassName="w-full divide-y divide-gray-200"
-              theadClassName="bg-gray-50"
-              initialCount={maxItemsToShow}
-              buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-              buttonExpandedLabel="Show Less"
-            />
-          </div>
+          <MetricsTable
+            data={languagesByUsers}
+            columns={languagesByUsersColumns}
+            rowClassName={tableRowClassName}
+            tableClassName="w-full divide-y divide-gray-200"
+            tableContainerClassName="overflow-x-auto border border-gray-200"
+            theadClassName="bg-gray-50"
+            initialCount={maxItemsToShow}
+            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+            buttonExpandedLabel="Show Less"
+          />
         </div>
       </div>
 
@@ -480,37 +478,35 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
         <p className="text-sm text-gray-500 mb-4">
           Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
         </p>
-        <div className="overflow-x-auto border border-gray-200">
-          <MetricsTable
-            data={languagesByNetLocImpact}
-            columns={languagesByNetImpactColumns}
-            rowClassName={tableRowClassName}
-            tableClassName="w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            initialCount={maxItemsToShow}
-            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-            buttonExpandedLabel="Show Less"
-          />
-        </div>
+        <MetricsTable
+          data={languagesByNetLocImpact}
+          columns={languagesByNetImpactColumns}
+          rowClassName={tableRowClassName}
+          tableClassName="w-full divide-y divide-gray-200"
+          tableContainerClassName="overflow-x-auto border border-gray-200"
+          theadClassName="bg-gray-50"
+          initialCount={maxItemsToShow}
+          buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+          buttonExpandedLabel="Show Less"
+        />
       </div>
 
       {/* Full Languages Table */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
-        <div className="overflow-x-auto border border-gray-200">
-          <MetricsTable
-            data={sortedLanguages}
-            columns={completeLanguagesColumns}
-            sortState={tableSortState}
-            onSortChange={handleTableSortChange}
-            rowClassName={tableRowClassName}
-            tableClassName="w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            initialCount={maxItemsToShow}
-            buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-            buttonExpandedLabel="Show Less"
-          />
-        </div>
+        <MetricsTable
+          data={sortedLanguages}
+          columns={completeLanguagesColumns}
+          sortState={tableSortState}
+          onSortChange={handleTableSortChange}
+          rowClassName={tableRowClassName}
+          tableClassName="w-full divide-y divide-gray-200"
+          tableContainerClassName="overflow-x-auto border border-gray-200"
+          theadClassName="bg-gray-50"
+          initialCount={maxItemsToShow}
+          buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
+          buttonExpandedLabel="Show Less"
+        />
 
         {languages.length === 0 && (
           <div className="text-center py-8">

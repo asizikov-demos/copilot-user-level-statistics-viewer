@@ -36,6 +36,7 @@ export interface MetricsTableProps<T> {
   onSortChange?: (next: SortState) => void;
   rowClassName?: (item: T, index: number) => string | undefined;
   tableClassName?: string;
+  tableContainerClassName?: string;
   theadClassName?: string;
   tbodyClassName?: string;
   onRowClick?: (item: T, index: number) => void;
@@ -65,6 +66,7 @@ export function MetricsTable<T>({
   onSortChange,
   rowClassName,
   tableClassName,
+  tableContainerClassName,
   theadClassName,
   tbodyClassName,
   onRowClick,
@@ -106,9 +108,8 @@ export function MetricsTable<T>({
     return <>{emptyState}</>;
   }
 
-  return (
-    <>
-      <table className={tableClassName ?? 'w-full divide-y divide-gray-200'}>
+  const table = (
+    <table className={tableClassName ?? 'w-full divide-y divide-gray-200'}>
         <thead className={theadClassName ?? 'bg-gray-50'}>
           <tr>
             {columns.map((column) => {
@@ -189,6 +190,15 @@ export function MetricsTable<T>({
           })}
         </tbody>
       </table>
+  );
+
+  return (
+    <>
+      {tableContainerClassName ? (
+        <div className={tableContainerClassName}>
+          {table}
+        </div>
+      ) : table}
       {canExpand && (
         <div className={expandButtonContainerClass}>
           <button

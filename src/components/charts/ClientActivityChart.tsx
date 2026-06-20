@@ -221,16 +221,15 @@ export default function ClientActivityChart({
       {allVersions.length > 0 && (
         <div className="mt-8">
           <h4 className="text-md font-semibold text-gray-900 mb-4">Client Versions</h4>
-          <div className="overflow-x-auto border border-gray-200">
-            <MetricsTable
-              data={allVersions}
-              columns={versionColumns}
-              getRowKey={(_, i) => i}
-              initialCount={1}
-              buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
-              buttonExpandedLabel="Show Less"
-            />
-          </div>
+          <MetricsTable
+            data={allVersions}
+            columns={versionColumns}
+            tableContainerClassName="overflow-x-auto border border-gray-200"
+            getRowKey={(_, i) => i}
+            initialCount={1}
+            buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
+            buttonExpandedLabel="Show Less"
+          />
         </div>
       )}
     </>
