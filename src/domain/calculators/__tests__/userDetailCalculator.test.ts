@@ -363,7 +363,7 @@ describe('userDetailCalculator', () => {
     });
   });
 
-  describe('adaptDaysAsMetrics - used_cli passthrough via dailyCliImpact', () => {
+  describe('dailyCliImpact via feature accumulation', () => {
     it('should produce non-empty dailyCliImpact when CLI data includes copilot_cli feature', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
