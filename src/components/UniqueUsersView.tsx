@@ -100,7 +100,7 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
     {
       id: 'ai_adoption_phase',
       header: 'AI ADOPTION',
-      headerClassName: `${headerRightClass} w-1/8`,
+      headerClassName: `${headerRightClass} w-[12.5%]`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
       renderCell: (user) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
