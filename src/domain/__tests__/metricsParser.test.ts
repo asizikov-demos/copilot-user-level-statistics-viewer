@@ -26,6 +26,11 @@ describe('metricsParser', () => {
         totals_by_model_feature: [],
         used_agent: false,
         used_chat: true,
+        ai_adoption_phase: {
+          phase_number: 2,
+          phase: 'Phase 2',
+          version: 'v1',
+        },
       });
 
       const result = parseMetricsLine(validLine);
@@ -37,6 +42,11 @@ describe('metricsParser', () => {
       expect(result?.loc_deleted_sum).toBe(20);
       expect(result?.loc_suggested_to_add_sum).toBe(150);
       expect(result?.loc_suggested_to_delete_sum).toBe(30);
+      expect(result?.ai_adoption_phase).toEqual({
+        phase_number: 2,
+        phase: 'Phase 2',
+        version: 'v1',
+      });
     });
 
     it('should reject deprecated schema with old LOC fields at root level', () => {

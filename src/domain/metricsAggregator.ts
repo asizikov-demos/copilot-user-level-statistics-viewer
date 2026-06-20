@@ -134,12 +134,14 @@ export interface AggregatedMetrics {
 interface UserSummaryAccumulator {
   userMap: Map<number, UserSummary>;
   userActiveDays: Map<number, Set<string>>;
+  userAiAdoptionPhaseDays: Map<number, string>;
 }
 
 function createUserSummaryAccumulator(): UserSummaryAccumulator {
   return {
     userMap: new Map(),
     userActiveDays: new Map(),
+    userAiAdoptionPhaseDays: new Map(),
   };
 }
 
@@ -189,6 +191,13 @@ function accumulateUserSummary(
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
   userSummary.used_copilot_coding_agent = userSummary.used_copilot_coding_agent || usedCopilotCloudAgent;
   userSummary.used_auto_mode = userSummary.used_auto_mode || hasAutoModeActivity(metric);
+  if (metric.ai_adoption_phase) {
+    const latestPhaseDay = accumulator.userAiAdoptionPhaseDays.get(userId);
+    if (!latestPhaseDay || metric.day >= latestPhaseDay) {
+      userSummary.ai_adoption_phase = { ...metric.ai_adoption_phase };
+      accumulator.userAiAdoptionPhaseDays.set(userId, metric.day);
+    }
+  }
   accumulator.userActiveDays.get(userId)!.add(date);
 }
 
