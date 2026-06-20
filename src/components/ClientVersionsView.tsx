@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { MetricTileGroup, MetricTileIcon, StatsGrid, ViewPanel } from './ui';
-import ExpandableTableSection from './ui/ExpandableTableSection';
 import ExpandableInlineList from './ui/ExpandableInlineList';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
@@ -391,24 +390,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                 Plugin versions that are not among the latest 20 stable releases. Users with outdated plugins may be missing important features and security updates.
               </p>
               {outdatedPlugins.length > 0 ? (
-                <ExpandableTableSection
-                  items={outdatedPlugins}
+                <MetricsTable
+                  data={outdatedPlugins}
+                  columns={outdatedPluginsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-red-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
                   initialCount={5}
                   buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
                   buttonExpandedLabel="Show Less"
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto border border-gray-200">
-                      <MetricsTable
-                        data={visibleItems}
-                        columns={outdatedPluginsColumns}
-                        tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                        theadClassName="bg-red-50"
-                        rowClassName={() => 'hover:bg-gray-50'}
-                      />
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               ) : (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                   <div className="text-green-800 font-medium">✓ All users are on recent plugin versions!</div>
@@ -419,32 +411,31 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
 
             <div>
               <h4 className="text-md font-semibold text-gray-800 mb-3">JetBrains &mdash; Latest 20 Plugin Versions</h4>
-              <ExpandableTableSection
-                items={latestTwentyUpdates}
-                initialCount={2}
-                buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                buttonExpandedLabel="Show Less"
-              >
-                {({ visibleItems }) => (
-                  <div className="overflow-x-auto border border-gray-200">
-                    {jbLoading ? (
-                      <div className="px-4 py-3 text-gray-500">Loading…</div>
-                    ) : jbError ? (
-                      <div className="px-4 py-3 text-red-600">Failed to load plugin versions: {jbError}</div>
-                    ) : jetbrainsUpdates.length === 0 ? (
-                      <div className="px-4 py-3 text-gray-500">No version data available.</div>
-                    ) : (
-                      <MetricsTable
-                        data={visibleItems}
-                        columns={jetbrainsVersionsColumns}
-                        tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                        theadClassName="bg-gray-50"
-                        rowClassName={() => 'hover:bg-gray-50'}
-                      />
-                    )}
-                  </div>
-                )}
-              </ExpandableTableSection>
+              {jbLoading ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-gray-500">Loading…</div>
+                </div>
+              ) : jbError ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-red-600">Failed to load plugin versions: {jbError}</div>
+                </div>
+              ) : jetbrainsUpdates.length === 0 ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-gray-500">No version data available.</div>
+                </div>
+              ) : (
+                <MetricsTable
+                  data={latestTwentyUpdates}
+                  columns={jetbrainsVersionsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-gray-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  initialCount={2}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                />
+              )}
             </div>
 
             <StatsGrid columns={{ base: 1, md: 2 }} gapClassName="gap-4">
@@ -599,24 +590,17 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
                 Unable to classify versions — release metadata unavailable for this report window.
               </div>
             ) : outdatedVsCodePlugins.length > 0 ? (
-              <ExpandableTableSection
-                items={outdatedVsCodePlugins}
+              <MetricsTable
+                data={outdatedVsCodePlugins}
+                columns={outdatedVsCodePluginsColumns}
+                tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                tableContainerClassName="overflow-x-auto border border-gray-200"
+                theadClassName="bg-red-50"
+                rowClassName={() => 'hover:bg-gray-50'}
                 initialCount={5}
                 buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
                 buttonExpandedLabel="Show Less"
-              >
-                {({ visibleItems }) => (
-                  <div className="overflow-x-auto border border-gray-200">
-                    <MetricsTable
-                      data={visibleItems}
-                      columns={outdatedVsCodePluginsColumns}
-                      tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                      theadClassName="bg-red-50"
-                      rowClassName={() => 'hover:bg-gray-50'}
-                    />
-                  </div>
-                )}
-              </ExpandableTableSection>
+              />
             ) : (
               <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                 <div className="text-green-800 font-medium">✓ All users are on recent extension versions!</div>
@@ -626,32 +610,31 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
 
             <div>
               <h4 className="text-md font-semibold text-gray-800 mb-3">VS Code &mdash; Latest Stable Releases</h4>
-              <ExpandableTableSection
-                items={latestTwentyVsCodeReleases}
-                initialCount={2}
-                buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
-                buttonExpandedLabel="Show Less"
-              >
-                {({ visibleItems }) => (
-                  <div className="overflow-x-auto border border-gray-200">
-                    {vsLoading ? (
-                      <div className="px-4 py-3 text-gray-500">Loading…</div>
-                    ) : vsError ? (
-                      <div className="px-4 py-3 text-red-600">Failed to load VS Code releases: {vsError}</div>
-                    ) : vsCodeStableReleases.length === 0 ? (
-                      <div className="px-4 py-3 text-gray-500">No version data available.</div>
-                    ) : (
-                      <MetricsTable
-                        data={visibleItems}
-                        columns={vsCodeVersionsColumns}
-                        tableClassName="min-w-full divide-y divide-gray-200 text-sm"
-                        theadClassName="bg-gray-50"
-                        rowClassName={() => 'hover:bg-gray-50'}
-                      />
-                    )}
-                  </div>
-                )}
-              </ExpandableTableSection>
+              {vsLoading ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-gray-500">Loading…</div>
+                </div>
+              ) : vsError ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-red-600">Failed to load VS Code releases: {vsError}</div>
+                </div>
+              ) : vsCodeStableReleases.length === 0 ? (
+                <div className="overflow-x-auto border border-gray-200">
+                  <div className="px-4 py-3 text-gray-500">No version data available.</div>
+                </div>
+              ) : (
+                <MetricsTable
+                  data={latestTwentyVsCodeReleases}
+                  columns={vsCodeVersionsColumns}
+                  tableClassName="min-w-full divide-y divide-gray-200 text-sm"
+                  tableContainerClassName="overflow-x-auto border border-gray-200"
+                  theadClassName="bg-gray-50"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  initialCount={2}
+                  buttonCollapsedLabel={(total) => `Show All ${total} Versions`}
+                  buttonExpandedLabel="Show Less"
+                />
+              )}
             </div>
 
             <StatsGrid columns={{ base: 1, md: 2 }} gapClassName="gap-4">

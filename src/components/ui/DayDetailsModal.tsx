@@ -5,7 +5,7 @@ import type { UserDayData } from '../../types/metrics';
 import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
 import { translateFeature } from '../../domain/featureTranslations';
 import { formatIDEName } from '../icons/IDEIcons';
-import ExpandableTableSection from './ExpandableTableSection';
+import MetricsTable, { type TableColumn } from './MetricsTable';
 import type { VoidCallback } from '../../types/events';
 
 interface DayDetailsModalProps {
@@ -15,6 +15,72 @@ interface DayDetailsModalProps {
   dayMetrics?: UserDayData;
   userLogin?: string;
 }
+
+type FeatureRow = UserDayData['totals_by_feature'][number];
+type LanguageFeatureRow = UserDayData['totals_by_language_feature'][number];
+type LanguageModelRow = UserDayData['totals_by_language_model'][number];
+type ModelFeatureRow = UserDayData['totals_by_model_feature'][number];
+
+interface ClientRow {
+  name: string;
+  user_initiated_interaction_count: number;
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+  loc_added_sum: number;
+  loc_deleted_sum: number;
+  plugin_version: string;
+}
+
+const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';
+const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
+const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
+
+const featureColumns: TableColumn<FeatureRow>[] = [
+  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => translateFeature(r.feature) },
+  { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
+  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+];
+
+const clientColumns: TableColumn<ClientRow>[] = [
+  { id: 'name', header: 'Client', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.name },
+  { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
+  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+  { id: 'pluginVersion', header: 'Plugin Version', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.plugin_version },
+];
+
+const languageFeatureColumns: TableColumn<LanguageFeatureRow>[] = [
+  { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
+  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => translateFeature(r.feature) },
+  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+];
+
+const languageModelColumns: TableColumn<LanguageModelRow>[] = [
+  { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
+  { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => r.model || 'Unknown' },
+  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+];
+
+const modelFeatureColumns: TableColumn<ModelFeatureRow>[] = [
+  { id: 'model', header: 'Model', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.model || 'Unknown' },
+  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => translateFeature(r.feature) },
+  { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
+  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+];
 
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {
   if (!isOpen) return null;
@@ -32,6 +98,31 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const cliDayTotals = computeCliDayTotals(dayMetrics);
   const hasCliActivity = cliDayTotals.promptCount > 0 || cliDayTotals.interactions > 0;
   const cliInteractionCount = cliDayTotals.interactionCount;
+
+  const clientRows: ClientRow[] = hasData ? [
+    ...dayMetrics!.totals_by_ide.map((ide) => ({
+      name: formatIDEName(ide.ide),
+      user_initiated_interaction_count: ide.user_initiated_interaction_count,
+      code_generation_activity_count: ide.code_generation_activity_count,
+      code_acceptance_activity_count: ide.code_acceptance_activity_count,
+      loc_added_sum: ide.loc_added_sum,
+      loc_deleted_sum: ide.loc_deleted_sum,
+      plugin_version: ide.last_known_plugin_version
+        ? `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}`
+        : 'Unknown',
+    })),
+    ...(hasCliActivity ? [{
+      name: 'Copilot CLI',
+      user_initiated_interaction_count: cliInteractionCount,
+      code_generation_activity_count: cliDayTotals.generations,
+      code_acceptance_activity_count: cliDayTotals.acceptances,
+      loc_added_sum: cliDayTotals.locAdded,
+      loc_deleted_sum: cliDayTotals.locDeleted,
+      plugin_version: dayMetrics!.totals_by_cli?.last_known_cli_version
+        ? `v${dayMetrics!.totals_by_cli.last_known_cli_version.cli_version}`
+        : 'Unknown',
+    }] : []),
+  ] : [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -101,214 +192,81 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               {/* Features Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h4>
-                <ExpandableTableSection
-                  items={dayMetrics.totals_by_feature}
+                <MetricsTable
+                  data={dayMetrics.totals_by_feature}
+                  columns={featureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
                   initialCount={5}
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {visibleItems.map((feature, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{translateFeature(feature.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{feature.loc_deleted_sum.toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               </div>
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
-                <ExpandableTableSection
-                  items={dayMetrics.totals_by_ide}
+                <MetricsTable
+                  data={clientRows}
+                  columns={clientColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
                   initialCount={5}
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-                             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Plugin Version</th>
-                           </tr>
-                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {visibleItems.map((ide, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{formatIDEName(ide.ide)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.user_initiated_interaction_count.toLocaleString()}</td>
-                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
-                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
-                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
-                               <td className="px-4 py-3 text-sm text-gray-900 text-right">{ide.loc_deleted_sum.toLocaleString()}</td>
-                               <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                 {ide.last_known_plugin_version ? 
-                                   `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}` : 
-                                  'Unknown'
-                                }
-                              </td>
-                             </tr>
-                           ))}
-                          {hasCliActivity && (
-                            <tr className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">Copilot CLI</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.generations.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.acceptances.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.locAdded.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{cliDayTotals.locDeleted.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                {dayMetrics.totals_by_cli?.last_known_cli_version ?
-                                  `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}` :
-                                  'Unknown'
-                                }
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               </div>
 
               {/* Language + Feature Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language & Feature</h4>
-                <ExpandableTableSection
-                  items={dayMetrics.totals_by_language_feature}
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Feature</h4>
+                <MetricsTable
+                  data={dayMetrics.totals_by_language_feature}
+                  columns={languageFeatureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
                   initialCount={10}
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {visibleItems.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.language || 'Unknown'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{translateFeature(item.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_deleted_sum.toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               </div>
 
               {/* Language + Model Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language & Model</h4>
-                <ExpandableTableSection
-                  items={dayMetrics.totals_by_language_model}
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
+                <MetricsTable
+                  data={dayMetrics.totals_by_language_model}
+                  columns={languageModelColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
                   initialCount={10}
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {visibleItems.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.language || 'Unknown'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{item.model || 'Unknown'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_deleted_sum.toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               </div>
 
               {/* Model + Feature Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Model & Feature</h4>
-                <ExpandableTableSection
-                  items={dayMetrics.totals_by_model_feature}
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Model &amp; Feature</h4>
+                <MetricsTable
+                  data={dayMetrics.totals_by_model_feature}
+                  columns={modelFeatureColumns}
+                  tableClassName="w-full divide-y divide-gray-200"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-gray-50"
+                  tbodyClassName="bg-white divide-y divide-gray-200"
+                  rowClassName={() => 'hover:bg-gray-50'}
+                  getRowKey={(_, idx) => idx}
                   initialCount={10}
-                >
-                  {({ visibleItems }) => (
-                    <div className="overflow-x-auto">
-                      <table className="w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {visibleItems.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.model || 'Unknown'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{translateFeature(item.feature)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.user_initiated_interaction_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_generation_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.code_acceptance_activity_count.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loc_added_sum.toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </ExpandableTableSection>
+                />
               </div>
             </div>
           )}
