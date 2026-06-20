@@ -3,9 +3,11 @@
 import React from 'react';
 import type { UserDayData } from '../../types/metrics';
 import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
-import { translateFeature } from '../../domain/featureTranslations';
 import { formatIDEName } from '../icons/IDEIcons';
 import MetricsTable, { type TableColumn } from './MetricsTable';
+import DayImpactCard from './DayImpactCard';
+import DayFeatureBreakdown from './DayFeatureBreakdown';
+import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../types/events';
 
 interface DayDetailsModalProps {
@@ -16,10 +18,7 @@ interface DayDetailsModalProps {
   userLogin?: string;
 }
 
-type FeatureRow = UserDayData['totals_by_feature'][number];
-type LanguageFeatureRow = UserDayData['totals_by_language_feature'][number];
 type LanguageModelRow = UserDayData['totals_by_language_model'][number];
-type ModelFeatureRow = UserDayData['totals_by_model_feature'][number];
 
 interface ClientRow {
   name: string;
@@ -36,15 +35,6 @@ const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
 const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
 const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
 
-const featureColumns: TableColumn<FeatureRow>[] = [
-  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => translateFeature(r.feature) },
-  { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
-  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
-  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
-  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
-];
-
 const clientColumns: TableColumn<ClientRow>[] = [
   { id: 'name', header: 'Client', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.name },
   { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
@@ -55,15 +45,6 @@ const clientColumns: TableColumn<ClientRow>[] = [
   { id: 'pluginVersion', header: 'Plugin Version', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.plugin_version },
 ];
 
-const languageFeatureColumns: TableColumn<LanguageFeatureRow>[] = [
-  { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
-  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => translateFeature(r.feature) },
-  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
-  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
-  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
-];
-
 const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
   { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => r.model || 'Unknown' },
@@ -71,15 +52,6 @@ const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
   { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
   { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
-];
-
-const modelFeatureColumns: TableColumn<ModelFeatureRow>[] = [
-  { id: 'model', header: 'Model', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.model || 'Unknown' },
-  { id: 'feature', header: 'Feature', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => translateFeature(r.feature) },
-  { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
-  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
-  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
 ];
 
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {
@@ -133,7 +105,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
             <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
             {hasData && userLogin && (
               <p className="text-sm text-gray-600 mt-1">
-                Activity Details • User: {userLogin}
+                User: {userLogin}
               </p>
             )}
           </div>
@@ -161,47 +133,26 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Summary Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {(dayMetrics.user_initiated_interaction_count + cliInteractionCount).toLocaleString()}
-                  </div>
-                  <div className="text-sm font-medium text-blue-800">Interactions</div>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-green-600">
-                    {dayMetrics.code_generation_activity_count.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-medium text-green-800">Code Generation</div>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {dayMetrics.code_acceptance_activity_count.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-medium text-purple-800">Code Acceptance</div>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {(dayMetrics.loc_added_sum + dayMetrics.loc_deleted_sum).toLocaleString()}
-                  </div>
-                  <div className="text-sm font-medium text-orange-800">Total LOC Changed</div>
-                </div>
+              {/* Clients & Impact cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+                <DayClientDistributionChart
+                  dayMetrics={dayMetrics}
+                  cliInteractionCount={cliInteractionCount}
+                />
+                <DayImpactCard
+                  locAdded={dayMetrics.loc_added_sum}
+                  locDeleted={dayMetrics.loc_deleted_sum}
+                />
               </div>
 
               {/* Features Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h4>
-                <MetricsTable
-                  data={dayMetrics.totals_by_feature}
-                  columns={featureColumns}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  tableContainerClassName="overflow-x-auto"
-                  theadClassName="bg-gray-50"
-                  tbodyClassName="bg-white divide-y divide-gray-200"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  getRowKey={(_, idx) => idx}
-                  initialCount={5}
+                <h4 className="text-lg font-semibold text-gray-900 mb-1">Activity by Feature</h4>
+                <p className="text-sm text-gray-600 mb-4">Expand a feature to see the languages and models used.</p>
+                <DayFeatureBreakdown
+                  totalsByFeature={dayMetrics.totals_by_feature}
+                  totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
+                  totalsByModelFeature={dayMetrics.totals_by_model_feature}
                 />
               </div>
 
@@ -221,44 +172,12 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                 />
               </div>
 
-              {/* Language + Feature Section */}
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Feature</h4>
-                <MetricsTable
-                  data={dayMetrics.totals_by_language_feature}
-                  columns={languageFeatureColumns}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  tableContainerClassName="overflow-x-auto"
-                  theadClassName="bg-gray-50"
-                  tbodyClassName="bg-white divide-y divide-gray-200"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  getRowKey={(_, idx) => idx}
-                  initialCount={10}
-                />
-              </div>
-
               {/* Language + Model Section */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
                 <MetricsTable
                   data={dayMetrics.totals_by_language_model}
                   columns={languageModelColumns}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  tableContainerClassName="overflow-x-auto"
-                  theadClassName="bg-gray-50"
-                  tbodyClassName="bg-white divide-y divide-gray-200"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  getRowKey={(_, idx) => idx}
-                  initialCount={10}
-                />
-              </div>
-
-              {/* Model + Feature Section */}
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Model &amp; Feature</h4>
-                <MetricsTable
-                  data={dayMetrics.totals_by_model_feature}
-                  columns={modelFeatureColumns}
                   tableClassName="w-full divide-y divide-gray-200"
                   tableContainerClassName="overflow-x-auto"
                   theadClassName="bg-gray-50"
