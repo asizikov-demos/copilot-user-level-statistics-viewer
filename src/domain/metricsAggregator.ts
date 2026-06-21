@@ -106,6 +106,11 @@ import {
   accumulateCodeReviewAdoptionSignal,
   computeDailyCloudAgentAdoptionData,
   computeDailyCodeReviewAdoptionData,
+
+  AiAdoptionPhaseData,
+  createAiAdoptionPhaseAccumulator,
+  accumulateAiAdoptionPhase,
+  computeAiAdoptionPhaseData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
 
@@ -140,6 +145,7 @@ export interface AggregatedMetrics {
   dailyAdoptionTrend: DailyAdoptionTrend[];
   dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
   dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
+  aiAdoptionPhaseData: AiAdoptionPhaseData[];
 }
 
 interface UserSummaryAccumulator {
@@ -262,6 +268,7 @@ export function aggregateMetrics(
   const modelBreakdownAccumulator = createModelBreakdownAccumulator();
   const cliUsageAccumulator = createCliUsageAccumulator();
   const advancedAdoptionAccumulator = createAdvancedAdoptionAccumulator();
+  const aiAdoptionPhaseAccumulator = createAiAdoptionPhaseAccumulator();
   const userDetailAccumulator = createUserDetailAccumulator();
 
   for (const metric of metrics) {
@@ -279,6 +286,7 @@ export function aggregateMetrics(
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
 
     accumulateUserSummary(userSummaryAccumulator, metric, usedCopilotCloudAgent);
+    accumulateAiAdoptionPhase(aiAdoptionPhaseAccumulator, metric);
     accumulateUserDetail(userDetailAccumulator, metric);
 
     accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, usedCopilotCloudAgent);
@@ -417,6 +425,7 @@ export function aggregateMetrics(
     dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
     dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
     dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
+    aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),
     },
     userDetailAccumulator,
   };

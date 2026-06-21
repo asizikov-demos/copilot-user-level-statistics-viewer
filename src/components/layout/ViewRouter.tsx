@@ -16,6 +16,7 @@ import LanguagesView from '../LanguagesView';
 import ClientsView from '../ClientsView';
 import CopilotImpactView from '../CopilotImpactView';
 import CopilotAdoptionView from '../CopilotAdoptionView';
+import AiAdoptionPhaseView from '../AiAdoptionPhaseView';
 import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
@@ -139,6 +140,7 @@ const ViewRouter: React.FC = () => {
     dailyAdoptionTrend,
     dailyCloudAgentAdoptionData = [],
     dailyCodeReviewAdoptionData = [],
+    aiAdoptionPhaseData = [],
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -210,6 +212,13 @@ const ViewRouter: React.FC = () => {
           dailyAdoptionTrend={dailyAdoptionTrend}
           dailyCloudAgentAdoptionData={dailyCloudAgentAdoptionData}
           dailyCodeReviewAdoptionData={dailyCodeReviewAdoptionData}
+        />
+      );
+
+    case VIEW_MODES.AI_ADOPTION_PHASES:
+      return (
+        <AiAdoptionPhaseView
+          phaseData={aiAdoptionPhaseData}
         />
       );
 

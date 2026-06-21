@@ -9,6 +9,7 @@ export const VIEW_MODES = {
   CLIENT_ANALYSIS: 'ides',
   COPILOT_IMPACT: 'copilotImpact',
   COPILOT_ADOPTION: 'copilotAdoption',
+  AI_ADOPTION_PHASES: 'aiAdoptionPhases',
   MODEL_DETAILS: 'modelDetails',
   CLI_ADOPTION: 'cliAdoption',
 } as const;

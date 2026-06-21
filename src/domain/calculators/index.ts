@@ -154,4 +154,13 @@ export {
   computeDailyCodeReviewAdoptionData,
 } from './advancedAdoptionCalculator';
 
+export {
+  type AiAdoptionPhaseAccumulator,
+  type AiAdoptionPhaseData,
+  type AiAdoptionPhaseTopEntry,
+  createAiAdoptionPhaseAccumulator,
+  accumulateAiAdoptionPhase,
+  computeAiAdoptionPhaseData,
+} from './aiAdoptionPhaseCalculator';
+
 export { compareDatesAsc, compareByDateAsc } from './statsCalculators';
