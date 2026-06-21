@@ -38,6 +38,11 @@ export type {
   DailyCliAdoptionTrend,
 } from './cliUsageCalculator';
 
+export type {
+  DailyCloudAgentAdoptionData,
+  DailyCodeReviewAdoptionData,
+} from './advancedAdoptionCalculator';
+
 export const calculateStats = calculateStatsFromMetrics;
 
 export const calculateDailyModelUsage = calculateDailyModelUsageFromMetrics;

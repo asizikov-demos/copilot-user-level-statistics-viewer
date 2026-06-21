@@ -645,6 +645,48 @@ describe('metricsAggregator', () => {
       expect(aggregated.userSummaries[0].used_copilot_coding_agent).toBe(true);
     });
 
+    it('should aggregate daily Cloud Agent and Code Review adoption users', () => {
+      const day1CloudUser = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        used_copilot_cloud_agent: true,
+        used_copilot_code_review_active: true,
+      });
+      const day1SecondCloudUser = createBasicMetric({
+        user_id: 2,
+        day: '2024-01-15',
+        used_copilot_cloud_agent: true,
+        used_copilot_code_review_passive: true,
+      });
+      const day1DuplicateCloudUser = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        used_copilot_cloud_agent: true,
+        used_copilot_code_review_active: true,
+      });
+      const day2CodeReviewUser = createBasicMetric({
+        user_id: 3,
+        day: '2024-01-16',
+        used_copilot_code_review_active: true,
+        used_copilot_code_review_passive: true,
+      });
+
+      const { aggregated } = aggregateMetrics([
+        day1CloudUser,
+        day1SecondCloudUser,
+        day1DuplicateCloudUser,
+        day2CodeReviewUser,
+      ]);
+
+      expect(aggregated.dailyCloudAgentAdoptionData).toEqual([
+        { date: '2024-01-15', uniqueUsers: 2 },
+      ]);
+      expect(aggregated.dailyCodeReviewAdoptionData).toEqual([
+        { date: '2024-01-15', activeUsers: 1, passiveUsers: 1 },
+        { date: '2024-01-16', activeUsers: 1, passiveUsers: 1 },
+      ]);
+    });
+
     it('should prefer the new cloud-agent flag over the legacy coding-agent flag', () => {
       const metric = createBasicMetric({
         used_chat: false,
