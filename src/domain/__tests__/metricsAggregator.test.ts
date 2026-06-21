@@ -196,6 +196,116 @@ describe('metricsAggregator', () => {
       });
     });
 
+    it('should aggregate AI adoption phase metrics and top dimensions per user phase', () => {
+      const ideTotal = (ide: string, activity: number) => ({
+        ide,
+        user_initiated_interaction_count: activity,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      });
+      const modelFeature = (model: string, interactions: number) => ({
+        model,
+        feature: 'chat_panel_ask_mode',
+        user_initiated_interaction_count: interactions,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      });
+      const languageFeature = (language: string, generations: number, acceptances: number) => ({
+        language,
+        feature: 'code_completion',
+        code_generation_activity_count: generations,
+        code_acceptance_activity_count: acceptances,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      });
+
+      const user1Day1 = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        user_initiated_interaction_count: 10,
+        loc_added_sum: 100,
+        loc_deleted_sum: 10,
+        ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
+        totals_by_ide: [ideTotal('vscode', 10)],
+        totals_by_model_feature: [modelFeature('gpt-4o', 8)],
+        totals_by_language_feature: [languageFeature('typescript', 5, 1)],
+      });
+      const user1Day2 = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-16',
+        user_initiated_interaction_count: 20,
+        loc_added_sum: 50,
+        loc_deleted_sum: 5,
+        ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
+        totals_by_ide: [ideTotal('vscode', 4)],
+        totals_by_model_feature: [modelFeature('claude-sonnet-4.6', 15)],
+        totals_by_language_feature: [languageFeature('python', 7, 3)],
+      });
+      const user2 = createBasicMetric({
+        user_id: 2,
+        day: '2024-01-15',
+        user_initiated_interaction_count: 10,
+        loc_added_sum: 50,
+        loc_deleted_sum: 5,
+        ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
+        totals_by_ide: [ideTotal('vscode', 3)],
+        totals_by_model_feature: [modelFeature('gpt-4o', 20)],
+        totals_by_language_feature: [languageFeature('typescript', 10, 2)],
+      });
+      const user3 = createBasicMetric({
+        user_id: 3,
+        day: '2024-01-15',
+        user_initiated_interaction_count: 5,
+        loc_added_sum: 30,
+        loc_deleted_sum: 3,
+        ai_adoption_phase: { phase_number: 2, phase: 'Phase 2', version: 'v1' },
+        totals_by_ide: [ideTotal('intellij', 7)],
+        totals_by_model_feature: [modelFeature('gpt-4o', 10)],
+        totals_by_language_feature: [languageFeature('go', 6, 2)],
+      });
+
+      const { aggregated } = aggregateMetrics([user1Day1, user1Day2, user2, user3]);
+
+      expect(aggregated.aiAdoptionPhaseData).toHaveLength(2);
+
+      const phase1 = aggregated.aiAdoptionPhaseData.find(phase => phase.phase.phase_number === 1)!;
+      expect(phase1.userCount).toBe(2);
+      expect(phase1.avgUserInitiatedInteractions).toBe(20);
+      expect(phase1.totalLocAdded).toBe(200);
+      expect(phase1.totalLocDeleted).toBe(20);
+      expect(phase1.avgLocAdded).toBe(100);
+      expect(phase1.avgLocDeleted).toBe(10);
+      expect(phase1.avgDaysActive).toBe(1.5);
+      expect(phase1.topModels).toEqual([
+        { name: 'gpt-4o', total: 28, uniqueUsers: 2 },
+        { name: 'claude-sonnet-4.6', total: 15, uniqueUsers: 1 },
+      ]);
+      expect(phase1.topClients).toEqual([
+        { name: 'vscode', total: 17, uniqueUsers: 2 },
+      ]);
+      expect(phase1.topLanguages).toEqual([
+        { name: 'typescript', total: 18, uniqueUsers: 2 },
+        { name: 'python', total: 10, uniqueUsers: 1 },
+      ]);
+
+      const phase2 = aggregated.aiAdoptionPhaseData.find(phase => phase.phase.phase_number === 2)!;
+      expect(phase2.userCount).toBe(1);
+      expect(phase2.avgUserInitiatedInteractions).toBe(5);
+      expect(phase2.topClients).toEqual([
+        { name: 'intellij', total: 7, uniqueUsers: 1 },
+      ]);
+    });
+
     it('should accumulate user flags across multiple days (OR logic)', () => {
       // User uses chat on day 1, agent on day 2
       const day1 = createBasicMetric({

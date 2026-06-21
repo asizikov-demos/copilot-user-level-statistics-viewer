@@ -68,6 +68,15 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'AI Adoption Phases',
+    view: VIEW_MODES.AI_ADOPTION_PHASES,
+    icon: (
+      <svg className="w-5 h-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5M6.75 6.75v10.5M12 6.75v10.5M17.25 6.75v10.5" />
+      </svg>
+    ),
+  },
+  {
     label: 'Model Usage',
     view: VIEW_MODES.MODEL_DETAILS,
     icon: (

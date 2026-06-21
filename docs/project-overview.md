@@ -88,7 +88,7 @@ flowchart LR
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, model usage analysis, adoption, and model details.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, model usage analysis, adoption, AI adoption phases, and model details.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 

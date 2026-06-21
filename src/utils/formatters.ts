@@ -153,9 +153,26 @@ export function formatModelDisplayName(modelName: string): string {
   return modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/-/g, ' ');
 }
 
+const AI_ADOPTION_PHASE_NAMES_BY_NUMBER: Partial<Record<number, string>> = {
+  0: 'No cohort',
+  1: 'Code first',
+  2: 'Agent first',
+  3: 'Multi-agent',
+};
+
+export function formatAiAdoptionPhaseName(aiAdoptionPhase?: AIAdoptionPhase): string {
+  if (!aiAdoptionPhase) return 'N/A';
+  return AI_ADOPTION_PHASE_NAMES_BY_NUMBER[aiAdoptionPhase.phase_number]
+    ?? aiAdoptionPhase.phase
+    ?? `Phase ${aiAdoptionPhase.phase_number}`;
+}
+
 export function formatAiAdoptionPhase(aiAdoptionPhase?: AIAdoptionPhase): string {
   if (!aiAdoptionPhase) return 'N/A';
-  return aiAdoptionPhase.phase || `Phase ${aiAdoptionPhase.phase_number}`;
+  const phaseName = AI_ADOPTION_PHASE_NAMES_BY_NUMBER[aiAdoptionPhase.phase_number];
+  return phaseName
+    ? `Phase ${aiAdoptionPhase.phase_number} — ${phaseName}`
+    : aiAdoptionPhase.phase || `Phase ${aiAdoptionPhase.phase_number}`;
 }
 
 export function generateDateRange(startDay: string, endDay: string): string[] {

@@ -43,6 +43,11 @@ export type {
   DailyCodeReviewAdoptionData,
 } from './advancedAdoptionCalculator';
 
+export type {
+  AiAdoptionPhaseData,
+  AiAdoptionPhaseTopEntry,
+} from './aiAdoptionPhaseCalculator';
+
 export const calculateStats = calculateStatsFromMetrics;
 
 export const calculateDailyModelUsage = calculateDailyModelUsageFromMetrics;
