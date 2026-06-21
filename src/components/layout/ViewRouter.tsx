@@ -20,6 +20,7 @@ import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
 import ClientVersionsView from '../ClientVersionsView';
+import AboutView from '../AboutView';
 
 const ViewRouter: React.FC = () => {
   const { 
@@ -152,6 +153,9 @@ const ViewRouter: React.FC = () => {
           featureAdoptionData={featureAdoptionData}
         />
       );
+
+    case VIEW_MODES.ABOUT:
+      return <AboutView />;
 
     case VIEW_MODES.CLIENT_VERSIONS:
       return (
