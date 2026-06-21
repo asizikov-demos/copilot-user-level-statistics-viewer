@@ -3,6 +3,7 @@
 import React, { useId, useMemo, useState } from 'react';
 import type { UserDayData } from '../../types/metrics';
 import { translateFeature } from '../../domain/featureTranslations';
+import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 
 type FeatureRow = UserDayData['totals_by_feature'][number];
 type LanguageFeatureRow = UserDayData['totals_by_language_feature'][number];
@@ -98,7 +99,7 @@ function FeatureCard({
           <span className="text-sm font-semibold text-gray-900 truncate">{translateFeature(feature.feature)}</span>
         </span>
         <span className="flex items-center gap-4">
-          <MetricChip label="Interactions" value={fmt(feature.user_initiated_interaction_count)} />
+          <MetricChip label="Interactions" value={fmt(getTotalUserInitiatedInteractionCount(feature))} />
           <MetricChip label="Gen" value={fmt(feature.code_generation_activity_count)} />
           <MetricChip label="Acc" value={fmt(feature.code_acceptance_activity_count)} />
           <MetricChip label="LOC" value={`+${fmt(feature.loc_added_sum)} / -${fmt(feature.loc_deleted_sum)}`} />
@@ -124,6 +125,7 @@ export default function DayFeatureBreakdown({
     () =>
       [...totalsByFeature].sort(
         (a, b) =>
+          getTotalUserInitiatedInteractionCount(b) - getTotalUserInitiatedInteractionCount(a) ||
           b.user_initiated_interaction_count - a.user_initiated_interaction_count ||
           b.code_generation_activity_count - a.code_generation_activity_count
       ),

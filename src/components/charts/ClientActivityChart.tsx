@@ -12,12 +12,14 @@ import { formatShortDate, generateDateRange } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
 import type { UserDayData } from '../../types/metrics';
+import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 
 registerChartJS();
 
 interface IDEAggregateItem {
   ide: string;
   user_initiated_interaction_count: number;
+  assumed_user_initiated_interaction_count?: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
   loc_added_sum: number;
@@ -108,7 +110,7 @@ export default function ClientActivityChart({
       const data = allDays.map(dayStr => {
         const dayData = dayMap.get(dayStr);
         const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
-        return ideData?.user_initiated_interaction_count || 0;
+        return ideData ? getTotalUserInitiatedInteractionCount(ideData) : 0;
       });
 
       const color = getIdeColor(ide, fallbackIndex);
@@ -185,7 +187,7 @@ export default function ClientActivityChart({
                     <span>{formatIDEName(ide.ide)}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.user_initiated_interaction_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{getTotalUserInitiatedInteractionCount(ide).toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>

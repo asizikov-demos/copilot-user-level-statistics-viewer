@@ -110,7 +110,7 @@ export const FEATURE_ADOPTION_RADAR_METADATA = [
   { key: 'cliInteractions', label: 'CLI', summaryLabel: 'CLI', unit: 'interactions' },
   { key: 'askModeInteractions', label: 'Ask Mode', summaryLabel: 'Ask', unit: 'interactions' },
   { key: 'editModeInteractions', label: 'Edit Mode', summaryLabel: 'Edit', unit: 'interactions' },
-  { key: 'completionInteractions', label: 'Completions', summaryLabel: 'Completions', unit: 'acceptances' },
+  { key: 'completionInteractions', label: 'Completions', summaryLabel: 'Completions', unit: 'interactions' },
 ] as const;
 
 export function getFeatureTaxonomy(): readonly FeatureTaxonomyEntry[] {

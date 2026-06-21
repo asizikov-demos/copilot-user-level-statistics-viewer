@@ -232,6 +232,7 @@ export interface UserDayData {
   totals_by_feature: Array<{
     feature: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count?: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;
@@ -242,6 +243,7 @@ export interface UserDayData {
   totals_by_ide: Array<{
     ide: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count?: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;
@@ -278,6 +280,7 @@ export interface UserDayData {
     model: string;
     feature: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count?: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;

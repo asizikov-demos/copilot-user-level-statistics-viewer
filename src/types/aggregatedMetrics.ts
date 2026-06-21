@@ -11,6 +11,7 @@ export interface UserDetailedMetrics {
   featureAggregates: Array<{
     feature: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;
@@ -21,6 +22,7 @@ export interface UserDetailedMetrics {
   ideAggregates: Array<{
     ide: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;
@@ -42,6 +44,7 @@ export interface UserDetailedMetrics {
     model: string;
     feature: string;
     user_initiated_interaction_count: number;
+    assumed_user_initiated_interaction_count: number;
     code_generation_activity_count: number;
     code_acceptance_activity_count: number;
     loc_added_sum: number;

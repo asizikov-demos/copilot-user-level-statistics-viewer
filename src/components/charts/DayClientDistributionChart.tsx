@@ -11,6 +11,7 @@ import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import { sortBySelector } from '../../utils/sorting';
 import type { UserDayData } from '../../types/metrics';
+import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 
 registerChartJS();
 
@@ -21,8 +22,8 @@ interface DayClientDistributionChartProps {
 
 export default function DayClientDistributionChart({ dayMetrics, cliInteractionCount }: DayClientDistributionChartProps) {
   const sorted = sortBySelector(
-    dayMetrics.totals_by_ide.filter((ide) => ide.user_initiated_interaction_count > 0),
-    (ide) => ide.user_initiated_interaction_count,
+    dayMetrics.totals_by_ide.filter((ide) => getTotalUserInitiatedInteractionCount(ide) > 0),
+    getTotalUserInitiatedInteractionCount,
     'desc'
   );
   const hasCliActivity = cliInteractionCount > 0;
@@ -34,7 +35,7 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
   ];
 
   const dataValues = [
-    ...sorted.map((ide) => ide.user_initiated_interaction_count),
+    ...sorted.map(getTotalUserInitiatedInteractionCount),
     ...(hasCliActivity ? [cliInteractionCount] : []),
   ];
 
@@ -72,7 +73,7 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
   return (
     <ChartContainer
       title="Clients"
-      description="Share of interactions across clients on this day."
+      description="Share of recorded and assumed interactions across clients on this day."
       chartHeight="h-64"
       className="h-full"
       isEmpty={!hasData}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
@@ -15,6 +16,7 @@ interface UniqueUsersViewProps {
 }
 
 type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days';
+const USERS_PER_PAGE = 500;
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
@@ -23,10 +25,27 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
     'total_user_initiated_interactions',
     'desc'
   );
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleUserClick = (user: UserSummary) => {
     onUserClick(user.user_login, user.user_id);
   };
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / USERS_PER_PAGE));
+  const pagedUsers = useMemo(() => {
+    const start = (currentPage - 1) * USERS_PER_PAGE;
+    return sortedUsers.slice(start, start + USERS_PER_PAGE);
+  }, [currentPage, sortedUsers]);
+  const pageStart = sortedUsers.length === 0 ? 0 : (currentPage - 1) * USERS_PER_PAGE + 1;
+  const pageEnd = Math.min(currentPage * USERS_PER_PAGE, sortedUsers.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortField, sortDirection, users]);
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   const tableSortState = { field: sortField as string, direction: sortDirection };
 
@@ -208,7 +227,7 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
         </div>
         <div className="overflow-x-auto border border-gray-200">
           <MetricsTable<UserSummary>
-            data={sortedUsers}
+            data={pagedUsers}
             columns={columns}
             sortState={tableSortState}
             onSortChange={({ field }) => handleSort(field as SortField)}
@@ -218,6 +237,34 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
             onRowClick={(user) => handleUserClick(user)}
           />
         </div>
+        {sortedUsers.length > USERS_PER_PAGE && (
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-gray-600">
+              Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
 
       {users.length === 0 && (
         <div className="text-center py-8">
