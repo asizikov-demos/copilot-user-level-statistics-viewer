@@ -136,6 +136,8 @@ const ViewRouter: React.FC = () => {
     dailyCliTokenData,
     dailyCliAdoptionTrend,
     dailyAdoptionTrend,
+    dailyCloudAgentAdoptionData = [],
+    dailyCodeReviewAdoptionData = [],
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -202,6 +204,8 @@ const ViewRouter: React.FC = () => {
           agentModeHeatmapData={agentModeHeatmapData}
           stats={stats}
           dailyAdoptionTrend={dailyAdoptionTrend}
+          dailyCloudAgentAdoptionData={dailyCloudAgentAdoptionData}
+          dailyCodeReviewAdoptionData={dailyCodeReviewAdoptionData}
         />
       );
 

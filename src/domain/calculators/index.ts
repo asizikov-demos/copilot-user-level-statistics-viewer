@@ -143,4 +143,15 @@ export {
   computeCliAdoptionTrend,
 } from './cliUsageCalculator';
 
+export {
+  type DailyCloudAgentAdoptionData,
+  type DailyCodeReviewAdoptionData,
+  type AdvancedAdoptionAccumulator,
+  createAdvancedAdoptionAccumulator,
+  accumulateCloudAgentAdoption,
+  accumulateCodeReviewAdoptionSignal,
+  computeDailyCloudAgentAdoptionData,
+  computeDailyCodeReviewAdoptionData,
+} from './advancedAdoptionCalculator';
+
 export { compareDatesAsc, compareByDateAsc } from './statsCalculators';

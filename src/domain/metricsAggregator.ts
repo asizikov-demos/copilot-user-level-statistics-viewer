@@ -98,6 +98,14 @@ import {
   computeDailyCliSessionData,
   computeDailyCliTokenData,
   computeCliAdoptionTrend,
+
+  DailyCloudAgentAdoptionData,
+  DailyCodeReviewAdoptionData,
+  createAdvancedAdoptionAccumulator,
+  accumulateCloudAgentAdoption,
+  accumulateCodeReviewAdoptionSignal,
+  computeDailyCloudAgentAdoptionData,
+  computeDailyCodeReviewAdoptionData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
 
@@ -130,6 +138,8 @@ export interface AggregatedMetrics {
   dailyCliTokenData: DailyCliTokenData[];
   dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
   dailyAdoptionTrend: DailyAdoptionTrend[];
+  dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
+  dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
 }
 
 interface UserSummaryAccumulator {
@@ -251,6 +261,7 @@ export function aggregateMetrics(
   const languageFeatureImpactAccumulator = createLanguageFeatureImpactAccumulator();
   const modelBreakdownAccumulator = createModelBreakdownAccumulator();
   const cliUsageAccumulator = createCliUsageAccumulator();
+  const advancedAdoptionAccumulator = createAdvancedAdoptionAccumulator();
   const userDetailAccumulator = createUserDetailAccumulator();
 
   for (const metric of metrics) {
@@ -330,6 +341,14 @@ export function aggregateMetrics(
       userId,
       (metric.used_copilot_code_review_active ?? false) || (metric.used_copilot_code_review_passive ?? false)
     );
+    accumulateCloudAgentAdoption(advancedAdoptionAccumulator, date, userId, usedCopilotCloudAgent);
+    accumulateCodeReviewAdoptionSignal(
+      advancedAdoptionAccumulator,
+      date,
+      userId,
+      metric.used_copilot_code_review_active ?? false,
+      metric.used_copilot_code_review_passive ?? false
+    );
     accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
 
     for (const feature of metric.totals_by_feature) {
@@ -396,6 +415,8 @@ export function aggregateMetrics(
     dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
     dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
     dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
+    dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
+    dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
     },
     userDetailAccumulator,
   };
