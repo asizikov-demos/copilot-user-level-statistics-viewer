@@ -34,8 +34,8 @@ describe('advancedAdoptionCalculator', () => {
     accumulateCodeReviewAdoptionSignal(accumulator, '2024-01-17', 5, false, false);
 
     expect(computeDailyCodeReviewAdoptionData(accumulator)).toEqual([
-      { date: '2024-01-15', activeUsers: 0, passiveUsers: 1 },
-      { date: '2024-01-16', activeUsers: 2, passiveUsers: 2 },
+      { date: '2024-01-15', activeUsers: 0, passiveUsers: 1, totalUsers: 1 },
+      { date: '2024-01-16', activeUsers: 2, passiveUsers: 2, totalUsers: 3 },
     ]);
   });
 });

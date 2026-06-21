@@ -19,6 +19,10 @@ interface CodeReviewAdoptionChartProps {
   reportEndDay: string;
 }
 
+function getTotalUsers(day: DailyCodeReviewAdoptionData): number {
+  return day.totalUsers ?? Math.max(day.activeUsers, day.passiveUsers);
+}
+
 function padCodeReviewAdoptionData(
   data: DailyCodeReviewAdoptionData[],
   reportStartDay: string,
@@ -26,11 +30,16 @@ function padCodeReviewAdoptionData(
 ): DailyCodeReviewAdoptionData[] {
   const dataByDate = new Map(data.map(day => [day.date, day]));
 
-  return generateDateRange(reportStartDay, reportEndDay).map(date => ({
-    date,
-    activeUsers: dataByDate.get(date)?.activeUsers ?? 0,
-    passiveUsers: dataByDate.get(date)?.passiveUsers ?? 0,
-  }));
+  return generateDateRange(reportStartDay, reportEndDay).map(date => {
+    const day = dataByDate.get(date);
+
+    return {
+      date,
+      activeUsers: day?.activeUsers ?? 0,
+      passiveUsers: day?.passiveUsers ?? 0,
+      totalUsers: day ? getTotalUsers(day) : 0,
+    };
+  });
 }
 
 export default function CodeReviewAdoptionChart({
@@ -44,8 +53,7 @@ export default function CodeReviewAdoptionChart({
   );
   const peakActiveUsers = data.reduce((peak, day) => Math.max(peak, day.activeUsers), 0);
   const peakPassiveUsers = data.reduce((peak, day) => Math.max(peak, day.passiveUsers), 0);
-  const activeUserDays = data.reduce((sum, day) => sum + day.activeUsers, 0);
-  const passiveUserDays = data.reduce((sum, day) => sum + day.passiveUsers, 0);
+  const totalUserDays = data.reduce((sum, day) => sum + getTotalUsers(day), 0);
 
   const chartData = {
     labels: paddedData.map(day => formatShortDate(day.date)),
@@ -79,7 +87,7 @@ export default function CodeReviewAdoptionChart({
       summaryStats={[
         { value: peakActiveUsers.toLocaleString(), label: 'Peak Active Users' },
         { value: peakPassiveUsers.toLocaleString(), label: 'Peak Passive Users' },
-        { value: (activeUserDays + passiveUserDays).toLocaleString(), label: 'CCR User-days' },
+        { value: totalUserDays.toLocaleString(), label: 'CCR User-days' },
       ]}
     >
       <div className="h-full">

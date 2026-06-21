@@ -9,6 +9,7 @@ export interface DailyCodeReviewAdoptionData {
   date: string;
   activeUsers: number;
   passiveUsers: number;
+  totalUsers: number;
 }
 
 interface AdvancedAdoptionDay {
@@ -87,11 +88,19 @@ export function computeDailyCodeReviewAdoptionData(
   accumulator: AdvancedAdoptionAccumulator
 ): DailyCodeReviewAdoptionData[] {
   return Array.from(accumulator.dailyAdoption.entries())
-    .map(([date, day]) => ({
-      date,
-      activeUsers: day.codeReviewActiveUsers.size,
-      passiveUsers: day.codeReviewPassiveUsers.size,
-    }))
+    .map(([date, day]) => {
+      const totalUsers = new Set([
+        ...day.codeReviewActiveUsers,
+        ...day.codeReviewPassiveUsers,
+      ]).size;
+
+      return {
+        date,
+        activeUsers: day.codeReviewActiveUsers.size,
+        passiveUsers: day.codeReviewPassiveUsers.size,
+        totalUsers,
+      };
+    })
     .filter(day => day.activeUsers > 0 || day.passiveUsers > 0)
     .sort(compareByDateAsc);
 }

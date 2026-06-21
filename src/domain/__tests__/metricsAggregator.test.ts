@@ -682,8 +682,8 @@ describe('metricsAggregator', () => {
         { date: '2024-01-15', uniqueUsers: 2 },
       ]);
       expect(aggregated.dailyCodeReviewAdoptionData).toEqual([
-        { date: '2024-01-15', activeUsers: 1, passiveUsers: 1 },
-        { date: '2024-01-16', activeUsers: 1, passiveUsers: 1 },
+        { date: '2024-01-15', activeUsers: 1, passiveUsers: 1, totalUsers: 2 },
+        { date: '2024-01-16', activeUsers: 1, passiveUsers: 1, totalUsers: 1 },
       ]);
     });
 
