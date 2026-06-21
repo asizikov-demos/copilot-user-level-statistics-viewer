@@ -9,6 +9,7 @@ import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../types/events';
+import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 
 interface DayDetailsModalProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const clientRows: ClientRow[] = hasData ? [
     ...dayMetrics!.totals_by_ide.map((ide) => ({
       name: formatIDEName(ide.ide),
-      user_initiated_interaction_count: ide.user_initiated_interaction_count,
+      user_initiated_interaction_count: getTotalUserInitiatedInteractionCount(ide),
       code_generation_activity_count: ide.code_generation_activity_count,
       code_acceptance_activity_count: ide.code_acceptance_activity_count,
       loc_added_sum: ide.loc_added_sum,

@@ -25,6 +25,7 @@ import type { ModeImpactData } from '../domain/calculators/metricCalculators';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 import { isActiveAutoModeFeature } from '../domain/autoMode';
+import { getTotalUserInitiatedInteractionCount } from '../domain/assumedInteractions';
 
 registerChartJS();
 
@@ -157,12 +158,12 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
     .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
   const completionInteractions = featureAggregates
     .filter(f => f.feature === 'code_completion')
-    .reduce((sum, f) => sum + f.code_acceptance_activity_count, 0);
+    .reduce((sum, f) => sum + getTotalUserInitiatedInteractionCount(f), 0);
   const cliInteractions = totalCliPrompts;
 
   const ideChartData = useMemo(() => {
     const labels = ideAggregates.map(ide => formatIDEName(ide.ide));
-    const data = ideAggregates.map(ide => ide.user_initiated_interaction_count);
+    const data = ideAggregates.map(getTotalUserInitiatedInteractionCount);
 
     if (totalCliPrompts > 0) {
       labels.push('Copilot CLI');
@@ -210,7 +211,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const { modelInteractions, modelChartData } = useMemo(() => {
     const interactions = modelFeatureAggregates.reduce((acc, item) => {
       if (item.model && item.model !== '') {
-        acc[item.model] = (acc[item.model] || 0) + item.user_initiated_interaction_count;
+        acc[item.model] = (acc[item.model] || 0) + getTotalUserInitiatedInteractionCount(item);
       }
       return acc;
     }, {} as Record<string, number>);
@@ -363,7 +364,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         const dayData = dayMap.get(dayStr);
         const modelData = dayData?.totals_by_model_feature
           .filter(item => item.model === model)
-          .reduce((sum, item) => sum + item.user_initiated_interaction_count, 0) || 0;
+          .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0) || 0;
         return modelData;
       });
 
@@ -685,7 +686,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
               {featureAggregates.map((feature) => (
                 <tr key={feature.feature}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{translateFeature(feature.feature)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.user_initiated_interaction_count.toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{getTotalUserInitiatedInteractionCount(feature).toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.code_generation_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.code_acceptance_activity_count.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.loc_added_sum.toLocaleString()}</td>

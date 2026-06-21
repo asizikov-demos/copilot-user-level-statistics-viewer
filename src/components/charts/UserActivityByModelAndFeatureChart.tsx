@@ -1,10 +1,11 @@
 'use client';
 
 import { ChartData, ChartOptions } from 'chart.js';
-import { CopilotMetrics } from '../../types/metrics';
+import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import ActivityBreakdownChart from './ActivityBreakdownChart';
+import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 
-export type ModelFeatureAggregate = CopilotMetrics['totals_by_model_feature'][number];
+export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
 interface UserActivityByModelAndFeatureChartProps {
   modelFeatureAggregates: ModelFeatureAggregate[];
@@ -19,9 +20,9 @@ const modelChartConfig = {
   unknownLabel: 'Unknown Model',
   totalLabel: 'total interactions',
   groupKey: 'model' as const,
-  countAccessor: (item: ModelFeatureAggregate) => item.user_initiated_interaction_count,
+  countAccessor: getTotalUserInitiatedInteractionCount,
   columns: [
-    { header: 'Interactions', accessor: (item: ModelFeatureAggregate) => item.user_initiated_interaction_count },
+    { header: 'Interactions', accessor: getTotalUserInitiatedInteractionCount },
     { header: 'Generation', accessor: (item: ModelFeatureAggregate) => item.code_generation_activity_count },
     { header: 'Acceptance', accessor: (item: ModelFeatureAggregate) => item.code_acceptance_activity_count },
     { header: 'LOC Added', accessor: (item: ModelFeatureAggregate) => item.loc_added_sum },

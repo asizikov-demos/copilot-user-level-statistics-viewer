@@ -16,10 +16,17 @@ import {
   accumulateModelFeature,
   computeDailyModelUsageData,
 } from './modelUsageCalculator';
+import {
+  distributeAssumedInteractionsByGeneration,
+  getTotalUserInitiatedInteractionCount,
+  sumAssumedUserInitiatedInteractions,
+  withAssumedUserInitiatedInteractionCount,
+} from '../assumedInteractions';
 
 interface FeatureAgg {
   feature: string;
   user_initiated_interaction_count: number;
+  assumed_user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
   loc_added_sum: number;
@@ -31,6 +38,7 @@ interface FeatureAgg {
 interface IDEAgg {
   ide: string;
   user_initiated_interaction_count: number;
+  assumed_user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
   loc_added_sum: number;
@@ -54,6 +62,7 @@ interface ModelFeatureAgg {
   model: string;
   feature: string;
   user_initiated_interaction_count: number;
+  assumed_user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
   loc_added_sum: number;
@@ -131,6 +140,7 @@ interface AggMetricTotals {
 /** Extends AggMetricTotals with user-initiated interaction count (used by Feature, IDE, ModelFeature). */
 interface InteractionAggMetricTotals extends AggMetricTotals {
   user_initiated_interaction_count: number;
+  assumed_user_initiated_interaction_count: number;
 }
 
 /** Accumulates the 6 shared code-gen/acceptance/LOC fields in-place on `existing`. */
@@ -149,6 +159,7 @@ function accumulateInteractionAggMetricTotals(
   incoming: InteractionAggMetricTotals
 ): void {
   existing.user_initiated_interaction_count += incoming.user_initiated_interaction_count;
+  existing.assumed_user_initiated_interaction_count += incoming.assumed_user_initiated_interaction_count;
   accumulateAggMetricTotals(existing, incoming);
 }
 
@@ -177,19 +188,26 @@ export function accumulateUserDetail(
 ): void {
   const userId = metric.user_id;
   const state = getOrCreateUserState(accumulator, userId);
+  const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
+  const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
+  const ideAssumedInteractionCounts = distributeAssumedInteractionsByGeneration(
+    metric.totals_by_ide,
+    sumAssumedUserInitiatedInteractions(featureTotals),
+  );
 
-  for (const mf of metric.totals_by_model_feature) {
-    state.totalModelRequests += mf.user_initiated_interaction_count;
+  for (const mf of modelFeatureTotals) {
+    state.totalModelRequests += getTotalUserInitiatedInteractionCount(mf);
   }
 
-  for (const f of metric.totals_by_feature) {
+  for (const f of featureTotals) {
     upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
   }
 
-  for (const ide of metric.totals_by_ide) {
+  for (const [index, ide] of metric.totals_by_ide.entries()) {
     const ideEntry: IDEAgg = {
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
+      assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,
       code_generation_activity_count: ide.code_generation_activity_count,
       code_acceptance_activity_count: ide.code_acceptance_activity_count,
       loc_added_sum: ide.loc_added_sum,
@@ -222,7 +240,7 @@ export function accumulateUserDetail(
     upsertAggMapEntry(state.langFeatureMap, `${lf.language}-${lf.feature}`, lf, accumulateAggMetricTotals);
   }
 
-  for (const mf of metric.totals_by_model_feature) {
+  for (const mf of modelFeatureTotals) {
     upsertAggMapEntry(state.modelFeatureMap, `${mf.model}-${mf.feature}`, mf, accumulateInteractionAggMetricTotals);
   }
 
@@ -238,10 +256,11 @@ export function accumulateUserDetail(
     used_copilot_coding_agent: metric.used_copilot_coding_agent ?? false,
     used_copilot_code_review_active: metric.used_copilot_code_review_active ?? false,
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
-    totals_by_feature: metric.totals_by_feature.map((f) => ({ ...f })),
-    totals_by_ide: metric.totals_by_ide.map((ide) => ({
+    totals_by_feature: featureTotals.map((f) => ({ ...f })),
+    totals_by_ide: metric.totals_by_ide.map((ide, index) => ({
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
+      assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,
       code_generation_activity_count: ide.code_generation_activity_count,
       code_acceptance_activity_count: ide.code_acceptance_activity_count,
       loc_added_sum: ide.loc_added_sum,
@@ -254,7 +273,7 @@ export function accumulateUserDetail(
     })),
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
-    totals_by_model_feature: metric.totals_by_model_feature.map((mf) => ({ ...mf })),
+    totals_by_model_feature: modelFeatureTotals.map((mf) => ({ ...mf })),
     totals_by_cli: metric.totals_by_cli ? {
       session_count: metric.totals_by_cli.session_count,
       request_count: metric.totals_by_cli.request_count,
@@ -315,7 +334,7 @@ export function computeSingleUserDetailedMetrics(
         modelUsageAccumulator,
         day.day,
         mf.model,
-        mf.user_initiated_interaction_count
+        getTotalUserInitiatedInteractionCount(mf)
       );
     }
   }

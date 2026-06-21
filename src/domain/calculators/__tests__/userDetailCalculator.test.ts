@@ -427,6 +427,53 @@ describe('userDetailCalculator', () => {
   });
 
   describe('IDE aggregates alongside CLI data', () => {
+    it('should allocate assumed completion interactions to IDE client aggregates', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_feature: [{
+          feature: 'code_completion',
+          user_initiated_interaction_count: 0,
+          code_generation_activity_count: 44,
+          code_acceptance_activity_count: 2,
+          loc_added_sum: 2,
+          loc_deleted_sum: 0,
+          loc_suggested_to_add_sum: 64,
+          loc_suggested_to_delete_sum: 0,
+        }],
+        totals_by_ide: [
+          {
+            ide: 'vscode',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 30,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 1,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 40,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            ide: 'jetbrains',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 14,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 1,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 24,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+
+      expect(result!.ideAggregates.find(ide => ide.ide === 'vscode')!.assumed_user_initiated_interaction_count).toBe(30);
+      expect(result!.ideAggregates.find(ide => ide.ide === 'jetbrains')!.assumed_user_initiated_interaction_count).toBe(14);
+      expect(result!.days[0].totals_by_ide.reduce((sum, ide) => sum + (ide.assumed_user_initiated_interaction_count ?? 0), 0)).toBe(44);
+    });
+
     it('should produce correct ideAggregates AND cliVersions from a single metric', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
@@ -585,6 +632,46 @@ describe('userDetailCalculator', () => {
   });
 
   describe('Feature aggregate accumulation', () => {
+    it('should expose code completion generations as assumed user interactions', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_feature: [
+          {
+            feature: 'code_completion',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 44,
+            code_acceptance_activity_count: 2,
+            loc_added_sum: 2,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 64,
+            loc_suggested_to_delete_sum: 0,
+          },
+          {
+            feature: 'chat_panel_agent_mode',
+            user_initiated_interaction_count: 3,
+            code_generation_activity_count: 11,
+            code_acceptance_activity_count: 1,
+            loc_added_sum: 5,
+            loc_deleted_sum: 1,
+            loc_suggested_to_add_sum: 8,
+            loc_suggested_to_delete_sum: 2,
+          },
+        ],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      const completionAgg = result!.featureAggregates.find(f => f.feature === 'code_completion')!;
+      const agentAgg = result!.featureAggregates.find(f => f.feature === 'chat_panel_agent_mode')!;
+
+      expect(completionAgg.user_initiated_interaction_count).toBe(0);
+      expect(completionAgg.assumed_user_initiated_interaction_count).toBe(44);
+      expect(agentAgg.assumed_user_initiated_interaction_count).toBe(0);
+      expect(result!.days[0].totals_by_feature.find(f => f.feature === 'code_completion')!.assumed_user_initiated_interaction_count).toBe(44);
+    });
+
     it('should accumulate all metric fields for the same feature across multiple days', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
@@ -757,6 +844,33 @@ describe('userDetailCalculator', () => {
   });
 
   describe('Model-feature aggregate accumulation', () => {
+    it('should include assumed code completion interactions in model request totals and daily model usage', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_model_feature: [{
+          model: 'gpt-4o',
+          feature: 'code_completion',
+          user_initiated_interaction_count: 0,
+          code_generation_activity_count: 44,
+          code_acceptance_activity_count: 2,
+          loc_added_sum: 2,
+          loc_deleted_sum: 0,
+          loc_suggested_to_add_sum: 64,
+          loc_suggested_to_delete_sum: 0,
+        }],
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+      const completionAgg = result!.modelFeatureAggregates[0];
+
+      expect(result!.totalModelRequests).toBe(44);
+      expect(completionAgg.assumed_user_initiated_interaction_count).toBe(44);
+      expect(result!.dailyModelUsage[0].modelInteractions).toBe(44);
+    });
+
     it('should accumulate all metric fields for the same model-feature key across multiple days', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';
