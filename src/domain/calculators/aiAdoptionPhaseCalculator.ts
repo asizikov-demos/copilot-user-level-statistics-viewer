@@ -99,7 +99,7 @@ function getActivityCount(item: {
 function getCliActivityCount(metric: CopilotMetrics): number {
   const cli = metric.totals_by_cli;
   if (!cli) return metric.used_cli ? 1 : 0;
-  return cli.prompt_count || cli.request_count || cli.session_count || 0;
+  return cli.prompt_count ?? cli.request_count ?? cli.session_count ?? 0;
 }
 
 export function accumulateAiAdoptionPhase(

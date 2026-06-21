@@ -140,7 +140,7 @@ const ViewRouter: React.FC = () => {
     dailyAdoptionTrend,
     dailyCloudAgentAdoptionData = [],
     dailyCodeReviewAdoptionData = [],
-    aiAdoptionPhaseData,
+    aiAdoptionPhaseData = [],
   } = aggregatedMetrics;
 
   switch (currentView) {

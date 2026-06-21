@@ -306,6 +306,28 @@ describe('metricsAggregator', () => {
       ]);
     });
 
+    it('should not fall back to CLI request counts when prompt count is zero for AI adoption clients', () => {
+      const metric = createBasicMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
+        totals_by_cli: {
+          session_count: 2,
+          request_count: 4,
+          prompt_count: 0,
+          token_usage: {
+            output_tokens_sum: 0,
+            prompt_tokens_sum: 0,
+            avg_tokens_per_request: 0,
+          },
+        },
+      });
+
+      const { aggregated } = aggregateMetrics([metric]);
+
+      expect(aggregated.aiAdoptionPhaseData[0].topClients).toEqual([]);
+    });
+
     it('should accumulate user flags across multiple days (OR logic)', () => {
       // User uses chat on day 1, agent on day 2
       const day1 = createBasicMetric({
