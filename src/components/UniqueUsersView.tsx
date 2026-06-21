@@ -41,7 +41,7 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortField, sortDirection]);
+  }, [searchQuery, sortField, sortDirection, users]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));

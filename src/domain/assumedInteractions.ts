@@ -18,7 +18,7 @@ export function getAssumedUserInitiatedInteractionCount(
   feature: string,
   codeGenerationActivityCount: number,
 ): number {
-  return feature === CODE_COMPLETION_FEATURE ? codeGenerationActivityCount : 0;
+  return feature === CODE_COMPLETION_FEATURE ? Math.max(0, codeGenerationActivityCount) : 0;
 }
 
 export function withAssumedUserInitiatedInteractionCount<T extends FeatureGenerationMetric>(
