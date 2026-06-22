@@ -11,6 +11,33 @@ interface AiAdoptionPhaseViewProps {
   phaseData: AiAdoptionPhaseData[];
 }
 
+const AI_ADOPTION_PHASE_BLOG_URL = 'https://github.blog/changelog/2026-05-29-copilot-usage-metrics-api-adds-cohorts-for-ai-adoption/#whats-new';
+const PHASE_PILL_CLASS = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800';
+
+const PHASE_DEFINITIONS = [
+  {
+    phaseNumber: 0,
+    phase: 'No cohort',
+    description: 'User did not meet the engagement criteria for any phase.',
+  },
+  {
+    phaseNumber: 1,
+    phase: 'Phase 1',
+    description: 'User engaged with code completion and/or IDE agent mode.',
+  },
+  {
+    phaseNumber: 2,
+    phase: 'Phase 2',
+    description:
+      'User engaged with a single GitHub-based agent surface, such as Copilot cloud agent, Copilot code review, or Copilot CLI.',
+  },
+  {
+    phaseNumber: 3,
+    phase: 'Phase 3',
+    description: 'User engaged with two or more GitHub-based agent surfaces, or with the GitHub Copilot app.',
+  },
+] as const;
+
 function formatAverage(value: number): string {
   return formatNumber(value, 1);
 }
@@ -78,7 +105,7 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 whitespace-nowrap',
       renderCell: (phase) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+        <span className={PHASE_PILL_CLASS}>
           {formatAiAdoptionPhase(phase.phase)}
         </span>
       ),
@@ -187,6 +214,42 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
             </div>
           )}
         />
+      </div>
+
+      <div className="bg-white rounded-md border border-[#d1d9e0]">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">How phases are assigned</h3>
+          <p className="mt-1 text-sm text-gray-600">
+            GitHub classifies each engaged user based on the Copilot surfaces used on at least two days in the rolling
+            28-day window.
+          </p>
+        </div>
+        <div className="px-6 py-5">
+          <dl className="space-y-3">
+            {PHASE_DEFINITIONS.map((phaseDefinition) => (
+              <div key={phaseDefinition.phaseNumber} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <dt>
+                  <span className={PHASE_PILL_CLASS}>
+                    {formatAiAdoptionPhase({
+                      phase_number: phaseDefinition.phaseNumber,
+                      phase: phaseDefinition.phase,
+                      version: 'v1',
+                    })}
+                  </span>
+                </dt>
+                <dd className="mt-2 text-sm text-gray-600">{phaseDefinition.description}</dd>
+              </div>
+            ))}
+          </dl>
+          <a
+            href={AI_ADOPTION_PHASE_BLOG_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex text-sm font-medium text-[#0969da] hover:underline"
+          >
+            Learn More
+          </a>
+        </div>
       </div>
     </ViewPanel>
   );
