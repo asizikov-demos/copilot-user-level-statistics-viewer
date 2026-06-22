@@ -66,6 +66,8 @@ export function computeIDEInsights(
       'android_studio',
       'goland',
       'phpstorm',
+      'clion',
+      'rustrover',
     ]);
     const limitedAgenticIDEs = ideStats.filter(
       (s) => !strongAgenticIDEs.has(s.ide) && s.uniqueUsers > 0,

@@ -11,6 +11,8 @@ const FORMAT_MAP: Record<string, string> = {
   android_studio: 'Android Studio',
   goland: 'GoLand',
   phpstorm: 'PhpStorm',
+  clion: 'CLion',
+  rustrover: 'RustRover',
   rstudio: 'RStudio',
   emacs: 'Emacs',
   neovim: 'Neovim',
