@@ -138,7 +138,7 @@ const CLionIcon = () => (
 // RustRover — JetBrains-style mark (no official Simple Icons vector available),
 // drawn to match the family's black square with white lettering.
 const RustRoverIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0z" fill="#000" />
     <text
       x="12"
