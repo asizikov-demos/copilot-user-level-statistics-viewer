@@ -49,19 +49,37 @@ export function computeIDEInsights(
       }
     }
 
-    // 3. CLI Penetration — users on non-VS Code/Visual Studio IDEs without CLI
-    const bestAgenticIDEs = new Set(['vscode', 'visualstudio', 'visual_studio']);
-    const nonVSIDEs = ideStats.filter((s) => !bestAgenticIDEs.has(s.ide) && s.uniqueUsers > 0);
-    if (nonVSIDEs.length > 0) {
-      const nonVSUsers = nonVSIDEs.reduce((sum, s) => sum + s.uniqueUsers, 0);
-      const nonVSWithCLI = nonVSIDEs.reduce((sum, s) => sum + s.cliOverlapUsers, 0);
-      const nonVSWithoutCLI = nonVSUsers - nonVSWithCLI;
-      if (nonVSWithoutCLI > 0) {
-        const names = nonVSIDEs.map((s) => formatIDEName(s.ide)).join(', ');
+    // 3. CLI Penetration — users on IDEs with limited agentic harnesses without CLI.
+    // VS Code, Visual Studio, and JetBrains-based IDEs (including Android Studio)
+    // ship strong agentic harnesses — JetBrains now has a Copilot SDK-based harness
+    // on par with VS Code/CLI — so they're excluded from the CLI recommendation.
+    const strongAgenticIDEs = new Set([
+      'vscode',
+      'visualstudio',
+      'visual_studio',
+      'jetbrains',
+      'intellij',
+      'pycharm',
+      'webstorm',
+      'rider',
+      'datagrip',
+      'android_studio',
+      'goland',
+      'phpstorm',
+    ]);
+    const limitedAgenticIDEs = ideStats.filter(
+      (s) => !strongAgenticIDEs.has(s.ide) && s.uniqueUsers > 0,
+    );
+    if (limitedAgenticIDEs.length > 0) {
+      const limitedUsers = limitedAgenticIDEs.reduce((sum, s) => sum + s.uniqueUsers, 0);
+      const limitedWithCLI = limitedAgenticIDEs.reduce((sum, s) => sum + s.cliOverlapUsers, 0);
+      const limitedWithoutCLI = limitedUsers - limitedWithCLI;
+      if (limitedWithoutCLI > 0) {
+        const names = limitedAgenticIDEs.map((s) => formatIDEName(s.ide)).join(', ');
         insights.push({
           title: 'CLI Opportunity',
           variant: 'orange',
-          message: `${nonVSWithoutCLI} users on ${names} don\u2019t use Copilot CLI. These IDEs have limited agentic capabilities \u2014 CLI provides a stronger agentic harness for terminal-based workflows.`,
+          message: `${limitedWithoutCLI} users on ${names} don\u2019t use Copilot CLI. These IDEs have limited agentic capabilities \u2014 CLI provides a stronger agentic harness for terminal-based workflows.`,
           ctaUrl: CLI_DOCS_URL,
           ctaLabel: 'Learn about Copilot CLI',
         });

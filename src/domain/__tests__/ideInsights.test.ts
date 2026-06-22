@@ -95,11 +95,11 @@ describe('computeIDEInsights', () => {
   });
 
   describe('CLI Penetration', () => {
-    it('triggers CLI Opportunity for non-VS Code/VS users without CLI', () => {
+    it('triggers CLI Opportunity for IDEs with limited agentic harnesses without CLI', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 10),
-        makeIDE('jetbrains', 30, 500, 200, 5),
-        makeIDE('neovim', 10, 100, 40, 0),
+        makeIDE('neovim', 30, 500, 200, 5),
+        makeIDE('eclipse', 10, 100, 40, 0),
       ];
       const insights = computeIDEInsights(stats, 0, 90, 15);
       const match = insights.find((i) => i.title === 'CLI Opportunity');
@@ -110,7 +110,18 @@ describe('computeIDEInsights', () => {
       expect(match!.ctaUrl).toContain('copilot-cli');
     });
 
-    it('counts only non-VS Code/Visual Studio IDEs', () => {
+    it('excludes JetBrains-based IDEs from CLI Opportunity', () => {
+      const stats = [
+        makeIDE('vscode', 50, 1000, 400, 10),
+        makeIDE('intellij', 30, 500, 200, 0),
+        makeIDE('pycharm', 20, 300, 100, 0),
+        makeIDE('goland', 10, 100, 40, 0),
+      ];
+      const insights = computeIDEInsights(stats, 0, 110, 10);
+      expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
+    });
+
+    it('excludes VS Code and Visual Studio from CLI Opportunity', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 0),
         makeIDE('visualstudio', 20, 500, 200, 0),
@@ -119,10 +130,10 @@ describe('computeIDEInsights', () => {
       expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
     });
 
-    it('does not trigger when all non-VS users already use CLI', () => {
+    it('does not trigger when all limited-harness users already use CLI', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 10),
-        makeIDE('jetbrains', 20, 500, 200, 20),
+        makeIDE('neovim', 20, 500, 200, 20),
       ];
       const insights = computeIDEInsights(stats, 0, 70, 30);
       expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
