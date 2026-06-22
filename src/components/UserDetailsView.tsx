@@ -132,7 +132,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
   const daysActive = userSummary.days_active;
-  const aiCreditsUsed = userDetails.total_ai_credits_used;
+  const aiCreditsUsed = userDetails.totalAiCreditsUsed;
   const aiAdoptionPhaseLabel = formatAiAdoptionPhase(userSummary.ai_adoption_phase);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;

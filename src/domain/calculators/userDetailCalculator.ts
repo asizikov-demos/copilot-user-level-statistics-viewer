@@ -345,7 +345,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
-    total_ai_credits_used: state.totalAiCreditsUsed,
+    totalAiCreditsUsed: state.totalAiCreditsUsed,
     featureAggregates: Array.from(state.featureMap.values()),
     ideAggregates: Array.from(state.ideMap.values()),
     languageFeatureAggregates: Array.from(state.langFeatureMap.values()),

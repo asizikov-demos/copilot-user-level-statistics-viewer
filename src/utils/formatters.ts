@@ -94,8 +94,10 @@ export function formatCurrency(
   });
 }
 
+const AI_CREDIT_COST_USD = 0.01;
+
 export function formatAiCreditCost(aiCreditsUsed: number): string {
-  return formatCurrency(aiCreditsUsed * 0.01);
+  return formatCurrency(aiCreditsUsed * AI_CREDIT_COST_USD);
 }
 
 /**
