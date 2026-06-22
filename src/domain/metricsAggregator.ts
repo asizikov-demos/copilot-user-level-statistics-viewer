@@ -189,6 +189,7 @@ function accumulateUserSummary(
       total_loc_deleted: 0,
       total_loc_suggested_to_add: 0,
       total_loc_suggested_to_delete: 0,
+      total_ai_credits_used: 0,
       net_loc_contribution: 0,
       days_active: 0,
       cloud_agent_days: 0,
@@ -214,6 +215,7 @@ function accumulateUserSummary(
   userSummary.total_loc_deleted += metric.loc_deleted_sum;
   userSummary.total_loc_suggested_to_add += metric.loc_suggested_to_add_sum;
   userSummary.total_loc_suggested_to_delete += metric.loc_suggested_to_delete_sum;
+  userSummary.total_ai_credits_used += metric.ai_credits_used;
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;

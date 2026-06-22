@@ -19,6 +19,7 @@ describe('metricsParser', () => {
         loc_deleted_sum: 20,
         loc_suggested_to_add_sum: 150,
         loc_suggested_to_delete_sum: 30,
+        ai_credits_used: 55.053015,
         totals_by_ide: [],
         totals_by_feature: [],
         totals_by_language_feature: [],
@@ -42,6 +43,7 @@ describe('metricsParser', () => {
       expect(result?.loc_deleted_sum).toBe(20);
       expect(result?.loc_suggested_to_add_sum).toBe(150);
       expect(result?.loc_suggested_to_delete_sum).toBe(30);
+      expect(result?.ai_credits_used).toBe(55.053015);
       expect(result?.ai_adoption_phase).toEqual({
         phase_number: 2,
         phase: 'Phase 2',
@@ -191,6 +193,66 @@ describe('metricsParser', () => {
 
       expect(result).not.toBeNull();
       expect(result?.used_cli).toBe(false);
+      expect(result?.ai_credits_used).toBe(0);
+    });
+
+    it('should reject lines with invalid ai_credits_used', () => {
+      const invalidCreditsLine = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        ai_credits_used: '55.05',
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [],
+        totals_by_language_model: [],
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      expect(parseMetricsLine(invalidCreditsLine)).toBeNull();
+    });
+
+    it('should default null ai_credits_used to zero', () => {
+      const lineWithNullCredits = JSON.stringify({
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        day: '2024-01-15',
+        enterprise_id: 'test-enterprise',
+        user_id: 123,
+        user_login: 'testuser',
+        user_initiated_interaction_count: 10,
+        code_generation_activity_count: 5,
+        code_acceptance_activity_count: 3,
+        loc_added_sum: 100,
+        loc_deleted_sum: 20,
+        loc_suggested_to_add_sum: 150,
+        loc_suggested_to_delete_sum: 30,
+        ai_credits_used: null,
+        totals_by_ide: [],
+        totals_by_feature: [],
+        totals_by_language_feature: [],
+        totals_by_language_model: [],
+        totals_by_model_feature: [],
+        used_agent: false,
+        used_chat: true,
+      });
+
+      const result = parseMetricsLine(lineWithNullCredits);
+
+      expect(result).not.toBeNull();
+      expect(result?.ai_credits_used).toBe(0);
     });
 
     it('should default used_copilot_coding_agent to false when missing', () => {

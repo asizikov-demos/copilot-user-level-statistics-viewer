@@ -60,6 +60,15 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
 
     // We rely on upstream schema conformity; at runtime we only soft-validated key fields
     const metric = parsedRaw as unknown as CopilotMetrics;
+    const aiCreditsUsed = parsedRaw['ai_credits_used'];
+    if (aiCreditsUsed === undefined || aiCreditsUsed === null) {
+      metric.ai_credits_used = 0;
+    } else if (typeof aiCreditsUsed === 'number' && Number.isFinite(aiCreditsUsed)) {
+      metric.ai_credits_used = aiCreditsUsed;
+    } else {
+      console.warn('Skipping line with invalid ai_credits_used:', line.substring(0, 200));
+      return null;
+    }
     metric.used_cli = metric.used_cli ?? false;
     metric.used_copilot_code_review_active = metric.used_copilot_code_review_active ?? false;
     metric.used_copilot_code_review_passive = metric.used_copilot_code_review_passive ?? false;
