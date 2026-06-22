@@ -149,7 +149,7 @@ describe('userDetailCalculator', () => {
       const result = computeSingleUserDetailedMetrics(acc, 1);
 
       expect(result).not.toBeNull();
-      expect(result!.totalAiCreditsUsed).toBeCloseTo(60);
+      expect(result!.total_ai_credits_used).toBeCloseTo(60);
       expect(result!.days.map(day => day.ai_credits_used)).toEqual([55.053015, 4.946985]);
     });
   });
