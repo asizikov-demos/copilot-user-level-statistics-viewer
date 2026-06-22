@@ -3,7 +3,7 @@
 import React from 'react';
 import type { UserDayData } from '../../types/metrics';
 import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
-import { formatIDEName } from '../icons/IDEIcons';
+import { formatIDEName, getIDEIcon } from '../icons/IDEIcons';
 import MetricsTable, { type TableColumn } from './MetricsTable';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
@@ -24,6 +24,7 @@ type LanguageModelRow = UserDayData['totals_by_language_model'][number];
 
 interface ClientRow {
   name: string;
+  iconName: string;
   user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;
@@ -38,7 +39,23 @@ const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 upperc
 const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
 
 const clientColumns: TableColumn<ClientRow>[] = [
-  { id: 'name', header: 'Client', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.name },
+  {
+    id: 'name',
+    header: 'Client',
+    headerClassName: headerLeft,
+    className: cellLeft,
+    renderCell: (r) => {
+      const ClientIcon = getIDEIcon(r.iconName);
+      return (
+        <div className="flex items-center gap-2">
+          <span className="flex-shrink-0">
+            <ClientIcon />
+          </span>
+          <span>{r.name}</span>
+        </div>
+      );
+    },
+  },
   { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
   { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
   { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
@@ -76,6 +93,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const clientRows: ClientRow[] = hasData ? [
     ...dayMetrics!.totals_by_ide.map((ide) => ({
       name: formatIDEName(ide.ide),
+      iconName: ide.ide,
       user_initiated_interaction_count: getTotalUserInitiatedInteractionCount(ide),
       code_generation_activity_count: ide.code_generation_activity_count,
       code_acceptance_activity_count: ide.code_acceptance_activity_count,
@@ -87,6 +105,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
     })),
     ...(hasCliActivity ? [{
       name: 'Copilot CLI',
+      iconName: 'copilot_cli',
       user_initiated_interaction_count: cliInteractionCount,
       code_generation_activity_count: cliDayTotals.generations,
       code_acceptance_activity_count: cliDayTotals.acceptances,
