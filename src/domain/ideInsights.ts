@@ -50,9 +50,9 @@ export function computeIDEInsights(
     }
 
     // 3. CLI Penetration — users on IDEs with limited agentic harnesses without CLI.
-    // VS Code, Visual Studio, and JetBrains IDEs ship strong agentic harnesses
-    // (JetBrains now has a Copilot SDK-based harness on par with VS Code/CLI),
-    // so they're excluded from the CLI recommendation.
+    // VS Code, Visual Studio, and JetBrains-based IDEs (including Android Studio)
+    // ship strong agentic harnesses — JetBrains now has a Copilot SDK-based harness
+    // on par with VS Code/CLI — so they're excluded from the CLI recommendation.
     const strongAgenticIDEs = new Set([
       'vscode',
       'visualstudio',

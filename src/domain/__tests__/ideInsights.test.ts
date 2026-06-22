@@ -121,7 +121,7 @@ describe('computeIDEInsights', () => {
       expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
     });
 
-    it('counts only non-VS Code/Visual Studio IDEs', () => {
+    it('excludes VS Code and Visual Studio from CLI Opportunity', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 0),
         makeIDE('visualstudio', 20, 500, 200, 0),
@@ -130,7 +130,7 @@ describe('computeIDEInsights', () => {
       expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
     });
 
-    it('does not trigger when all non-VS users already use CLI', () => {
+    it('does not trigger when all limited-harness users already use CLI', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 10),
         makeIDE('neovim', 20, 500, 200, 20),
