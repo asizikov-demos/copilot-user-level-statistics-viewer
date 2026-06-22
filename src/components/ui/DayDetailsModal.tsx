@@ -34,7 +34,8 @@ interface ClientRow {
   plugin_version: string;
 }
 
-const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
+const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';
+const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
 const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
 const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
 
