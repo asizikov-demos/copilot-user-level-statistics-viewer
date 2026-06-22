@@ -48,7 +48,7 @@ const clientColumns: TableColumn<ClientRow>[] = [
       const ClientIcon = getIDEIcon(r.iconName);
       return (
         <div className="flex items-center gap-2">
-          <span className="flex-shrink-0">
+          <span className="flex-shrink-0" aria-hidden="true">
             <ClientIcon />
           </span>
           <span>{r.name}</span>
