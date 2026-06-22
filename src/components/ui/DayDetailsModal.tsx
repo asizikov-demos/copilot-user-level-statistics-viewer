@@ -10,6 +10,7 @@ import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../types/events';
 import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import { isAgentFeature, isCliFeature, isCodeCompletionFeature } from '../../domain/featureCategories';
 import { formatAiCreditCost } from '../../utils/formatters';
 
 interface DayDetailsModalProps {
@@ -33,10 +34,54 @@ interface ClientRow {
   plugin_version: string;
 }
 
-const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';
-const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
+const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
 const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
 const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
+
+const pillBase = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
+
+interface FeaturePill {
+  label: string;
+  className: string;
+}
+
+function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): FeaturePill[] {
+  const features = dayMetrics.totals_by_feature ?? [];
+  const usedCompletions = features.some(
+    (f) => isCodeCompletionFeature(f.feature) && f.code_generation_activity_count > 0
+  );
+  const usedIdeAgent = features.some(
+    (f) => isAgentFeature(f.feature) && !isCliFeature(f.feature) && f.user_initiated_interaction_count > 0
+  );
+
+  const reviewActive = dayMetrics.used_copilot_code_review_active;
+  const reviewPassive = dayMetrics.used_copilot_code_review_passive;
+  const reviewMode = reviewActive && reviewPassive
+    ? 'Active & Passive'
+    : reviewActive
+      ? 'Active'
+      : reviewPassive
+        ? 'Passive'
+        : null;
+
+  const pills: FeaturePill[] = [];
+  if (dayMetrics.used_copilot_coding_agent) {
+    pills.push({ label: 'Cloud Agent', className: `${pillBase} bg-purple-100 text-purple-800` });
+  }
+  if (reviewMode) {
+    pills.push({ label: `Code Review (${reviewMode})`, className: `${pillBase} bg-pink-100 text-pink-800` });
+  }
+  if (hasCliActivity) {
+    pills.push({ label: 'CLI', className: `${pillBase} bg-teal-100 text-teal-800` });
+  }
+  if (usedCompletions) {
+    pills.push({ label: 'Completions', className: `${pillBase} bg-blue-100 text-blue-800` });
+  }
+  if (usedIdeAgent) {
+    pills.push({ label: 'IDE Agent', className: `${pillBase} bg-cyan-100 text-cyan-800` });
+  }
+  return pills;
+}
 
 const clientColumns: TableColumn<ClientRow>[] = [
   {
@@ -89,6 +134,8 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const cliDayTotals = computeCliDayTotals(dayMetrics);
   const hasCliActivity = cliDayTotals.promptCount > 0 || cliDayTotals.interactions > 0;
   const cliInteractionCount = cliDayTotals.interactionCount;
+
+  const featurePills = hasData ? buildFeaturePills(dayMetrics!, hasCliActivity) : [];
 
   const clientRows: ClientRow[] = hasData ? [
     ...dayMetrics!.totals_by_ide.map((ide) => ({
@@ -156,6 +203,16 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Features used pills */}
+              {featurePills.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Features used:</span>
+                  {featurePills.map((pill) => (
+                    <span key={pill.label} className={pill.className}>{pill.label}</span>
+                  ))}
+                </div>
+              )}
+
               {/* Clients & Impact cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
                 <DayClientDistributionChart
