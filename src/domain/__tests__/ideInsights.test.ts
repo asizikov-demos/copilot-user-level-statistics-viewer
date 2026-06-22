@@ -116,8 +116,10 @@ describe('computeIDEInsights', () => {
         makeIDE('intellij', 30, 500, 200, 0),
         makeIDE('pycharm', 20, 300, 100, 0),
         makeIDE('goland', 10, 100, 40, 0),
+        makeIDE('clion', 15, 150, 60, 0),
+        makeIDE('rustrover', 15, 150, 60, 0),
       ];
-      const insights = computeIDEInsights(stats, 0, 110, 10);
+      const insights = computeIDEInsights(stats, 0, 140, 10);
       expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
     });
 
