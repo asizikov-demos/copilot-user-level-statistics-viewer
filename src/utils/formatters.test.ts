@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatAiAdoptionPhase, formatAiAdoptionPhaseName, generateDateRange } from './formatters';
+import { formatAiAdoptionPhase, formatAiAdoptionPhaseName, formatAiCreditCost, generateDateRange } from './formatters';
 
 describe('formatters', () => {
   describe('generateDateRange', () => {
@@ -50,6 +50,13 @@ describe('formatters', () => {
     it('formats missing phase data as not available', () => {
       expect(formatAiAdoptionPhase()).toBe('N/A');
       expect(formatAiAdoptionPhaseName()).toBe('N/A');
+    });
+  });
+
+  describe('formatAiCreditCost', () => {
+    it('formats AI credits as USD cost at one cent per credit', () => {
+      expect(formatAiCreditCost(55.053015)).toBe('$0.55');
+      expect(formatAiCreditCost(60)).toBe('$0.60');
     });
   });
 });

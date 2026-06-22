@@ -21,6 +21,7 @@ export interface CopilotMetrics {
   loc_deleted_sum: number;
   loc_suggested_to_add_sum: number;
   loc_suggested_to_delete_sum: number;
+  ai_credits_used: number;
   totals_by_ide: Array<{
     ide: string;
     user_initiated_interaction_count: number;
@@ -126,6 +127,7 @@ export interface UserSummary {
   total_loc_deleted: number;
   total_loc_suggested_to_add: number;
   total_loc_suggested_to_delete: number;
+  total_ai_credits_used: number;
   net_loc_contribution: number;
   days_active: number;
   cloud_agent_days: number;
@@ -226,6 +228,7 @@ export interface UserDayData {
   loc_deleted_sum: number;
   loc_suggested_to_add_sum: number;
   loc_suggested_to_delete_sum: number;
+  ai_credits_used: number;
   used_copilot_coding_agent: boolean;
   used_copilot_code_review_active: boolean;
   used_copilot_code_review_passive: boolean;

@@ -4,7 +4,7 @@ import React from 'react';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel } from './ui';
 import type { AiAdoptionPhaseData, AiAdoptionPhaseTopEntry } from '../domain/calculators/metricCalculators';
-import { formatAiAdoptionPhase, formatModelDisplayName, formatNumber } from '../utils/formatters';
+import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
 
 interface AiAdoptionPhaseViewProps {
@@ -109,6 +109,13 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
           <span className="text-red-600">-{formatAverage(phase.avgLocDeleted)}</span>
         </span>
       ),
+    },
+    {
+      id: 'avgAiCreditsUsed',
+      header: 'Avg AI Cost',
+      headerClassName: rightHeaderClass,
+      className: rightCellClass,
+      renderCell: (phase) => formatAiCreditCost(phase.avgAiCreditsUsed),
     },
     {
       id: 'totalLocImpact',

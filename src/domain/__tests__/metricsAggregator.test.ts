@@ -111,6 +111,23 @@ describe('metricsAggregator', () => {
       expect(userSummary.days_active).toBe(2);
     });
 
+    it('should aggregate AI credits per user across days', () => {
+      const day1 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-15',
+        ai_credits_used: 55.053015,
+      });
+      const day2 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-16',
+        ai_credits_used: 4.946985,
+      });
+
+      const { aggregated } = aggregateMetrics([day1, day2]);
+
+      expect(aggregated.userSummaries[0].total_ai_credits_used).toBeCloseTo(60);
+    });
+
     it('should track user feature flags correctly', () => {
       const agentUser = createBasicMetric({
         user_id: 1,
@@ -235,6 +252,7 @@ describe('metricsAggregator', () => {
         user_initiated_interaction_count: 10,
         loc_added_sum: 100,
         loc_deleted_sum: 10,
+        ai_credits_used: 10,
         ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
         totals_by_ide: [ideTotal('vscode', 10)],
         totals_by_model_feature: [modelFeature('gpt-4o', 8)],
@@ -246,6 +264,7 @@ describe('metricsAggregator', () => {
         user_initiated_interaction_count: 20,
         loc_added_sum: 50,
         loc_deleted_sum: 5,
+        ai_credits_used: 20,
         ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
         totals_by_ide: [ideTotal('vscode', 4)],
         totals_by_model_feature: [modelFeature('claude-sonnet-4.6', 15)],
@@ -257,6 +276,7 @@ describe('metricsAggregator', () => {
         user_initiated_interaction_count: 10,
         loc_added_sum: 50,
         loc_deleted_sum: 5,
+        ai_credits_used: 50,
         ai_adoption_phase: { phase_number: 1, phase: 'Phase 1', version: 'v1' },
         totals_by_ide: [ideTotal('vscode', 3)],
         totals_by_model_feature: [modelFeature('gpt-4o', 20)],
@@ -268,6 +288,7 @@ describe('metricsAggregator', () => {
         user_initiated_interaction_count: 5,
         loc_added_sum: 30,
         loc_deleted_sum: 3,
+        ai_credits_used: 5,
         ai_adoption_phase: { phase_number: 2, phase: 'Phase 2', version: 'v1' },
         totals_by_ide: [ideTotal('intellij', 7)],
         totals_by_model_feature: [modelFeature('gpt-4o', 10)],
@@ -285,6 +306,7 @@ describe('metricsAggregator', () => {
       expect(phase1.totalLocDeleted).toBe(20);
       expect(phase1.avgLocAdded).toBe(100);
       expect(phase1.avgLocDeleted).toBe(10);
+      expect(phase1.avgAiCreditsUsed).toBe(40);
       expect(phase1.avgDaysActive).toBe(1.5);
       expect(phase1.topModels).toEqual([
         { name: 'gpt-4o', total: 28, uniqueUsers: 2 },
@@ -301,6 +323,7 @@ describe('metricsAggregator', () => {
       const phase2 = aggregated.aiAdoptionPhaseData.find(phase => phase.phase.phase_number === 2)!;
       expect(phase2.userCount).toBe(1);
       expect(phase2.avgUserInitiatedInteractions).toBe(5);
+      expect(phase2.avgAiCreditsUsed).toBe(5);
       expect(phase2.topClients).toEqual([
         { name: 'intellij', total: 7, uniqueUsers: 1 },
       ]);

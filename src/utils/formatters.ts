@@ -94,6 +94,10 @@ export function formatCurrency(
   });
 }
 
+export function formatAiCreditCost(aiCreditsUsed: number): string {
+  return formatCurrency(aiCreditsUsed * 0.01);
+}
+
 /**
  * Format a large number with compact notation (e.g., 1.2K, 3.5M).
  * @param value - Number to format

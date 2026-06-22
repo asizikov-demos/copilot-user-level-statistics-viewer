@@ -131,6 +131,29 @@ describe('userDetailCalculator', () => {
     });
   });
 
+  describe('accumulateUserDetail — AI credits', () => {
+    it('should expose total and daily AI credits in the user detail payload', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-15',
+        ai_credits_used: 55.053015,
+      }));
+      accumulateUserDetail(acc, createMetric({
+        day: '2024-01-16',
+        ai_credits_used: 4.946985,
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+
+      expect(result).not.toBeNull();
+      expect(result!.total_ai_credits_used).toBeCloseTo(60);
+      expect(result!.days.map(day => day.ai_credits_used)).toEqual([55.053015, 4.946985]);
+    });
+  });
+
   describe('accumulateUserDetail — CLI data stored in days', () => {
     it('should store totals_by_cli in the day entry when present', () => {
       const acc = createUserDetailAccumulator();

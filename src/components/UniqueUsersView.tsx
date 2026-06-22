@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
-import { formatAiAdoptionPhase } from '../utils/formatters';
+import { formatAiAdoptionPhase, formatAiCreditCost } from '../utils/formatters';
 import { ViewPanel } from './ui';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import StatsGrid from './ui/StatsGrid';
@@ -15,7 +15,7 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days';
 const USERS_PER_PAGE = 500;
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
@@ -99,6 +99,14 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       accessor: 'total_code_generation_activities',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
+    },
+    {
+      id: 'total_ai_credits_used',
+      header: 'AI COST',
+      sortable: true,
+      headerClassName: `${headerRightClass} w-1/8`,
+      className: valueCellClass,
+      renderCell: (user) => formatAiCreditCost(user.total_ai_credits_used),
     },
     {
       id: 'net_loc_contribution',

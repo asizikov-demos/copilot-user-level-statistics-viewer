@@ -15,6 +15,7 @@ export interface AiAdoptionPhaseData {
   totalLocDeleted: number;
   avgLocAdded: number;
   avgLocDeleted: number;
+  avgAiCreditsUsed: number;
   avgDaysActive: number;
   topModels: AiAdoptionPhaseTopEntry[];
   topClients: AiAdoptionPhaseTopEntry[];
@@ -27,6 +28,7 @@ interface UserPhaseAccumulatorEntry {
   totalUserInitiatedInteractions: number;
   totalLocAdded: number;
   totalLocDeleted: number;
+  totalAiCreditsUsed: number;
   activeDays: Set<string>;
   models: Map<string, number>;
   clients: Map<string, number>;
@@ -39,6 +41,7 @@ interface PhaseAccumulatorEntry {
   totalUserInitiatedInteractions: number;
   totalLocAdded: number;
   totalLocDeleted: number;
+  totalAiCreditsUsed: number;
   totalDaysActive: number;
   models: Map<string, { total: number; uniqueUsers: number }>;
   clients: Map<string, { total: number; uniqueUsers: number }>;
@@ -70,6 +73,7 @@ function getOrCreateUserEntry(
       totalUserInitiatedInteractions: 0,
       totalLocAdded: 0,
       totalLocDeleted: 0,
+      totalAiCreditsUsed: 0,
       activeDays: new Set(),
       models: new Map(),
       clients: new Map(),
@@ -111,6 +115,7 @@ export function accumulateAiAdoptionPhase(
   entry.totalUserInitiatedInteractions += metric.user_initiated_interaction_count;
   entry.totalLocAdded += metric.loc_added_sum;
   entry.totalLocDeleted += metric.loc_deleted_sum;
+  entry.totalAiCreditsUsed += metric.ai_credits_used;
   entry.activeDays.add(metric.day);
 
   if (metric.ai_adoption_phase) {
@@ -168,6 +173,7 @@ function getOrCreatePhaseEntry(
       totalUserInitiatedInteractions: 0,
       totalLocAdded: 0,
       totalLocDeleted: 0,
+      totalAiCreditsUsed: 0,
       totalDaysActive: 0,
       models: new Map(),
       clients: new Map(),
@@ -205,6 +211,7 @@ export function computeAiAdoptionPhaseData(
     phaseEntry.totalUserInitiatedInteractions += userEntry.totalUserInitiatedInteractions;
     phaseEntry.totalLocAdded += userEntry.totalLocAdded;
     phaseEntry.totalLocDeleted += userEntry.totalLocDeleted;
+    phaseEntry.totalAiCreditsUsed += userEntry.totalAiCreditsUsed;
     phaseEntry.totalDaysActive += userEntry.activeDays.size;
     addUserDimensionsToPhase(phaseEntry.models, userEntry.models);
     addUserDimensionsToPhase(phaseEntry.clients, userEntry.clients);
@@ -220,6 +227,7 @@ export function computeAiAdoptionPhaseData(
       totalLocDeleted: phaseEntry.totalLocDeleted,
       avgLocAdded: phaseEntry.totalLocAdded / phaseEntry.userCount,
       avgLocDeleted: phaseEntry.totalLocDeleted / phaseEntry.userCount,
+      avgAiCreditsUsed: phaseEntry.totalAiCreditsUsed / phaseEntry.userCount,
       avgDaysActive: phaseEntry.totalDaysActive / phaseEntry.userCount,
       topModels: computeTopEntries(phaseEntry.models),
       topClients: computeTopEntries(phaseEntry.clients),

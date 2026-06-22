@@ -5,7 +5,7 @@ import type { UserSummary, UserDayData } from '../types/metrics';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
-import { formatAiAdoptionPhase, formatShortDate, generateDateRange } from '../utils/formatters';
+import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../utils/formatters';
 import { padSeriesWithDefaults } from '../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
@@ -132,6 +132,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
   const daysActive = userSummary.days_active;
+  const aiCreditsUsed = userDetails.total_ai_credits_used;
   const aiAdoptionPhaseLabel = formatAiAdoptionPhase(userSummary.ai_adoption_phase);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
@@ -548,6 +549,8 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
             <span>User ID: {userId}</span>
             <span aria-hidden="true" className="text-gray-300">•</span>
             <span>AI adoption phase: {aiAdoptionPhaseLabel}</span>
+            <span aria-hidden="true" className="text-gray-300">•</span>
+            <span>AI cost: {formatAiCreditCost(aiCreditsUsed)}</span>
           </p>
         </div>
       )}

@@ -84,6 +84,7 @@ interface CliVersionEntry {
 
 interface UserAccState {
   totalModelRequests: number;
+  totalAiCreditsUsed: number;
   featureMap: Map<string, FeatureAgg>;
   ideMap: Map<string, IDEAgg>;
   langFeatureMap: Map<string, LangFeatureAgg>;
@@ -112,6 +113,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   if (!state) {
     state = {
       totalModelRequests: 0,
+      totalAiCreditsUsed: 0,
       featureMap: new Map(),
       ideMap: new Map(),
       langFeatureMap: new Map(),
@@ -198,6 +200,7 @@ export function accumulateUserDetail(
   for (const mf of modelFeatureTotals) {
     state.totalModelRequests += getTotalUserInitiatedInteractionCount(mf);
   }
+  state.totalAiCreditsUsed += metric.ai_credits_used;
 
   for (const f of featureTotals) {
     upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
@@ -253,6 +256,7 @@ export function accumulateUserDetail(
     loc_deleted_sum: metric.loc_deleted_sum,
     loc_suggested_to_add_sum: metric.loc_suggested_to_add_sum,
     loc_suggested_to_delete_sum: metric.loc_suggested_to_delete_sum,
+    ai_credits_used: metric.ai_credits_used,
     used_copilot_coding_agent: metric.used_copilot_coding_agent ?? false,
     used_copilot_code_review_active: metric.used_copilot_code_review_active ?? false,
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
@@ -341,6 +345,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
+    total_ai_credits_used: state.totalAiCreditsUsed,
     featureAggregates: Array.from(state.featureMap.values()),
     ideAggregates: Array.from(state.ideMap.values()),
     languageFeatureAggregates: Array.from(state.langFeatureMap.values()),

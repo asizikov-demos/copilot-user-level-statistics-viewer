@@ -42,6 +42,7 @@ function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
     loc_deleted_sum: 0,
     loc_suggested_to_add_sum: 0,
     loc_suggested_to_delete_sum: 0,
+    ai_credits_used: 0,
     used_copilot_coding_agent: false,
     used_copilot_code_review_active: false,
     used_copilot_code_review_passive: false,

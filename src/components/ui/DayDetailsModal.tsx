@@ -10,6 +10,7 @@ import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../types/events';
 import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import { formatAiCreditCost } from '../../utils/formatters';
 
 interface DayDetailsModalProps {
   isOpen: boolean;
@@ -105,8 +106,10 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
           <div>
             <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
             {hasData && userLogin && (
-              <p className="text-sm text-gray-600 mt-1">
-                User: {userLogin}
+              <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                <span>User: {userLogin}</span>
+                <span aria-hidden="true" className="text-gray-300">•</span>
+                <span>AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}</span>
               </p>
             )}
           </div>

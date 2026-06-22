@@ -8,6 +8,7 @@ import type {
 
 export interface UserDetailedMetrics {
   totalModelRequests: number;
+  total_ai_credits_used: number;
   featureAggregates: Array<{
     feature: string;
     user_initiated_interaction_count: number;

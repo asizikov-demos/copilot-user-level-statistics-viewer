@@ -26,6 +26,7 @@ export function makeMetric(overrides: Partial<CopilotMetrics> = {}): CopilotMetr
     loc_deleted_sum: 0,
     loc_suggested_to_add_sum: 0,
     loc_suggested_to_delete_sum: 0,
+    ai_credits_used: 0,
     totals_by_ide: [],
     totals_by_feature: [],
     totals_by_language_feature: [],
