@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import type { UserSummary, UserDayData } from '../types/metrics';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
@@ -101,6 +101,35 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       selectedMetrics: undefined,
     });
   };
+
+  const reportDateRange = useMemo(
+    () => generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay),
+    [userDetails.reportStartDay, userDetails.reportEndDay],
+  );
+  const dayMetricsMap = useMemo(
+    () => new Map(userDetails.days.map(d => [d.day, d])),
+    [userDetails.days],
+  );
+
+  const selectedDayIndex = modalState.isOpen ? reportDateRange.indexOf(modalState.selectedDate) : -1;
+  const canNavigatePrevDay = selectedDayIndex > 0;
+  const canNavigateNextDay = selectedDayIndex >= 0 && selectedDayIndex < reportDateRange.length - 1;
+
+  const handleNavigateDay = useCallback((direction: -1 | 1) => {
+    setModalState(prev => {
+      if (!prev.isOpen) return prev;
+      const idx = reportDateRange.indexOf(prev.selectedDate);
+      if (idx === -1) return prev;
+      const nextIdx = idx + direction;
+      if (nextIdx < 0 || nextIdx >= reportDateRange.length) return prev;
+      const nextDate = reportDateRange[nextIdx];
+      return {
+        isOpen: true,
+        selectedDate: nextDate,
+        selectedMetrics: dayMetricsMap.get(nextDate),
+      };
+    });
+  }, [reportDateRange, dayMetricsMap]);
 
   const handleCopyUserLogin = () => {
     if (navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -721,6 +750,9 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         date={modalState.selectedDate}
         dayMetrics={modalState.selectedMetrics}
         userLogin={userLogin}
+        onNavigateDay={handleNavigateDay}
+        canNavigatePrevDay={canNavigatePrevDay}
+        canNavigateNextDay={canNavigateNextDay}
       />
     </ViewPanel>
   );
