@@ -122,16 +122,16 @@ const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
 ];
 
-export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay, canNavigateNextDay }: DayDetailsModalProps) {
+export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {
   React.useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft' && canNavigatePrevDay) {
+      if (event.key === 'ArrowLeft' && onNavigateDay && canNavigatePrevDay) {
         event.preventDefault();
-        onNavigateDay?.(-1);
-      } else if (event.key === 'ArrowRight' && canNavigateNextDay) {
+        onNavigateDay(-1);
+      } else if (event.key === 'ArrowRight' && onNavigateDay && canNavigateNextDay) {
         event.preventDefault();
-        onNavigateDay?.(1);
+        onNavigateDay(1);
       } else if (event.key === 'Escape') {
         onClose();
       }
@@ -193,13 +193,14 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
           <div className="flex items-center gap-3">
             {onNavigateDay && (
               <button
+                type="button"
                 onClick={() => onNavigateDay(-1)}
                 disabled={!canNavigatePrevDay}
                 aria-label="Previous day"
                 title="Previous day (←)"
                 className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
@@ -216,13 +217,14 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
             </div>
             {onNavigateDay && (
               <button
+                type="button"
                 onClick={() => onNavigateDay(1)}
                 disabled={!canNavigateNextDay}
                 aria-label="Next day"
                 title="Next day (→)"
                 className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
