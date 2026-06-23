@@ -19,6 +19,9 @@ interface DayDetailsModalProps {
   date: string;
   dayMetrics?: UserDayData;
   userLogin?: string;
+  onNavigateDay?: (direction: -1 | 1) => void;
+  canNavigatePrevDay?: boolean;
+  canNavigateNextDay?: boolean;
 }
 
 type LanguageModelRow = UserDayData['totals_by_language_model'][number];
@@ -119,7 +122,24 @@ const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
 ];
 
-export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin }: DayDetailsModalProps) {
+export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay, canNavigateNextDay }: DayDetailsModalProps) {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft' && canNavigatePrevDay) {
+        event.preventDefault();
+        onNavigateDay?.(-1);
+      } else if (event.key === 'ArrowRight' && canNavigateNextDay) {
+        event.preventDefault();
+        onNavigateDay?.(1);
+      } else if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, canNavigatePrevDay, canNavigateNextDay, onNavigateDay, onClose]);
+
   if (!isOpen) return null;
 
   const formatDate = (dateString: string) => {
@@ -170,14 +190,42 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
       <div className="bg-white rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
-            {hasData && userLogin && (
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
-                <span>User: {userLogin}</span>
-                <span aria-hidden="true" className="text-gray-300">•</span>
-                <span>AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}</span>
-              </p>
+          <div className="flex items-center gap-3">
+            {onNavigateDay && (
+              <button
+                onClick={() => onNavigateDay(-1)}
+                disabled={!canNavigatePrevDay}
+                aria-label="Previous day"
+                title="Previous day (←)"
+                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
+              {hasData && userLogin && (
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                  <span>User: {userLogin}</span>
+                  <span aria-hidden="true" className="text-gray-300">•</span>
+                  <span>AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}</span>
+                </p>
+              )}
+            </div>
+            {onNavigateDay && (
+              <button
+                onClick={() => onNavigateDay(1)}
+                disabled={!canNavigateNextDay}
+                aria-label="Next day"
+                title="Next day (→)"
+                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             )}
           </div>
           <button
