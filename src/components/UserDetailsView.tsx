@@ -11,6 +11,7 @@ import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
+import AiCreditsChart from './charts/AiCreditsChart';
 import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
 import ModeImpactChart from './charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
@@ -22,6 +23,7 @@ import { ViewPanel } from './ui';
 import { VIEW_MODES } from '../types/navigation';
 import { useNavigation } from '../state/NavigationContext';
 import type { ModeImpactData } from '../domain/calculators/metricCalculators';
+import type { DailyAiCreditsData } from '../domain/calculators/metricCalculators';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 import { isActiveAutoModeFeature } from '../domain/autoMode';
@@ -530,6 +532,20 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
+  const dailyAiCreditsData = useMemo<DailyAiCreditsData[]>(() => {
+    const creditsByDay = new Map<string, number>();
+    for (const day of userDetails.days) {
+      creditsByDay.set(day.day, (creditsByDay.get(day.day) ?? 0) + day.ai_credits_used);
+    }
+
+    return Array.from(creditsByDay.entries())
+      .map(([date, aiCreditsUsed]) => ({
+        date,
+        aiCreditsUsed,
+        users: aiCreditsUsed > 0 ? 1 : 0,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [userDetails.days]);
 
   return (
     <ViewPanel
@@ -607,6 +623,14 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
           />
         </div>
       </div>
+
+      <AiCreditsChart
+        data={dailyAiCreditsData}
+        reportStartDay={userDetails.reportStartDay}
+        reportEndDay={userDetails.reportEndDay}
+        description="AI credits consumed by this user each day during the reporting period"
+        showUsers={false}
+      />
 
       <ModeImpactChart
         data={filledCombinedImpact}

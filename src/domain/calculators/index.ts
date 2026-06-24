@@ -163,4 +163,12 @@ export {
   computeAiAdoptionPhaseData,
 } from './aiAdoptionPhaseCalculator';
 
+export {
+  type DailyAiCreditsData,
+  type AiCreditsAccumulator,
+  createAiCreditsAccumulator,
+  accumulateAiCredits,
+  computeDailyAiCreditsData,
+} from './aiCreditsCalculator';
+
 export { compareDatesAsc, compareByDateAsc } from './statsCalculators';

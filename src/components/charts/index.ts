@@ -5,6 +5,7 @@
 
 export { default as ActivityBreakdownChart } from './ActivityBreakdownChart';
 export { default as AgentModeHeatmapChart } from './AgentModeHeatmapChart';
+export { default as AiCreditsChart } from './AiCreditsChart';
 export { default as ChatRequestsChart } from './ChatRequestsChart';
 export { default as ChatUsersChart } from './ChatUsersChart';
 export { default as CLISessionChart } from './CLISessionChart';

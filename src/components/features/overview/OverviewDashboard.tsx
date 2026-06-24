@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { MetricsStats } from '../../../types/metrics';
-import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData } from '../../../domain/calculators/metricCalculators';
+import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData, DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
 import EngagementChart from '../../charts/EngagementChart';
 import ChatUsersChart from '../../charts/ChatUsersChart';
 import ChatRequestsChart from '../../charts/ChatRequestsChart';
+import AiCreditsChart from '../../charts/AiCreditsChart';
 
 interface OverviewDashboardProps {
   stats: MetricsStats;
@@ -13,6 +14,7 @@ interface OverviewDashboardProps {
   engagementData: DailyEngagementData[];
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
+  dailyAiCreditsData: DailyAiCreditsData[];
 }
 
 const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
@@ -21,6 +23,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   engagementData,
   chatUsersData,
   chatRequestsData,
+  dailyAiCreditsData,
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -29,6 +32,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       day: 'numeric'
     });
   };
+  const hasAiCreditsData = dailyAiCreditsData.some(entry => entry.aiCreditsUsed > 0);
 
   return (
     <div className="space-y-8">
@@ -51,6 +55,16 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <div className="w-full">
         <ChatRequestsChart data={chatRequestsData} />
       </div>
+
+      {hasAiCreditsData && (
+        <div className="w-full">
+          <AiCreditsChart
+            data={dailyAiCreditsData}
+            reportStartDay={stats.reportStartDay}
+            reportEndDay={stats.reportEndDay}
+          />
+        </div>
+      )}
     </div>
   );
 };
