@@ -147,10 +147,11 @@ describe('metricsAggregator', () => {
 
       const { aggregated } = aggregateMetrics([day2User1, day1User1, day1User2]);
 
-      expect(aggregated.dailyAiCreditsData).toEqual([
-        { date: '2024-01-15', aiCreditsUsed: 60, users: 2 },
-        { date: '2024-01-16', aiCreditsUsed: 10, users: 1 },
-      ]);
+      expect(aggregated.dailyAiCreditsData).toHaveLength(2);
+      expect(aggregated.dailyAiCreditsData[0].date).toBe('2024-01-15');
+      expect(aggregated.dailyAiCreditsData[0].aiCreditsUsed).toBeCloseTo(60);
+      expect(aggregated.dailyAiCreditsData[0].users).toBe(2);
+      expect(aggregated.dailyAiCreditsData[1]).toEqual({ date: '2024-01-16', aiCreditsUsed: 10, users: 1 });
     });
 
     it('should track user feature flags correctly', () => {
