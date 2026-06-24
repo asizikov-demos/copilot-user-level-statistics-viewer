@@ -7,6 +7,9 @@ import EngagementChart from '../../charts/EngagementChart';
 import ChatUsersChart from '../../charts/ChatUsersChart';
 import ChatRequestsChart from '../../charts/ChatRequestsChart';
 import AiCreditsChart from '../../charts/AiCreditsChart';
+import { OVERVIEW_SECTIONS } from './overviewSections';
+
+const [engagementSection, chatUsersSection, chatRequestsSection] = OVERVIEW_SECTIONS;
 
 interface OverviewDashboardProps {
   stats: MetricsStats;
@@ -44,15 +47,15 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </h2>
       </div>
 
-      <div className="w-full">
+      <div id={engagementSection.id} className="w-full scroll-mt-28">
         <EngagementChart data={engagementData} />
       </div>
 
-      <div className="w-full">
+      <div id={chatUsersSection.id} className="w-full scroll-mt-28">
         <ChatUsersChart data={chatUsersData} />
       </div>
 
-      <div className="w-full">
+      <div id={chatRequestsSection.id} className="w-full scroll-mt-28">
         <ChatRequestsChart data={chatRequestsData} />
       </div>
 

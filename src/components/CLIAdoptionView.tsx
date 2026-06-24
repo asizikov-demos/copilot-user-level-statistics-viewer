@@ -7,6 +7,7 @@ import CLIUsersChart from './charts/CLIUsersChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import ModelsUsageChart from './charts/ModelsUsageChart';
+import { CLI_ADOPTION_SECTIONS } from './layout/contextSections';
 import type { MetricsStats, ModelDailyUsageEntry } from '../types/metrics';
 import type { DailyCliSessionData, DailyCliTokenData, DailyCliAdoptionTrend } from '../domain/calculators/metricCalculators';
 interface CLIAdoptionViewProps {
@@ -32,6 +33,8 @@ export default function CLIAdoptionView({
     ? Math.round((stats.cliUsers / stats.uniqueUsers) * 1000) / 10
     : 0;
 
+  const [trendSection, usersSection, sessionsSection, tokensSection, modelsSection] = CLI_ADOPTION_SECTIONS;
+
   return (
     <ViewPanel
       headerProps={{
@@ -45,11 +48,21 @@ export default function CLIAdoptionView({
       contentClassName="space-y-8"
     >
 
-      <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} stats={stats} />
-      <CLIUsersChart data={dailyCliSessionData} />
-      <CLISessionChart data={dailyCliSessionData} />
-      <CLITokensChart data={dailyCliTokenData} />
-      <ModelsUsageChart modelEntries={cliModelEntries} dates={cliModelDates} totalInteractions={cliModelTotal} variant="cli" />
+      <div id={trendSection.id} className="scroll-mt-28">
+        <CLIAdoptionTrendChart data={dailyCliAdoptionTrend} stats={stats} />
+      </div>
+      <div id={usersSection.id} className="scroll-mt-28">
+        <CLIUsersChart data={dailyCliSessionData} />
+      </div>
+      <div id={sessionsSection.id} className="scroll-mt-28">
+        <CLISessionChart data={dailyCliSessionData} />
+      </div>
+      <div id={tokensSection.id} className="scroll-mt-28">
+        <CLITokensChart data={dailyCliTokenData} />
+      </div>
+      <div id={modelsSection.id} className="scroll-mt-28">
+        <ModelsUsageChart modelEntries={cliModelEntries} dates={cliModelDates} totalInteractions={cliModelTotal} variant="cli" />
+      </div>
     </ViewPanel>
   );
 }
