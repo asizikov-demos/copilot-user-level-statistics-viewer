@@ -11,6 +11,8 @@ export function useActiveSection(ids: string[]): string | null {
   const [activeId, setActiveId] = useState<string | null>(ids[0] ?? null);
 
   useEffect(() => {
+    setActiveId(ids[0] ?? null);
+
     if (ids.length === 0 || typeof IntersectionObserver === 'undefined') {
       return;
     }

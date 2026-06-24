@@ -16,9 +16,14 @@ const ContextPanel: React.FC = () => {
 
   const handleNavigate = (id: string) => {
     const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!element) {
+      return;
     }
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    element.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    window.history.replaceState(null, '', `#${id}`);
   };
 
   return (
@@ -38,7 +43,7 @@ const ContextPanel: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleNavigate(id)}
-                  aria-current={isActive ? 'true' : undefined}
+                  aria-current={isActive ? 'location' : undefined}
                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 ${
                     isActive
                       ? 'bg-[#f6f8fa] text-[#1f2328] font-semibold'
