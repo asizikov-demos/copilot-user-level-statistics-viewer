@@ -4,6 +4,7 @@ import React from 'react';
 import ModeImpactChart from './charts/ModeImpactChart';
 import { ViewPanel } from './ui';
 import InsightsCard from './ui/InsightsCard';
+import { COPILOT_IMPACT_SECTIONS } from './layout/contextSections';
 import type { AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../domain/calculators/metricCalculators';
 interface CopilotImpactViewProps {
   agentImpactData: AgentImpactData[];
@@ -16,6 +17,16 @@ interface CopilotImpactViewProps {
 }
 
 export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, joinedImpactData }: CopilotImpactViewProps) {
+  const [
+    combinedSection,
+    agentSection,
+    cliSection,
+    codeCompletionSection,
+    askSection,
+    inlineSection,
+    editSection,
+  ] = COPILOT_IMPACT_SECTIONS;
+
   return (
     <ViewPanel
       headerProps={{
@@ -25,53 +36,67 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
       }}
       contentClassName="space-y-8"
     >
-      <ModeImpactChart
-        data={joinedImpactData || []}
-        title="Combined Copilot Impact"
-        description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, and CLI activities."
-        emptyStateMessage="No combined impact data available."
-      />
-      <ModeImpactChart
-        data={agentImpactData || []}
-        title="Copilot Agent Mode Impact"
-        description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
-        emptyStateMessage="No agent mode impact data available."
-      />
-      <ModeImpactChart
-        data={cliImpactData || []}
-        title="Copilot CLI Impact"
-        description="Daily lines of code added and deleted through Copilot CLI sessions."
-        emptyStateMessage="No CLI impact data available."
-      />
-      <ModeImpactChart
-        data={codeCompletionImpactData || []}
-        title="Code Completion Impact"
-        description="Daily lines of code added and deleted when developers accept Copilot code completions."
-        emptyStateMessage="No code completion impact data available."
-      />
-      <ModeImpactChart
-        data={askModeImpactData || []}
-        title="Copilot Ask Mode Impact"
-        description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
-        emptyStateMessage="No Ask Mode impact data available."
-      />
-      <ModeImpactChart
-        data={inlineModeImpactData || []}
-        title="Copilot Inline Mode Impact"
-        description="Daily lines of code added and deleted when developers work inline with Copilot."
-        emptyStateMessage="No Inline Mode impact data available."
-      />
-      <ModeImpactChart
-        data={editModeImpactData || []}
-        title="Copilot Edit Mode Impact"
-        description="Daily lines of code added and deleted through Copilot's Edit Mode sessions."
-        emptyStateMessage="No Edit Mode impact data available."
-        footer={
-          <InsightsCard title="Edit Mode Deprecation" variant="orange">
-            Edit mode is deprecated and will be removed in newer versions of IDE clients.
-          </InsightsCard>
-        }
-      />
+      <div id={combinedSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={joinedImpactData || []}
+          title="Combined Copilot Impact"
+          description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, and CLI activities."
+          emptyStateMessage="No combined impact data available."
+        />
+      </div>
+      <div id={agentSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={agentImpactData || []}
+          title="Copilot Agent Mode Impact"
+          description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
+          emptyStateMessage="No agent mode impact data available."
+        />
+      </div>
+      <div id={cliSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={cliImpactData || []}
+          title="Copilot CLI Impact"
+          description="Daily lines of code added and deleted through Copilot CLI sessions."
+          emptyStateMessage="No CLI impact data available."
+        />
+      </div>
+      <div id={codeCompletionSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={codeCompletionImpactData || []}
+          title="Code Completion Impact"
+          description="Daily lines of code added and deleted when developers accept Copilot code completions."
+          emptyStateMessage="No code completion impact data available."
+        />
+      </div>
+      <div id={askSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={askModeImpactData || []}
+          title="Copilot Ask Mode Impact"
+          description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+          emptyStateMessage="No Ask Mode impact data available."
+        />
+      </div>
+      <div id={inlineSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={inlineModeImpactData || []}
+          title="Copilot Inline Mode Impact"
+          description="Daily lines of code added and deleted when developers work inline with Copilot."
+          emptyStateMessage="No Inline Mode impact data available."
+        />
+      </div>
+      <div id={editSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={editModeImpactData || []}
+          title="Copilot Edit Mode Impact"
+          description="Daily lines of code added and deleted through Copilot's Edit Mode sessions."
+          emptyStateMessage="No Edit Mode impact data available."
+          footer={
+            <InsightsCard title="Edit Mode Deprecation" variant="orange">
+              Edit mode is deprecated and will be removed in newer versions of IDE clients.
+            </InsightsCard>
+          }
+        />
+      </div>
     </ViewPanel>
   );
 }
