@@ -128,6 +128,32 @@ describe('metricsAggregator', () => {
       expect(aggregated.userSummaries[0].total_ai_credits_used).toBeCloseTo(60);
     });
 
+    it('should aggregate AI credits by day across users', () => {
+      const day1User1 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-15',
+        ai_credits_used: 55.053015,
+      });
+      const day1User2 = createBasicMetric({
+        user_id: 456,
+        day: '2024-01-15',
+        ai_credits_used: 4.946985,
+      });
+      const day2User1 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-16',
+        ai_credits_used: 10,
+      });
+
+      const { aggregated } = aggregateMetrics([day2User1, day1User1, day1User2]);
+
+      expect(aggregated.dailyAiCreditsData).toHaveLength(2);
+      expect(aggregated.dailyAiCreditsData[0].date).toBe('2024-01-15');
+      expect(aggregated.dailyAiCreditsData[0].aiCreditsUsed).toBeCloseTo(60);
+      expect(aggregated.dailyAiCreditsData[0].users).toBe(2);
+      expect(aggregated.dailyAiCreditsData[1]).toEqual({ date: '2024-01-16', aiCreditsUsed: 10, users: 1 });
+    });
+
     it('should track user feature flags correctly', () => {
       const agentUser = createBasicMetric({
         user_id: 1,

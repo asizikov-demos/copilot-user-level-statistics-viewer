@@ -141,6 +141,7 @@ const ViewRouter: React.FC = () => {
     dailyCloudAgentAdoptionData = [],
     dailyCodeReviewAdoptionData = [],
     aiAdoptionPhaseData = [],
+    dailyAiCreditsData = [],
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -294,6 +295,7 @@ const ViewRouter: React.FC = () => {
           engagementData={engagementData}
           chatUsersData={chatUsersData}
           chatRequestsData={chatRequestsData}
+          dailyAiCreditsData={dailyAiCreditsData}
         />
       );
   }

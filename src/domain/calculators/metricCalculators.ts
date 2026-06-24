@@ -48,6 +48,10 @@ export type {
   AiAdoptionPhaseTopEntry,
 } from './aiAdoptionPhaseCalculator';
 
+export type {
+  DailyAiCreditsData,
+} from './aiCreditsCalculator';
+
 export const calculateStats = calculateStatsFromMetrics;
 
 export const calculateDailyModelUsage = calculateDailyModelUsageFromMetrics;
