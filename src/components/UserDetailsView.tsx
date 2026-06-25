@@ -710,7 +710,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
           </div>
         </div>
       )}
-       
+
       <div id={summarySection.id} className="scroll-mt-28">
         <UserSummaryChart
           usedChat={usedChat}
