@@ -5,6 +5,8 @@ import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { formatAiAdoptionPhase, formatAiCreditCost } from '../utils/formatters';
+import { formatIDEName } from '../utils/ideNames';
+import { getIDEIcon } from './icons/IDEIcons';
 import { ViewPanel } from './ui';
 import DashboardStatsCard from './ui/DashboardStatsCard';
 import StatsGrid from './ui/StatsGrid';
@@ -15,8 +17,18 @@ interface UniqueUsersViewProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 const USERS_PER_PAGE = 500;
+
+function ClientIcon({ client }: { client: string }) {
+  const Icon = getIDEIcon(client);
+
+  return (
+    <span aria-hidden="true" className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center">
+      <Icon />
+    </span>
+  );
+}
 
 export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
@@ -137,6 +149,19 @@ export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewP
       accessor: 'code_review_days',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
+    },
+    {
+      id: 'top_client',
+      header: 'CLIENT',
+      sortable: true,
+      headerClassName: `${headerRightClass} w-1/8`,
+      className: valueCellClass,
+      renderCell: (user) => user.top_client ? (
+        <span className="inline-flex items-center justify-end gap-2">
+          <ClientIcon client={user.top_client} />
+          {formatIDEName(user.top_client)}
+        </span>
+      ) : '-',
     },
     {
       id: 'ai_adoption_phase',
