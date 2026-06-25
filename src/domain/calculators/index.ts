@@ -158,10 +158,18 @@ export {
   type AiAdoptionPhaseAccumulator,
   type AiAdoptionPhaseData,
   type AiAdoptionPhaseTopEntry,
+  type DimensionUsageTotals,
+  type UserPhaseAccumulatorEntry,
   createAiAdoptionPhaseAccumulator,
   accumulateAiAdoptionPhase,
   computeAiAdoptionPhaseData,
 } from './aiAdoptionPhaseCalculator';
+
+export {
+  type UsageDistributionBucket,
+  type UsageDistributionBucketId,
+  computeUsageDistributionData,
+} from './usageDistributionCalculator';
 
 export {
   type DailyAiCreditsData,

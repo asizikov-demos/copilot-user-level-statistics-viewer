@@ -49,6 +49,11 @@ export type {
 } from './aiAdoptionPhaseCalculator';
 
 export type {
+  UsageDistributionBucket,
+  UsageDistributionBucketId,
+} from './usageDistributionCalculator';
+
+export type {
   DailyAiCreditsData,
 } from './aiCreditsCalculator';
 

@@ -22,7 +22,7 @@ export interface AiAdoptionPhaseData {
   topLanguages: AiAdoptionPhaseTopEntry[];
 }
 
-interface UserPhaseAccumulatorEntry {
+export interface UserPhaseAccumulatorEntry {
   phase?: AIAdoptionPhase;
   latestPhaseDay?: string;
   totalUserInitiatedInteractions: number;
@@ -147,8 +147,10 @@ export function accumulateAiAdoptionPhase(
   }
 }
 
-function addUserDimensionsToPhase(
-  phaseDimensions: PhaseAccumulatorEntry['models'],
+export type DimensionUsageTotals = Map<string, { total: number; uniqueUsers: number }>;
+
+export function addUserDimensionsToPhase(
+  phaseDimensions: DimensionUsageTotals,
   userDimensions: Map<string, number>
 ): void {
   for (const [name, total] of userDimensions) {
@@ -184,7 +186,7 @@ function getOrCreatePhaseEntry(
   return phases.get(phase.phase_number)!;
 }
 
-function computeTopEntries(dimensions: Map<string, { total: number; uniqueUsers: number }>): AiAdoptionPhaseTopEntry[] {
+export function computeTopEntries(dimensions: DimensionUsageTotals): AiAdoptionPhaseTopEntry[] {
   return Array.from(dimensions.entries())
     .map(([name, entry]) => ({
       name,
