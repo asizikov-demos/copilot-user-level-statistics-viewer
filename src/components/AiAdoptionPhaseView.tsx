@@ -7,6 +7,7 @@ import { AI_ADOPTION_PHASE_SECTIONS } from './layout/contextSections';
 import type { AiAdoptionPhaseData, AiAdoptionPhaseTopEntry } from '../domain/calculators/metricCalculators';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
+import { getModelIcon } from './icons/ModelIcons';
 
 interface AiAdoptionPhaseViewProps {
   phaseData: AiAdoptionPhaseData[];
@@ -96,6 +97,35 @@ function renderTopClientEntries(entries: AiAdoptionPhaseTopEntry[]) {
   );
 }
 
+function renderTopModelEntries(entries: AiAdoptionPhaseTopEntry[]) {
+  if (entries.length === 0) {
+    return <span className="text-sm text-gray-400">No data</span>;
+  }
+
+  return (
+    <div className="space-y-1">
+      {entries.map((entry) => {
+        const ModelIcon = getModelIcon(entry.name);
+        return (
+          <div key={entry.name} className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex-shrink-0">
+                <ModelIcon />
+              </div>
+              <span className="truncate text-gray-900" title={entry.name}>
+                {formatModelDisplayName(entry.name)}
+              </span>
+            </div>
+            <span className="whitespace-nowrap text-xs text-gray-500" title={`${entry.uniqueUsers.toLocaleString()} users`}>
+              {entry.total.toLocaleString()}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewProps) {
   const rightHeaderClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
   const rightCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
@@ -171,7 +201,7 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
       header: 'Top Models - interactions',
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 align-top',
-      renderCell: (phase) => renderTopEntries(phase.topModels, formatModelDisplayName),
+      renderCell: (phase) => renderTopModelEntries(phase.topModels),
     },
     {
       id: 'topClients',
