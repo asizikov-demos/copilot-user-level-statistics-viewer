@@ -8,6 +8,7 @@ import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types
 import LanguageDailyChart from './charts/LanguageDailyChart';
 import { translateFeature } from '../domain/featureTranslations';
 import { sortBySelector, rankBySelector } from '../utils/sorting';
+import { LANGUAGES_SECTIONS } from './layout/contextSections';
 
 interface LanguagesViewProps {
   languages: LanguageStats[];
@@ -362,6 +363,14 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
     },
   ];
   const maxItemsToShow = 10;
+  const [
+    summarySection,
+    dailyChartsSection,
+    topListsSection,
+    netImpactSection,
+    completeBreakdownSection,
+  ] = LANGUAGES_SECTIONS;
+
   return (
     <ViewPanel
       headerProps={{
@@ -372,15 +381,17 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       contentClassName="space-y-6"
     >
       {/* Summary Stats */}
-      <DashboardStatsCardGroup
-        className="mb-6"
-        columns={{ base: 2, md: 5 }}
-        gapClassName="gap-4"
-        items={summaryCards}
-      />
+      <div id={summarySection.id} className="scroll-mt-28">
+        <DashboardStatsCardGroup
+          className="mb-6"
+          columns={{ base: 2, md: 5 }}
+          gapClassName="gap-4"
+          items={summaryCards}
+        />
+      </div>
 
       {/* Daily Language Charts */}
-      <div className="space-y-6 mt-6 pt-6 border-t border-gray-200">
+      <div id={dailyChartsSection.id} className="space-y-6 mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
         <LanguageDailyChart chartData={dailyLanguageGenerationsData} variant="generations" />
         <LanguageDailyChart chartData={dailyLanguageLocData} variant="loc" />
       </div>
@@ -438,7 +449,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       )}
 
       {/* Two Column Layout for Tables */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200">
+      <div id={topListsSection.id} className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
         {/* Languages by Number of Generations */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Code Generations</h3>
@@ -473,7 +484,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       </div>
 
       {/* Net Productivity Impact by Language */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
+      <div id={netImpactSection.id} className="mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Net Productivity Impact by Language</h3>
         <p className="text-sm text-gray-500 mb-4">
           Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
@@ -492,7 +503,7 @@ export default function LanguagesView({ languages, languageFeatureImpactData, da
       </div>
 
       {/* Full Languages Table */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
+      <div id={completeBreakdownSection.id} className="mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
         <MetricsTable
           data={sortedLanguages}

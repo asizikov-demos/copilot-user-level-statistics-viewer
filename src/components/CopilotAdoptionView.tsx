@@ -7,6 +7,7 @@ import AdoptionTrendChart from './charts/AdoptionTrendChart';
 import CloudAgentAdoptionChart from './charts/CloudAgentAdoptionChart';
 import CodeReviewAdoptionChart from './charts/CodeReviewAdoptionChart';
 import { ViewPanel } from './ui';
+import { COPILOT_ADOPTION_SECTIONS } from './layout/contextSections';
 import type {
   FeatureAdoptionData,
   AgentModeHeatmapData,
@@ -51,6 +52,7 @@ export default function CopilotAdoptionView({
   const adoptionData = featureAdoptionData ?? EMPTY_FEATURE_ADOPTION_DATA;
   const hasCloudAgentAdoption = adoptionData.codingAgentUsers > 0;
   const hasCodeReviewAdoption = adoptionData.codeReviewUsers > 0;
+  const [featureSection, heatmapSection, trendSection] = COPILOT_ADOPTION_SECTIONS;
 
   return (
     <ViewPanel
@@ -60,10 +62,14 @@ export default function CopilotAdoptionView({
       }}
       contentClassName="space-y-10"
     >
-      <FeatureAdoptionChart
-        data={adoptionData}
-      />
-      <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
+      <div id={featureSection.id} className="scroll-mt-28">
+        <FeatureAdoptionChart
+          data={adoptionData}
+        />
+      </div>
+      <div id={heatmapSection.id} className="scroll-mt-28">
+        <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
+      </div>
       {hasCloudAgentAdoption && (
         <CloudAgentAdoptionChart
           data={dailyCloudAgentAdoptionData}
@@ -78,11 +84,13 @@ export default function CopilotAdoptionView({
           reportEndDay={stats.reportEndDay}
         />
       )}
-      <AdoptionTrendChart
-        data={dailyAdoptionTrend}
-        reportStartDay={stats.reportStartDay}
-        reportEndDay={stats.reportEndDay}
-      />
+      <div id={trendSection.id} className="scroll-mt-28">
+        <AdoptionTrendChart
+          data={dailyAdoptionTrend}
+          reportStartDay={stats.reportStartDay}
+          reportEndDay={stats.reportEndDay}
+        />
+      </div>
     </ViewPanel>
   );
 }
