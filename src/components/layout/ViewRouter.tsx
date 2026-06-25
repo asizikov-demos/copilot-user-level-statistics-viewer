@@ -20,6 +20,7 @@ import AiAdoptionPhaseView from '../AiAdoptionPhaseView';
 import CLIAdoptionView from '../CLIAdoptionView';
 import ModelDetailsView from '../ModelDetailsView';
 import ExecutiveSummaryView from '../ExecutiveSummaryView';
+import AiCreditsView from '../AiCreditsView';
 import ClientVersionsView from '../ClientVersionsView';
 import AboutView from '../AboutView';
 
@@ -142,6 +143,7 @@ const ViewRouter: React.FC = () => {
     dailyCodeReviewAdoptionData = [],
     aiAdoptionPhaseData = [],
     dailyAiCreditsData = [],
+    usageDistributionData = [],
   } = aggregatedMetrics;
 
   switch (currentView) {
@@ -154,6 +156,17 @@ const ViewRouter: React.FC = () => {
           agentImpactData={agentImpactData}
           codeCompletionImpactData={codeCompletionImpactData}
           featureAdoptionData={featureAdoptionData}
+        />
+      );
+
+    case VIEW_MODES.AI_CREDITS:
+      return (
+        <AiCreditsView
+          stats={stats}
+          dailyAiCreditsData={dailyAiCreditsData}
+          userSummaries={userSummaries}
+          usageDistributionData={usageDistributionData}
+          onUserClick={handleUserClick}
         />
       );
 
@@ -295,7 +308,6 @@ const ViewRouter: React.FC = () => {
           engagementData={engagementData}
           chatUsersData={chatUsersData}
           chatRequestsData={chatRequestsData}
-          dailyAiCreditsData={dailyAiCreditsData}
         />
       );
   }

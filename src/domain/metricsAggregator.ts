@@ -112,6 +112,9 @@ import {
   accumulateAiAdoptionPhase,
   computeAiAdoptionPhaseData,
 
+  UsageDistributionBucket,
+  computeUsageDistributionData,
+
   DailyAiCreditsData,
   createAiCreditsAccumulator,
   accumulateAiCredits,
@@ -151,6 +154,7 @@ export interface AggregatedMetrics {
   dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
   dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
   aiAdoptionPhaseData: AiAdoptionPhaseData[];
+  usageDistributionData: UsageDistributionBucket[];
   dailyAiCreditsData: DailyAiCreditsData[];
 }
 
@@ -436,6 +440,7 @@ export function aggregateMetrics(
     dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
     dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
     aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),
+    usageDistributionData: computeUsageDistributionData(aiAdoptionPhaseAccumulator),
     dailyAiCreditsData: computeDailyAiCreditsData(aiCreditsAccumulator),
     },
     userDetailAccumulator,

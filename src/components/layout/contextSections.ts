@@ -73,8 +73,15 @@ export const MODEL_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'model-auto-adoption', label: 'Auto Adoption' },
 ];
 
+export const AI_CREDITS_SECTIONS: ContextSection[] = [
+  { id: 'ai-credits-daily-consumption', label: 'Daily Consumption' },
+  { id: 'ai-credits-top-users', label: 'Top Users' },
+  { id: 'ai-credits-usage-distribution', label: 'Usage Distribution' },
+];
+
 export const CONTEXT_SECTIONS: Partial<Record<ViewMode, ContextSection[]>> = {
   [VIEW_MODES.OVERVIEW]: OVERVIEW_SECTIONS,
+  [VIEW_MODES.AI_CREDITS]: AI_CREDITS_SECTIONS,
   [VIEW_MODES.CLIENT_ANALYSIS]: CLIENT_ANALYSIS_SECTIONS,
   [VIEW_MODES.COPILOT_IMPACT]: COPILOT_IMPACT_SECTIONS,
   [VIEW_MODES.COPILOT_ADOPTION]: COPILOT_ADOPTION_SECTIONS,

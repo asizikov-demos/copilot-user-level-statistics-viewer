@@ -1,5 +1,6 @@
 export const VIEW_MODES = {
   OVERVIEW: 'overview',
+  AI_CREDITS: 'aiCredits',
   EXECUTIVE_SUMMARY: 'executiveSummary',
   ABOUT: 'about',
   CLIENT_VERSIONS: 'clientVersions',
