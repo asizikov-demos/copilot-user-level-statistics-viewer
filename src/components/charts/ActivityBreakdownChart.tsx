@@ -97,7 +97,7 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
               const groupLabel = key === 'unknown' || key === '' ? config.unknownLabel : key;
               const GroupIcon = config.groupIcon?.(key);
               return items.map((item, idx) => (
-                <tr key={`${key}-${idx}`} className={idx === 0 ? 'border-t-2 border-gray-200' : undefined}>
+                <tr key={`${key}-${item.feature}`} className={idx === 0 ? 'border-t-2 border-gray-200' : undefined}>
                   {idx === 0 && (
                     <td
                       rowSpan={items.length}
