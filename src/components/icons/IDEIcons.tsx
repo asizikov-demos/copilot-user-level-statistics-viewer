@@ -155,6 +155,24 @@ const RustRoverIcon = () => (
   </svg>
 );
 
+const RubyMineIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0v24h24V0H0z" fill="#000" />
+    <text
+      x="12"
+      y="13.4"
+      textAnchor="middle"
+      fontFamily="Arial, Helvetica, sans-serif"
+      fontSize="8.5"
+      fontWeight="700"
+      fill="#fff"
+    >
+      RM
+    </text>
+    <path d="M2.28 19.5h9V21h-9z" fill="#fff" />
+  </svg>
+);
+
 const DefaultIDEIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="#6B7280" strokeWidth="2" fill="none"/>
@@ -175,6 +193,7 @@ const ideIconMap: Record<string, React.ComponentType> = {
   android_studio: AndroidStudioIcon,
   goland: GoLandIcon,
   phpstorm: PhpStormIcon,
+  rubymine: RubyMineIcon,
   clion: CLionIcon,
   rustrover: RustRoverIcon,
   rstudio: RStudioIcon,

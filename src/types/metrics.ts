@@ -132,6 +132,7 @@ export interface UserSummary {
   days_active: number;
   cloud_agent_days: number;
   code_review_days: number;
+  top_client: string | null;
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;

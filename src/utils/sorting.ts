@@ -1,5 +1,25 @@
 import type { SortDirection } from '../types/sort';
 
+function compareValues(
+  aVal: string | number | boolean | null | undefined,
+  bVal: string | number | boolean | null | undefined,
+  sortDirection: SortDirection,
+): number {
+  const aMissing = aVal == null;
+  const bMissing = bVal == null;
+
+  if (aMissing || bMissing) {
+    if (aMissing && bMissing) return 0;
+    return aMissing ? 1 : -1;
+  }
+
+  const normalizedA = typeof aVal === 'string' ? aVal.toLowerCase() : aVal;
+  const normalizedB = typeof bVal === 'string' ? bVal.toLowerCase() : bVal;
+  const comparison = normalizedA < normalizedB ? -1 : normalizedA > normalizedB ? 1 : 0;
+
+  return sortDirection === 'asc' ? comparison : -comparison;
+}
+
 /**
  * Generic comparator for sorting arrays of objects by a field.
  * Handles string (case-insensitive) and numeric comparisons.
@@ -12,19 +32,9 @@ export function sortByField<T, K extends keyof T>(
   if (sortField == null) return [...items];
 
   return [...items].sort((a, b) => {
-    let aVal = a[sortField];
-    let bVal = b[sortField];
-
-    if (typeof aVal === 'string' && typeof bVal === 'string') {
-      aVal = aVal.toLowerCase() as T[K];
-      bVal = bVal.toLowerCase() as T[K];
-    }
-
-    if (sortDirection === 'asc') {
-      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-    } else {
-      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-    }
+    const aVal = a[sortField] as string | number | boolean | null | undefined;
+    const bVal = b[sortField] as string | number | boolean | null | undefined;
+    return compareValues(aVal, bVal, sortDirection);
   });
 }
 

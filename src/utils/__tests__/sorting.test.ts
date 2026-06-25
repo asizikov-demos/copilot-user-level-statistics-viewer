@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortBySelector, takeTopBySelector, rankBySelector } from '../sorting';
+import { sortByField, sortBySelector, takeTopBySelector, rankBySelector } from '../sorting';
 
 interface Item {
   name: string;
@@ -50,6 +50,27 @@ describe('sortBySelector', () => {
     const cIndex = result.findIndex(i => i.name === 'c');
     const dIndex = result.findIndex(i => i.name === 'd');
     expect(cIndex).toBeLessThan(dIndex);
+  });
+});
+
+describe('sortByField', () => {
+  it('sorts nullable strings with null values last', () => {
+    const users: Array<{ login: string; top_client: string | null }> = [
+      { login: 'first', top_client: 'vscode' },
+      { login: 'missing', top_client: null },
+      { login: 'second', top_client: 'intellij' },
+    ];
+
+    expect(sortByField(users, 'top_client', 'asc').map(user => user.login)).toEqual([
+      'second',
+      'first',
+      'missing',
+    ]);
+    expect(sortByField(users, 'top_client', 'desc').map(user => user.login)).toEqual([
+      'first',
+      'second',
+      'missing',
+    ]);
   });
 });
 

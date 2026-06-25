@@ -111,6 +111,86 @@ describe('metricsAggregator', () => {
       expect(userSummary.days_active).toBe(2);
     });
 
+    it('should select the top user client by interaction count', () => {
+      const ideTotal = (ide: string, interactions: number) => ({
+        ide,
+        user_initiated_interaction_count: interactions,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      });
+      const day1 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-15',
+        totals_by_ide: [ideTotal('vscode', 3), ideTotal('intellij', 8)],
+      });
+      const day2 = createBasicMetric({
+        user_id: 123,
+        day: '2024-01-16',
+        totals_by_ide: [ideTotal('vscode', 7), ideTotal('intellij', 1)],
+      });
+      const inactiveClientDay = createBasicMetric({
+        user_id: 456,
+        day: '2024-01-15',
+        totals_by_ide: [ideTotal('vscode', 0)],
+      });
+
+      const { aggregated } = aggregateMetrics([day1, day2, inactiveClientDay]);
+
+      expect(aggregated.userSummaries.find(user => user.user_id === 123)?.top_client).toBe('vscode');
+      expect(aggregated.userSummaries.find(user => user.user_id === 456)?.top_client).toBeNull();
+    });
+
+    it('should include CLI activity when selecting the top user client', () => {
+      const ideTotal = (ide: string, interactions: number) => ({
+        ide,
+        user_initiated_interaction_count: interactions,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+        loc_added_sum: 0,
+        loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0,
+        loc_suggested_to_delete_sum: 0,
+      });
+      const cliOnly = createBasicMetric({
+        user_id: 123,
+        used_cli: true,
+        totals_by_cli: {
+          session_count: 3,
+          request_count: 12,
+          prompt_count: 9,
+          token_usage: {
+            output_tokens_sum: 0,
+            prompt_tokens_sum: 0,
+            avg_tokens_per_request: 0,
+          },
+        },
+      });
+      const cliTop = createBasicMetric({
+        user_id: 456,
+        used_cli: true,
+        totals_by_ide: [ideTotal('vscode', 4)],
+        totals_by_cli: {
+          session_count: 3,
+          request_count: 12,
+          prompt_count: 9,
+          token_usage: {
+            output_tokens_sum: 0,
+            prompt_tokens_sum: 0,
+            avg_tokens_per_request: 0,
+          },
+        },
+      });
+
+      const { aggregated } = aggregateMetrics([cliOnly, cliTop]);
+
+      expect(aggregated.userSummaries.find(user => user.user_id === 123)?.top_client).toBe('copilot_cli');
+      expect(aggregated.userSummaries.find(user => user.user_id === 456)?.top_client).toBe('copilot_cli');
+    });
+
     it('should aggregate AI credits per user across days', () => {
       const day1 = createBasicMetric({
         user_id: 123,
