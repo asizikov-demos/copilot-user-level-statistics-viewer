@@ -3,6 +3,7 @@
 import React from 'react';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel } from './ui';
+import { AI_ADOPTION_PHASE_SECTIONS } from './layout/contextSections';
 import type { AiAdoptionPhaseData, AiAdoptionPhaseTopEntry } from '../domain/calculators/metricCalculators';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
@@ -98,6 +99,7 @@ function renderTopClientEntries(entries: AiAdoptionPhaseTopEntry[]) {
 export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewProps) {
   const rightHeaderClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
   const rightCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const [comparisonSection, assignmentSection] = AI_ADOPTION_PHASE_SECTIONS;
   const columns: TableColumn<AiAdoptionPhaseData>[] = [
     {
       id: 'phase',
@@ -195,7 +197,7 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
       }}
       contentClassName="space-y-8"
     >
-      <div className="bg-white rounded-md border border-[#d1d9e0]">
+      <div id={comparisonSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Phase comparison</h3>
           <p className="mt-1 text-sm text-gray-600">Averages are calculated per user in each phase.</p>
@@ -216,7 +218,7 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
         />
       </div>
 
-      <div className="bg-white rounded-md border border-[#d1d9e0]">
+      <div id={assignmentSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">How phases are assigned</h3>
           <p className="mt-1 text-sm text-gray-600">

@@ -9,6 +9,7 @@ import { useSortableTable } from '../hooks/useSortableTable';
 import IDEDistributionChart from './charts/IDEDistributionChart';
 import CLIOverlapChart from './charts/CLIOverlapChart';
 import IDEInsights from './IDEInsights';
+import { CLIENT_ANALYSIS_SECTIONS } from './layout/contextSections';
 
 type IDEStats = IDEStatsData;
 
@@ -169,6 +170,7 @@ export default function ClientsView({
 
   const usersColumns = createColumns({ field: 'uniqueUsers', label: 'UNIQUE USERS' });
   const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'ENGAGEMENTS' });
+  const [distributionSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
 
   return (
     <ViewPanel
@@ -179,12 +181,12 @@ export default function ClientsView({
       contentClassName="space-y-8"
     >
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id={distributionSection.id} className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-28">
           <IDEDistributionChart ideStats={ideStats} cliUsers={cliUsers} />
           <CLIOverlapChart ideStats={ideStats} />
         </div>
 
-        <div className="bg-white rounded-md border border-[#d1d9e0]">
+        <div id={insightsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Insights</h3>
           </div>
@@ -198,7 +200,7 @@ export default function ClientsView({
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-[#d1d9e0]">
+        <div id={usersSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Users</h3>
           </div>
@@ -213,7 +215,7 @@ export default function ClientsView({
           />
         </div>
 
-        <div className="bg-white rounded-md border border-[#d1d9e0]">
+        <div id={engagementsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Engagements</h3>
           </div>

@@ -7,6 +7,7 @@ import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import InsightsCard from './ui/InsightsCard';
 import { usePluginVersions } from '../hooks/usePluginVersions';
 import { classifyVsCodeVersion, parseReportDayInclusiveEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
+import { CLIENT_VERSIONS_SECTIONS } from './layout/contextSections';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
 import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
 
@@ -30,6 +31,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
   const totalUniqueIntellijUsers = pluginVersionData.totalUniqueIntellijUsers;
   const vscodeVersionAnalysis = pluginVersionData.vscode;
   const totalUniqueVsCodeUsers = pluginVersionData.totalUniqueVsCodeUsers;
+  const [jetbrainsSection, vsCodeSection] = CLIENT_VERSIONS_SECTIONS;
 
   const latestTwentyUpdates = React.useMemo(() => {
     const stable = jetbrainsUpdates.filter(u => !u.version.toLowerCase().endsWith('-nightly'));
@@ -319,7 +321,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
       contentClassName="space-y-10"
     >
       <div className="space-y-4">
-        <div>
+        <div id={jetbrainsSection.id} className="scroll-mt-28">
           <h4 className="text-md font-semibold text-gray-900 mb-1">JetBrains</h4>
           <p className="text-gray-600 text-xs mb-4 max-w-2xl">
             IntelliJ-based IDEs using the GitHub Copilot JetBrains plugin.
@@ -457,7 +459,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
           </div>
         )}
 
-        <div>
+        <div id={vsCodeSection.id} className="scroll-mt-28">
           <h4 className="text-md font-semibold text-gray-900 mb-1 mt-6">Visual Studio Code</h4>
           <p className="text-gray-600 text-xs mb-4 max-w-2xl">
             VS Code using the GitHub Copilot extension. When release history is available, version status is evaluated against the stable train available at the start of the report window; if not, it falls back to the currently bundled stable train. Timestamp builds are treated as pre-release channels.

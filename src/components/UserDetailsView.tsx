@@ -28,6 +28,7 @@ import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './charts/utils/chartSetup';
 import { isActiveAutoModeFeature } from '../domain/autoMode';
 import { getTotalUserInitiatedInteractionCount } from '../domain/assumedInteractions';
+import { USER_DETAILS_SECTIONS } from './layout/contextSections';
 
 registerChartJS();
 
@@ -546,6 +547,17 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }, [userDetails.days]);
+  const [
+    overviewSection,
+    aiCreditsSection,
+    combinedImpactSection,
+    impactBreakdownSection,
+    summarySection,
+    clientActivitySection,
+    featureActivitySection,
+    languageActivitySection,
+    modelActivitySection,
+  ] = USER_DETAILS_SECTIONS;
 
   return (
     <ViewPanel
@@ -601,7 +613,7 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
       )}
       contentClassName="space-y-8"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div id={overviewSection.id} className="grid grid-cols-1 lg:grid-cols-3 gap-6 scroll-mt-28">
         <div className="lg:col-span-2">
           <ActivityCalendar
             days={userDetails.days}
@@ -624,23 +636,27 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         </div>
       </div>
 
-      <AiCreditsChart
-        data={dailyAiCreditsData}
-        reportStartDay={userDetails.reportStartDay}
-        reportEndDay={userDetails.reportEndDay}
-        description="AI credits consumed by this user each day during the reporting period"
-        showUsers={false}
-      />
+      <div id={aiCreditsSection.id} className="scroll-mt-28">
+        <AiCreditsChart
+          data={dailyAiCreditsData}
+          reportStartDay={userDetails.reportStartDay}
+          reportEndDay={userDetails.reportEndDay}
+          description="AI credits consumed by this user each day during the reporting period"
+          showUsers={false}
+        />
+      </div>
 
-      <ModeImpactChart
-        data={filledCombinedImpact}
-        title="Combined Copilot Impact"
-        description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
-        emptyStateMessage="No combined impact data available."
-      />
+      <div id={combinedImpactSection.id} className="scroll-mt-28">
+        <ModeImpactChart
+          data={filledCombinedImpact}
+          title="Combined Copilot Impact"
+          description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
+          emptyStateMessage="No combined impact data available."
+        />
+      </div>
 
       {/* Impact Breakdown Section */}
-      <div className="border-t border-gray-200 pt-6">
+      <div id={impactBreakdownSection.id} className="border-t border-gray-200 pt-6 scroll-mt-28">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Impact Breakdown</h3>
@@ -694,35 +710,39 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
           </div>
         </div>
       )}
-      
-      <UserSummaryChart
-        usedChat={usedChat}
-        usedAgent={usedAgent}
-        usedCli={usedCli}
-        usedCodingAgent={usedCodingAgent}
-        usedCodeReview={usedCodeReview}
-        usedAutoMode={usedAutoMode}
-        ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
-        languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
-        modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
-        chartOptions={chartOptions}
-      />
+
+      <div id={summarySection.id} className="scroll-mt-28">
+        <UserSummaryChart
+          usedChat={usedChat}
+          usedAgent={usedAgent}
+          usedCli={usedCli}
+          usedCodingAgent={usedCodingAgent}
+          usedCodeReview={usedCodeReview}
+          usedAutoMode={usedAutoMode}
+          ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
+          languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
+          modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
+          chartOptions={chartOptions}
+        />
+      </div>
 
       {showCloudAgentsUsage && (
         <CloudAgentsUsageChart data={cloudAgentsUsageData} />
       )}
 
-      <ClientActivityChart
-        ideAggregates={ideAggregates}
-        days={userDetails.days}
-        reportStartDay={userDetails.reportStartDay}
-        reportEndDay={userDetails.reportEndDay}
-        pluginVersions={userDetails.pluginVersions}
-        cliVersions={userDetails.cliVersions}
+      <div id={clientActivitySection.id} className="scroll-mt-28">
+        <ClientActivityChart
+          ideAggregates={ideAggregates}
+          days={userDetails.days}
+          reportStartDay={userDetails.reportStartDay}
+          reportEndDay={userDetails.reportEndDay}
+          pluginVersions={userDetails.pluginVersions}
+          cliVersions={userDetails.cliVersions}
         />
+      </div>
 
       {/* Totals by Feature */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
+      <div id={featureActivitySection.id} className="mt-8 pt-6 border-t border-gray-200 scroll-mt-28">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h3>
         <div className="overflow-x-auto border border-gray-200">
           <table className="w-full divide-y divide-gray-200">
@@ -756,17 +776,21 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
         </div>
       </div>
 
-      <UserActivityByLanguageAndFeatureChart
-        languageFeatureAggregates={languageFeatureAggregates}
-        languageBarChartData={languageBarChartData}
-        languageBarChartOptions={languageBarChartOptions}
+      <div id={languageActivitySection.id} className="scroll-mt-28">
+        <UserActivityByLanguageAndFeatureChart
+          languageFeatureAggregates={languageFeatureAggregates}
+          languageBarChartData={languageBarChartData}
+          languageBarChartOptions={languageBarChartOptions}
         />
+      </div>
 
-      <UserActivityByModelAndFeatureChart
-        modelFeatureAggregates={modelFeatureAggregates}
-        modelBarChartData={modelBarChartData}
-        modelBarChartOptions={modelBarChartOptions}
-      />
+      <div id={modelActivitySection.id} className="scroll-mt-28">
+        <UserActivityByModelAndFeatureChart
+          modelFeatureAggregates={modelFeatureAggregates}
+          modelBarChartData={modelBarChartData}
+          modelBarChartOptions={modelBarChartOptions}
+        />
+      </div>
 
       <DayDetailsModal
         isOpen={modalState.isOpen}
