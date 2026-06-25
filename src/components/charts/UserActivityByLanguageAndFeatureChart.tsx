@@ -16,6 +16,7 @@ const languageChartConfig = {
   title: 'Activity by Language and Feature',
   chartSubtitle: 'Daily Language Generations',
   detailsLabel: 'Detailed Language and Feature Breakdown',
+  groupHeader: 'Language',
   unknownLabel: 'Unknown Language',
   totalLabel: 'total generations',
   groupKey: 'language' as const,

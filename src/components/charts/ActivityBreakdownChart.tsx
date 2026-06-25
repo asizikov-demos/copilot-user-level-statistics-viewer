@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import type { ComponentType } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
@@ -29,11 +30,13 @@ interface ActivityBreakdownChartConfig<T extends BaseAggregate> {
   title: string;
   chartSubtitle: string;
   detailsLabel: string;
+  groupHeader: string;
   unknownLabel: string;
   totalLabel: string;
   groupKey: keyof T;
   countAccessor: (item: T) => number;
   columns: ColumnConfig<T>[];
+  groupIcon?: (groupKey: string) => ComponentType;
 }
 
 interface ActivityBreakdownChartProps<T extends BaseAggregate> {
@@ -73,48 +76,61 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
   const footer = (
     <DisclosureSection label={config.detailsLabel}>
       <div className="overflow-x-auto">
-        <div className="space-y-6">
-          {groupedAndSorted.sortedKeys.map(key => {
-            const items = groupedAndSorted.grouped[key];
-            const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
-            return (
-              <div key={key} className="border border-gray-200 rounded-lg p-4">
-                <h4 className="text-md font-semibold text-gray-800 mb-3 capitalize">
-                  {key === 'unknown' || key === '' ? config.unknownLabel : key}
-                  <span className="text-sm font-normal text-gray-600 ml-2">
-                    ({total.toLocaleString()} {config.totalLabel})
-                  </span>
-                </h4>
-                <table className="w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                      {config.columns.map((col, idx) => (
-                        <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {col.header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {items.map((item, idx) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {translateFeature(item.feature)}
-                        </td>
-                        {config.columns.map((col, colIdx) => (
-                          <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
-                            {col.accessor(item).toLocaleString()}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
-        </div>
+        <table className="w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {config.groupHeader}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
+              {config.columns.map((col, idx) => (
+                <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {col.header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {groupedAndSorted.sortedKeys.map(key => {
+              const items = groupedAndSorted.grouped[key];
+              const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
+              const groupLabel = key === 'unknown' || key === '' ? config.unknownLabel : key;
+              const GroupIcon = config.groupIcon?.(key);
+              return items.map((item, idx) => (
+                <tr key={`${key}-${idx}`} className={idx === 0 ? 'border-t-2 border-gray-200' : undefined}>
+                  {idx === 0 && (
+                    <td
+                      rowSpan={items.length}
+                      className="px-4 py-2 align-top text-sm font-semibold text-gray-900 capitalize"
+                    >
+                      <div className="flex items-center gap-2">
+                        {GroupIcon && (
+                          <span className="flex-shrink-0">
+                            <GroupIcon />
+                          </span>
+                        )}
+                        <span>
+                          {groupLabel}
+                          <span className="block text-xs font-normal text-gray-500">
+                            {total.toLocaleString()} {config.totalLabel}
+                          </span>
+                        </span>
+                      </div>
+                    </td>
+                  )}
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {translateFeature(item.feature)}
+                  </td>
+                  {config.columns.map((col, colIdx) => (
+                    <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                      {col.accessor(item).toLocaleString()}
+                    </td>
+                  ))}
+                </tr>
+              ));
+            })}
+          </tbody>
+        </table>
       </div>
     </DisclosureSection>
   );

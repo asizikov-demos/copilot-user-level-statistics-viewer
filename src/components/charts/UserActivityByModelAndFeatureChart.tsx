@@ -4,6 +4,7 @@ import { ChartData, ChartOptions } from 'chart.js';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import ActivityBreakdownChart from './ActivityBreakdownChart';
 import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import { getModelIcon } from '../icons/ModelIcons';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
@@ -17,10 +18,12 @@ const modelChartConfig = {
   title: 'Activity by Model and Feature',
   chartSubtitle: 'Daily Model Interactions',
   detailsLabel: 'Detailed Model and Feature Breakdown',
+  groupHeader: 'Model Name',
   unknownLabel: 'Unknown Model',
   totalLabel: 'total interactions',
   groupKey: 'model' as const,
   countAccessor: getTotalUserInitiatedInteractionCount,
+  groupIcon: getModelIcon,
   columns: [
     { header: 'Interactions', accessor: getTotalUserInitiatedInteractionCount },
     { header: 'Generation', accessor: (item: ModelFeatureAggregate) => item.code_generation_activity_count },
