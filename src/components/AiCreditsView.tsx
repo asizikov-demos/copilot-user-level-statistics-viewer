@@ -267,12 +267,12 @@ export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries
         </div>
       )}
 
-      {topUsers.length > 0 && (
-        <div id="ai-credits-top-users" className="space-y-3 scroll-mt-28">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Top 5 Users by AI Credits Consumption</h3>
-            <p className="text-sm text-gray-600">Users with the highest AI credit usage and their share of total credits consumed.</p>
-          </div>
+      <div id="ai-credits-top-users" className="space-y-3 scroll-mt-28">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">Top 5 Users by AI Credits Consumption</h3>
+          <p className="text-sm text-gray-600">Users with the highest AI credit usage and their share of total credits consumed.</p>
+        </div>
+        {topUsers.length > 0 ? (
           <MetricsTable
             data={topUsers}
             columns={columns}
@@ -282,15 +282,19 @@ export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries
             theadClassName="bg-gray-50"
             tbodyClassName="bg-white divide-y divide-gray-200"
           />
-        </div>
-      )}
-
-      {hasDistributionData && (
-        <div id="ai-credits-usage-distribution" className="space-y-3 scroll-mt-28">
-          <div>
-            <h3 className="text-base font-semibold text-gray-900">Usage Distribution</h3>
-            <p className="text-sm text-gray-600">Users segmented by AI credit consumption. Averages are calculated per user within each segment.</p>
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+            No AI credit consumption was recorded during the reporting period.
           </div>
+        )}
+      </div>
+
+      <div id="ai-credits-usage-distribution" className="space-y-3 scroll-mt-28">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">Usage Distribution</h3>
+          <p className="text-sm text-gray-600">Users segmented by AI credit consumption. Averages are calculated per user within each segment.</p>
+        </div>
+        {hasDistributionData ? (
           <MetricsTable<UsageDistributionBucket>
             data={usageDistributionData}
             columns={distributionColumns}
@@ -300,8 +304,12 @@ export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries
             theadClassName="bg-gray-50"
             rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
           />
-        </div>
-      )}
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+            No AI credit consumption was recorded during the reporting period.
+          </div>
+        )}
+      </div>
     </ViewPanel>
   );
 }
