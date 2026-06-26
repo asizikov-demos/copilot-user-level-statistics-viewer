@@ -79,7 +79,7 @@ export function parsePluginVersionsResponse(
     throw new Error('Unexpected response shape');
   }
 
-  // Parse stable release window, excluding timestamp builds (those are pre-release channels)
+  // Parse stable release window, keeping only versions accepted by the shared stability rules
   const stableReleases = Array.isArray(raw.stableReleases)
     ? mapPluginVersions(raw.stableReleases).filter(({ version }) => isStableVsCodeVersion(version))
     : [];
