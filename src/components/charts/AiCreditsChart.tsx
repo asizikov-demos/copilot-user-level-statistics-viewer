@@ -4,7 +4,8 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { DailyAiCreditsData } from '../../domain/calculators/metricCalculators';
 import { calculateStats } from '../../domain/calculators/statsCalculators';
-import { formatAiCreditCost, formatNumber, formatShortDate, generateDateRange } from '../../utils/formatters';
+import { formatAiCreditCost, formatNumber, formatShortDate } from '../../utils/formatters';
+import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 import { chartColors } from './utils/chartColors';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
@@ -28,11 +29,13 @@ function createDisplayData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyAiCreditsData[] {
-  const dataByDate = new Map(data.map(entry => [entry.date, entry]));
-
-  return generateDateRange(reportStartDay, reportEndDay).map(date => (
-    dataByDate.get(date) ?? { date, aiCreditsUsed: 0, users: 0 }
-  ));
+  return padReportRangeWithDefaults(
+    data,
+    reportStartDay,
+    reportEndDay,
+    entry => entry.date,
+    date => ({ date, aiCreditsUsed: 0, users: 0 }),
+  );
 }
 
 export default function AiCreditsChart({

@@ -18,6 +18,10 @@ describe('parseVersionMinor', () => {
     expect(parseVersionMinor('0.38.2')).toBe(38);
   });
 
+  it('parses minor from v-prefixed stable patch release (v0.38.2)', () => {
+    expect(parseVersionMinor('v0.38.2')).toBe(38);
+  });
+
   it('parses minor from stable rolling build (0.38.2026030304)', () => {
     expect(parseVersionMinor('0.38.2026030304')).toBe(38);
   });

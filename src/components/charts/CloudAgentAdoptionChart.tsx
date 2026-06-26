@@ -7,8 +7,9 @@ import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import { formatShortDate } from '../../utils/formatters';
 import type { DailyCloudAgentAdoptionData } from '../../domain/calculators/metricCalculators';
+import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();
@@ -24,12 +25,13 @@ function padCloudAgentAdoptionData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyCloudAgentAdoptionData[] {
-  const dataByDate = new Map(data.map(day => [day.date, day]));
-
-  return generateDateRange(reportStartDay, reportEndDay).map(date => ({
-    date,
-    uniqueUsers: dataByDate.get(date)?.uniqueUsers ?? 0,
-  }));
+  return padReportRangeWithDefaults(
+    data,
+    reportStartDay,
+    reportEndDay,
+    day => day.date,
+    date => ({ date, uniqueUsers: 0 }),
+  );
 }
 
 export default function CloudAgentAdoptionChart({

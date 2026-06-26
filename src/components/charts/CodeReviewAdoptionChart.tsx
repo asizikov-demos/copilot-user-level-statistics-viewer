@@ -7,8 +7,9 @@ import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import { formatShortDate } from '../../utils/formatters';
 import type { DailyCodeReviewAdoptionData } from '../../domain/calculators/metricCalculators';
+import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();
@@ -28,18 +29,21 @@ function padCodeReviewAdoptionData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyCodeReviewAdoptionData[] {
-  const dataByDate = new Map(data.map(day => [day.date, day]));
-
-  return generateDateRange(reportStartDay, reportEndDay).map(date => {
-    const day = dataByDate.get(date);
-
-    return {
+  return padReportRangeWithDefaults(
+    data,
+    reportStartDay,
+    reportEndDay,
+    day => day.date,
+    date => ({
       date,
-      activeUsers: day?.activeUsers ?? 0,
-      passiveUsers: day?.passiveUsers ?? 0,
-      totalUsers: day ? getTotalUsers(day) : 0,
-    };
-  });
+      activeUsers: 0,
+      passiveUsers: 0,
+      totalUsers: 0,
+    }),
+  ).map(day => ({
+    ...day,
+    totalUsers: getTotalUsers(day),
+  }));
 }
 
 export default function CodeReviewAdoptionChart({

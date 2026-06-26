@@ -1,6 +1,7 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool } from '../utils/stringPool';
 import { parseMetricsLine } from '../domain/metricsParser';
+import { flushNdjsonRemainder, splitNdjsonChunk } from '../utils/ndjsonParser';
 
 interface StreamProcessingResult {
   count: number;
@@ -16,7 +17,8 @@ async function processFileStream(
   const stream = file.stream();
   const reader = stream.getReader();
   const decoder = new TextDecoder('utf-8');
-  let buffer = '';
+  let remainder = '';
+  let nextLineNumber = 1;
   let processedCount = initialCount;
 
   try {
@@ -24,14 +26,12 @@ async function processFileStream(
       const { done, value } = await reader.read();
       if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      const chunkResult = splitNdjsonChunk(decoder.decode(value, { stream: true }), remainder, nextLineNumber);
+      remainder = chunkResult.remainder;
+      nextLineNumber = chunkResult.nextLineNumber;
 
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) continue;
-        const metric = parseMetricsLine(trimmedLine, pool);
+      for (const { line } of chunkResult.lines) {
+        const metric = parseMetricsLine(line, pool);
         if (metric) {
           metrics.push(metric);
           processedCount++;
@@ -44,18 +44,27 @@ async function processFileStream(
     }
 
     // Flush the decoder to handle any remaining multi-byte UTF-8 sequences
-    buffer += decoder.decode();
+    const finalChunkResult = splitNdjsonChunk(decoder.decode(), remainder, nextLineNumber);
+    const countBeforeFlush = processedCount;
 
-    const trimmedBuffer = buffer.trim();
-    if (trimmedBuffer) {
-      const metric = parseMetricsLine(trimmedBuffer, pool);
+    for (const { line } of finalChunkResult.lines) {
+      const metric = parseMetricsLine(line, pool);
       if (metric) {
         metrics.push(metric);
         processedCount++;
-        if (onChunkProcessed) {
-          onChunkProcessed(processedCount);
-        }
       }
+    }
+
+    for (const { line } of flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber)) {
+      const metric = parseMetricsLine(line, pool);
+      if (metric) {
+        metrics.push(metric);
+        processedCount++;
+      }
+    }
+
+    if (processedCount > countBeforeFlush && onChunkProcessed) {
+      onChunkProcessed(processedCount);
     }
   } finally {
     reader.releaseLock();
