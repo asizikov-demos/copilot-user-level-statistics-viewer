@@ -45,9 +45,9 @@ async function processFileStream(
 
     // Flush the decoder to handle any remaining multi-byte UTF-8 sequences
     const finalChunkResult = splitNdjsonChunk(decoder.decode(), remainder, nextLineNumber);
-    const countBeforeFinalFlush = processedCount;
+    const countBeforeFlush = processedCount;
 
-    for (const { line } of [...finalChunkResult.lines, ...flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber)]) {
+    for (const { line } of finalChunkResult.lines) {
       const metric = parseMetricsLine(line, pool);
       if (metric) {
         metrics.push(metric);
@@ -55,7 +55,15 @@ async function processFileStream(
       }
     }
 
-    if (processedCount > countBeforeFinalFlush && onChunkProcessed) {
+    for (const { line } of flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber)) {
+      const metric = parseMetricsLine(line, pool);
+      if (metric) {
+        metrics.push(metric);
+        processedCount++;
+      }
+    }
+
+    if (processedCount > countBeforeFlush && onChunkProcessed) {
       onChunkProcessed(processedCount);
     }
   } finally {
