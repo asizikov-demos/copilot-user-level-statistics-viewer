@@ -2,8 +2,8 @@
 
 import type { TooltipItem } from 'chart.js';
 import { createDualAxisChartOptions } from './chartOptions';
-import { formatShortDate, generateDateRange } from '../../../utils/formatters';
-import { padSeriesWithCarryForward } from '../../../utils/timeSeries';
+import { formatShortDate } from '../../../utils/formatters';
+import { padReportRangeWithCarryForward } from '../../../utils/timeSeries';
 import { createBarDataset, createLineDataset, computeAverageRetention, computeRetentionRates } from './chartStyles';
 import { chartColors } from './chartColors';
 import type { SummaryStatItem } from '../../ui/ChartContainer';
@@ -94,12 +94,11 @@ export function padAdoptionTrendData(
   reportStartDay: string,
   reportEndDay: string
 ): AdoptionTrendPoint[] {
-  const allDays = generateDateRange(reportStartDay, reportEndDay);
-  const dataMap = new Map(data.map(d => [d.date, d]));
-
-  return padSeriesWithCarryForward(
-    allDays,
-    dataMap,
+  return padReportRangeWithCarryForward(
+    data,
+    reportStartDay,
+    reportEndDay,
+    entry => entry.date,
     0,
     (entry) => entry.cumulativeUsers,
     (date, lastCumulative) => ({
