@@ -104,8 +104,9 @@ export default function ClientActivityChart({
       new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
+    const chartDays: ClientChartDay[] = days;
     const paddedDays = padReportRangeWithDefaults<ClientChartDay>(
-      days.map(day => ({ day: day.day, totals_by_ide: day.totals_by_ide })),
+      chartDays,
       reportStartDay,
       reportEndDay,
       day => day.day,
