@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitNdjsonLines } from '../ndjsonParser';
+import { flushNdjsonRemainder, splitNdjsonChunk, splitNdjsonLines } from '../ndjsonParser';
 
 describe('splitNdjsonLines', () => {
   describe('line endings', () => {
@@ -16,6 +16,39 @@ describe('splitNdjsonLines', () => {
     it('handles mixed LF and CRLF line endings', () => {
       const result = splitNdjsonLines('{"a":1}\r\n{"b":2}\n{"c":3}');
       expect(result.map(r => r.line)).toEqual(['{"a":1}', '{"b":2}', '{"c":3}']);
+    });
+  });
+
+  describe('splitNdjsonChunk', () => {
+    it('returns complete trimmed lines and preserves the final remainder', () => {
+      const result = splitNdjsonChunk('  {"a":1}\r\n\r\n{"b":2}');
+
+      expect(result.lines).toEqual([{ line: '{"a":1}', lineNumber: 1 }]);
+      expect(result.remainder).toBe('{"b":2}');
+      expect(result.nextLineNumber).toBe(3);
+    });
+
+    it('handles CRLF split across chunk boundaries', () => {
+      const firstChunk = splitNdjsonChunk('{"a":1}\r', '', 1);
+      const secondChunk = splitNdjsonChunk('\n{"b":2}\n', firstChunk.remainder, firstChunk.nextLineNumber);
+
+      expect(firstChunk.lines).toEqual([]);
+      expect(secondChunk.lines).toEqual([
+        { line: '{"a":1}', lineNumber: 1 },
+        { line: '{"b":2}', lineNumber: 2 },
+      ]);
+      expect(secondChunk.remainder).toBe('');
+      expect(secondChunk.nextLineNumber).toBe(3);
+    });
+  });
+
+  describe('flushNdjsonRemainder', () => {
+    it('returns the final trimmed line without requiring a trailing newline', () => {
+      expect(flushNdjsonRemainder('  {"a":1}  ', 4)).toEqual([{ line: '{"a":1}', lineNumber: 4 }]);
+    });
+
+    it('skips blank remainder content', () => {
+      expect(flushNdjsonRemainder('   ', 2)).toEqual([]);
     });
   });
 
