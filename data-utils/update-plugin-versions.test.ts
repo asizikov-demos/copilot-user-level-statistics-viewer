@@ -20,6 +20,10 @@ describe('parseMinorFromTag', () => {
     expect(parseMinorFromTag('v0.39.2026030604')).toBe(39);
   });
 
+  it('parses minor from tags with version suffixes', () => {
+    expect(parseMinorFromTag('v0.38.2-insider')).toBe(38);
+  });
+
   it('returns null for tags that do not match major.minor', () => {
     expect(parseMinorFromTag('latest')).toBeNull();
     expect(parseMinorFromTag('')).toBeNull();
