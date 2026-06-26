@@ -3,6 +3,44 @@ export interface NdjsonLine {
   lineNumber: number;
 }
 
+export interface NdjsonChunkResult {
+  lines: NdjsonLine[];
+  remainder: string;
+  nextLineNumber: number;
+}
+
+function toNdjsonLine(line: string, lineNumber: number): NdjsonLine | null {
+  const trimmed = line.trim();
+  return trimmed ? { line: trimmed, lineNumber } : null;
+}
+
+export function splitNdjsonChunk(
+  chunk: string,
+  remainder: string = '',
+  startLineNumber: number = 1
+): NdjsonChunkResult {
+  const parts = `${remainder}${chunk}`.split(/\r?\n/);
+  const lines: NdjsonLine[] = [];
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    const ndjsonLine = toNdjsonLine(parts[i], startLineNumber + i);
+    if (ndjsonLine) {
+      lines.push(ndjsonLine);
+    }
+  }
+
+  return {
+    lines,
+    remainder: parts[parts.length - 1] ?? '',
+    nextLineNumber: startLineNumber + Math.max(parts.length - 1, 0),
+  };
+}
+
+export function flushNdjsonRemainder(remainder: string, lineNumber: number = 1): NdjsonLine[] {
+  const ndjsonLine = toNdjsonLine(remainder, lineNumber);
+  return ndjsonLine ? [ndjsonLine] : [];
+}
+
 /**
  * Splits NDJSON (or plain newline-delimited) text into trimmed, non-empty lines.
  *
@@ -15,13 +53,6 @@ export interface NdjsonLine {
  * that this helper can be reused across different parsing contexts.
  */
 export function splitNdjsonLines(text: string): NdjsonLine[] {
-  const parts = text.split(/\r?\n/);
-  const result: NdjsonLine[] = [];
-  for (let i = 0; i < parts.length; i++) {
-    const trimmed = parts[i].trim();
-    if (trimmed) {
-      result.push({ line: trimmed, lineNumber: i + 1 });
-    }
-  }
-  return result;
+  const { lines, remainder, nextLineNumber } = splitNdjsonChunk(text);
+  return [...lines, ...flushNdjsonRemainder(remainder, nextLineNumber)];
 }
