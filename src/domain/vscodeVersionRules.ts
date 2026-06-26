@@ -1,4 +1,5 @@
 const VERSION_RE = /^v?(\d+)\.(\d+)(?:\.(.+))?$/;
+const TAG_PREFIX_RE = /^v?(\d+)\.(\d+)/;
 const TIMESTAMP_PATCH_RE = /^20\d{8}$/;
 const NUMERIC_PATCH_RE = /^\d+$/;
 
@@ -35,6 +36,12 @@ export function parseVsCodeVersion(version: string): ParsedVsCodeVersion | null 
 
 export function parseVersionMinor(version: string): number | null {
   return parseVsCodeVersion(version)?.minor ?? null;
+}
+
+export function parseTagMinor(versionTag: string): number | null {
+  const match = versionTag.match(TAG_PREFIX_RE);
+  if (!match) return null;
+  return Number.parseInt(match[2], 10);
 }
 
 export function isStableVsCodeVersion(version: string): boolean {

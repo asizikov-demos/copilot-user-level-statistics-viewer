@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import {
   derivePreviewMinor,
   isStableVsCodeVersion,
-  parseVersionMinor,
+  parseTagMinor,
 } from '../src/domain/vscodeVersionRules';
 
 export const STABLE_RELEASES_WINDOW = 20;
@@ -61,7 +61,7 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
  * Returns null if the tag does not match the expected format.
  */
 export function parseMinorFromTag(tag: string): number | null {
-  return parseVersionMinor(tag);
+  return parseTagMinor(tag);
 }
 
 function normalizeIsoTimestamp(timestamp: string): string {

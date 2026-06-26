@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   derivePreviewMinor,
   isStableVsCodeVersion,
+  parseTagMinor,
   parseVersionMinor,
   parseVsCodeVersion,
 } from '../vscodeVersionRules';
@@ -10,6 +11,10 @@ describe('vscodeVersionRules', () => {
   it('parses minor from both prefixed and unprefixed versions', () => {
     expect(parseVersionMinor('v0.38.2')).toBe(38);
     expect(parseVersionMinor('0.38.2')).toBe(38);
+  });
+
+  it('parses tag minor from prefixed tags with suffixes', () => {
+    expect(parseTagMinor('v0.38.2-insider')).toBe(38);
   });
 
   it('parses timestamp prerelease builds', () => {
