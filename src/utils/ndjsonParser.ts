@@ -31,7 +31,7 @@ export function splitNdjsonChunk(
 
   return {
     lines,
-    remainder: parts.at(-1) ?? '',
+    remainder: parts[parts.length - 1] ?? '',
     nextLineNumber: startLineNumber + Math.max(parts.length - 1, 0),
   };
 }
