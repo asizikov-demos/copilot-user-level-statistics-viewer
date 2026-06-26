@@ -62,6 +62,30 @@ describe('clientActivityRows', () => {
       });
     });
 
+    it('uses CLI feature interactions when both interactions and prompt count exist', () => {
+      const row = createCliClientActivityRow({
+        promptCount: 11,
+        interactions: 7,
+        generations: 1,
+        acceptances: 2,
+        locAdded: 3,
+        locDeleted: 4,
+        locSuggestedToAdd: 5,
+        locSuggestedToDelete: 6,
+      });
+
+      expect(row).toEqual({
+        ide: 'copilot_cli',
+        user_initiated_interaction_count: 7,
+        code_generation_activity_count: 1,
+        code_acceptance_activity_count: 2,
+        loc_added_sum: 3,
+        loc_deleted_sum: 4,
+        loc_suggested_to_add_sum: 5,
+        loc_suggested_to_delete_sum: 6,
+      });
+    });
+
     it('returns null when CLI has no prompt or feature interaction activity', () => {
       const row = createCliClientActivityRow({
         promptCount: 0,
