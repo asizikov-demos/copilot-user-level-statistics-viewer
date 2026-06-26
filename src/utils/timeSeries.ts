@@ -1,3 +1,5 @@
+import { generateDateRange } from './formatters';
+
 /**
  * Shared time-series utilities for report-range generation and keyed series padding.
  *
@@ -34,6 +36,18 @@ export function padSeriesWithDefaults<T>(
   });
 }
 
+export function padReportRangeWithDefaults<T>(
+  data: T[],
+  reportStartDay: string,
+  reportEndDay: string,
+  getDate: (entry: T) => string,
+  getDefault: (date: string) => T,
+): T[] {
+  const reportDays = generateDateRange(reportStartDay, reportEndDay);
+  const dataMap = new Map(data.map(entry => [getDate(entry), entry]));
+  return padSeriesWithDefaults(reportDays, dataMap, getDefault);
+}
+
 /**
  * Pads a keyed data series across the supplied date list, carrying forward a
  * piece of state across missing days.
@@ -68,4 +82,24 @@ export function padSeriesWithCarryForward<T, C>(
     }
     return getDefault(date, carried);
   });
+}
+
+export function padReportRangeWithCarryForward<T, C>(
+  data: T[],
+  reportStartDay: string,
+  reportEndDay: string,
+  getDate: (entry: T) => string,
+  initialCarried: C,
+  updateCarried: (entry: T, prev: C) => C,
+  getDefault: (date: string, carried: C) => T,
+): T[] {
+  const reportDays = generateDateRange(reportStartDay, reportEndDay);
+  const dataMap = new Map(data.map(entry => [getDate(entry), entry]));
+  return padSeriesWithCarryForward(
+    reportDays,
+    dataMap,
+    initialCarried,
+    updateCarried,
+    getDefault,
+  );
 }

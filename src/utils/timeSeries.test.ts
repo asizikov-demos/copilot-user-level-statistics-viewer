@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { padSeriesWithDefaults, padSeriesWithCarryForward } from './timeSeries';
+import {
+  padSeriesWithDefaults,
+  padSeriesWithCarryForward,
+  padReportRangeWithDefaults,
+  padReportRangeWithCarryForward,
+} from './timeSeries';
 
 // ── padSeriesWithDefaults ─────────────────────────────────────────────────────
 
@@ -181,5 +186,49 @@ describe('padSeriesWithCarryForward', () => {
     );
 
     expect(result).toEqual([undefined, 'default-1']);
+  });
+});
+
+describe('padReportRangeWithDefaults', () => {
+  it('pads report range using date selector and default factory', () => {
+    const result = padReportRangeWithDefaults(
+      [
+        { day: '2024-01-01', value: 5 },
+        { day: '2024-01-03', value: 10 },
+      ],
+      '2024-01-01',
+      '2024-01-03',
+      entry => entry.day,
+      day => ({ day, value: 0 }),
+    );
+
+    expect(result).toEqual([
+      { day: '2024-01-01', value: 5 },
+      { day: '2024-01-02', value: 0 },
+      { day: '2024-01-03', value: 10 },
+    ]);
+  });
+});
+
+describe('padReportRangeWithCarryForward', () => {
+  it('pads report range and carries forward cumulative values', () => {
+    const result = padReportRangeWithCarryForward(
+      [
+        { date: '2024-01-01', cumulative: 2, value: 2 },
+        { date: '2024-01-03', cumulative: 3, value: 1 },
+      ],
+      '2024-01-01',
+      '2024-01-03',
+      entry => entry.date,
+      0,
+      entry => entry.cumulative,
+      (date, cumulative) => ({ date, cumulative, value: 0 }),
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01', cumulative: 2, value: 2 },
+      { date: '2024-01-02', cumulative: 2, value: 0 },
+      { date: '2024-01-03', cumulative: 3, value: 1 },
+    ]);
   });
 });

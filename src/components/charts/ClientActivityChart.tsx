@@ -8,7 +8,8 @@ import { createBarDataset } from './utils/chartStyles';
 import { createBaseChartOptions } from './utils/chartOptions';
 import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
-import { formatShortDate, generateDateRange } from '../../utils/formatters';
+import { formatShortDate } from '../../utils/formatters';
+import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
 import type { UserDayData } from '../../types/metrics';
@@ -46,6 +47,7 @@ interface ClientActivityChartProps {
 }
 
 type VersionEntry = { name: string; version: string; sampled_at: string };
+type ClientChartDay = Pick<UserDayData, 'day' | 'totals_by_ide'>;
 
 const versionColumns: TableColumn<VersionEntry>[] = [
   { id: 'name', header: 'Client', headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900', renderCell: (r) => r.name },
@@ -102,14 +104,18 @@ export default function ClientActivityChart({
       new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
     ).sort();
 
-    const allDays = generateDateRange(reportStartDay, reportEndDay);
-    const dayMap = new Map(days.map(d => [d.day, d]));
+    const paddedDays = padReportRangeWithDefaults<ClientChartDay>(
+      days.map(day => ({ day: day.day, totals_by_ide: day.totals_by_ide })),
+      reportStartDay,
+      reportEndDay,
+      day => day.day,
+      day => ({ day, totals_by_ide: [] }),
+    );
 
     let fallbackIndex = 0;
     const datasets = allIDEs.map((ide) => {
-      const data = allDays.map(dayStr => {
-        const dayData = dayMap.get(dayStr);
-        const ideData = dayData?.totals_by_ide.find(i => i.ide === ide);
+      const data = paddedDays.map(dayData => {
+        const ideData = dayData.totals_by_ide.find(i => i.ide === ide);
         return ideData ? getTotalUserInitiatedInteractionCount(ideData) : 0;
       });
 
@@ -123,14 +129,14 @@ export default function ClientActivityChart({
     // Add CLI dataset if any day has CLI data
     const hasCliData = Array.from(cliTotalsByDay.values()).some(dayTotals => dayTotals.interactionCount > 0);
     if (hasCliData) {
-      const cliData = allDays.map(dayStr => {
-        return cliTotalsByDay.get(dayStr)?.interactionCount ?? 0;
+      const cliData = paddedDays.map(dayData => {
+        return cliTotalsByDay.get(dayData.day)?.interactionCount ?? 0;
       });
       datasets.push(createBarDataset(ideColors['copilot_cli'], 'Copilot CLI', cliData));
     }
 
     return {
-      labels: allDays.map(day => formatShortDate(day)),
+      labels: paddedDays.map(day => formatShortDate(day.day)),
       datasets: datasets,
     };
   }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
