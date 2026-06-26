@@ -33,22 +33,22 @@ describe('tooltip footer helpers', () => {
 
   it('formats stacked total with share and zero-total fallback', () => {
     const footer = createStackedTotalWithShareFooter({
-      shareDatasetLabel: 'Premium',
-      shareLabel: 'Premium share',
+      shareDatasetLabel: 'Selected',
+      shareLabel: 'Selected share',
       shareSeparator: ' · ',
     });
 
-    expect(footer([tooltipItem('Premium', 0), tooltipItem('Base', 0)])).toBe('Total: 0 · Premium share: 0.0%');
-    expect(footer([tooltipItem('Base', 10)])).toBe('Total: 10 · Premium share: 0.0%');
+    expect(footer([tooltipItem('Selected', 0), tooltipItem('Other', 0)])).toBe('Total: 0 · Selected share: 0.0%');
+    expect(footer([tooltipItem('Other', 10)])).toBe('Total: 10 · Selected share: 0.0%');
   });
 
   it('computes non-zero share from the named dataset', () => {
     const footer = createStackedTotalWithShareFooter({
-      shareDatasetLabel: 'Premium',
-      shareLabel: 'Premium share',
+      shareDatasetLabel: 'Selected',
+      shareLabel: 'Selected share',
       shareSeparator: ' · ',
     });
 
-    expect(footer([tooltipItem('Premium', 25), tooltipItem('Base', 75)])).toBe('Total: 100 · Premium share: 25.0%');
+    expect(footer([tooltipItem('Selected', 25), tooltipItem('Other', 75)])).toBe('Total: 100 · Selected share: 25.0%');
   });
 });
