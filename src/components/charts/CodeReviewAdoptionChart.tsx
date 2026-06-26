@@ -38,6 +38,7 @@ function padCodeReviewAdoptionData(
       date,
       activeUsers: 0,
       passiveUsers: 0,
+      totalUsers: 0,
     }),
   ).map(day => ({
     ...day,
