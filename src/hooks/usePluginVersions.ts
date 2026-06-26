@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getBasePath } from '../utils/basePath';
-import { deriveCurrentStableMinor, parseVsCodeVersion } from '../domain/vscodeVersionClassifier';
+import { deriveCurrentStableMinor, isStableVsCodeVersion } from '../domain/vscodeVersionRules';
 
 export interface PluginVersion {
   version: string;
@@ -81,10 +81,7 @@ export function parsePluginVersionsResponse(
 
   // Parse stable release window, excluding timestamp builds (those are pre-release channels)
   const stableReleases = Array.isArray(raw.stableReleases)
-    ? mapPluginVersions(raw.stableReleases).filter(({ version }) => {
-        const parsed = parseVsCodeVersion(version);
-        return parsed !== null && !parsed.isTimestampBuild;
-      })
+    ? mapPluginVersions(raw.stableReleases).filter(({ version }) => isStableVsCodeVersion(version))
     : [];
 
   return {

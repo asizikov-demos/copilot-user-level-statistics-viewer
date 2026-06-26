@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+  derivePreviewMinor,
+  isStableVsCodeVersion,
+  parseVersionMinor,
+} from '../src/domain/vscodeVersionRules';
 
 export const STABLE_RELEASES_WINDOW = 20;
 
@@ -56,17 +61,11 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
  * Returns null if the tag does not match the expected format.
  */
 export function parseMinorFromTag(tag: string): number | null {
-  const match = tag.match(/^v?(\d+)\.(\d+)/);
-  if (!match) return null;
-  return parseInt(match[2], 10);
+  return parseVersionMinor(tag);
 }
 
 function normalizeIsoTimestamp(timestamp: string): string {
   return timestamp.replace(/\.\d{1,7}Z$/, 'Z');
-}
-
-function isStableVsCodeVersion(version: string): boolean {
-  return /^\d+\.\d+\.\d+$/.test(version) && !/^\d+\.\d+\.20\d{8}$/.test(version);
 }
 
 export function collectStableReleases(
@@ -149,7 +148,7 @@ async function fetchVsCodeData(): Promise<VsCodeData> {
   }
 
   const updatedAt = stableReleases[0].releaseDate;
-  const previewMinor = stableMinor + 1;
+  const previewMinor = derivePreviewMinor(stableMinor);
 
   return { stableMinor, previewMinor, updatedAt, stableReleases };
 }
