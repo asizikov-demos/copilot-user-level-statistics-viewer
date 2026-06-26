@@ -8,7 +8,6 @@ export type MetricTileIconName =
   | "top-language"
   | "top-ide"
   | "impact"
-  | "pru-usage"
   | "copilot-adoption"
   | "top-model"
   | "chat-users"
@@ -80,14 +79,6 @@ const ICON_PATHS: Record<MetricTileIconName, React.ReactElement> = {
         d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
       />
     </>
-  ),
-  "pru-usage": (
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M3 3h18M9 7h12M9 11h12M9 15h12M3 7h.01M3 11h.01M3 15h.01M9 19h12M3 19h.01"
-    />
   ),
   "copilot-adoption": (
     <path
