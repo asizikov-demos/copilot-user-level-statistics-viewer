@@ -5,7 +5,7 @@ import {
   derivePreviewMinor,
   isStableVsCodeVersion,
   parseTagMinor,
-} from '../src/domain/vscodeVersionRules';
+} from '#domain/vscodeVersionRules';
 
 export const STABLE_RELEASES_WINDOW = 20;
 

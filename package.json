@@ -2,6 +2,10 @@
   "name": "user-level-metrics-viewer",
   "version": "0.1.0",
   "private": true,
+  "imports": {
+    "#domain/*": "./src/domain/*.ts",
+    "#utils/*": "./src/utils/*.ts"
+  },
   "scripts": {
     "dev": "npm run build:worker && next dev --turbopack",
     "build": "npm run build:worker -- --production && next build",
