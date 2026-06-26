@@ -4,7 +4,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { splitNdjsonLines } from '../src/utils/ndjsonParser';
+import { splitNdjsonLines } from '#utils/ndjsonParser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

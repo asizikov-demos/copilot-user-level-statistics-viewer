@@ -5,7 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomInt } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { splitNdjsonLines } from '../src/utils/ndjsonParser';
+import { splitNdjsonLines } from '#utils/ndjsonParser';
 
 type JsonRecord = Record<string, unknown>;
 interface ParsedRecord {
