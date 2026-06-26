@@ -3,11 +3,12 @@ import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
-import { getIDEIcon, formatIDEName, CopilotIcon } from '../icons/IDEIcons';
+import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
 import { createBarDataset } from './utils/chartStyles';
 import { createBaseChartOptions } from './utils/chartOptions';
 import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
+import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../domain/calculators/clientActivityRows';
 import { formatShortDate } from '../../utils/formatters';
 import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
@@ -152,8 +153,18 @@ export default function ClientActivityChart({
     },
   }), []);
 
-  const hasCliData = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
-  const cliInteractionCount = cliTotals.interactions > 0 ? cliTotals.interactions : cliTotals.promptCount;
+  const ideClientRows = useMemo(
+    () => mapIdeClientActivityRows(ideAggregates),
+    [ideAggregates],
+  );
+  const cliClientRow = useMemo(
+    () => createCliClientActivityRow(cliTotals),
+    [cliTotals],
+  );
+  const clientRows = useMemo(
+    () => (cliClientRow ? [...ideClientRows, cliClientRow] : ideClientRows),
+    [ideClientRows, cliClientRow],
+  );
   const hasCliVersions = cliVersions && cliVersions.length > 0;
   const allVersions = [
     ...(pluginVersions || []).map(p => ({
@@ -167,7 +178,7 @@ export default function ClientActivityChart({
       sampled_at: c.sampled_at,
     })),
   ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
-  const isEmpty = ideAggregates.length === 0 && !hasCliData && !hasCliVersions;
+  const isEmpty = ideAggregates.length === 0 && !cliClientRow && !hasCliVersions;
 
   const footer = (
     <>
@@ -186,43 +197,23 @@ export default function ClientActivityChart({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {ideAggregates.map(ide => (
-              <tr key={ide.ide}>
+            {clientRows.map((client) => (
+              <tr key={client.ide}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <div className="flex items-center gap-2">
-                    {React.createElement(getIDEIcon(ide.ide))}
-                    <span>{formatIDEName(ide.ide)}</span>
+                    {React.createElement(getIDEIcon(client.ide))}
+                    <span>{formatIDEName(client.ide)}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{getTotalUserInitiatedInteractionCount(ide).toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_generation_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.code_acceptance_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_added_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_deleted_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_suggested_to_add_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{ide.loc_suggested_to_delete_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.user_initiated_interaction_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_generation_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_acceptance_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_added_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_deleted_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_add_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_delete_sum.toLocaleString()}</td>
               </tr>
             ))}
-            {(() => {
-              if (!hasCliData) return null;
-              return (
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base"><CopilotIcon /></span>
-                      <span>Copilot CLI</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliInteractionCount.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.generations.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.acceptances.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locAdded.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locDeleted.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToAdd.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{cliTotals.locSuggestedToDelete.toLocaleString()}</td>
-                </tr>
-              );
-            })()}
           </tbody>
         </table>
       </div>
