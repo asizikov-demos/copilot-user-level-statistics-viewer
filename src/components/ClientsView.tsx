@@ -10,6 +10,7 @@ import IDEDistributionChart from './charts/IDEDistributionChart';
 import CLIOverlapChart from './charts/CLIOverlapChart';
 import IDEInsights from './IDEInsights';
 import { CLIENT_ANALYSIS_SECTIONS } from './layout/contextSections';
+import { appendCliClientStatsRow } from '../domain/calculators/clientActivityRows';
 
 type IDEStats = IDEStatsData;
 
@@ -34,20 +35,12 @@ export default function ClientsView({
 }: IDEViewProps) {
 
   const allClients: IDEStats[] = React.useMemo(() => {
-    if (cliUsers <= 0) return ideStats;
-    const cliEntry: IDEStats = {
-      ide: 'copilot_cli',
-      uniqueUsers: cliUsers,
-      cliOverlapUsers: 0,
-      totalEngagements: cliSessions,
-      totalGenerations: 0,
-      totalAcceptances: 0,
+    return appendCliClientStatsRow(ideStats, {
+      users: cliUsers,
+      sessions: cliSessions,
       locAdded: cliLocAdded,
       locDeleted: cliLocDeleted,
-      locSuggestedToAdd: 0,
-      locSuggestedToDelete: 0,
-    };
-    return [...ideStats, cliEntry];
+    });
   }, [ideStats, cliUsers, cliSessions, cliLocAdded, cliLocDeleted]);
 
   const {

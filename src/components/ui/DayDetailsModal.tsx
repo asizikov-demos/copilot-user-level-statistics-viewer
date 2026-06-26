@@ -3,13 +3,13 @@
 import React from 'react';
 import type { UserDayData } from '../../types/metrics';
 import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
+import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../domain/calculators/clientActivityRows';
 import { formatIDEName, getIDEIcon } from '../icons/IDEIcons';
 import MetricsTable, { type TableColumn } from './MetricsTable';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../types/events';
-import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
 import { isAgentFeature, isCliFeature, isCodeCompletionFeature } from '../../domain/featureCategories';
 import { formatAiCreditCost } from '../../utils/formatters';
 
@@ -153,32 +153,40 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
   const hasData = !!dayMetrics;
   const cliDayTotals = computeCliDayTotals(dayMetrics);
-  const hasCliActivity = cliDayTotals.promptCount > 0 || cliDayTotals.interactions > 0;
+  const cliClientRow = createCliClientActivityRow(cliDayTotals);
+  const hasCliActivity = cliClientRow !== null;
   const cliInteractionCount = cliDayTotals.interactionCount;
 
   const featurePills = hasData ? buildFeaturePills(dayMetrics!, hasCliActivity) : [];
-
-  const clientRows: ClientRow[] = hasData ? [
-    ...dayMetrics!.totals_by_ide.map((ide) => ({
-      name: formatIDEName(ide.ide),
-      iconName: ide.ide,
-      user_initiated_interaction_count: getTotalUserInitiatedInteractionCount(ide),
-      code_generation_activity_count: ide.code_generation_activity_count,
-      code_acceptance_activity_count: ide.code_acceptance_activity_count,
-      loc_added_sum: ide.loc_added_sum,
-      loc_deleted_sum: ide.loc_deleted_sum,
-      plugin_version: ide.last_known_plugin_version
+  const ideClientRows = hasData ? mapIdeClientActivityRows(dayMetrics!.totals_by_ide) : [];
+  const ideVersionByClient = hasData
+    ? new Map(dayMetrics!.totals_by_ide.map((ide) => [
+      ide.ide,
+      ide.last_known_plugin_version
         ? `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}`
         : 'Unknown',
+    ]))
+    : new Map<string, string>();
+
+  const clientRows: ClientRow[] = hasData ? [
+    ...ideClientRows.map((client) => ({
+      name: formatIDEName(client.ide),
+      iconName: client.ide,
+      user_initiated_interaction_count: client.user_initiated_interaction_count,
+      code_generation_activity_count: client.code_generation_activity_count,
+      code_acceptance_activity_count: client.code_acceptance_activity_count,
+      loc_added_sum: client.loc_added_sum,
+      loc_deleted_sum: client.loc_deleted_sum,
+      plugin_version: ideVersionByClient.get(client.ide) ?? 'Unknown',
     })),
-    ...(hasCliActivity ? [{
-      name: 'Copilot CLI',
-      iconName: 'copilot_cli',
-      user_initiated_interaction_count: cliInteractionCount,
-      code_generation_activity_count: cliDayTotals.generations,
-      code_acceptance_activity_count: cliDayTotals.acceptances,
-      loc_added_sum: cliDayTotals.locAdded,
-      loc_deleted_sum: cliDayTotals.locDeleted,
+    ...(cliClientRow ? [{
+      name: formatIDEName(cliClientRow.ide),
+      iconName: cliClientRow.ide,
+      user_initiated_interaction_count: cliClientRow.user_initiated_interaction_count,
+      code_generation_activity_count: cliClientRow.code_generation_activity_count,
+      code_acceptance_activity_count: cliClientRow.code_acceptance_activity_count,
+      loc_added_sum: cliClientRow.loc_added_sum,
+      loc_deleted_sum: cliClientRow.loc_deleted_sum,
       plugin_version: dayMetrics!.totals_by_cli?.last_known_cli_version
         ? `v${dayMetrics!.totals_by_cli.last_known_cli_version.cli_version}`
         : 'Unknown',
