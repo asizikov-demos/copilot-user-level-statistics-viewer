@@ -32,17 +32,6 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
       contentClassName="space-y-6"
     >
       <div className="space-y-6">
-        <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-          GitHub Copilot has moved to usage-based billing.{' '}
-          <a
-            href="https://github.blog/news-insights/company-news/github-copilot-is-moving-to-usage-based-billing/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium underline decoration-blue-400 underline-offset-2 hover:text-blue-700"
-          >
-            Read the announcement.
-          </a>
-        </div>
         <div id={allModelsSection.id} className="scroll-mt-28">
           <ModelsUsageChart modelEntries={modelEntries} dates={modelBreakdownData.dates} totalInteractions={modelTotal} variant="all" />
         </div>
