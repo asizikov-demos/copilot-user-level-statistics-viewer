@@ -1,15 +1,11 @@
 'use client';
 
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
 import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
-import { createBaseChartOptions } from './utils/chartOptions';
-import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate } from '../../utils/formatters';
+import { createDailyBarChartConfig, padDailyReportRangeData } from './utils/dailyBarChart';
 import type { DailyCloudAgentAdoptionData } from '../../domain/calculators/metricCalculators';
-import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();
@@ -25,7 +21,7 @@ function padCloudAgentAdoptionData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyCloudAgentAdoptionData[] {
-  return padReportRangeWithDefaults(
+  return padDailyReportRangeData(
     data,
     reportStartDay,
     reportEndDay,
@@ -46,24 +42,24 @@ export default function CloudAgentAdoptionChart({
   const peakDailyUsers = data.reduce((peak, day) => Math.max(peak, day.uniqueUsers), 0);
   const userDays = data.reduce((sum, day) => sum + day.uniqueUsers, 0);
 
-  const chartData = {
-    labels: paddedData.map(day => formatShortDate(day.date)),
-    datasets: [
-      createBarDataset(
-        chartColors.teal.solid,
-        'Cloud Agent users',
-        paddedData.map(day => day.uniqueUsers)
-      ),
+  const { chartData, options } = createDailyBarChartConfig({
+    data: paddedData,
+    getDate: day => day.date,
+    series: [
+      {
+        color: chartColors.teal.solid,
+        label: 'Cloud Agent users',
+        getValue: day => day.uniqueUsers,
+      },
     ],
-  };
-
-  const options = createBaseChartOptions({
-    xAxisLabel: 'Date',
-    yAxisLabel: 'Unique Users',
-    yStepSize: 1,
-    xMaxRotation: 45,
-    xAutoSkip: true,
-  }) as ChartOptions<'bar'>;
+    options: {
+      xAxisLabel: 'Date',
+      yAxisLabel: 'Unique Users',
+      yStepSize: 1,
+      xMaxRotation: 45,
+      xAutoSkip: true,
+    },
+  });
 
   return (
     <ChartContainer

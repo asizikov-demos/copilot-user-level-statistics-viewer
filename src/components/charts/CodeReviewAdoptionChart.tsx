@@ -1,15 +1,11 @@
 'use client';
 
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
 import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
-import { createBaseChartOptions } from './utils/chartOptions';
-import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
-import { formatShortDate } from '../../utils/formatters';
+import { createDailyBarChartConfig, padDailyReportRangeData } from './utils/dailyBarChart';
 import type { DailyCodeReviewAdoptionData } from '../../domain/calculators/metricCalculators';
-import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();
@@ -29,7 +25,7 @@ function padCodeReviewAdoptionData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyCodeReviewAdoptionData[] {
-  return padReportRangeWithDefaults(
+  return padDailyReportRangeData(
     data,
     reportStartDay,
     reportEndDay,
@@ -40,10 +36,11 @@ function padCodeReviewAdoptionData(
       passiveUsers: 0,
       totalUsers: 0,
     }),
-  ).map(day => ({
-    ...day,
-    totalUsers: getTotalUsers(day),
-  }));
+    day => ({
+      ...day,
+      totalUsers: getTotalUsers(day),
+    }),
+  );
 }
 
 export default function CodeReviewAdoptionChart({
@@ -59,29 +56,29 @@ export default function CodeReviewAdoptionChart({
   const peakPassiveUsers = data.reduce((peak, day) => Math.max(peak, day.passiveUsers), 0);
   const totalUserDays = data.reduce((sum, day) => sum + getTotalUsers(day), 0);
 
-  const chartData = {
-    labels: paddedData.map(day => formatShortDate(day.date)),
-    datasets: [
-      createBarDataset(
-        chartColors.cyan.solid,
-        'Active CCR users',
-        paddedData.map(day => day.activeUsers)
-      ),
-      createBarDataset(
-        chartColors.indigo.solid,
-        'Passive CCR users',
-        paddedData.map(day => day.passiveUsers)
-      ),
+  const { chartData, options } = createDailyBarChartConfig({
+    data: paddedData,
+    getDate: day => day.date,
+    series: [
+      {
+        color: chartColors.cyan.solid,
+        label: 'Active CCR users',
+        getValue: day => day.activeUsers,
+      },
+      {
+        color: chartColors.indigo.solid,
+        label: 'Passive CCR users',
+        getValue: day => day.passiveUsers,
+      },
     ],
-  };
-
-  const options = createBaseChartOptions({
-    xAxisLabel: 'Date',
-    yAxisLabel: 'Unique Users',
-    yStepSize: 1,
-    xMaxRotation: 45,
-    xAutoSkip: true,
-  }) as ChartOptions<'bar'>;
+    options: {
+      xAxisLabel: 'Date',
+      yAxisLabel: 'Unique Users',
+      yStepSize: 1,
+      xMaxRotation: 45,
+      xAutoSkip: true,
+    },
+  });
 
   return (
     <ChartContainer
