@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formatShortDate } from '../../../utils/formatters';
 import { createDailyBarChartConfig, padDailyReportRangeData } from './dailyBarChart';
 
 describe('padDailyReportRangeData', () => {
@@ -50,7 +51,7 @@ describe('createDailyBarChartConfig', () => {
       },
     });
 
-    expect(chartData.labels).toEqual(['Jan 1', 'Jan 2']);
+    expect(chartData.labels).toEqual(['2024-01-01', '2024-01-02'].map(formatShortDate));
     expect(chartData.datasets).toHaveLength(2);
     expect(chartData.datasets[0]).toMatchObject({
       label: 'A',
