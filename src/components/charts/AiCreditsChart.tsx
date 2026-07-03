@@ -4,13 +4,12 @@ import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { DailyAiCreditsData } from '../../domain/calculators/metricCalculators';
 import { calculateStats } from '../../domain/calculators/statsCalculators';
-import { formatAiCreditCost, formatNumber, formatShortDate } from '../../utils/formatters';
-import { padReportRangeWithDefaults } from '../../utils/timeSeries';
+import { formatAiCreditCost, formatNumber } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import { chartColors } from './utils/chartColors';
-import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
+import { yAxisFormatters } from './utils/chartOptions';
+import { createDailyBarChartConfig, padDailyReportRangeData } from './utils/dailyBarChart';
 import { registerChartJS } from './utils/chartSetup';
-import { createBarDataset } from './utils/chartStyles';
 
 registerChartJS();
 
@@ -29,7 +28,7 @@ function createDisplayData(
   reportStartDay: string,
   reportEndDay: string
 ): DailyAiCreditsData[] {
-  return padReportRangeWithDefaults(
+  return padDailyReportRangeData(
     data,
     reportStartDay,
     reportEndDay,
@@ -63,35 +62,35 @@ export default function AiCreditsChart({
     undefined
   );
 
-  const chartData = {
-    labels: displayData.map(entry => formatShortDate(entry.date)),
-    datasets: [
-      createBarDataset(
-        chartColors.violet.alpha60,
-        'AI Credits Used',
-        displayData.map(entry => entry.aiCreditsUsed),
-        {
+  const { chartData, options } = createDailyBarChartConfig({
+    data: displayData,
+    getDate: entry => entry.date,
+    series: [
+      {
+        color: chartColors.violet.alpha60,
+        label: 'AI Credits Used',
+        getValue: entry => entry.aiCreditsUsed,
+        datasetOptions: {
           borderColor: chartColors.violet.solid,
-        }
-      ),
+        },
+      },
     ],
-  };
-
-  const options = createBaseChartOptions({
-    xAxisLabel: 'Date',
-    yAxisLabel: 'AI Credits Used',
-    showLegend: false,
-    yTicksCallback: yAxisFormatters.localeNumber,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
-      const dayData = displayData[context.dataIndex];
-      const labels = [
-        `AI credits: ${formatNumber(dayData.aiCreditsUsed, 2)}`,
-        `Estimated cost: ${formatAiCreditCost(dayData.aiCreditsUsed)}`,
-      ];
-      if (showUsers) {
-        labels.push(`Users with credits: ${dayData.users}`);
-      }
-      return labels;
+    options: {
+      xAxisLabel: 'Date',
+      yAxisLabel: 'AI Credits Used',
+      showLegend: false,
+      yTicksCallback: yAxisFormatters.localeNumber,
+      tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+        const dayData = displayData[context.dataIndex];
+        const labels = [
+          `AI credits: ${formatNumber(dayData.aiCreditsUsed, 2)}`,
+          `Estimated cost: ${formatAiCreditCost(dayData.aiCreditsUsed)}`,
+        ];
+        if (showUsers) {
+          labels.push(`Users with credits: ${dayData.users}`);
+        }
+        return labels;
+      },
     },
   });
 
