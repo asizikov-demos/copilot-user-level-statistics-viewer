@@ -12,9 +12,11 @@ describe('TopEntriesList', () => {
   });
 
   it('renders formatted entries with icons, raw-name titles, and unique-user totals', () => {
+    const total = 1234;
+    const uniqueUsers = 56;
     const markup = renderToStaticMarkup(
       <TopEntriesList
-        entries={[{ name: 'gpt-4o', total: 1234, uniqueUsers: 56 }]}
+        entries={[{ name: 'gpt-4o', total, uniqueUsers }]}
         formatName={(name) => `Formatted ${name}`}
         getIcon={() => TestIcon}
       />
@@ -22,18 +24,28 @@ describe('TopEntriesList', () => {
 
     expect(markup).toContain('Formatted gpt-4o');
     expect(markup).toContain('title="gpt-4o"');
-    expect(markup).toContain('title="56 users"');
-    expect(markup).toContain('1,234');
+    expect(markup).toContain(`title="${uniqueUsers.toLocaleString()} users"`);
+    expect(markup).toContain(total.toLocaleString());
+    expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('data-icon="test"');
   });
 
   it('renders plain-text entries without requiring an icon callback', () => {
+    const uniqueUsers = 3;
     const markup = renderToStaticMarkup(
-      <TopEntriesList entries={[{ name: 'TypeScript', total: 7, uniqueUsers: 3 }]} />
+      <TopEntriesList entries={[{ name: 'TypeScript', total: 7, uniqueUsers }]} />
     );
 
     expect(markup).toContain('TypeScript');
-    expect(markup).toContain('title="3 users"');
+    expect(markup).toContain(`title="${uniqueUsers.toLocaleString()} users"`);
     expect(markup).not.toContain('data-icon=');
+  });
+
+  it('pluralizes unique-user tooltip labels', () => {
+    const singularMarkup = renderToStaticMarkup(
+      <TopEntriesList entries={[{ name: 'Model A', total: 1, uniqueUsers: 1 }]} />
+    );
+
+    expect(singularMarkup).toContain(`title="${(1).toLocaleString()} user"`);
   });
 });

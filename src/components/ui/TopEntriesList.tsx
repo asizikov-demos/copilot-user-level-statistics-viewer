@@ -25,12 +25,13 @@ export default function TopEntriesList<Entry extends TopEntriesListEntry>({
     <div className="space-y-1">
       {entries.map((entry) => {
         const Icon = getIcon?.(entry.name);
+        const uniqueUsersLabel = `${entry.uniqueUsers.toLocaleString()} user${entry.uniqueUsers === 1 ? '' : 's'}`;
 
         return (
           <div key={entry.name} className="flex items-center justify-between gap-3 text-sm">
             <div className="flex min-w-0 items-center gap-2">
               {Icon ? (
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0" aria-hidden="true">
                   <Icon />
                 </div>
               ) : null}
@@ -38,7 +39,7 @@ export default function TopEntriesList<Entry extends TopEntriesListEntry>({
                 {formatName(entry.name)}
               </span>
             </div>
-            <span className="whitespace-nowrap text-xs text-gray-500" title={`${entry.uniqueUsers.toLocaleString()} users`}>
+            <span className="whitespace-nowrap text-xs text-gray-500" title={uniqueUsersLabel}>
               {entry.total.toLocaleString()}
             </span>
           </div>
