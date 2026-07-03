@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { makeMetric } from '../../__tests__/factories/metrics';
 import { parseMetricsFile } from '../../domain/metricsParser';
 import { parseMultipleMetricsStreams } from '../metricsFileParser';
 
@@ -25,11 +26,7 @@ function createChunkedFile(chunks: string[], name: string = 'metrics.ndjson'): F
 
 describe('parseMultipleMetricsStreams', () => {
   it('matches parseMetricsFile for equivalent NDJSON content across chunk boundaries', async () => {
-    const baseRecord = {
-      report_start_day: '2024-01-01',
-      report_end_day: '2024-01-31',
-      day: '2024-01-15',
-      enterprise_id: 'test-enterprise',
+    const baseRecord = makeMetric({
       user_id: 123,
       user_login: 'user1',
       user_initiated_interaction_count: 10,
@@ -39,14 +36,8 @@ describe('parseMultipleMetricsStreams', () => {
       loc_deleted_sum: 20,
       loc_suggested_to_add_sum: 150,
       loc_suggested_to_delete_sum: 30,
-      totals_by_ide: [],
-      totals_by_feature: [],
-      totals_by_language_feature: [],
-      totals_by_language_model: [],
-      totals_by_model_feature: [],
-      used_agent: false,
       used_chat: true,
-    };
+    });
     const secondRecord = { ...baseRecord, user_id: 456, user_login: 'user2' };
     const deprecatedRecord = { ...baseRecord, user_id: 789, generated_loc_sum: 100 };
 
