@@ -88,7 +88,7 @@ describe('metricsParser', () => {
     });
 
     it('should reject lines missing required LOC fields', () => {
-      const missingFieldsTests = [
+      const missingFieldsTests: Array<{ field: keyof CopilotMetrics }> = [
         { field: 'loc_added_sum' },
         { field: 'loc_deleted_sum' },
         { field: 'loc_suggested_to_add_sum' },
