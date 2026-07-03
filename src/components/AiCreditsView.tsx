@@ -4,10 +4,11 @@ import React, { useMemo } from 'react';
 import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
+import TopEntriesList from './ui/TopEntriesList';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber, formatPercentage } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
 import { getModelIcon } from './icons/ModelIcons';
-import type { DailyAiCreditsData, AiAdoptionPhaseTopEntry, UsageDistributionBucket } from '../domain/calculators/metricCalculators';
+import type { DailyAiCreditsData, UsageDistributionBucket } from '../domain/calculators/metricCalculators';
 import type { MetricsStats, UserSummary } from '../types/metrics';
 
 interface AiCreditsViewProps {
@@ -20,64 +21,6 @@ interface AiCreditsViewProps {
 
 function formatAverage(value: number): string {
   return formatNumber(value, 1);
-}
-
-function renderTopModelEntries(entries: AiAdoptionPhaseTopEntry[]) {
-  if (entries.length === 0) {
-    return <span className="text-sm text-gray-400">No data</span>;
-  }
-
-  return (
-    <div className="space-y-1">
-      {entries.map((entry) => {
-        const ModelIcon = getModelIcon(entry.name);
-        return (
-          <div key={entry.name} className="flex items-center justify-between gap-3 text-sm">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="flex-shrink-0">
-                <ModelIcon />
-              </div>
-              <span className="truncate text-gray-900" title={entry.name}>
-                {formatModelDisplayName(entry.name)}
-              </span>
-            </div>
-            <span className="whitespace-nowrap text-xs text-gray-500" title={`${entry.uniqueUsers.toLocaleString()} users`}>
-              {entry.total.toLocaleString()}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function renderTopClientEntries(entries: AiAdoptionPhaseTopEntry[]) {
-  if (entries.length === 0) {
-    return <span className="text-sm text-gray-400">No data</span>;
-  }
-
-  return (
-    <div className="space-y-1">
-      {entries.map((entry) => {
-        const ClientIcon = getIDEIcon(entry.name);
-        return (
-          <div key={entry.name} className="flex items-center justify-between gap-3 text-sm">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="flex-shrink-0">
-                <ClientIcon />
-              </div>
-              <span className="truncate text-gray-900" title={entry.name}>
-                {formatIDEName(entry.name)}
-              </span>
-            </div>
-            <span className="whitespace-nowrap text-xs text-gray-500" title={`${entry.uniqueUsers.toLocaleString()} users`}>
-              {entry.total.toLocaleString()}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 interface TopAiCreditsUser extends UserSummary {
@@ -232,14 +175,26 @@ export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries
       header: 'Top Models - interactions',
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 align-top',
-      renderCell: (bucket) => renderTopModelEntries(bucket.topModels),
+      renderCell: (bucket) => (
+        <TopEntriesList
+          entries={bucket.topModels}
+          formatName={formatModelDisplayName}
+          getIcon={getModelIcon}
+        />
+      ),
     },
     {
       id: 'topClients',
       header: 'Top Clients - activity',
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 align-top',
-      renderCell: (bucket) => renderTopClientEntries(bucket.topClients),
+      renderCell: (bucket) => (
+        <TopEntriesList
+          entries={bucket.topClients}
+          formatName={formatIDEName}
+          getIcon={getIDEIcon}
+        />
+      ),
     },
   ];
 
