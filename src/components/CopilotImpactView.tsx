@@ -72,7 +72,7 @@ export default function CopilotImpactView({ agentImpactData, codeCompletionImpac
         <ModeImpactChart
           data={askModeImpactData || []}
           title="Copilot Ask Mode Impact"
-          description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
+          description="Lines of code copied or applied into files from Copilot Chat Ask Mode responses. Ask Mode does not edit files directly — these counts reflect suggestions the developer chose to accept."
           emptyStateMessage="No Ask Mode impact data available."
         />
       </div>
