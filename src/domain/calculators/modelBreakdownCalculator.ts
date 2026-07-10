@@ -1,7 +1,5 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
-import { isCliFeature } from '../featureCategories';
-import { isActiveAutoModeFeature } from '../autoMode';
-import { classifyModelRequest } from '../modelConfig';
+import { analyzeModelFeature, type ModelFeatureAnalysis, type ModelFeatureAnalysisInput } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -52,46 +50,42 @@ export function accumulateModelBreakdown(
   accumulator: ModelBreakdownAccumulator,
   date: string,
   userId: number,
-  modelFeature: {
-    model: string;
-    feature: string;
-    user_initiated_interaction_count: number;
-    code_generation_activity_count: number;
-    code_acceptance_activity_count: number;
-  }
+  modelFeature: ModelFeatureAnalysisInput | ModelFeatureAnalysis
 ): void {
-  const interactionCount = modelFeature.user_initiated_interaction_count || 0;
-  const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
-  const { normalizedModel, isUnknown } = classifyModelRequest(modelFeature.model);
+  const analysis = 'modelKey' in modelFeature
+    ? modelFeature
+    : analyzeModelFeature(modelFeature);
 
-  if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
+  if (analysis.isCli && analysis.interactionCount > 0) {
     accumulator.allDates.add(date);
-    accumulator.cliTotal += interactionCount;
-    accumulateModelEntry(accumulator.cliModels, normalizedModel || 'unknown', date, interactionCount);
+    accumulator.cliTotal += analysis.interactionCount;
+    accumulateModelEntry(accumulator.cliModels, analysis.modelKey, date, analysis.interactionCount);
   }
 
-  if (isActiveAutoModeFeature(modelFeature)) {
+  if (analysis.isActiveAutoMode) {
     accumulator.allDates.add(date);
     if (!accumulator.autoModeUsersByDate.has(date)) {
       accumulator.autoModeUsersByDate.set(date, new Set());
     }
     accumulator.autoModeUsersByDate.get(date)!.add(userId);
 
-    const autoUsageCount = interactionCount > 0 ? interactionCount : activityCount;
-    accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount);
+    const autoUsageCount = analysis.interactionCount > 0
+      ? analysis.interactionCount
+      : analysis.activityCount;
+    accumulateModelEntry(accumulator.autoModels, analysis.normalizedModel, date, autoUsageCount);
     return;
   }
 
-  if (!interactionCount) {
+  if (!analysis.interactionCount) {
     return;
   }
 
   accumulator.allDates.add(date);
-  accumulator.modelTotal += interactionCount;
-  accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount);
+  accumulator.modelTotal += analysis.interactionCount;
+  accumulateModelEntry(accumulator.allModels, analysis.modelKey, date, analysis.interactionCount);
 
-  if (isUnknown) {
-    accumulator.unknownTotal += interactionCount;
+  if (analysis.isUnknown) {
+    accumulator.unknownTotal += analysis.interactionCount;
   }
 }
 

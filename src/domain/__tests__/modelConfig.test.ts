@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  analyzeModelFeature,
   classifyModelRequest,
   isActiveAutoModeFeature,
   isKnownModelName,
@@ -82,6 +83,48 @@ describe('modelConfig', () => {
         normalizedModel: 'some-random-model',
         isUnknown: false,
         isKnownModel: false,
+      });
+    });
+  });
+
+  describe('analyzeModelFeature', () => {
+    it('should normalize once and expose shared unknown and CLI classification', () => {
+      expect(analyzeModelFeature({
+        model: ' ',
+        feature: 'copilot_cli',
+        user_initiated_interaction_count: 4,
+        code_generation_activity_count: 0,
+        code_acceptance_activity_count: 0,
+      })).toEqual({
+        normalizedModel: '',
+        isUnknown: true,
+        isKnownModel: false,
+        feature: 'copilot_cli',
+        interactionCount: 4,
+        activityCount: 0,
+        modelKey: 'unknown',
+        isCli: true,
+        isActiveAutoMode: false,
+      });
+    });
+
+    it('should preserve auto-mode activity fallback when interactions are zero', () => {
+      expect(analyzeModelFeature({
+        model: '  Auto  ',
+        feature: 'agent_edit',
+        user_initiated_interaction_count: 0,
+        code_generation_activity_count: 3,
+        code_acceptance_activity_count: 0,
+      })).toEqual({
+        normalizedModel: 'auto',
+        isUnknown: false,
+        isKnownModel: true,
+        feature: 'agent_edit',
+        interactionCount: 0,
+        activityCount: 3,
+        modelKey: 'auto',
+        isCli: false,
+        isActiveAutoMode: true,
       });
     });
   });

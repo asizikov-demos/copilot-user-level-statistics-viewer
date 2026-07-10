@@ -1,4 +1,4 @@
-import { classifyModelRequest } from '../modelConfig';
+import { analyzeModelFeature, classifyModelRequest, type ModelFeatureAnalysis } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
 import { getChatModeBucket } from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
@@ -34,11 +34,13 @@ export function createModelUsageAccumulator(): ModelUsageAccumulator {
   };
 }
 
+type ModelUsageFeatureInput = Pick<ModelFeatureAnalysis, 'interactionCount' | 'isUnknown'>;
+
 export function accumulateModelFeature(
   accumulator: ModelUsageAccumulator,
   date: string,
-  model: string,
-  interactions: number
+  modelOrAnalysis: string | ModelUsageFeatureInput,
+  interactions = 0
 ): void {
   if (!accumulator.dailyModelUsage.has(date)) {
     accumulator.dailyModelUsage.set(date, {
@@ -47,10 +49,13 @@ export function accumulateModelFeature(
     });
   }
   const dmu = accumulator.dailyModelUsage.get(date)!;
-  const { isUnknown } = classifyModelRequest(model);
-  dmu.modelInteractions += interactions;
+  const { interactionCount, isUnknown } = typeof modelOrAnalysis === 'string'
+    ? { interactionCount: interactions, ...classifyModelRequest(modelOrAnalysis) }
+    : modelOrAnalysis;
+
+  dmu.modelInteractions += interactionCount;
   if (isUnknown) {
-    dmu.unknownModels += interactions;
+    dmu.unknownModels += interactionCount;
   }
 }
 
@@ -108,12 +113,7 @@ export function calculateDailyModelUsageFromMetrics(
     const date = metric.day;
 
     for (const modelFeature of metric.totals_by_model_feature) {
-      accumulateModelFeature(
-        accumulator,
-        date,
-        modelFeature.model,
-        modelFeature.user_initiated_interaction_count
-      );
+      accumulateModelFeature(accumulator, date, analyzeModelFeature(modelFeature));
     }
   }
 

@@ -1,6 +1,7 @@
 /**
  * Shared configuration for model normalization and known-model recognition.
  */
+import { isCliFeature } from './featureCategories';
 import { normalizeModelName } from './autoMode';
 
 export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
@@ -83,6 +84,23 @@ export interface ModelRequestClassification {
   isKnownModel: boolean;
 }
 
+export interface ModelFeatureAnalysisInput {
+  model: string;
+  feature: string;
+  user_initiated_interaction_count: number;
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+}
+
+export interface ModelFeatureAnalysis extends ModelRequestClassification {
+  feature: string;
+  interactionCount: number;
+  activityCount: number;
+  modelKey: string;
+  isCli: boolean;
+  isActiveAutoMode: boolean;
+}
+
 export function isUnknownModelName(modelName: string): boolean {
   const normalized = normalizeModelName(modelName);
   return normalized === '' || normalized === UNKNOWN_MODEL_NAME;
@@ -100,5 +118,25 @@ export function classifyModelRequest(modelName: string): ModelRequestClassificat
     normalizedModel,
     isUnknown,
     isKnownModel: normalizedModel !== '' && normalizedModel !== UNKNOWN_MODEL_NAME && KNOWN_MODEL_NAMES.has(normalizedModel),
+  };
+}
+
+export function analyzeModelFeature(modelFeature: ModelFeatureAnalysisInput): ModelFeatureAnalysis {
+  const interactionCount = modelFeature.user_initiated_interaction_count || 0;
+  const activityCount =
+    (modelFeature.code_generation_activity_count || 0) +
+    (modelFeature.code_acceptance_activity_count || 0);
+  const classification = classifyModelRequest(modelFeature.model);
+
+  return {
+    ...classification,
+    feature: modelFeature.feature,
+    interactionCount,
+    activityCount,
+    modelKey: classification.normalizedModel || UNKNOWN_MODEL_NAME,
+    isCli: isCliFeature(modelFeature.feature),
+    isActiveAutoMode:
+      classification.normalizedModel === 'auto' &&
+      (interactionCount > 0 || activityCount > 0),
   };
 }

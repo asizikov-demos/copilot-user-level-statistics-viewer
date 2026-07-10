@@ -121,6 +121,7 @@ import {
   computeDailyAiCreditsData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
+import { analyzeModelFeature } from './modelConfig';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;
@@ -392,16 +393,12 @@ export function aggregateMetrics(
 
     for (const modelFeature of metric.totals_by_model_feature) {
       const engagements = modelFeature.code_generation_activity_count + modelFeature.code_acceptance_activity_count;
+      const analyzedModelFeature = analyzeModelFeature(modelFeature);
       accumulateModelEngagement(statsAccumulator, modelFeature.model, engagements);
 
-      accumulateModelFeature(
-        modelUsageAccumulator,
-        date,
-        modelFeature.model,
-        modelFeature.user_initiated_interaction_count
-      );
+      accumulateModelFeature(modelUsageAccumulator, date, analyzedModelFeature);
 
-      accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);
+      accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, analyzedModelFeature);
     }
 
     const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];

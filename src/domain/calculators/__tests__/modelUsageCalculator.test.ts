@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { analyzeModelFeature } from '../../modelConfig';
 import {
   createModelUsageAccumulator,
   accumulateModelFeature,
@@ -7,14 +8,28 @@ import {
   computeAgentModeHeatmapData,
 } from '../modelUsageCalculator';
 
+const analyze = (
+  model: string,
+  feature = 'code_completion',
+  user_initiated_interaction_count = 10,
+  code_generation_activity_count = 0,
+  code_acceptance_activity_count = 0
+) => analyzeModelFeature({
+  model,
+  feature,
+  user_initiated_interaction_count,
+  code_generation_activity_count,
+  code_acceptance_activity_count,
+});
+
 describe('modelUsageCalculator', () => {
   describe('Model interaction accumulation', () => {
     it('should aggregate interactions and track explicit unknown models', () => {
       const accumulator = createModelUsageAccumulator();
 
-      accumulateModelFeature(accumulator, '2024-01-15', 'gpt-4o', 100);
-      accumulateModelFeature(accumulator, '2024-01-15', 'gpt-5', 50);
-      accumulateModelFeature(accumulator, '2024-01-15', 'unknown', 10);
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('gpt-4o', 'code_completion', 100));
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('gpt-5', 'code_completion', 50));
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('unknown', 'code_completion', 10));
 
       const results = computeDailyModelUsageData(accumulator);
 
@@ -27,7 +42,11 @@ describe('modelUsageCalculator', () => {
     it('should include normalized aliases in model interactions', () => {
       const accumulator = createModelUsageAccumulator();
 
-      accumulateModelFeature(accumulator, '2024-01-15', 'Claude Opus 4.6 (fast mode)', 10);
+      accumulateModelFeature(
+        accumulator,
+        '2024-01-15',
+        analyze('Claude Opus 4.6 (fast mode)', 'code_completion', 10)
+      );
 
       const results = computeDailyModelUsageData(accumulator);
       expect(results[0].modelInteractions).toBe(10);
@@ -77,8 +96,8 @@ describe('modelUsageCalculator', () => {
     it('should track unknown models separately', () => {
       const accumulator = createModelUsageAccumulator();
 
-      accumulateModelFeature(accumulator, '2024-01-15', 'unknown', 10);
-      accumulateModelFeature(accumulator, '2024-01-15', '', 5);
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('unknown', 'code_completion', 10));
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('', 'code_completion', 5));
 
       const results = computeDailyModelUsageData(accumulator);
 
@@ -89,7 +108,7 @@ describe('modelUsageCalculator', () => {
     it('should not count unrecognized model names as explicit unknown models', () => {
       const accumulator = createModelUsageAccumulator();
 
-      accumulateModelFeature(accumulator, '2024-01-15', 'totally-unknown-xyz', 10);
+      accumulateModelFeature(accumulator, '2024-01-15', analyze('totally-unknown-xyz', 'code_completion', 10));
 
       const results = computeDailyModelUsageData(accumulator);
 

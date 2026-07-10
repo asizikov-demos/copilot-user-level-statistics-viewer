@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { analyzeModelFeature } from '../../modelConfig';
 import {
   createModelBreakdownAccumulator,
   accumulateModelBreakdown,
@@ -12,6 +13,22 @@ const makeModelFeature = (
   code_generation_activity_count = 0,
   code_acceptance_activity_count = 0
 ) => ({ model, feature, user_initiated_interaction_count, code_generation_activity_count, code_acceptance_activity_count });
+
+const analyze = (
+  model: string,
+  feature = 'code_completion',
+  user_initiated_interaction_count = 10,
+  code_generation_activity_count = 0,
+  code_acceptance_activity_count = 0
+) => analyzeModelFeature(
+  makeModelFeature(
+    model,
+    feature,
+    user_initiated_interaction_count,
+    code_generation_activity_count,
+    code_acceptance_activity_count
+  )
+);
 
 describe('modelBreakdownCalculator', () => {
   describe('createModelBreakdownAccumulator', () => {
@@ -27,8 +44,8 @@ describe('modelBreakdownCalculator', () => {
   describe('model normalization and unknown handling', () => {
     it('should aggregate known model interactions into neutral totals and entries', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5'));
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('gpt-5'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('gpt-4o'));
       expect(acc.modelTotal).toBe(20);
       expect(acc.unknownTotal).toBe(0);
       expect(acc.allModels.get('gpt-5')?.total).toBe(10);
@@ -37,22 +54,22 @@ describe('modelBreakdownCalculator', () => {
 
     it('should normalize a model name with spaces into allModels', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.7'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('Claude Opus 4.7'));
       expect(acc.modelTotal).toBe(10);
       expect(Array.from(acc.allModels.keys())).toEqual(['claude-opus-4.7']);
     });
 
     it('should normalize a model name with parentheses into allModels', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.6 (fast mode)'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('Claude Opus 4.6 (fast mode)'));
       expect(acc.modelTotal).toBe(10);
       expect(Array.from(acc.allModels.keys())).toEqual(['claude-opus-4.6-fast-mode']);
     });
 
     it('should aggregate variants with the same canonical model key', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('Claude Opus 4.7'));
-      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('claude-opus-4.7'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('Claude Opus 4.7'));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, analyze('claude-opus-4.7'));
 
       expect(acc.modelTotal).toBe(20);
       expect(acc.allModels.size).toBe(1);
@@ -61,7 +78,7 @@ describe('modelBreakdownCalculator', () => {
 
     it('should classify the unknown sentinel to unknownTotal', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('unknown'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('unknown'));
       expect(acc.unknownTotal).toBe(10);
       expect(acc.modelTotal).toBe(10);
       expect(acc.allModels.get('unknown')?.total).toBe(10);
@@ -69,7 +86,7 @@ describe('modelBreakdownCalculator', () => {
 
     it('should classify empty model names to unknownTotal', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature(''));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze(''));
       expect(acc.unknownTotal).toBe(10);
       expect(acc.modelTotal).toBe(10);
       expect(acc.allModels.get('unknown')?.total).toBe(10);
@@ -79,51 +96,51 @@ describe('modelBreakdownCalculator', () => {
   describe('auto model handling', () => {
     it('should route auto model to autoModels and not increment neutral model total', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto'));
       expect(acc.modelTotal).toBe(0);
       expect(acc.autoModels.size).toBe(1);
     });
 
     it('should track auto-mode users per date', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto'));
-      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('auto'));
-      accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('auto'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto'));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, analyze('auto'));
+      accumulateModelBreakdown(acc, '2024-01-16', 1, analyze('auto'));
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.size).toBe(2);
       expect(acc.autoModeUsersByDate.get('2024-01-16')?.size).toBe(1);
     });
 
     it('should treat auto model as active when only interactions are non-zero', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'chat_panel', 5, 0, 0));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto', 'chat_panel', 5, 0, 0));
       expect(acc.autoModels.size).toBe(1);
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
     });
 
     it('should treat auto model as active when only generation activity is non-zero', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'agent_edit', 0, 3, 0));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto', 'agent_edit', 0, 3, 0));
       expect(acc.autoModels.size).toBe(1);
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
     });
 
     it('should treat auto model as active when only acceptance activity is non-zero', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'code_completion', 0, 0, 2));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto', 'code_completion', 0, 0, 2));
       expect(acc.autoModels.size).toBe(1);
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
     });
 
     it('should not record auto model when all activity counts are zero', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'chat_panel', 0, 0, 0));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('auto', 'chat_panel', 0, 0, 0));
       expect(acc.autoModels.size).toBe(0);
       expect(acc.autoModeUsersByDate.size).toBe(0);
     });
 
     it('should normalize "  Auto  " (with spaces) to auto bucket', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('  Auto  ', 'chat_panel', 5));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('  Auto  ', 'chat_panel', 5));
       expect(acc.autoModels.size).toBe(1);
       expect(acc.modelTotal).toBe(0);
     });
@@ -132,14 +149,14 @@ describe('modelBreakdownCalculator', () => {
   describe('CLI model handling', () => {
     it('should route CLI features to cliModels and increment cliTotal', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o', 'copilot_cli'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('gpt-4o', 'copilot_cli'));
       expect(acc.cliTotal).toBe(10);
       expect(acc.cliModels.size).toBe(1);
     });
 
     it('should coerce empty CLI model names to unknown', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('', 'copilot_cli'));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('', 'copilot_cli'));
       expect(Array.from(acc.cliModels.keys())).toEqual(['unknown']);
     });
   });
@@ -147,8 +164,8 @@ describe('modelBreakdownCalculator', () => {
   describe('computeModelBreakdownData', () => {
     it('should return sorted dates and totals', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('gpt-5'));
-      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('gpt-4o'));
+      accumulateModelBreakdown(acc, '2024-01-16', 1, analyze('gpt-5'));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, analyze('gpt-4o'));
       const data = computeModelBreakdownData(acc);
       expect(data.dates).toEqual(['2024-01-15', '2024-01-16']);
       expect(data.modelTotal).toBe(20);
@@ -158,9 +175,9 @@ describe('modelBreakdownCalculator', () => {
 
     it('should include unknown models in neutral model totals and entries', () => {
       const acc = createModelBreakdownAccumulator();
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5', 'code_completion', 10));
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o', 'code_completion', 20));
-      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('unknown', 'code_completion', 5));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('gpt-5', 'code_completion', 10));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('gpt-4o', 'code_completion', 20));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, analyze('unknown', 'code_completion', 5));
       const data = computeModelBreakdownData(acc);
 
       expect(data.modelTotal).toBe(35);
