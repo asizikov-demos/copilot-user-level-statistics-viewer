@@ -120,7 +120,7 @@ import {
   accumulateAiCredits,
   computeDailyAiCreditsData,
 } from './calculators';
-import { isActiveAutoModeFeature } from './autoMode';
+import { isActiveAutoModeFeature } from './modelConfig';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;

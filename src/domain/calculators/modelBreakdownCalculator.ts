@@ -1,7 +1,6 @@
 import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
-import { isActiveAutoModeFeature } from '../autoMode';
-import { classifyModelRequest } from '../modelConfig';
+import { classifyModelRequest, isActiveAutoModeFeature } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 

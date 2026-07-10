@@ -7,6 +7,10 @@ import {
   KNOWN_MODELS,
   normalizeModelName,
 } from '../modelConfig';
+import {
+  isActiveAutoModeFeature as isActiveAutoModeFeatureFromAutoMode,
+  normalizeModelName as normalizeModelNameFromAutoMode,
+} from '../autoMode';
 
 describe('modelConfig', () => {
   describe('normalizeModelName', () => {
@@ -18,6 +22,10 @@ describe('modelConfig', () => {
 
     it('should collapse repeated separators', () => {
       expect(normalizeModelName('claude---opus___4.7')).toBe('claude-opus-4.7');
+    });
+
+    it('should keep the autoMode shim aligned with modelConfig ownership', () => {
+      expect(normalizeModelNameFromAutoMode).toBe(normalizeModelName);
     });
   });
 
@@ -124,6 +132,10 @@ describe('modelConfig', () => {
 
     it('should return false when auto activity counts are negative', () => {
       expect(isActiveAutoModeFeature(makeFeature('auto', -1, -2, -3))).toBe(false);
+    });
+
+    it('should keep the autoMode shim aligned with modelConfig ownership', () => {
+      expect(isActiveAutoModeFeatureFromAutoMode).toBe(isActiveAutoModeFeature);
     });
   });
 });
