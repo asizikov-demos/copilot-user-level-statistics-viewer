@@ -1,8 +1,9 @@
 import type { CopilotMetrics } from '../../types/metrics';
 import { describe, it, expect } from 'vitest';
 import { makeMetric, makeMetricLine, makeNdjson } from '../../__tests__/factories/metrics';
-import { parseMetricsLine, parseMetricsFile } from '../metricsParser';
+import { parseMetricsLine, parseMetricsFile, parseMetricsLines, appendParsedMetricsFromLines } from '../metricsParser';
 import { StringPool } from '../../utils/stringPool';
+import { splitNdjsonLines } from '../../utils/ndjsonParser';
 
 const baseParserMetricOverrides: Partial<CopilotMetrics> = {
   user_id: 123,
@@ -408,6 +409,45 @@ describe('metricsParser', () => {
       expect(parseMetricsFile('')).toEqual([]);
       expect(parseMetricsFile('   ')).toEqual([]);
       expect(parseMetricsFile('\n\n')).toEqual([]);
+    });
+  });
+
+  describe('shared line consumption helpers', () => {
+    const baseRecord = makeMetric({
+      ...baseParserMetricOverrides,
+      user_login: 'user1',
+    });
+
+    it('should parse mixed NDJSON line collections consistently', () => {
+      const deprecatedLine = JSON.stringify({ ...baseRecord, generated_loc_sum: 100 });
+      const missingLocLine = JSON.stringify(omitMetricField(baseRecord, 'loc_added_sum'));
+      const secondValidLine = JSON.stringify({ ...baseRecord, user_id: 456, user_login: 'user2' });
+
+      const lines = splitNdjsonLines(
+        `${JSON.stringify(baseRecord)}\n${deprecatedLine}\n${missingLocLine}\ninvalid json\n${secondValidLine}`
+      );
+
+      const results = parseMetricsLines(lines);
+
+      expect(results).toHaveLength(2);
+      expect(results.map(metric => metric.user_id)).toEqual([123, 456]);
+    });
+
+    it('should append parsed metrics and return accepted count', () => {
+      const metrics: CopilotMetrics[] = [];
+      const pool = new StringPool();
+      const secondValidLine = JSON.stringify({ ...baseRecord, user_id: 456, user_login: 'user2' });
+      const lines = [
+        { line: JSON.stringify(baseRecord) },
+        { line: 'invalid json' },
+        { line: secondValidLine },
+      ];
+
+      const accepted = appendParsedMetricsFromLines(lines, metrics, pool);
+
+      expect(accepted).toBe(2);
+      expect(metrics).toHaveLength(2);
+      expect(metrics.map(metric => metric.user_id)).toEqual([123, 456]);
     });
   });
 });
