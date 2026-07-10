@@ -1,5 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
+import type { NdjsonLine } from '../utils/ndjsonParser';
 import { splitNdjsonLines } from '../utils/ndjsonParser';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { normalizeLanguage } from './languageNormalizer';
@@ -91,19 +92,38 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
   }
 }
 
-export function parseMetricsFile(fileContent: string): CopilotMetrics[] {
-  const metrics: CopilotMetrics[] = [];
-  const pool = new StringPool();
+export function appendParsedMetricsFromLines(
+  lines: Iterable<Pick<NdjsonLine, 'line'>>,
+  metrics: CopilotMetrics[],
+  pool: StringPool
+): number {
+  let appendedCount = 0;
 
-  for (const { line } of splitNdjsonLines(fileContent)) {
+  for (const { line } of lines) {
     const metric = parseMetricsLine(line, pool);
     if (metric) {
       metrics.push(metric);
+      appendedCount++;
     }
   }
 
-  // Pool can be cleared after parsing - interned strings in metrics remain valid
-  pool.clear();
+  return appendedCount;
+}
+
+export function parseMetricsLines(lines: Iterable<Pick<NdjsonLine, 'line'>>): CopilotMetrics[] {
+  const metrics: CopilotMetrics[] = [];
+  const pool = new StringPool();
+
+  try {
+    appendParsedMetricsFromLines(lines, metrics, pool);
+  } finally {
+    // Pool can be cleared after parsing - interned strings in metrics remain valid
+    pool.clear();
+  }
 
   return metrics;
+}
+
+export function parseMetricsFile(fileContent: string): CopilotMetrics[] {
+  return parseMetricsLines(splitNdjsonLines(fileContent));
 }

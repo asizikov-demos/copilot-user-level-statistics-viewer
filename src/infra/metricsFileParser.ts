@@ -1,6 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool } from '../utils/stringPool';
-import { parseMetricsLine } from '../domain/metricsParser';
+import { appendParsedMetricsFromLines } from '../domain/metricsParser';
 import { flushNdjsonRemainder, splitNdjsonChunk } from '../utils/ndjsonParser';
 
 interface StreamProcessingResult {
@@ -30,13 +30,7 @@ async function processFileStream(
       remainder = chunkResult.remainder;
       nextLineNumber = chunkResult.nextLineNumber;
 
-      for (const { line } of chunkResult.lines) {
-        const metric = parseMetricsLine(line, pool);
-        if (metric) {
-          metrics.push(metric);
-          processedCount++;
-        }
-      }
+      processedCount += appendParsedMetricsFromLines(chunkResult.lines, metrics, pool);
 
       if (onChunkProcessed) {
         onChunkProcessed(processedCount);
@@ -47,21 +41,13 @@ async function processFileStream(
     const finalChunkResult = splitNdjsonChunk(decoder.decode(), remainder, nextLineNumber);
     const countBeforeFlush = processedCount;
 
-    for (const { line } of finalChunkResult.lines) {
-      const metric = parseMetricsLine(line, pool);
-      if (metric) {
-        metrics.push(metric);
-        processedCount++;
-      }
-    }
+    processedCount += appendParsedMetricsFromLines(finalChunkResult.lines, metrics, pool);
 
-    for (const { line } of flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber)) {
-      const metric = parseMetricsLine(line, pool);
-      if (metric) {
-        metrics.push(metric);
-        processedCount++;
-      }
-    }
+    processedCount += appendParsedMetricsFromLines(
+      flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber),
+      metrics,
+      pool
+    );
 
     if (processedCount > countBeforeFlush && onChunkProcessed) {
       onChunkProcessed(processedCount);
