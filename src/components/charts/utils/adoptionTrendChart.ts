@@ -187,6 +187,17 @@ export function createAdoptionTrendChartConfig(config: AdoptionTrendChartConfig)
       xAxisLabel: 'Date',
       yAxisLabel,
       y1AxisLabel,
+      stacked: true,
+      yStepSize,
+      xMaxRotation: 45,
+      xAutoSkip: true,
+      extraYAxes: {
+        y2: {
+          display: false,
+          min: 0,
+          max: 100,
+        },
+      },
       tooltipAfterBodyCallback: (context: TooltipItem<'line' | 'bar'>[]) => {
         const dataIndex = context[0].dataIndex;
         const day = data[dataIndex];
@@ -201,37 +212,6 @@ export function createAdoptionTrendChartConfig(config: AdoptionTrendChartConfig)
         ];
       },
     }),
-    scales: {
-      x: {
-        stacked: true,
-        display: true,
-        title: { display: true, text: 'Date' },
-        ticks: { maxRotation: 45, autoSkip: true },
-      },
-      y: {
-        stacked: true,
-        type: 'linear' as const,
-        display: true,
-        position: 'left' as const,
-        title: { display: true, text: yAxisLabel },
-        beginAtZero: true,
-        ...(yStepSize !== undefined ? { ticks: { stepSize: yStepSize } } : {}),
-      },
-      y1: {
-        type: 'linear' as const,
-        display: true,
-        position: 'right' as const,
-        title: { display: true, text: y1AxisLabel },
-        beginAtZero: true,
-        grid: { drawOnChartArea: false },
-      },
-      y2: {
-        type: 'linear' as const,
-        display: false,
-        min: 0,
-        max: 100,
-      },
-    },
   };
 
   return { chartData, options, retentionRates };

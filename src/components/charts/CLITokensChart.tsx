@@ -33,6 +33,7 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
   const dailyAverageTokensPerRequest = data.map(d =>
     d.requestCount > 0 ? Math.round(((d.promptTokens + d.outputTokens) / d.requestCount) * 10) / 10 : null
   );
+  const formatTokenAxisTick = (value: unknown) => formatTokenCount(Number(value));
 
   const chartData = {
     labels: data.map(d => formatShortDate(d.date)),
@@ -75,6 +76,11 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
       xAxisLabel: 'Date',
       yAxisLabel: 'Tokens',
       y1AxisLabel: 'Avg Tokens / Request',
+      stacked: true,
+      xMaxRotation: 45,
+      xAutoSkip: true,
+      yTicksCallback: formatTokenAxisTick,
+      y1TicksCallback: formatTokenAxisTick,
       tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
         const label = context.dataset.label || '';
         const value = context.parsed.y;
@@ -85,36 +91,6 @@ export default function CLITokensChart({ data }: CLITokensChartProps) {
         return `${label}: ${formatTokenCount(value)} tokens`;
       },
     }),
-    scales: {
-      x: {
-        stacked: true,
-        display: true,
-        title: { display: true, text: 'Date' },
-        ticks: { maxRotation: 45, autoSkip: true },
-      },
-      y: {
-        stacked: true,
-        type: 'linear' as const,
-        display: true,
-        position: 'left' as const,
-        title: { display: true, text: 'Tokens' },
-        beginAtZero: true,
-        ticks: {
-          callback: (value: string | number) => formatTokenCount(Number(value)),
-        },
-      },
-      y1: {
-        type: 'linear' as const,
-        display: true,
-        position: 'right' as const,
-        title: { display: true, text: 'Avg Tokens / Request' },
-        beginAtZero: true,
-        grid: { drawOnChartArea: false },
-        ticks: {
-          callback: (value: string | number) => formatTokenCount(Number(value)),
-        },
-      },
-    },
   };
 
   return (

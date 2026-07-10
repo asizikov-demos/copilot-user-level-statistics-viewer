@@ -82,6 +82,23 @@ describe('createAdoptionTrendChartConfig', () => {
       yAxisID: 'y2',
     });
     expect(retentionRates).toEqual([33.3, null]);
+    expect(options.scales.x).toMatchObject({
+      stacked: true,
+      ticks: { maxRotation: 45, autoSkip: true },
+    });
+    expect(options.scales.y).toMatchObject({
+      stacked: true,
+      beginAtZero: true,
+    });
+    expect(options.scales.y1).toMatchObject({
+      title: { display: true, text: 'Cumulative Users' },
+      grid: { drawOnChartArea: false },
+    });
+    expect(options.scales.y2).toMatchObject({
+      display: false,
+      min: 0,
+      max: 100,
+    });
 
     const tooltipLines = options.plugins.tooltip.callbacks.afterBody([{ dataIndex: 1 }]);
     expect(tooltipLines).toEqual([
