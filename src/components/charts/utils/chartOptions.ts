@@ -33,6 +33,20 @@ export interface DualAxisChartConfig extends BaseChartConfig {
   y1AxisLabel?: string;
   y1Max?: number;
   y1BeginAtZero?: boolean;
+  y1TicksCallback?: (value: unknown) => string | number;
+  extraYAxes?: Record<string, DualAxisExtraAxisConfig>;
+}
+
+export interface DualAxisExtraAxisConfig {
+  axisLabel?: string;
+  beginAtZero?: boolean;
+  display?: boolean;
+  max?: number;
+  min?: number;
+  position?: 'left' | 'right';
+  stepSize?: number;
+  ticksCallback?: (value: unknown) => string | number;
+  drawGridOnChartArea?: boolean;
 }
 
 /**
@@ -140,10 +154,18 @@ export function createDualAxisChartOptions(config: DualAxisChartConfig = {}) {
     showLegend = true,
     legendPosition = 'top',
     beginAtZero = true,
+    stacked = false,
+    yMax,
+    yTicksCallback,
+    yStepSize,
     y1BeginAtZero = true,
     y1Max,
+    y1TicksCallback,
+    xMaxRotation,
+    xAutoSkip,
     tooltipLabelCallback,
     tooltipAfterBodyCallback,
+    extraYAxes,
   } = config;
 
   return {
@@ -170,13 +192,21 @@ export function createDualAxisChartOptions(config: DualAxisChartConfig = {}) {
     },
     scales: {
       x: {
+        stacked,
         display: true,
         title: {
           display: !!xAxisLabel,
           text: xAxisLabel || '',
         },
+        ...(xMaxRotation !== undefined || xAutoSkip !== undefined ? {
+          ticks: {
+            ...(xMaxRotation !== undefined && { maxRotation: xMaxRotation }),
+            ...(xAutoSkip !== undefined && { autoSkip: xAutoSkip }),
+          },
+        } : {}),
       },
       y: {
+        stacked,
         type: 'linear' as const,
         display: true,
         position: 'left' as const,
@@ -185,6 +215,13 @@ export function createDualAxisChartOptions(config: DualAxisChartConfig = {}) {
           text: yAxisLabel || '',
         },
         beginAtZero,
+        ...(yMax !== undefined && { max: yMax }),
+        ...(yStepSize !== undefined || yTicksCallback ? {
+          ticks: {
+            ...(yStepSize !== undefined && { stepSize: yStepSize }),
+            ...(yTicksCallback && { callback: yTicksCallback }),
+          },
+        } : {}),
       },
       y1: {
         type: 'linear' as const,
@@ -199,7 +236,40 @@ export function createDualAxisChartOptions(config: DualAxisChartConfig = {}) {
         grid: {
           drawOnChartArea: false,
         },
+        ...(y1TicksCallback ? {
+          ticks: {
+            callback: y1TicksCallback,
+          },
+        } : {}),
       },
+      ...Object.fromEntries(
+        Object.entries(extraYAxes ?? {}).map(([axisId, axisConfig]) => [
+          axisId,
+          {
+            type: 'linear' as const,
+            display: axisConfig.display ?? true,
+            position: axisConfig.position ?? 'right',
+            title: {
+              display: !!axisConfig.axisLabel,
+              text: axisConfig.axisLabel || '',
+            },
+            beginAtZero: axisConfig.beginAtZero ?? true,
+            ...(axisConfig.min !== undefined && { min: axisConfig.min }),
+            ...(axisConfig.max !== undefined && { max: axisConfig.max }),
+            ...(axisConfig.drawGridOnChartArea !== undefined ? {
+              grid: {
+                drawOnChartArea: axisConfig.drawGridOnChartArea,
+              },
+            } : {}),
+            ...(axisConfig.stepSize !== undefined || axisConfig.ticksCallback ? {
+              ticks: {
+                ...(axisConfig.stepSize !== undefined && { stepSize: axisConfig.stepSize }),
+                ...(axisConfig.ticksCallback && { callback: axisConfig.ticksCallback }),
+              },
+            } : {}),
+          },
+        ])
+      ),
     },
   };
 }
