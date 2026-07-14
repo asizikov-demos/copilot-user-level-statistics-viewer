@@ -197,6 +197,14 @@ export interface ModelDailyUsageEntry {
   dailyData: Record<string, number>;
 }
 
+export type ModelUsageCategory = 'Lightweight' | 'Powerful' | 'Versatile' | 'Uncategorized';
+
+export interface ModelCategoryUsageEntry {
+  category: ModelUsageCategory;
+  total: number;
+  dailyData: Record<string, number>;
+}
+
 export interface AutoModeAdoptionTrendEntry {
   date: string;
   newUsers: number;
@@ -207,6 +215,7 @@ export interface AutoModeAdoptionTrendEntry {
 
 export interface ModelBreakdownData {
   allModels: ModelDailyUsageEntry[];
+  modelCategories: ModelCategoryUsageEntry[];
   autoModels?: ModelDailyUsageEntry[];
   cliModels?: ModelDailyUsageEntry[];
   autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];

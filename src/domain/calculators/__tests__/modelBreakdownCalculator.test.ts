@@ -20,6 +20,7 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.cliTotal).toBe(0);
       expect(acc.unknownTotal).toBe(0);
       expect(acc.modelTotal).toBe(0);
+      expect(acc.modelCategories.size).toBe(0);
       expect(acc.allModels.size).toBe(0);
     });
   });
@@ -169,6 +170,22 @@ describe('modelBreakdownCalculator', () => {
         { model: 'gpt-4o', total: 20, dailyData: { '2024-01-15': 20 } },
         { model: 'gpt-5', total: 10, dailyData: { '2024-01-15': 10 } },
         { model: 'unknown', total: 5, dailyData: { '2024-01-15': 5 } },
+      ]);
+      expect(data.modelCategories).toEqual([
+        { category: 'Uncategorized', total: 35, dailyData: { '2024-01-15': 35 } },
+      ]);
+    });
+
+    it('should aggregate daily interactions by published model category', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5-mini', 'chat_panel', 8));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('claude-sonnet-4.6', 'chat_panel', 12));
+      accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('claude-opus-4.8', 'chat_panel', 5));
+
+      expect(computeModelBreakdownData(acc).modelCategories).toEqual([
+        { category: 'Lightweight', total: 8, dailyData: { '2024-01-15': 8 } },
+        { category: 'Versatile', total: 12, dailyData: { '2024-01-15': 12 } },
+        { category: 'Powerful', total: 5, dailyData: { '2024-01-16': 5 } },
       ]);
     });
   });

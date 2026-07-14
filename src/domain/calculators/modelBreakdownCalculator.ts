@@ -1,7 +1,13 @@
-import type { AutoModeAdoptionTrendEntry, ModelBreakdownData, ModelDailyUsageEntry } from '../../types/metrics';
+import type {
+  AutoModeAdoptionTrendEntry,
+  ModelBreakdownData,
+  ModelCategoryUsageEntry,
+  ModelDailyUsageEntry,
+  ModelUsageCategory,
+} from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
 import { isActiveAutoModeFeature } from '../autoMode';
-import { classifyModelRequest } from '../modelConfig';
+import { classifyModelRequest, getModelCategory } from '../modelConfig';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -12,6 +18,7 @@ interface ModelAccEntry {
 
 export interface ModelBreakdownAccumulator {
   allModels: Map<string, ModelAccEntry>;
+  modelCategories: Map<ModelUsageCategory, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
   cliModels: Map<string, ModelAccEntry>;
   autoModeUsersByDate: Map<string, Set<number>>;
@@ -24,6 +31,7 @@ export interface ModelBreakdownAccumulator {
 export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
   return {
     allModels: new Map(),
+    modelCategories: new Map(),
     autoModels: new Map(),
     cliModels: new Map(),
     autoModeUsersByDate: new Map(),
@@ -89,6 +97,12 @@ export function accumulateModelBreakdown(
   accumulator.allDates.add(date);
   accumulator.modelTotal += interactionCount;
   accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount);
+  accumulateModelEntry(
+    accumulator.modelCategories,
+    getModelCategory(normalizedModel) ?? 'Uncategorized',
+    date,
+    interactionCount
+  );
 
   if (isUnknown) {
     accumulator.unknownTotal += interactionCount;
@@ -113,6 +127,28 @@ function buildModelEntries(
     .sort((a, b) => b.total - a.total);
 }
 
+function buildModelCategoryEntries(
+  categoriesMap: Map<ModelUsageCategory, ModelAccEntry>
+): ModelCategoryUsageEntry[] {
+  const categoryOrder: ModelUsageCategory[] = [
+    'Lightweight',
+    'Versatile',
+    'Powerful',
+    'Uncategorized',
+  ];
+
+  return categoryOrder.flatMap(category => {
+    const entry = categoriesMap.get(category);
+    if (!entry) return [];
+
+    return [{
+      category,
+      total: entry.total,
+      dailyData: Object.fromEntries(entry.dailyData),
+    }];
+  });
+}
+
 function computeAutoModeAdoptionTrend(
   dates: string[],
   usersByDate: Map<string, Set<number>>
@@ -133,6 +169,7 @@ export function computeModelBreakdownData(
 
   return {
     allModels: buildModelEntries(accumulator.allModels),
+    modelCategories: buildModelCategoryEntries(accumulator.modelCategories),
     autoModels: buildModelEntries(accumulator.autoModels),
     cliModels: buildModelEntries(accumulator.cliModels),
     autoModeAdoptionTrend: computeAutoModeAdoptionTrend(dates, accumulator.autoModeUsersByDate),

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   classifyModelRequest,
+  getModelCategory,
   isActiveAutoModeFeature,
   isKnownModelName,
   isUnknownModelName,
@@ -22,10 +23,16 @@ describe('modelConfig', () => {
   });
 
   describe('known model catalog', () => {
-    it('should keep model entries name-only', () => {
-      const model = KNOWN_MODELS.find(entry => entry.name === 'gpt-5');
+    it('should attach published categories to current models', () => {
+      const model = KNOWN_MODELS.find(entry => entry.name === 'gpt-5.6-sol');
 
-      expect(model).toEqual({ name: 'gpt-5' });
+      expect(model).toEqual({ name: 'gpt-5.6-sol', category: 'Powerful' });
+      expect(getModelCategory('GPT-5.6 Luna')).toBe('Lightweight');
+      expect(getModelCategory('Claude Sonnet 5')).toBe('Versatile');
+      expect(getModelCategory('Claude 4.6 Sonnet')).toBe('Versatile');
+      expect(getModelCategory('Claude 4.5 Haiku')).toBe('Versatile');
+      expect(getModelCategory('Gemini 3.0 Flash')).toBe('Lightweight');
+      expect(getModelCategory('legacy-model')).toBeUndefined();
     });
 
     it('should include the unknown sentinel', () => {

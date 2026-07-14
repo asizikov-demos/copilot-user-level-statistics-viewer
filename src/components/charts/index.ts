@@ -16,6 +16,7 @@ export { default as FeatureAdoptionChart } from './FeatureAdoptionChart';
 export { default as CLIOverlapChart } from './CLIOverlapChart';
 export { default as ClientActivityChart } from './ClientActivityChart';
 export { default as ModeImpactChart } from './ModeImpactChart';
+export { default as ModelCategoryDistributionChart } from './ModelCategoryDistributionChart';
 export { default as ModelsUsageChart } from './ModelsUsageChart';
 export { default as UserActivityByLanguageAndFeatureChart } from './UserActivityByLanguageAndFeatureChart';
 export { default as UserActivityByModelAndFeatureChart } from './UserActivityByModelAndFeatureChart';
