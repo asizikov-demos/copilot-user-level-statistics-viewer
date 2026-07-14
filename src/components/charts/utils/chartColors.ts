@@ -105,6 +105,13 @@ export const chatModeColors = {
   cli: chartColors.rose,
 } as const;
 
+export const modelCategoryColors = {
+  Lightweight: chartColors.green,
+  Versatile: chartColors.blue,
+  Powerful: chartColors.purple,
+  Uncategorized: chartColors.gray,
+} as const;
+
 /**
  * IDE/client brand colors for consistent representation across distribution and activity charts.
  * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').
