@@ -2,7 +2,7 @@
 
 import type { ChartOptions } from 'chart.js';
 import { formatShortDate } from '../../../utils/formatters';
-import { padReportRangeWithDefaults } from '../../../utils/timeSeries';
+import { mapReportRangeData } from '../../../utils/timeSeries';
 import { createBaseChartOptions } from './chartOptions';
 import type { BaseChartConfig } from './chartOptions';
 import { createBarDataset } from './chartStyles';
@@ -22,15 +22,16 @@ export function padDailyReportRangeData<T>(
   getDefault: (date: string) => T,
   postProcess?: (entry: T) => T,
 ): T[] {
-  const padded = padReportRangeWithDefaults(
+  return mapReportRangeData(
     data,
     reportStartDay,
     reportEndDay,
     getDate,
-    getDefault,
+    (date, entry) => {
+      const paddedEntry = entry ?? getDefault(date);
+      return postProcess ? postProcess(paddedEntry) : paddedEntry;
+    },
   );
-
-  return postProcess ? padded.map(postProcess) : padded;
 }
 
 interface DailyBarChartConfig<T> {
