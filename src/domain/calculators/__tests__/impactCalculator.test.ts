@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createImpactAccumulator,
   accumulateFeatureImpacts,
+  accumulateFeatureImpactRecord,
   ensureImpactDates,
   computeAgentImpactData,
   computeCodeCompletionImpactData,
@@ -167,6 +168,27 @@ describe('impactCalculator', () => {
   });
 
   describe('Zero LOC filtering', () => {
+    it('should derive feature impacts from record totals with LOC fallbacks', () => {
+      const accumulator = createImpactAccumulator();
+      ensureImpactDates(accumulator, '2024-01-15');
+
+      accumulateFeatureImpactRecord(accumulator, '2024-01-15', 1, {
+        totals_by_feature: [
+          {
+            feature: 'code_completion',
+            loc_added_sum: undefined as unknown as number,
+            loc_deleted_sum: 5,
+          },
+        ],
+      });
+
+      const results = computeCodeCompletionImpactData(accumulator);
+
+      expect(results[0].locAdded).toBe(0);
+      expect(results[0].locDeleted).toBe(5);
+      expect(results[0].userCount).toBe(1);
+    });
+
     it('should ignore features with zero LOC added and deleted', () => {
       const accumulator = createImpactAccumulator();
       ensureImpactDates(accumulator, '2024-01-15');

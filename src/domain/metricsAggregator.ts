@@ -57,7 +57,7 @@ import {
   ModeImpactData,
   createImpactAccumulator,
   ensureImpactDates,
-  accumulateFeatureImpacts,
+  accumulateFeatureImpactRecord,
   computeAgentImpactData,
   computeCodeCompletionImpactData,
   computeEditModeImpactData,
@@ -404,8 +404,6 @@ export function aggregateMetrics(
       accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);
     }
 
-    const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
-
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
     accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, usedCopilotCloudAgent);
     accumulateCodeReviewAdoption(
@@ -447,15 +445,9 @@ export function aggregateMetrics(
         feature.feature,
         feature.user_initiated_interaction_count
       );
-
-      featureImpacts.push({
-        feature: feature.feature,
-        locAdded: feature.loc_added_sum || 0,
-        locDeleted: feature.loc_deleted_sum || 0,
-      });
     }
 
-    accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);
+    accumulateFeatureImpactRecord(impactAccumulator, date, userId, metric);
   }
   const userSummaries = computeUserSummaries(userSummaryAccumulator);
 
