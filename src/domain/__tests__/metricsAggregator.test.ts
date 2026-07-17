@@ -607,6 +607,14 @@ describe('metricsAggregator', () => {
           unknownModels: 0,
         },
       ]);
+      expect(aggregated.modelBreakdownData.modelTotal).toBe(44);
+      expect(aggregated.modelBreakdownData.allModels).toEqual([
+        {
+          model: 'gpt-4o',
+          total: 44,
+          dailyData: { '2024-01-15': 44 },
+        },
+      ]);
       expect(userDetails?.dailyModelUsage).toEqual(aggregated.modelUsageData);
       expect(userDetails?.totalModelRequests).toBe(44);
     });

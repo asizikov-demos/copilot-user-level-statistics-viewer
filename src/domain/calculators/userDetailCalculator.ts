@@ -19,7 +19,6 @@ import {
 import {
   distributeAssumedInteractionsByGeneration,
   getCanonicalUserInitiatedInteractionCount,
-  getTotalUserInitiatedInteractionCount,
   sumAssumedUserInitiatedInteractions,
   withAssumedUserInitiatedInteractionCount,
 } from '../assumedInteractions';

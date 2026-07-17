@@ -75,6 +75,15 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.modelTotal).toBe(10);
       expect(acc.allModels.get('unknown')?.total).toBe(10);
     });
+
+    it('should include assumed code completion interactions in neutral model totals', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o', 'code_completion', 0, 44, 2));
+
+      expect(acc.modelTotal).toBe(44);
+      expect(acc.unknownTotal).toBe(0);
+      expect(acc.allModels.get('gpt-4o')?.total).toBe(44);
+    });
   });
 
   describe('auto model handling', () => {
