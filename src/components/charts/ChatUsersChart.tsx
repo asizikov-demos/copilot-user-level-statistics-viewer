@@ -4,12 +4,16 @@ import { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
-import { createLineDataset } from './utils/chartStyles';
-import { chatModeColors } from './utils/chartColors';
-import { formatShortDate } from '../../utils/formatters';
-import { calculateAverage, findMaxValue } from '../../domain/calculators/statsCalculators';
 import { DailyChatUsersData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
+import {
+  createChatModeFooterEntries,
+  createChatModeLineChartData,
+  createChatModeMetricSummaries,
+  createChatModeStats,
+  maxChatModeDayValue,
+  renderChatModeFooter,
+} from './utils/chatModeChart';
 
 registerChartJS();
 
@@ -18,31 +22,13 @@ interface ChatUsersChartProps {
 }
 
 export default function ChatUsersChart({ data }: ChatUsersChartProps) {
-  const avgAskMode = calculateAverage(data, d => d.askModeUsers);
-  const avgAgentMode = calculateAverage(data, d => d.agentModeUsers);
-  const avgEditMode = calculateAverage(data, d => d.editModeUsers);
-  const avgInlineMode = calculateAverage(data, d => d.inlineModeUsers);
-  const avgPlanMode = calculateAverage(data, d => d.planModeUsers);
-  const avgCliUsers = calculateAverage(data, d => d.cliUsers);
+  const modeSummaries = createChatModeMetricSummaries(data, (day, mode) => mode.getUsersValue(day));
 
-  const maxAskMode = findMaxValue(data, d => d.askModeUsers);
-  const maxAgentMode = findMaxValue(data, d => d.agentModeUsers);
-  const maxEditMode = findMaxValue(data, d => d.editModeUsers);
-  const maxInlineMode = findMaxValue(data, d => d.inlineModeUsers);
-  const maxPlanMode = findMaxValue(data, d => d.planModeUsers);
-  const maxCliUsers = findMaxValue(data, d => d.cliUsers);
-
-  const chartData = {
-    labels: data.map(d => formatShortDate(d.date)),
-    datasets: [
-      createLineDataset(chatModeColors.ask.solid, 'Chat: Ask Mode', data.map(d => d.askModeUsers)),
-      createLineDataset(chatModeColors.agent.solid, 'Chat: Agent Mode', data.map(d => d.agentModeUsers)),
-      createLineDataset(chatModeColors.edit.solid, 'Chat: Edit Mode', data.map(d => d.editModeUsers)),
-      createLineDataset(chatModeColors.inline.solid, 'Chat: Inline Mode', data.map(d => d.inlineModeUsers)),
-      createLineDataset(chatModeColors.plan.solid, 'Chat: Plan Mode', data.map(d => d.planModeUsers)),
-      createLineDataset(chatModeColors.cli.solid, 'Copilot CLI', data.map(d => d.cliUsers)),
-    ],
-  };
+  const chartData = createChatModeLineChartData(
+    data,
+    (day, mode) => mode.getUsersValue(day),
+    mode => mode.userDatasetLabel
+  );
 
   const options = createBaseChartOptions({
     xAxisLabel: 'Date',
@@ -58,7 +44,11 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
-        const totalChatUsers = Math.max(dayData.askModeUsers, dayData.agentModeUsers, dayData.editModeUsers, dayData.inlineModeUsers, dayData.planModeUsers);
+        const totalChatUsers = maxChatModeDayValue(
+          dayData,
+          (day, mode) => mode.getUsersValue(day),
+          mode => mode.includeInPeakChatUsers
+        );
         return [
           '',
           `Date: ${dayData.date}`,
@@ -73,38 +63,10 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
     <ChartContainer
       title="Daily Chat Users Trends"
       description="Number of unique users using different chat modes each day"
-      stats={[
-        { label: 'Avg Ask', value: avgAskMode },
-        { label: 'Avg Agent', value: avgAgentMode },
-        { label: 'Avg Edit', value: avgEditMode },
-        { label: 'Avg Inline', value: avgInlineMode },
-        { label: 'Avg Plan', value: avgPlanMode },
-        { label: 'Avg CLI', value: avgCliUsers },
-      ]}
+      stats={createChatModeStats(modeSummaries)}
       isEmpty={data.length === 0}
       emptyState="No chat user data available"
-      footer={
-        <div className="grid grid-cols-6 gap-4 text-xs text-gray-500">
-          <div>
-            <span className="font-medium text-green-600">Ask Mode:</span> Max {maxAskMode} users
-          </div>
-          <div>
-            <span className="font-medium text-blue-600">Agent Mode:</span> Max {maxAgentMode} users
-          </div>
-          <div>
-            <span className="font-medium text-gray-900">Edit Mode:</span> Max {maxEditMode} users
-          </div>
-          <div>
-            <span className="font-medium text-amber-600">Inline Mode:</span> Max {maxInlineMode} users
-          </div>
-          <div>
-            <span className="font-medium text-purple-600">Plan Mode:</span> Max {maxPlanMode} users
-          </div>
-          <div>
-            <span className="font-medium text-rose-600">CLI:</span> Max {maxCliUsers} users
-          </div>
-        </div>
-      }
+      footer={renderChatModeFooter(createChatModeFooterEntries(modeSummaries, summary => `Max ${summary.max} users`))}
     >
       <Line data={chartData} options={options} />
     </ChartContainer>
