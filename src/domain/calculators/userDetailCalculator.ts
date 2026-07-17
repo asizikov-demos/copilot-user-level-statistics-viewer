@@ -18,6 +18,7 @@ import {
 } from './modelUsageCalculator';
 import {
   distributeAssumedInteractionsByGeneration,
+  getCanonicalUserInitiatedInteractionCount,
   getTotalUserInitiatedInteractionCount,
   sumAssumedUserInitiatedInteractions,
   withAssumedUserInitiatedInteractionCount,
@@ -198,7 +199,7 @@ export function accumulateUserDetail(
   );
 
   for (const mf of modelFeatureTotals) {
-    state.totalModelRequests += getTotalUserInitiatedInteractionCount(mf);
+    state.totalModelRequests += getCanonicalUserInitiatedInteractionCount(mf);
   }
   state.totalAiCreditsUsed += metric.ai_credits_used;
 
@@ -338,7 +339,7 @@ export function computeSingleUserDetailedMetrics(
         modelUsageAccumulator,
         day.day,
         mf.model,
-        getTotalUserInitiatedInteractionCount(mf)
+        getCanonicalUserInitiatedInteractionCount(mf)
       );
     }
   }

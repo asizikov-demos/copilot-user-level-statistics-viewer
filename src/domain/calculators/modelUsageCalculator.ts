@@ -2,6 +2,7 @@ import { classifyModelRequest } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
 import { getChatModeBucket } from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
+import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 
 export interface DailyModelUsageData {
   date: string;
@@ -112,7 +113,7 @@ export function calculateDailyModelUsageFromMetrics(
         accumulator,
         date,
         modelFeature.model,
-        modelFeature.user_initiated_interaction_count
+        getCanonicalUserInitiatedInteractionCount(modelFeature)
       );
     }
   }

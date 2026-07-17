@@ -5,7 +5,9 @@ import {
   accumulateAgentHeatmapFromFeature,
   computeDailyModelUsageData,
   computeAgentModeHeatmapData,
+  calculateDailyModelUsageFromMetrics,
 } from '../modelUsageCalculator';
+import { makeMetric } from '../../../__tests__/factories/metrics';
 
 describe('modelUsageCalculator', () => {
   describe('Model interaction accumulation', () => {
@@ -36,6 +38,35 @@ describe('modelUsageCalculator', () => {
   });
 
   describe('Daily model usage accumulation', () => {
+    it('includes assumed code completion interactions from model-feature totals', () => {
+      const results = calculateDailyModelUsageFromMetrics([
+        makeMetric({
+          day: '2024-01-15',
+          totals_by_model_feature: [
+            {
+              model: 'gpt-4o',
+              feature: 'code_completion',
+              user_initiated_interaction_count: 0,
+              code_generation_activity_count: 44,
+              code_acceptance_activity_count: 2,
+              loc_added_sum: 2,
+              loc_deleted_sum: 0,
+              loc_suggested_to_add_sum: 64,
+              loc_suggested_to_delete_sum: 0,
+            },
+          ],
+        }),
+      ]);
+
+      expect(results).toEqual([
+        {
+          date: '2024-01-15',
+          modelInteractions: 44,
+          unknownModels: 0,
+        },
+      ]);
+    });
+
     it('should aggregate model usage across models per day', () => {
       const accumulator = createModelUsageAccumulator();
 

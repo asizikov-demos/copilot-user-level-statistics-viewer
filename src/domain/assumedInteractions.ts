@@ -10,6 +10,8 @@ interface InteractionMetric {
   assumed_user_initiated_interaction_count?: number;
 }
 
+interface FeatureInteractionMetric extends FeatureGenerationMetric, InteractionMetric {}
+
 interface GenerationMetric {
   code_generation_activity_count: number;
 }
@@ -35,6 +37,15 @@ export function withAssumedUserInitiatedInteractionCount<T extends FeatureGenera
 
 export function getTotalUserInitiatedInteractionCount(item: InteractionMetric): number {
   return item.user_initiated_interaction_count + (item.assumed_user_initiated_interaction_count ?? 0);
+}
+
+export function getCanonicalUserInitiatedInteractionCount(item: FeatureInteractionMetric): number {
+  return getTotalUserInitiatedInteractionCount({
+    user_initiated_interaction_count: item.user_initiated_interaction_count,
+    assumed_user_initiated_interaction_count:
+      item.assumed_user_initiated_interaction_count
+      ?? getAssumedUserInitiatedInteractionCount(item.feature, item.code_generation_activity_count),
+  });
 }
 
 export function sumAssumedUserInitiatedInteractions(items: FeatureGenerationMetric[]): number {
