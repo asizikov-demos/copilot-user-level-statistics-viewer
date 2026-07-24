@@ -118,10 +118,14 @@ export const modelCategoryColors = {
  * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').
  * Both 'visualstudio' and 'visual_studio' are supported as aliases.
  */
-export const ideColors: Record<string, string> = Object.fromEntries(
-  Object.entries(IDE_METADATA_BY_KEY)
-    .filter(([, metadata]) => metadata.color)
-    .map(([key, metadata]) => [key, metadata.color])
+export const ideColors: Record<string, string> = Object.entries(IDE_METADATA_BY_KEY).reduce<Record<string, string>>(
+  (colors, [key, metadata]) => {
+    if (metadata.color) {
+      colors[key] = metadata.color;
+    }
+    return colors;
+  },
+  {}
 );
 
 /**
