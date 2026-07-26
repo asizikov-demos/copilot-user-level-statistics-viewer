@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DailyChatRequestsData, DailyChatUsersData } from '../../../domain/calculators/metricCalculators';
+import { formatShortDate } from '../../../utils/formatters';
 import {
   chatModeChartModes,
   createChatModeLineChartData,
@@ -82,7 +83,7 @@ describe('chatModeChart', () => {
       mode => mode.requestDatasetLabel
     );
 
-    expect(chartData.labels).toEqual(['Jan 1', 'Jan 2']);
+    expect(chartData.labels).toEqual(requestsData.map(day => formatShortDate(day.date)));
     expect(chartData.datasets).toHaveLength(chatModeChartModes.length);
     expect(chartData.datasets.map(dataset => dataset.label)).toEqual(
       chatModeChartModes.map(mode => mode.requestDatasetLabel)
