@@ -14,6 +14,7 @@ import {
 import { selectCopilotAdoptionReadModel } from '../../read-models/adoption';
 import { selectAiAdoptionPhaseReadModel } from '../../read-models/aiAdoptionPhases';
 import { selectCopilotImpactReadModel } from '../../read-models/impact';
+import { selectLanguagesReadModel } from '../../read-models/languages';
 import { selectUsersReadModel } from '../../read-models/users';
 import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
 import {
@@ -183,15 +184,11 @@ const ViewRouter: React.FC = () => {
   const { 
     stats, 
     userSummaries, 
-    languageStats,
     cliImpactData,
     ideStats,
     multiIDEUsersCount,
     totalUniqueIDEUsers,
     pluginVersionData,
-    languageFeatureImpactData,
-    dailyLanguageGenerationsData,
-    dailyLanguageLocData,
     modelBreakdownData,
     dailyCliSessionData,
     dailyCliTokenData,
@@ -204,6 +201,7 @@ const ViewRouter: React.FC = () => {
   const copilotAdoptionReadModel = selectCopilotAdoptionReadModel(aggregatedMetrics);
   const aiAdoptionPhaseReadModel = selectAiAdoptionPhaseReadModel(aggregatedMetrics);
   const copilotImpactReadModel = selectCopilotImpactReadModel(aggregatedMetrics);
+  const languagesReadModel = selectLanguagesReadModel(aggregatedMetrics);
   const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
@@ -240,10 +238,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.LANGUAGES:
       return (
         <LanguagesView
-          languages={languageStats}
-          languageFeatureImpactData={languageFeatureImpactData}
-          dailyLanguageGenerationsData={dailyLanguageGenerationsData}
-          dailyLanguageLocData={dailyLanguageLocData}
+          model={languagesReadModel}
         />
       );
 

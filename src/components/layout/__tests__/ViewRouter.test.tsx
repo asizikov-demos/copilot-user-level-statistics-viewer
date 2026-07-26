@@ -9,6 +9,7 @@ import { VIEW_MODES, type ViewMode } from '../../../types/navigation';
 import type { CopilotAdoptionReadModel } from '../../../read-models/adoption';
 import type { AiAdoptionPhaseReadModel } from '../../../read-models/aiAdoptionPhases';
 import type { CopilotImpactReadModel } from '../../../read-models/impact';
+import type { LanguagesReadModel } from '../../../read-models/languages';
 import ViewRouter from '../ViewRouter';
 
 const mocks = vi.hoisted(() => ({
@@ -24,6 +25,12 @@ const mocks = vi.hoisted(() => ({
   >(),
   copilotImpactView: vi.fn<
     (props: { model: CopilotImpactReadModel }) => void
+  >(),
+  languagesView: vi.fn<
+    (props: { model: LanguagesReadModel }) => void
+  >(),
+  selectLanguagesReadModel: vi.fn<
+    (metrics: AggregatedMetrics) => LanguagesReadModel
   >(),
 }));
 
@@ -87,15 +94,34 @@ vi.mock('../../CopilotImpactView', () => ({
   },
 }));
 
+vi.mock('../../LanguagesView', () => ({
+  default: (props: { model: LanguagesReadModel }) => {
+    mocks.languagesView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../read-models/languages', () => ({
+  selectLanguagesReadModel: mocks.selectLanguagesReadModel,
+}));
+
 describe('ViewRouter', () => {
   beforeEach(() => {
     mocks.navigateTo.mockClear();
     mocks.copilotAdoptionView.mockClear();
     mocks.aiAdoptionPhaseView.mockClear();
     mocks.copilotImpactView.mockClear();
+    mocks.languagesView.mockClear();
+    mocks.selectLanguagesReadModel.mockReset();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
     mocks.selectedUser = null;
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
+    mocks.selectLanguagesReadModel.mockImplementation((metrics) => ({
+      languageStats: metrics.languageStats,
+      languageFeatureImpactData: metrics.languageFeatureImpactData,
+      dailyLanguageGenerationsData: metrics.dailyLanguageGenerationsData,
+      dailyLanguageLocData: metrics.dailyLanguageLocData,
+    }));
   });
 
   describe('user-detail redirects', () => {
@@ -162,5 +188,24 @@ describe('ViewRouter', () => {
       cliImpactData: mocks.aggregatedMetrics?.cliImpactData,
       joinedImpactData: mocks.aggregatedMetrics?.joinedImpactData,
     });
+  });
+
+  it('routes languages through one cohesive read model', () => {
+    mocks.currentView = VIEW_MODES.LANGUAGES;
+    const expectedModel = {
+      languageStats: mocks.aggregatedMetrics!.languageStats,
+      languageFeatureImpactData: mocks.aggregatedMetrics!.languageFeatureImpactData,
+      dailyLanguageGenerationsData: mocks.aggregatedMetrics!.dailyLanguageGenerationsData,
+      dailyLanguageLocData: mocks.aggregatedMetrics!.dailyLanguageLocData,
+    };
+    mocks.selectLanguagesReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectLanguagesReadModel).toHaveBeenCalledWith(mocks.aggregatedMetrics);
+    expect(mocks.languagesView).toHaveBeenCalledOnce();
+    const props = mocks.languagesView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
   });
 });

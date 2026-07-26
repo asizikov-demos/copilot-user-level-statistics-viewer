@@ -41,7 +41,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate migrated UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, and Copilot impact consume only their typed projections. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate migrated UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, and languages consume only their typed projections. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -74,8 +74,9 @@ Established boundaries cover:
 - Copilot adoption
 - AI adoption phases
 - Copilot impact
+- languages
 
-Remaining Phase 4 slices are languages, clients and client versions, models and CLI, and AI credits. Grouping the worker payload, moving component files, and decomposing the general `ViewRouter` registry remain separate work.
+Remaining Phase 4 slices are clients and client versions, models and CLI, and AI credits. The worker payload remains flat; grouping it, moving component files, and decomposing the general `ViewRouter` registry remain separate work.
 
 ---
 

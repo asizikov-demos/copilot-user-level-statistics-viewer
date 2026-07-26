@@ -4,17 +4,14 @@ import { LanguageStats } from '../domain/calculators/metricCalculators';
 import { useMemo, useState } from 'react';
 import MetricsTable, { SortState as TableSortState, TableColumn } from './ui/MetricsTable';
 import { DashboardStatsCardGroup, ViewPanel } from './ui';
-import type { LanguageFeatureImpactData, DailyLanguageChartData } from '../types/metrics';
 import LanguageDailyChart from './charts/LanguageDailyChart';
 import { translateFeature } from '../domain/featureTranslations';
 import { sortBySelector, rankBySelector } from '../utils/sorting';
 import { LANGUAGES_SECTIONS } from './layout/contextSections';
+import type { LanguagesReadModel } from '../read-models/languages';
 
 interface LanguagesViewProps {
-  languages: LanguageStats[];
-  languageFeatureImpactData: LanguageFeatureImpactData;
-  dailyLanguageGenerationsData: DailyLanguageChartData;
-  dailyLanguageLocData: DailyLanguageChartData;
+  model: LanguagesReadModel;
 }
 
 type SortField = 'language' | 'totalGenerations' | 'totalAcceptances' | 'totalEngagements' | 'uniqueUsers' | 'locAdded' | 'locDeleted' | 'locSuggestedToAdd' | 'locSuggestedToDelete';
@@ -25,7 +22,13 @@ const formatAcceptanceRate = (lang: LanguageStats) => {
     : '0.0';
 };
 
-export default function LanguagesView({ languages, languageFeatureImpactData, dailyLanguageGenerationsData, dailyLanguageLocData }: LanguagesViewProps) {
+export default function LanguagesView({ model }: LanguagesViewProps) {
+  const {
+    languageStats: languages,
+    languageFeatureImpactData,
+    dailyLanguageGenerationsData,
+    dailyLanguageLocData,
+  } = model;
   const [tableSortState, setTableSortState] = useState<TableSortState>({
     field: 'totalEngagements',
     direction: 'desc',
