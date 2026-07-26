@@ -16,6 +16,7 @@ import type {
 } from '../../../read-models/clients';
 import type { ModelDetailsReadModel } from '../../../read-models/models';
 import type { CliAdoptionReadModel } from '../../../read-models/cliAdoption';
+import type { AiCreditsReadModel } from '../../../read-models/aiCredits';
 import ViewRouter from '../ViewRouter';
 
 const mocks = vi.hoisted(() => ({
@@ -47,6 +48,9 @@ const mocks = vi.hoisted(() => ({
   cliAdoptionView: vi.fn<
     (props: { model: CliAdoptionReadModel }) => void
   >(),
+  aiCreditsView: vi.fn<
+    (props: { model: AiCreditsReadModel }) => void
+  >(),
   selectLanguagesReadModel: vi.fn<
     (metrics: AggregatedMetrics) => LanguagesReadModel
   >(),
@@ -61,6 +65,12 @@ const mocks = vi.hoisted(() => ({
   >(),
   selectCliAdoptionReadModel: vi.fn<
     (metrics: AggregatedMetrics) => CliAdoptionReadModel
+  >(),
+  selectAiCreditsReadModel: vi.fn<
+    (
+      metrics: AggregatedMetrics,
+      onUserClick: AiCreditsReadModel['onUserClick']
+    ) => AiCreditsReadModel
   >(),
 }));
 
@@ -159,6 +169,13 @@ vi.mock('../../CLIAdoptionView', () => ({
   },
 }));
 
+vi.mock('../../AiCreditsView', () => ({
+  default: (props: { model: AiCreditsReadModel }) => {
+    mocks.aiCreditsView(props);
+    return null;
+  },
+}));
+
 vi.mock('../../../read-models/languages', () => ({
   selectLanguagesReadModel: mocks.selectLanguagesReadModel,
 }));
@@ -176,6 +193,10 @@ vi.mock('../../../read-models/cliAdoption', () => ({
   selectCliAdoptionReadModel: mocks.selectCliAdoptionReadModel,
 }));
 
+vi.mock('../../../read-models/aiCredits', () => ({
+  selectAiCreditsReadModel: mocks.selectAiCreditsReadModel,
+}));
+
 describe('ViewRouter', () => {
   beforeEach(() => {
     mocks.navigateTo.mockClear();
@@ -187,11 +208,13 @@ describe('ViewRouter', () => {
     mocks.clientVersionsView.mockClear();
     mocks.modelDetailsView.mockClear();
     mocks.cliAdoptionView.mockClear();
+    mocks.aiCreditsView.mockClear();
     mocks.selectLanguagesReadModel.mockReset();
     mocks.selectClientsReadModel.mockReset();
     mocks.selectClientVersionsReadModel.mockReset();
     mocks.selectModelDetailsReadModel.mockReset();
     mocks.selectCliAdoptionReadModel.mockReset();
+    mocks.selectAiCreditsReadModel.mockReset();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
     mocks.selectedUser = null;
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -233,6 +256,15 @@ describe('ViewRouter', () => {
       cliModelDates: metrics.modelBreakdownData.dates,
       cliModelTotal: metrics.modelBreakdownData.cliTotal ?? 0,
       cliShare: 0,
+    }));
+    mocks.selectAiCreditsReadModel.mockImplementation((metrics, onUserClick) => ({
+      reportStartDay: metrics.stats.reportStartDay,
+      reportEndDay: metrics.stats.reportEndDay,
+      dailyAiCreditsData: metrics.dailyAiCreditsData,
+      userSummaries: metrics.userSummaries,
+      usageDistributionData: metrics.usageDistributionData,
+      totalAiCreditsUsed: 0,
+      onUserClick,
     }));
   });
 
@@ -412,6 +444,31 @@ describe('ViewRouter', () => {
     );
     expect(mocks.cliAdoptionView).toHaveBeenCalledOnce();
     const props = mocks.cliAdoptionView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
+  });
+
+  it('routes AI Credits through the selector and a sole model prop', () => {
+    mocks.currentView = VIEW_MODES.AI_CREDITS;
+    const expectedModel: AiCreditsReadModel = {
+      reportStartDay: '2026-01-15',
+      reportEndDay: '2026-01-31',
+      dailyAiCreditsData: mocks.aggregatedMetrics!.dailyAiCreditsData,
+      userSummaries: mocks.aggregatedMetrics!.userSummaries,
+      usageDistributionData: mocks.aggregatedMetrics!.usageDistributionData,
+      totalAiCreditsUsed: 17.25,
+      onUserClick: vi.fn(),
+    };
+    mocks.selectAiCreditsReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectAiCreditsReadModel).toHaveBeenCalledOnce();
+    const [metrics, onUserClick] = mocks.selectAiCreditsReadModel.mock.calls[0];
+    expect(metrics).toBe(mocks.aggregatedMetrics);
+    expect(onUserClick).toEqual(expect.any(Function));
+    expect(mocks.aiCreditsView).toHaveBeenCalledOnce();
+    const props = mocks.aiCreditsView.mock.calls[0][0];
     expect(Object.keys(props)).toEqual(['model']);
     expect(props.model).toBe(expectedModel);
   });

@@ -5,18 +5,15 @@ import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import TopEntriesList from './ui/TopEntriesList';
+import type { AiCreditsReadModel } from '../read-models/aiCredits';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber, formatPercentage } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
 import { getModelIcon } from './icons/ModelIcons';
-import type { DailyAiCreditsData, UsageDistributionBucket } from '../domain/calculators/metricCalculators';
-import type { MetricsStats, UserSummary } from '../types/metrics';
+import type { UsageDistributionBucket } from '../domain/calculators/metricCalculators';
+import type { UserSummary } from '../types/metrics';
 
 interface AiCreditsViewProps {
-  stats: MetricsStats;
-  dailyAiCreditsData: DailyAiCreditsData[];
-  userSummaries: UserSummary[];
-  usageDistributionData: UsageDistributionBucket[];
-  onUserClick: (userLogin: string, userId: number) => void;
+  model: AiCreditsReadModel;
 }
 
 function formatAverage(value: number): string {
@@ -29,20 +26,30 @@ interface TopAiCreditsUser extends UserSummary {
 
 const TOP_USER_COUNT = 5;
 
-export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries, usageDistributionData, onUserClick }: AiCreditsViewProps) {
+export default function AiCreditsView({ model }: AiCreditsViewProps) {
+  const {
+    reportStartDay,
+    reportEndDay,
+    dailyAiCreditsData,
+    userSummaries,
+    usageDistributionData,
+    totalAiCreditsUsed,
+    onUserClick,
+  } = model;
   const hasAiCreditsData = dailyAiCreditsData.some(entry => entry.aiCreditsUsed > 0);
 
   const topUsers = useMemo<TopAiCreditsUser[]>(() => {
-    const totalCredits = userSummaries.reduce((sum, user) => sum + user.total_ai_credits_used, 0);
     return userSummaries
       .filter(user => user.total_ai_credits_used > 0)
       .sort((a, b) => b.total_ai_credits_used - a.total_ai_credits_used)
       .slice(0, TOP_USER_COUNT)
       .map(user => ({
         ...user,
-        creditsShare: totalCredits > 0 ? (user.total_ai_credits_used / totalCredits) * 100 : 0,
+        creditsShare: totalAiCreditsUsed > 0
+          ? (user.total_ai_credits_used / totalAiCreditsUsed) * 100
+          : 0,
       }));
-  }, [userSummaries]);
+  }, [totalAiCreditsUsed, userSummaries]);
 
   const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
   const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
@@ -212,8 +219,8 @@ export default function AiCreditsView({ stats, dailyAiCreditsData, userSummaries
         <div id="ai-credits-daily-consumption" className="scroll-mt-28">
           <AiCreditsChart
             data={dailyAiCreditsData}
-            reportStartDay={stats.reportStartDay}
-            reportEndDay={stats.reportEndDay}
+            reportStartDay={reportStartDay}
+            reportEndDay={reportEndDay}
           />
         </div>
       ) : (

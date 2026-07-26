@@ -21,6 +21,7 @@ import {
 } from '../../read-models/clients';
 import { selectModelDetailsReadModel } from '../../read-models/models';
 import { selectCliAdoptionReadModel } from '../../read-models/cliAdoption';
+import { selectAiCreditsReadModel } from '../../read-models/aiCredits';
 import { selectUsersReadModel } from '../../read-models/users';
 import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
 import {
@@ -187,12 +188,6 @@ const ViewRouter: React.FC = () => {
     );
   }
 
-  const { 
-    stats, 
-    userSummaries,
-    dailyAiCreditsData = [],
-    usageDistributionData = [],
-  } = aggregatedMetrics;
   const overviewReadModel = selectOverviewReadModel(aggregatedMetrics);
   const executiveSummaryReadModel = selectExecutiveSummaryReadModel(aggregatedMetrics);
   const copilotAdoptionReadModel = selectCopilotAdoptionReadModel(aggregatedMetrics);
@@ -203,6 +198,10 @@ const ViewRouter: React.FC = () => {
   const clientVersionsReadModel = selectClientVersionsReadModel(aggregatedMetrics);
   const modelDetailsReadModel = selectModelDetailsReadModel(aggregatedMetrics);
   const cliAdoptionReadModel = selectCliAdoptionReadModel(aggregatedMetrics);
+  const aiCreditsReadModel = selectAiCreditsReadModel(
+    aggregatedMetrics,
+    handleUserClick
+  );
   const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
@@ -217,11 +216,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.AI_CREDITS:
       return (
         <AiCreditsView
-          stats={stats}
-          dailyAiCreditsData={dailyAiCreditsData}
-          userSummaries={userSummaries}
-          usageDistributionData={usageDistributionData}
-          onUserClick={handleUserClick}
+          model={aiCreditsReadModel}
         />
       );
 
