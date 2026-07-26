@@ -7,13 +7,10 @@ import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { DailyChatRequestsData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 import {
-  ChatModeFooterEntry,
-  createChatModeFooterEntries,
+  chatModeChartModes,
   createChatModeLineChartData,
   createChatModeMetricSummaries,
   createChatModeStats,
-  renderChatModeFooter,
-  sumChatModeDayValues,
 } from './utils/chatModeChart';
 
 registerChartJS();
@@ -47,7 +44,10 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
-        const totalRequests = sumChatModeDayValues(dayData, (day, mode) => mode.getRequestsValue(day));
+        const totalRequests = chatModeChartModes.reduce(
+          (sum, mode) => sum + mode.getRequestsValue(dayData),
+          0
+        );
         return [
           '',
           `Date: ${dayData.date}`,
@@ -58,13 +58,6 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
     },
   });
 
-  const allModesEntry: ChatModeFooterEntry = {
-    key: 'all-modes',
-    label: 'All Modes',
-    colorClass: 'text-gray-600',
-    content: `${grandTotal} total requests`,
-  };
-
   return (
     <ChartContainer
       title="Daily Chat Requests"
@@ -72,10 +65,19 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
       stats={createChatModeStats(modeSummaries)}
       isEmpty={data.length === 0}
       emptyState="No chat request data available"
-      footer={renderChatModeFooter(
-        createChatModeFooterEntries(modeSummaries, summary => `${summary.total} total (max ${summary.max}/day)`),
-        [allModesEntry]
-      )}
+      footer={
+        <div className="grid grid-cols-7 gap-4 text-xs text-gray-500">
+          {modeSummaries.map(({ mode, total, max }) => (
+            <div key={mode.key}>
+              <span className={`font-medium ${mode.colorClass}`}>{mode.footerLabel}:</span>{' '}
+              {total} total (max {max}/day)
+            </div>
+          ))}
+          <div>
+            <span className="font-medium text-gray-600">All Modes:</span> {grandTotal} total requests
+          </div>
+        </div>
+      }
     >
       <Line data={chartData} options={options} />
     </ChartContainer>

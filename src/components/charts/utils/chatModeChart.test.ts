@@ -1,15 +1,10 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { DailyChatRequestsData, DailyChatUsersData } from '../../../domain/calculators/metricCalculators';
 import {
   chatModeChartModes,
-  createChatModeFooterEntries,
   createChatModeLineChartData,
   createChatModeMetricSummaries,
   createChatModeStats,
-  maxChatModeDayValue,
-  renderChatModeFooter,
-  sumChatModeDayValues,
 } from './chatModeChart';
 
 const usersData: DailyChatUsersData[] = [
@@ -99,40 +94,22 @@ describe('chatModeChart', () => {
     });
   });
 
-  it('shares footer entries and day-level aggregations between the charts', () => {
+  it('keeps request accessors and display metadata aligned for every mode', () => {
     const summaries = createChatModeMetricSummaries(requestsData, (day, mode) => mode.getRequestsValue(day));
-    const entries = createChatModeFooterEntries(
-      summaries,
-      summary => `${summary.total} total (max ${summary.max}/day)`
-    );
 
-    expect(entries).toEqual([
-      { key: 'ask', label: 'Ask Mode', colorClass: 'text-green-600', content: '6 total (max 5/day)' },
-      { key: 'agent', label: 'Agent Mode', colorClass: 'text-blue-600', content: '8 total (max 6/day)' },
-      { key: 'edit', label: 'Edit Mode', colorClass: 'text-gray-900', content: '2 total (max 2/day)' },
-      { key: 'inline', label: 'Inline Mode', colorClass: 'text-amber-600', content: '4 total (max 4/day)' },
-      { key: 'plan', label: 'Plan Mode', colorClass: 'text-purple-600', content: '4 total (max 3/day)' },
-      { key: 'cli', label: 'CLI', colorClass: 'text-rose-600', content: '4 total (max 3/day)' },
+    expect(summaries.map(({ mode, total, max }) => ({
+      key: mode.key,
+      footerLabel: mode.footerLabel,
+      colorClass: mode.colorClass,
+      total,
+      max,
+    }))).toEqual([
+      { key: 'ask', footerLabel: 'Ask Mode', colorClass: 'text-green-600', total: 6, max: 5 },
+      { key: 'agent', footerLabel: 'Agent Mode', colorClass: 'text-blue-600', total: 8, max: 6 },
+      { key: 'edit', footerLabel: 'Edit Mode', colorClass: 'text-gray-900', total: 2, max: 2 },
+      { key: 'inline', footerLabel: 'Inline Mode', colorClass: 'text-amber-600', total: 4, max: 4 },
+      { key: 'plan', footerLabel: 'Plan Mode', colorClass: 'text-purple-600', total: 4, max: 3 },
+      { key: 'cli', footerLabel: 'CLI', colorClass: 'text-rose-600', total: 4, max: 3 },
     ]);
-
-    expect(sumChatModeDayValues(requestsData[0], (day, mode) => mode.getRequestsValue(day))).toBe(15);
-    expect(
-      maxChatModeDayValue(
-        usersData[0],
-        (day, mode) => mode.getUsersValue(day),
-        mode => mode.includeInPeakChatUsers
-      )
-    ).toBe(3);
-
-    const markup = renderToStaticMarkup(renderChatModeFooter(entries, [{
-      key: 'all-modes',
-      label: 'All Modes',
-      colorClass: 'text-gray-600',
-      content: '19 total requests',
-    }]));
-
-    expect(markup).toContain('grid-cols-7');
-    expect(markup).toContain('Ask Mode:</span> 6 total (max 5/day)');
-    expect(markup).toContain('All Modes:</span> 19 total requests');
   });
 });

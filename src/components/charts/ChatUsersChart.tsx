@@ -7,12 +7,10 @@ import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { DailyChatUsersData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 import {
-  createChatModeFooterEntries,
+  chatModeChartModes,
   createChatModeLineChartData,
   createChatModeMetricSummaries,
   createChatModeStats,
-  maxChatModeDayValue,
-  renderChatModeFooter,
 } from './utils/chatModeChart';
 
 registerChartJS();
@@ -44,10 +42,10 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
-        const totalChatUsers = maxChatModeDayValue(
-          dayData,
-          (day, mode) => mode.getUsersValue(day),
-          mode => mode.includeInPeakChatUsers
+        const totalChatUsers = Math.max(
+          ...chatModeChartModes
+            .filter(mode => mode.key !== 'cli')
+            .map(mode => mode.getUsersValue(dayData))
         );
         return [
           '',
@@ -66,7 +64,15 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       stats={createChatModeStats(modeSummaries)}
       isEmpty={data.length === 0}
       emptyState="No chat user data available"
-      footer={renderChatModeFooter(createChatModeFooterEntries(modeSummaries, summary => `Max ${summary.max} users`))}
+      footer={
+        <div className="grid grid-cols-6 gap-4 text-xs text-gray-500">
+          {modeSummaries.map(({ mode, max }) => (
+            <div key={mode.key}>
+              <span className={`font-medium ${mode.colorClass}`}>{mode.footerLabel}:</span> Max {max} users
+            </div>
+          ))}
+        </div>
+      }
     >
       <Line data={chartData} options={options} />
     </ChartContainer>
