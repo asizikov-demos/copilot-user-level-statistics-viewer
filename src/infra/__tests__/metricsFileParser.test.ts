@@ -24,6 +24,21 @@ function createChunkedFile(chunks: string[], name: string = 'metrics.ndjson'): F
   return file;
 }
 
+function createFailingFile(name: string, error: Error): File {
+  const file = new File([''], name, { type: 'application/x-ndjson' });
+
+  Object.defineProperty(file, 'stream', {
+    value: () =>
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.error(error);
+        },
+      }),
+  });
+
+  return file;
+}
+
 describe('parseMultipleMetricsStreams', () => {
   it('matches parseMetricsFile for equivalent NDJSON content across chunk boundaries', async () => {
     const baseRecord = makeMetric({
@@ -61,5 +76,30 @@ describe('parseMultipleMetricsStreams', () => {
     expect(streamed.metrics).toEqual(parsedFromString);
     expect(streamed.metrics).toHaveLength(2);
     expect(streamed.metrics.map(metric => metric.user_id)).toEqual([123, 456]);
+  });
+
+  it('continues parsing later files after a file stream fails and reports cumulative progress', async () => {
+    const firstFile = createChunkedFile([
+      `${JSON.stringify(makeMetric({ user_id: 111, user_login: 'first_user' }))}\n`,
+    ], 'first.ndjson');
+    const failingFile = createFailingFile('broken.ndjson', new Error('stream exploded'));
+    const lastFile = createChunkedFile([
+      `${JSON.stringify(makeMetric({ user_id: 333, user_login: 'last_user' }))}\n`,
+    ], 'last.ndjson');
+    const progress: Array<{ currentFile: number; totalFiles: number; fileName: string; recordsProcessed: number }> = [];
+
+    const result = await parseMultipleMetricsStreams(
+      [firstFile, failingFile, lastFile],
+      update => progress.push(update)
+    );
+
+    expect(result.metrics.map(metric => metric.user_id)).toEqual([111, 333]);
+    expect(result.errors).toEqual([
+      { fileIndex: 2, fileName: 'broken.ndjson', error: 'stream exploded' },
+    ]);
+    expect(progress).toEqual([
+      { currentFile: 1, totalFiles: 3, fileName: 'first.ndjson', recordsProcessed: 1 },
+      { currentFile: 3, totalFiles: 3, fileName: 'last.ndjson', recordsProcessed: 2 },
+    ]);
   });
 });

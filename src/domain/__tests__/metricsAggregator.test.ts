@@ -112,6 +112,71 @@ describe('metricsAggregator', () => {
       expect(userSummary.days_active).toBe(2);
     });
 
+    it('should return a user-detail accumulator aligned with aggregate user summaries', () => {
+      const userOneDayOne = createBasicMetric({
+        user_id: 123,
+        user_login: 'user-one',
+        day: '2024-01-15',
+        report_start_day: '2024-01-01',
+        report_end_day: '2024-01-31',
+        user_initiated_interaction_count: 10,
+        ai_credits_used: 1.25,
+        totals_by_model_feature: [
+          {
+            model: 'gpt-4o',
+            feature: 'chat_panel_ask_mode',
+            user_initiated_interaction_count: 7,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+      const userOneDayTwo = createBasicMetric({
+        user_id: 123,
+        user_login: 'user-one',
+        day: '2024-01-16',
+        user_initiated_interaction_count: 5,
+        ai_credits_used: 2.75,
+        totals_by_model_feature: [
+          {
+            model: 'claude-sonnet-4.6',
+            feature: 'agent_edit',
+            user_initiated_interaction_count: 3,
+            code_generation_activity_count: 0,
+            code_acceptance_activity_count: 0,
+            loc_added_sum: 0,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 0,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+      const userTwo = createBasicMetric({
+        user_id: 456,
+        user_login: 'user-two',
+        user_initiated_interaction_count: 100,
+        ai_credits_used: 9,
+      });
+
+      const { aggregated, userDetailAccumulator } = aggregateMetrics([userOneDayOne, userTwo, userOneDayTwo]);
+      const summary = aggregated.userSummaries.find(user => user.user_id === 123);
+      const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 123);
+
+      expect(summary?.total_user_initiated_interactions).toBe(15);
+      expect(summary?.total_ai_credits_used).toBe(4);
+      expect(summary?.days_active).toBe(2);
+      expect(details?.totalModelRequests).toBe(10);
+      expect(details?.total_ai_credits_used).toBe(summary?.total_ai_credits_used);
+      expect(details?.days.map(day => day.day)).toEqual(['2024-01-15', '2024-01-16']);
+      expect(details?.reportStartDay).toBe(aggregated.stats.reportStartDay);
+      expect(details?.reportEndDay).toBe(aggregated.stats.reportEndDay);
+      expect(computeSingleUserDetailedMetrics(userDetailAccumulator, 999)).toBeNull();
+    });
+
     it('should select the top user client by interaction count', () => {
       const ideTotal = (ide: string, interactions: number) => ({
         ide,
