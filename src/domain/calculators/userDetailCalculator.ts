@@ -3,13 +3,12 @@ import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import {
   createImpactAccumulator,
   ensureImpactDates,
-  accumulateFeatureImpacts,
+  accumulateFeatureImpactRecord,
   computeAgentImpactData,
   computeAskModeImpactData,
   computeCodeCompletionImpactData,
   computeCliImpactData,
   computeJoinedImpactData,
-  type FeatureImpactInput,
 } from './impactCalculator';
 import {
   createModelUsageAccumulator,
@@ -325,13 +324,7 @@ export function computeSingleUserDetailedMetrics(
 
   for (const day of state.days) {
     ensureImpactDates(impactAccumulator, day.day);
-
-    const featureImpacts: FeatureImpactInput[] = day.totals_by_feature.map(f => ({
-      feature: f.feature,
-      locAdded: f.loc_added_sum || 0,
-      locDeleted: f.loc_deleted_sum || 0,
-    }));
-    accumulateFeatureImpacts(impactAccumulator, day.day, userId, featureImpacts);
+    accumulateFeatureImpactRecord(impactAccumulator, day.day, userId, day);
 
     for (const mf of day.totals_by_model_feature) {
       accumulateModelFeature(

@@ -55,8 +55,10 @@ import {
   AgentImpactData,
   CodeCompletionImpactData,
   ModeImpactData,
+  FeatureImpactInput,
   createImpactAccumulator,
   ensureImpactDates,
+  createFeatureImpactInput,
   accumulateFeatureImpacts,
   computeAgentImpactData,
   computeCodeCompletionImpactData,
@@ -404,7 +406,7 @@ export function aggregateMetrics(
       accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);
     }
 
-    const featureImpacts: Array<{ feature: string; locAdded: number; locDeleted: number }> = [];
+    const featureImpacts: FeatureImpactInput[] = [];
 
     accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
     accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, usedCopilotCloudAgent);
@@ -448,11 +450,7 @@ export function aggregateMetrics(
         feature.user_initiated_interaction_count
       );
 
-      featureImpacts.push({
-        feature: feature.feature,
-        locAdded: feature.loc_added_sum || 0,
-        locDeleted: feature.loc_deleted_sum || 0,
-      });
+      featureImpacts.push(createFeatureImpactInput(feature));
     }
 
     accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);

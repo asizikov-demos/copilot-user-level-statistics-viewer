@@ -84,6 +84,30 @@ export interface FeatureImpactInput {
   locDeleted: number;
 }
 
+interface FeatureImpactSourceEntry {
+  feature: string;
+  loc_added_sum?: number;
+  loc_deleted_sum?: number;
+}
+
+interface FeatureImpactSource {
+  totals_by_feature: FeatureImpactSourceEntry[];
+}
+
+export function createFeatureImpactInput(
+  feature: FeatureImpactSourceEntry
+): FeatureImpactInput {
+  return {
+    feature: feature.feature,
+    locAdded: feature.loc_added_sum || 0,
+    locDeleted: feature.loc_deleted_sum || 0,
+  };
+}
+
+function createFeatureImpactInputs(record: FeatureImpactSource): FeatureImpactInput[] {
+  return record.totals_by_feature.map(createFeatureImpactInput);
+}
+
 export function accumulateFeatureImpacts(
   accumulator: ImpactAccumulator,
   date: string,
@@ -189,6 +213,15 @@ export function accumulateFeatureImpacts(
   }
 }
 
+export function accumulateFeatureImpactRecord(
+  accumulator: ImpactAccumulator,
+  date: string,
+  userId: number,
+  record: FeatureImpactSource
+): void {
+  accumulateFeatureImpacts(accumulator, date, userId, createFeatureImpactInputs(record));
+}
+
 function formatImpactMap(
   map: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>,
   totalUniqueUsers: number
@@ -243,14 +276,7 @@ function processMetricsForImpact(metrics: CopilotMetrics[]): ImpactAccumulator {
     const userId = metric.user_id;
 
     ensureImpactDates(accumulator, date);
-
-    const featureImpacts: FeatureImpactInput[] = metric.totals_by_feature.map(f => ({
-      feature: f.feature,
-      locAdded: f.loc_added_sum || 0,
-      locDeleted: f.loc_deleted_sum || 0,
-    }));
-
-    accumulateFeatureImpacts(accumulator, date, userId, featureImpacts);
+    accumulateFeatureImpactRecord(accumulator, date, userId, metric);
   }
 
   return accumulator;
