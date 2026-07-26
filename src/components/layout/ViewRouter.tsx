@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { VIEW_MODES } from '../../types/navigation';
-import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useResetAppState } from '../../hooks/useResetAppState';
 import { terminateWorker, computeUserDetailsInWorker } from '../../workers/metricsWorkerClient';
+import {
+  resolveUserDetailsRouteState,
+  type UserDetailsLoadState,
+} from './userDetailsRouteState';
+import { runUserDetailsRequest } from './userDetailsRequest';
 import { FileUploadArea } from '../features/file-upload';
 import { OverviewDashboard } from '../features/overview';
 import UniqueUsersView from '../UniqueUsersView';
@@ -36,32 +40,93 @@ const ViewRouter: React.FC = () => {
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
   const resetAppState = useResetAppState();
 
-  const [userDetails, setUserDetails] = useState<UserDetailedMetrics | null>(null);
-  const [userDetailsLoading, setUserDetailsLoading] = useState(false);
-  const [loadedUserId, setLoadedUserId] = useState<number | null>(null);
+  const [userDetailsLoadState, setUserDetailsLoadState] = useState<UserDetailsLoadState>({
+    status: 'idle',
+  });
+  const [userDetailsRetryKey, setUserDetailsRetryKey] = useState(0);
+  const userDetailsRequestVersion = useRef(0);
+  const userDetailsRouteState = resolveUserDetailsRouteState({
+    currentView,
+    selectedUser,
+    userSummaries: aggregatedMetrics?.userSummaries ?? null,
+    dataset: aggregatedMetrics,
+    loadState: userDetailsLoadState,
+  });
 
   useEffect(() => {
-    setUserDetails(null);
-    setUserDetailsLoading(false);
-    setLoadedUserId(null);
-  }, [aggregatedMetrics]);
+    userDetailsRequestVersion.current += 1;
+    setUserDetailsLoadState({ status: 'idle' });
+  }, [aggregatedMetrics, selectedUser]);
 
   useEffect(() => {
-    if (currentView === VIEW_MODES.USER_DETAILS && selectedUser && loadedUserId !== selectedUser.id) {
-      setUserDetailsLoading(true);
-      setUserDetails(null);
-      computeUserDetailsInWorker(selectedUser.id)
-        .then(details => {
-          setUserDetails(details);
-          setLoadedUserId(selectedUser.id);
-          setUserDetailsLoading(false);
-        })
-        .catch(() => {
-          setUserDetailsLoading(false);
-          navigateTo(VIEW_MODES.USERS);
-        });
+    if (userDetailsRouteState.status === 'redirect') {
+      navigateTo(VIEW_MODES.USERS);
     }
-  }, [currentView, selectedUser, loadedUserId, navigateTo]);
+  }, [userDetailsRouteState.status, navigateTo]);
+
+  let userDetailsRequestUserId: number | null = null;
+  let userDetailsRequestLogin: string | null = null;
+  if (
+    userDetailsRouteState.status === 'error'
+    || userDetailsRouteState.status === 'ready'
+    || (
+      userDetailsRouteState.status === 'loading'
+      && userDetailsRouteState.userSummary !== null
+    )
+  ) {
+    userDetailsRequestUserId = userDetailsRouteState.selectedUser.id;
+    userDetailsRequestLogin = userDetailsRouteState.selectedUser.login;
+  }
+  const userDetailsRequestDataset = userDetailsRequestUserId === null
+    ? null
+    : aggregatedMetrics;
+
+  useEffect(() => {
+    if (!userDetailsRequestDataset || userDetailsRequestUserId === null) {
+      return;
+    }
+
+    const requestVersion = userDetailsRequestVersion.current + 1;
+    userDetailsRequestVersion.current = requestVersion;
+    setUserDetailsLoadState({
+      status: 'loading',
+      dataset: userDetailsRequestDataset,
+      userId: userDetailsRequestUserId,
+    });
+
+    void runUserDetailsRequest({
+      userId: userDetailsRequestUserId,
+      load: computeUserDetailsInWorker,
+      isCurrent: () => userDetailsRequestVersion.current === requestVersion,
+      onSuccess: (details) => {
+        setUserDetailsLoadState({
+          status: 'ready',
+          dataset: userDetailsRequestDataset,
+          userId: userDetailsRequestUserId,
+          details,
+        });
+      },
+      onError: (message) => {
+        setUserDetailsLoadState({
+          status: 'error',
+          dataset: userDetailsRequestDataset,
+          userId: userDetailsRequestUserId,
+          message,
+        });
+      },
+    });
+
+    return () => {
+      if (userDetailsRequestVersion.current === requestVersion) {
+        userDetailsRequestVersion.current += 1;
+      }
+    };
+  }, [
+    userDetailsRequestDataset,
+    userDetailsRequestLogin,
+    userDetailsRequestUserId,
+    userDetailsRetryKey,
+  ]);
 
   useEffect(() => {
     return () => { terminateWorker(); };
@@ -69,6 +134,10 @@ const ViewRouter: React.FC = () => {
 
   const handleUserClick = (userLogin: string, userId: number) => {
     selectUser({ login: userLogin, id: userId });
+  };
+
+  const retryUserDetails = () => {
+    setUserDetailsRetryKey((retryKey) => retryKey + 1);
   };
 
   if (error && hasData) {
@@ -262,35 +331,61 @@ const ViewRouter: React.FC = () => {
       );
 
     case VIEW_MODES.USER_DETAILS:
-      if (!selectedUser) {
-        navigateTo(VIEW_MODES.USERS);
+      if (
+        userDetailsRouteState.status === 'inactive'
+        || userDetailsRouteState.status === 'redirect'
+      ) {
         return null;
       }
-      {
-        if (userDetailsLoading || !userDetails) {
-          return (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-500 dark:text-gray-400">Loading user details...</p>
-              </div>
-            </div>
-          );
-        }
-        const userSummary = userSummaries.find(u => u.user_id === selectedUser.id);
-        if (!userSummary) {
-          navigateTo(VIEW_MODES.USERS);
-          return null;
-        }
+
+      if (userDetailsRouteState.status === 'loading') {
         return (
-          <UserDetailsView
-            userDetails={userDetails}
-            userSummary={userSummary}
-            userLogin={selectedUser.login}
-            userId={selectedUser.id}
-          />
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-500 dark:text-gray-400">Loading user details...</p>
+            </div>
+          </div>
         );
       }
+
+      if (userDetailsRouteState.status === 'error') {
+        return (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center max-w-md">
+              <p className="text-red-600 dark:text-red-400 font-medium mb-2">
+                Failed to load user details
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {userDetailsRouteState.message}
+              </p>
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <button
+                  onClick={retryUserDetails}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                >
+                  Retry
+                </button>
+                <button
+                  onClick={() => navigateTo(VIEW_MODES.USERS)}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
+                >
+                  Back to Users
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <UserDetailsView
+          userDetails={userDetailsRouteState.details}
+          userSummary={userDetailsRouteState.userSummary}
+          userLogin={userDetailsRouteState.selectedUser.login}
+          userId={userDetailsRouteState.selectedUser.id}
+        />
+      );
 
     case VIEW_MODES.MODEL_DETAILS:
       return (
