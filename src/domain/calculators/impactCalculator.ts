@@ -94,12 +94,18 @@ interface FeatureImpactSource {
   totals_by_feature: FeatureImpactSourceEntry[];
 }
 
-function createFeatureImpactInputs(record: FeatureImpactSource): FeatureImpactInput[] {
-  return record.totals_by_feature.map(feature => ({
+export function createFeatureImpactInput(
+  feature: FeatureImpactSourceEntry
+): FeatureImpactInput {
+  return {
     feature: feature.feature,
     locAdded: feature.loc_added_sum || 0,
     locDeleted: feature.loc_deleted_sum || 0,
-  }));
+  };
+}
+
+function createFeatureImpactInputs(record: FeatureImpactSource): FeatureImpactInput[] {
+  return record.totals_by_feature.map(createFeatureImpactInput);
 }
 
 export function accumulateFeatureImpacts(

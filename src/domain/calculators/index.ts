@@ -76,6 +76,7 @@ export {
   type FeatureImpactInput,
   createImpactAccumulator,
   ensureImpactDates,
+  createFeatureImpactInput,
   accumulateFeatureImpacts,
   accumulateFeatureImpactRecord,
   computeAgentImpactData,
