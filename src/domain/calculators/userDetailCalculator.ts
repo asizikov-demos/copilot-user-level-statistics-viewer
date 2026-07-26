@@ -185,7 +185,9 @@ function upsertAggMapEntry<T extends object>(
 
 export function accumulateUserDetail(
   accumulator: UserDetailAccumulator,
-  metric: CopilotMetrics
+  metric: CopilotMetrics,
+  usedCopilotCloudAgent =
+    metric.used_copilot_coding_agent ?? false
 ): void {
   const userId = metric.user_id;
   const state = getOrCreateUserState(accumulator, userId);
@@ -256,7 +258,7 @@ export function accumulateUserDetail(
     loc_suggested_to_add_sum: metric.loc_suggested_to_add_sum,
     loc_suggested_to_delete_sum: metric.loc_suggested_to_delete_sum,
     ai_credits_used: metric.ai_credits_used,
-    used_copilot_coding_agent: metric.used_copilot_coding_agent ?? false,
+    used_copilot_coding_agent: usedCopilotCloudAgent,
     used_copilot_code_review_active: metric.used_copilot_code_review_active ?? false,
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
     totals_by_feature: featureTotals.map((f) => ({ ...f })),
