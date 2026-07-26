@@ -10,6 +10,10 @@ import type { CopilotAdoptionReadModel } from '../../../read-models/adoption';
 import type { AiAdoptionPhaseReadModel } from '../../../read-models/aiAdoptionPhases';
 import type { CopilotImpactReadModel } from '../../../read-models/impact';
 import type { LanguagesReadModel } from '../../../read-models/languages';
+import type {
+  ClientsReadModel,
+  ClientVersionsReadModel,
+} from '../../../read-models/clients';
 import ViewRouter from '../ViewRouter';
 
 const mocks = vi.hoisted(() => ({
@@ -29,8 +33,20 @@ const mocks = vi.hoisted(() => ({
   languagesView: vi.fn<
     (props: { model: LanguagesReadModel }) => void
   >(),
+  clientsView: vi.fn<
+    (props: { model: ClientsReadModel }) => void
+  >(),
+  clientVersionsView: vi.fn<
+    (props: { model: ClientVersionsReadModel }) => void
+  >(),
   selectLanguagesReadModel: vi.fn<
     (metrics: AggregatedMetrics) => LanguagesReadModel
+  >(),
+  selectClientsReadModel: vi.fn<
+    (metrics: AggregatedMetrics) => ClientsReadModel
+  >(),
+  selectClientVersionsReadModel: vi.fn<
+    (metrics: AggregatedMetrics) => ClientVersionsReadModel
   >(),
 }));
 
@@ -101,8 +117,27 @@ vi.mock('../../LanguagesView', () => ({
   },
 }));
 
+vi.mock('../../ClientsView', () => ({
+  default: (props: { model: ClientsReadModel }) => {
+    mocks.clientsView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../ClientVersionsView', () => ({
+  default: (props: { model: ClientVersionsReadModel }) => {
+    mocks.clientVersionsView(props);
+    return null;
+  },
+}));
+
 vi.mock('../../../read-models/languages', () => ({
   selectLanguagesReadModel: mocks.selectLanguagesReadModel,
+}));
+
+vi.mock('../../../read-models/clients', () => ({
+  selectClientsReadModel: mocks.selectClientsReadModel,
+  selectClientVersionsReadModel: mocks.selectClientVersionsReadModel,
 }));
 
 describe('ViewRouter', () => {
@@ -112,7 +147,11 @@ describe('ViewRouter', () => {
     mocks.aiAdoptionPhaseView.mockClear();
     mocks.copilotImpactView.mockClear();
     mocks.languagesView.mockClear();
+    mocks.clientsView.mockClear();
+    mocks.clientVersionsView.mockClear();
     mocks.selectLanguagesReadModel.mockReset();
+    mocks.selectClientsReadModel.mockReset();
+    mocks.selectClientVersionsReadModel.mockReset();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
     mocks.selectedUser = null;
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -121,6 +160,19 @@ describe('ViewRouter', () => {
       languageFeatureImpactData: metrics.languageFeatureImpactData,
       dailyLanguageGenerationsData: metrics.dailyLanguageGenerationsData,
       dailyLanguageLocData: metrics.dailyLanguageLocData,
+    }));
+    mocks.selectClientsReadModel.mockImplementation((metrics) => ({
+      ideStats: metrics.ideStats,
+      multiIDEUsersCount: metrics.multiIDEUsersCount,
+      totalUniqueIDEUsers: metrics.totalUniqueIDEUsers,
+      cliUsers: metrics.stats.cliUsers,
+      cliSessions: 0,
+      cliLocAdded: 0,
+      cliLocDeleted: 0,
+    }));
+    mocks.selectClientVersionsReadModel.mockImplementation((metrics) => ({
+      pluginVersionData: metrics.pluginVersionData,
+      reportStartDay: metrics.stats.reportStartDay,
     }));
   });
 
@@ -205,6 +257,49 @@ describe('ViewRouter', () => {
     expect(mocks.selectLanguagesReadModel).toHaveBeenCalledWith(mocks.aggregatedMetrics);
     expect(mocks.languagesView).toHaveBeenCalledOnce();
     const props = mocks.languagesView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
+  });
+
+  it('routes clients through the selector and one cohesive read model', () => {
+    mocks.currentView = VIEW_MODES.CLIENT_ANALYSIS;
+    const expectedModel: ClientsReadModel = {
+      ideStats: mocks.aggregatedMetrics!.ideStats,
+      multiIDEUsersCount: 4,
+      totalUniqueIDEUsers: 5,
+      cliUsers: 6,
+      cliSessions: 7,
+      cliLocAdded: 8,
+      cliLocDeleted: 9,
+    };
+    mocks.selectClientsReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectClientsReadModel).toHaveBeenCalledWith(
+      mocks.aggregatedMetrics
+    );
+    expect(mocks.clientsView).toHaveBeenCalledOnce();
+    const props = mocks.clientsView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
+  });
+
+  it('routes client versions through the selector and one cohesive read model', () => {
+    mocks.currentView = VIEW_MODES.CLIENT_VERSIONS;
+    const expectedModel: ClientVersionsReadModel = {
+      pluginVersionData: mocks.aggregatedMetrics!.pluginVersionData,
+      reportStartDay: '2026-01-15',
+    };
+    mocks.selectClientVersionsReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectClientVersionsReadModel).toHaveBeenCalledWith(
+      mocks.aggregatedMetrics
+    );
+    expect(mocks.clientVersionsView).toHaveBeenCalledOnce();
+    const props = mocks.clientVersionsView.mock.calls[0][0];
     expect(Object.keys(props)).toEqual(['model']);
     expect(props.model).toBe(expectedModel);
   });
