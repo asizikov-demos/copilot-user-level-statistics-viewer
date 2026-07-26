@@ -45,9 +45,12 @@ vi.mock('../../../hooks/useResetAppState', () => ({
   useResetAppState: () => vi.fn(),
 }));
 
-vi.mock('../../../workers/metricsWorkerClient', () => ({
-  computeUserDetailsInWorker: vi.fn(),
-  terminateWorker: vi.fn(),
+vi.mock('../../../workers/MetricsWorkerContext', () => ({
+  useMetricsWorker: () => ({
+    computeUserDetails: vi.fn(),
+    parseAndAggregate: vi.fn(),
+    reset: vi.fn(),
+  }),
 }));
 
 describe('ViewRouter user-detail redirects', () => {

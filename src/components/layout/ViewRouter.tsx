@@ -6,7 +6,7 @@ import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useResetAppState } from '../../hooks/useResetAppState';
-import { terminateWorker, computeUserDetailsInWorker } from '../../workers/metricsWorkerClient';
+import { useMetricsWorker } from '../../workers/MetricsWorkerContext';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
@@ -39,6 +39,7 @@ const ViewRouter: React.FC = () => {
   } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
   const resetAppState = useResetAppState();
+  const metricsWorker = useMetricsWorker();
 
   const [userDetailsLoadState, setUserDetailsLoadState] = useState<UserDetailsLoadState>({
     status: 'idle',
@@ -96,7 +97,7 @@ const ViewRouter: React.FC = () => {
 
     void runUserDetailsRequest({
       userId: userDetailsRequestUserId,
-      load: computeUserDetailsInWorker,
+      load: metricsWorker.computeUserDetails,
       isCurrent: () => userDetailsRequestVersion.current === requestVersion,
       onSuccess: (details) => {
         setUserDetailsLoadState({
@@ -126,11 +127,8 @@ const ViewRouter: React.FC = () => {
     userDetailsRequestLogin,
     userDetailsRequestUserId,
     userDetailsRetryKey,
+    metricsWorker,
   ]);
-
-  useEffect(() => {
-    return () => { terminateWorker(); };
-  }, []);
 
   const handleUserClick = (userLogin: string, userId: number) => {
     selectUser({ login: userLogin, id: userId });

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MultiFileProgress } from '../infra/metricsFileParser';
-import { parseAndAggregateInWorker, terminateWorker } from '../workers/metricsWorkerClient';
+import { useMetricsWorker } from '../workers/MetricsWorkerContext';
 import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
@@ -19,6 +19,7 @@ interface UseFileUploadReturn {
 export function useFileUpload(): UseFileUploadReturn {
   const [uploadProgress, setUploadProgress] = useState<MultiFileProgress | null>(null);
   const requestIdRef = useRef(0);
+  const metricsWorker = useMetricsWorker();
   const {
     isLoading,
     error,
@@ -33,7 +34,7 @@ export function useFileUpload(): UseFileUploadReturn {
   } = useMetrics();
 
   const processFiles = useCallback(async (files: File[], requestId: number) => {
-    const response = await parseAndAggregateInWorker(files, (progress) => {
+    const response = await metricsWorker.parseAndAggregate(files, (progress) => {
       if (requestIdRef.current === requestId) {
         setUploadProgress(progress);
       }
@@ -61,12 +62,11 @@ export function useFileUpload(): UseFileUploadReturn {
     setFilename(files.length === 1 ? files[0].name : `${files.length} files`);
     setRecordCount(recordCount);
     setAggregatedMetrics(result);
-  }, [setAggregatedMetrics, setEnterpriseName, setFilename, setRecordCount, setUploadProgress, setError, setWarning]);
+  }, [metricsWorker, setAggregatedMetrics, setEnterpriseName, setFilename, setRecordCount, setUploadProgress, setError, setWarning]);
 
   useEffect(() => {
     return () => {
       requestIdRef.current++;
-      terminateWorker();
     };
   }, []);
 
@@ -80,7 +80,7 @@ export function useFileUpload(): UseFileUploadReturn {
       const lowerName = file.name.toLowerCase();
       if (!lowerName.endsWith('.ndjson') && !lowerName.endsWith('.json')) {
         requestIdRef.current++;
-        terminateWorker();
+        metricsWorker.reset();
         setIsLoading(false);
         setUploadProgress(null);
         setWarning(null);
@@ -90,7 +90,7 @@ export function useFileUpload(): UseFileUploadReturn {
     }
 
     const requestId = ++requestIdRef.current;
-    terminateWorker();
+    metricsWorker.reset();
     resetMetrics();
     setIsLoading(true);
     setUploadProgress(null);
@@ -107,11 +107,11 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
+  }, [metricsWorker, processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
 
   const handleSampleLoad = useCallback(async () => {
     const requestId = ++requestIdRef.current;
-    terminateWorker();
+    metricsWorker.reset();
     resetMetrics();
     setIsLoading(true);
     setUploadProgress(null);
@@ -138,7 +138,7 @@ export function useFileUpload(): UseFileUploadReturn {
         setUploadProgress(null);
       }
     }
-  }, [processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
+  }, [metricsWorker, processFiles, resetMetrics, setIsLoading, setError, setWarning, setUploadProgress]);
 
   return {
     handleFileUpload,
