@@ -51,6 +51,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 | `src/components/` | View components, charts, layout, UI primitives |
 | `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
 | `src/domain/` | Business logic: aggregator, model config, calculators |
+| `src/domain/aggregation/` | Concrete metric-family accumulator lifecycle orchestration |
 | `src/infra/` | Streaming metrics file parser |
 | `src/domain/calculators/` | Individual metric calculators (stats, engagement, model usage, impact, etc.) |
 | `src/hooks/` | Reusable React hooks (file upload, sorting, search) |
@@ -106,7 +107,9 @@ flowchart LR
 
 ### 4.2. Aggregation
 
-`metricsAggregator.ts` orchestrates all calculators in `src/domain/calculators/` to produce the flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`. This includes user summaries, daily time series, language/IDE/model breakdowns, model usage analysis, feature adoption, and LOC impact by mode. The worker payload remains flat; `src/read-models/` provides feature boundaries on the consuming side. See the calculator files for specifics.
+`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Language and model orchestration now own their accumulator creation, per-record nested consumption, and narrow finalization while sharing the parent-owned stats accumulator. Their family results map into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged.
+
+Phase 5 modular aggregation orchestration has begun with the language and model families. User summaries, engagement/chat, feature adoption, impact, IDE/plugin versions, CLI, advanced adoption, AI adoption phases, AI credits, and user-detail orchestration remain in the top-level coordinator for later slices.
 
 ### 4.3. Views
 
@@ -136,6 +139,7 @@ flowchart TB
 	subgraph WebWorker[Web Worker]
 		MFP[infra/metricsFileParser.ts]
 		MA[metricsAggregator.ts]
+		AGG[aggregation/]
 		CALC[calculators/]
 		MConf[modelConfig.ts]
 	end
@@ -156,6 +160,8 @@ flowchart TB
 	WC -->|postMessage| WT
 	WT --> MFP
 	WT --> MA
+	MA --> AGG
+	AGG --> CALC
 	MA --> CALC
 	CALC --> MConf
 

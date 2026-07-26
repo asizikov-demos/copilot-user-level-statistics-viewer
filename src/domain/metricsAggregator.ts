@@ -5,11 +5,19 @@ import {
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import {
+  accumulateLanguageAggregation,
+  createLanguageAggregationAccumulator,
+  finalizeLanguageAggregation,
+} from './aggregation/languageAggregation';
+import {
+  accumulateModelAggregation,
+  createModelAggregationAccumulator,
+  finalizeModelAggregation,
+} from './aggregation/modelAggregation';
+import {
   createStatsAccumulator,
   accumulateUserUsage,
   accumulateIdeUser,
-  accumulateLanguageEngagement,
-  accumulateModelEngagement,
   computeStats,
 
   createEngagementAccumulator,
@@ -21,16 +29,6 @@ import {
   accumulateChatFeature,
   computeChatUsersData,
   computeChatRequestsData,
-
-  createLanguageAccumulator,
-  accumulateLanguageStats,
-  computeLanguageStats,
-
-  createModelUsageAccumulator,
-  accumulateModelFeature,
-  accumulateAgentHeatmapFromFeature,
-  computeDailyModelUsageData,
-  computeAgentModeHeatmapData,
 
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
@@ -61,16 +59,6 @@ import {
   accumulatePluginVersion,
   computePluginVersionData,
 
-  createLanguageFeatureImpactAccumulator,
-  accumulateLanguageFeatureImpact,
-  accumulateDailyLanguage,
-  computeLanguageFeatureImpactData,
-  computeDailyLanguageChartData,
-
-  createModelBreakdownAccumulator,
-  accumulateModelBreakdown,
-  computeModelBreakdownData,
-
   type UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
@@ -99,7 +87,6 @@ import {
   computeDailyAiCreditsData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
-import { getCanonicalUserInitiatedInteractionCount } from './assumedInteractions';
 
 interface UserSummaryAccumulator {
   userMap: Map<number, UserSummary>;
@@ -263,14 +250,12 @@ export function aggregateMetrics(
   const userSummaryAccumulator = createUserSummaryAccumulator();
   const engagementAccumulator = createEngagementAccumulator();
   const chatAccumulator = createChatAccumulator();
-  const languageAccumulator = createLanguageAccumulator();
-  const modelUsageAccumulator = createModelUsageAccumulator();
+  const languageAggregationAccumulator = createLanguageAggregationAccumulator();
+  const modelAggregationAccumulator = createModelAggregationAccumulator();
   const featureAdoptionAccumulator = createFeatureAdoptionAccumulator();
   const impactAccumulator = createImpactAccumulator();
   const ideStatsAccumulator = createIDEStatsAccumulator();
   const pluginVersionAccumulator = createPluginVersionAccumulator();
-  const languageFeatureImpactAccumulator = createLanguageFeatureImpactAccumulator();
-  const modelBreakdownAccumulator = createModelBreakdownAccumulator();
   const cliUsageAccumulator = createCliUsageAccumulator();
   const advancedAdoptionAccumulator = createAdvancedAdoptionAccumulator();
   const aiAdoptionPhaseAccumulator = createAiAdoptionPhaseAccumulator();
@@ -313,39 +298,16 @@ export function aggregateMetrics(
       markCliUser(ideStatsAccumulator, userId);
     }
 
-    for (const langFeature of metric.totals_by_language_feature) {
-      const engagements = langFeature.code_generation_activity_count + langFeature.code_acceptance_activity_count;
-      accumulateLanguageEngagement(statsAccumulator, langFeature.language, engagements);
-
-      accumulateLanguageStats(
-        languageAccumulator,
-        userId,
-        langFeature.language,
-        langFeature.code_generation_activity_count,
-        langFeature.code_acceptance_activity_count,
-        langFeature.loc_added_sum,
-        langFeature.loc_deleted_sum,
-        langFeature.loc_suggested_to_add_sum,
-        langFeature.loc_suggested_to_delete_sum
-      );
-
-      accumulateLanguageFeatureImpact(languageFeatureImpactAccumulator, langFeature);
-      accumulateDailyLanguage(languageFeatureImpactAccumulator, date, langFeature);
-    }
-
-    for (const modelFeature of metric.totals_by_model_feature) {
-      const engagements = modelFeature.code_generation_activity_count + modelFeature.code_acceptance_activity_count;
-      accumulateModelEngagement(statsAccumulator, modelFeature.model, engagements);
-
-      accumulateModelFeature(
-        modelUsageAccumulator,
-        date,
-        modelFeature.model,
-        getCanonicalUserInitiatedInteractionCount(modelFeature)
-      );
-
-      accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);
-    }
+    accumulateLanguageAggregation(
+      languageAggregationAccumulator,
+      statsAccumulator,
+      metric
+    );
+    accumulateModelAggregation(
+      modelAggregationAccumulator,
+      statsAccumulator,
+      metric
+    );
 
     const featureImpacts: FeatureImpactInput[] = [];
 
@@ -383,54 +345,51 @@ export function aggregateMetrics(
         feature.user_initiated_interaction_count
       );
 
-      accumulateAgentHeatmapFromFeature(
-        modelUsageAccumulator,
-        date,
-        userId,
-        feature.feature,
-        feature.user_initiated_interaction_count
-      );
-
       featureImpacts.push(createFeatureImpactInput(feature));
     }
 
     accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);
   }
   const userSummaries = computeUserSummaries(userSummaryAccumulator);
+  const languageAggregation = finalizeLanguageAggregation(
+    languageAggregationAccumulator
+  );
+  const modelAggregation = finalizeModelAggregation(modelAggregationAccumulator);
 
   return {
     aggregated: {
-    stats: computeStats(statsAccumulator, filteredMetricsCount),
-    userSummaries,
-    engagementData: computeEngagementData(engagementAccumulator, cliUsageAccumulator),
-    chatUsersData: computeChatUsersData(chatAccumulator, cliUsageAccumulator),
-    chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsageAccumulator),
-    languageStats: computeLanguageStats(languageAccumulator),
-    modelUsageData: computeDailyModelUsageData(modelUsageAccumulator),
-    featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),
-    agentModeHeatmapData: computeAgentModeHeatmapData(modelUsageAccumulator),
-    agentImpactData: computeAgentImpactData(impactAccumulator),
-    codeCompletionImpactData: computeCodeCompletionImpactData(impactAccumulator),
-    editModeImpactData: computeEditModeImpactData(impactAccumulator),
-    inlineModeImpactData: computeInlineModeImpactData(impactAccumulator),
-    askModeImpactData: computeAskModeImpactData(impactAccumulator),
-    cliImpactData: computeCliImpactData(impactAccumulator),
-    joinedImpactData: computeJoinedImpactData(impactAccumulator),
-    ...computeIDEStatsData(ideStatsAccumulator),
-    pluginVersionData: computePluginVersionData(pluginVersionAccumulator),
-    languageFeatureImpactData: computeLanguageFeatureImpactData(languageFeatureImpactAccumulator),
-    dailyLanguageGenerationsData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'generations'),
-    dailyLanguageLocData: computeDailyLanguageChartData(languageFeatureImpactAccumulator, 'loc'),
-    modelBreakdownData: computeModelBreakdownData(modelBreakdownAccumulator),
-    dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
-    dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
-    dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
-    dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
-    dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
-    dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
-    aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),
-    usageDistributionData: computeUsageDistributionData(aiAdoptionPhaseAccumulator),
-    dailyAiCreditsData: computeDailyAiCreditsData(aiCreditsAccumulator),
+      stats: computeStats(statsAccumulator, filteredMetricsCount),
+      userSummaries,
+      engagementData: computeEngagementData(engagementAccumulator, cliUsageAccumulator),
+      chatUsersData: computeChatUsersData(chatAccumulator, cliUsageAccumulator),
+      chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsageAccumulator),
+      languageStats: languageAggregation.languageStats,
+      modelUsageData: modelAggregation.modelUsageData,
+      featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),
+      agentModeHeatmapData: modelAggregation.agentModeHeatmapData,
+      agentImpactData: computeAgentImpactData(impactAccumulator),
+      codeCompletionImpactData: computeCodeCompletionImpactData(impactAccumulator),
+      editModeImpactData: computeEditModeImpactData(impactAccumulator),
+      inlineModeImpactData: computeInlineModeImpactData(impactAccumulator),
+      askModeImpactData: computeAskModeImpactData(impactAccumulator),
+      cliImpactData: computeCliImpactData(impactAccumulator),
+      joinedImpactData: computeJoinedImpactData(impactAccumulator),
+      ...computeIDEStatsData(ideStatsAccumulator),
+      pluginVersionData: computePluginVersionData(pluginVersionAccumulator),
+      languageFeatureImpactData: languageAggregation.languageFeatureImpactData,
+      dailyLanguageGenerationsData:
+        languageAggregation.dailyLanguageGenerationsData,
+      dailyLanguageLocData: languageAggregation.dailyLanguageLocData,
+      modelBreakdownData: modelAggregation.modelBreakdownData,
+      dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
+      dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
+      dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
+      dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
+      dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
+      dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
+      aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),
+      usageDistributionData: computeUsageDistributionData(aiAdoptionPhaseAccumulator),
+      dailyAiCreditsData: computeDailyAiCreditsData(aiCreditsAccumulator),
     },
     userDetailAccumulator,
   };
