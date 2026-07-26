@@ -11,28 +11,24 @@ import CLIOverlapChart from './charts/CLIOverlapChart';
 import IDEInsights from './IDEInsights';
 import { CLIENT_ANALYSIS_SECTIONS } from './layout/contextSections';
 import { appendCliClientStatsRow } from '../domain/calculators/clientActivityRows';
+import type { ClientsReadModel } from '../read-models/clients';
 
 type IDEStats = IDEStatsData;
 
 interface IDEViewProps {
-  ideStats: IDEStatsData[];
-  multiIDEUsersCount: number;
-  totalUniqueIDEUsers: number;
-  cliUsers: number;
-  cliSessions: number;
-  cliLocAdded: number;
-  cliLocDeleted: number;
+  model: ClientsReadModel;
 }
 
-export default function ClientsView({
-  ideStats,
-  multiIDEUsersCount,
-  totalUniqueIDEUsers,
-  cliUsers,
-  cliSessions,
-  cliLocAdded,
-  cliLocDeleted,
-}: IDEViewProps) {
+export default function ClientsView({ model }: IDEViewProps) {
+  const {
+    ideStats,
+    multiIDEUsersCount,
+    totalUniqueIDEUsers,
+    cliUsers,
+    cliSessions,
+    cliLocAdded,
+    cliLocDeleted,
+  } = model;
 
   const allClients: IDEStats[] = React.useMemo(() => {
     return appendCliClientStatsRow(ideStats, {

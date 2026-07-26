@@ -9,14 +9,14 @@ import { usePluginVersions } from '../hooks/usePluginVersions';
 import { classifyVsCodeVersion, parseReportDayInclusiveEnd, resolveCurrentStableMinorAtDate } from '../domain/vscodeVersionClassifier';
 import { CLIENT_VERSIONS_SECTIONS } from './layout/contextSections';
 import type { VsCodeVersionClassification } from '../domain/vscodeVersionClassifier';
-import type { MetricsStats, PluginVersionAnalysisData } from '../types/metrics';
+import type { ClientVersionsReadModel } from '../read-models/clients';
 
 interface ClientVersionsViewProps {
-  pluginVersionData: PluginVersionAnalysisData;
-  stats: MetricsStats;
+  model: ClientVersionsReadModel;
 }
 
-export default function ClientVersionsView({ pluginVersionData, stats }: ClientVersionsViewProps) {
+export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
+  const { pluginVersionData, reportStartDay } = model;
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
   const {
     stableReleases: vsCodeStableReleases,
@@ -41,11 +41,11 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
   const latestTwentyVersions = React.useMemo(() => latestTwentyUpdates.map(u => u.version), [latestTwentyUpdates]);
 
   const effectiveVsCodeStableMinor = React.useMemo(() => {
-    const releaseWindowMinor = resolveCurrentStableMinorAtDate(vsCodeStableReleases, stats.reportStartDay);
+    const releaseWindowMinor = resolveCurrentStableMinorAtDate(vsCodeStableReleases, reportStartDay);
     if (releaseWindowMinor !== null) return releaseWindowMinor;
     if (vsCodeStableReleases.length > 0) return null;
     return currentStableMinor;
-  }, [currentStableMinor, stats.reportStartDay, vsCodeStableReleases]);
+  }, [currentStableMinor, reportStartDay, vsCodeStableReleases]);
 
   const effectiveVsCodePreviewMinor = React.useMemo(() => {
     if (effectiveVsCodeStableMinor === null) return null;
@@ -75,7 +75,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
     return earliest;
   }, [vsCodeStableReleases]);
 
-  const parsedReportStartDay = React.useMemo(() => parseReportDayInclusiveEnd(stats.reportStartDay), [stats.reportStartDay]);
+  const parsedReportStartDay = React.useMemo(() => parseReportDayInclusiveEnd(reportStartDay), [reportStartDay]);
 
   const hasHistoricalVsCodeMetadataGap = React.useMemo(
     () => {
@@ -535,7 +535,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
             <div className="space-y-1">
               <p>
                 <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                This report starts on {formatReportDay(stats.reportStartDay)}, which predates the bundled VS Code stable release history.
+                This report starts on {formatReportDay(reportStartDay)}, which predates the bundled VS Code stable release history.
               </p>
               <p>
                 Historical metadata in this build starts at {formatDate(earliestVsCodeStableReleaseDate ?? '')}, so older report windows are shown without stable or outdated classification.
@@ -555,7 +555,7 @@ export default function ClientVersionsView({ pluginVersionData, stats }: ClientV
             <div className="space-y-1">
               <p>
                 <span className="font-medium text-gray-900">Status evaluation:</span>{' '}
-                Versions are compared against the stable release train available at the start of this report window ({formatReportDay(stats.reportStartDay)}).
+                Versions are compared against the stable release train available at the start of this report window ({formatReportDay(reportStartDay)}).
               </p>
               <p>
                 <span className="font-medium text-gray-900">Stable release train at report start:</span>{' '}

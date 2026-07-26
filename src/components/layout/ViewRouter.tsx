@@ -15,6 +15,10 @@ import { selectCopilotAdoptionReadModel } from '../../read-models/adoption';
 import { selectAiAdoptionPhaseReadModel } from '../../read-models/aiAdoptionPhases';
 import { selectCopilotImpactReadModel } from '../../read-models/impact';
 import { selectLanguagesReadModel } from '../../read-models/languages';
+import {
+  selectClientsReadModel,
+  selectClientVersionsReadModel,
+} from '../../read-models/clients';
 import { selectUsersReadModel } from '../../read-models/users';
 import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
 import {
@@ -184,11 +188,6 @@ const ViewRouter: React.FC = () => {
   const { 
     stats, 
     userSummaries, 
-    cliImpactData,
-    ideStats,
-    multiIDEUsersCount,
-    totalUniqueIDEUsers,
-    pluginVersionData,
     modelBreakdownData,
     dailyCliSessionData,
     dailyCliTokenData,
@@ -202,6 +201,8 @@ const ViewRouter: React.FC = () => {
   const aiAdoptionPhaseReadModel = selectAiAdoptionPhaseReadModel(aggregatedMetrics);
   const copilotImpactReadModel = selectCopilotImpactReadModel(aggregatedMetrics);
   const languagesReadModel = selectLanguagesReadModel(aggregatedMetrics);
+  const clientsReadModel = selectClientsReadModel(aggregatedMetrics);
+  const clientVersionsReadModel = selectClientVersionsReadModel(aggregatedMetrics);
   const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
@@ -230,8 +231,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.CLIENT_VERSIONS:
       return (
         <ClientVersionsView
-          pluginVersionData={pluginVersionData}
-          stats={stats}
+          model={clientVersionsReadModel}
         />
       );
 
@@ -244,14 +244,8 @@ const ViewRouter: React.FC = () => {
 
     case VIEW_MODES.CLIENT_ANALYSIS:
       return (
-        <ClientsView 
-          ideStats={ideStats}
-          multiIDEUsersCount={multiIDEUsersCount}
-          totalUniqueIDEUsers={totalUniqueIDEUsers}
-          cliUsers={stats.cliUsers}
-          cliSessions={dailyCliSessionData.reduce((sum, d) => sum + d.sessionCount, 0)}
-          cliLocAdded={cliImpactData.reduce((sum, d) => sum + d.locAdded, 0)}
-          cliLocDeleted={cliImpactData.reduce((sum, d) => sum + d.locDeleted, 0)}
+        <ClientsView
+          model={clientsReadModel}
         />
       );
 
