@@ -61,7 +61,7 @@ vi.mock('../../../../state/NavigationContext', () => ({
   }),
 }));
 
-vi.mock('../../../../workers/MetricsWorkerContext', () => ({
+vi.mock('../../../../state/MetricsWorkerContext', () => ({
   useMetricsWorker: () => mocks.workerOperations,
 }));
 

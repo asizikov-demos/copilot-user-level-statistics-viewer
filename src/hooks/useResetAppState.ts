@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useMetrics } from '../components/MetricsContext';
 import { useNavigation } from '../state/NavigationContext';
-import { useMetricsWorker } from '../workers/MetricsWorkerContext';
+import { useMetricsWorker } from '../state/MetricsWorkerContext';
 
 export function useResetAppState() {
   const { resetMetrics } = useMetrics();

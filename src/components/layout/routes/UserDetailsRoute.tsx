@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { selectUserDetailsRouteReadModel } from '../../../read-models/userDetails';
 import { useNavigation } from '../../../state/NavigationContext';
+import { useMetricsWorker } from '../../../state/MetricsWorkerContext';
 import { VIEW_MODES } from '../../../types/navigation';
-import { useMetricsWorker } from '../../../workers/MetricsWorkerContext';
 import UserDetailsView from '../../UserDetailsView';
 import { useMetrics } from '../../MetricsContext';
 import { runUserDetailsRequest } from '../userDetailsRequest';

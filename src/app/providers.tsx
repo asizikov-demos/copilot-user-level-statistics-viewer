@@ -1,17 +1,17 @@
 "use client";
 
 import React from 'react';
-import { MetricsProvider } from '../components/MetricsContext';
+import { MetricsContextProvider } from '../components/MetricsContext';
 import { NavigationProvider } from '../state/NavigationContext';
-import { MetricsWorkerProvider } from '../workers/MetricsWorkerContext';
+import { MetricsWorkerProvider } from '../state/MetricsWorkerContext';
 
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <MetricsWorkerProvider>
       <NavigationProvider>
-        <MetricsProvider>
+        <MetricsContextProvider>
           {children}
-        </MetricsProvider>
+        </MetricsContextProvider>
       </NavigationProvider>
     </MetricsWorkerProvider>
   );

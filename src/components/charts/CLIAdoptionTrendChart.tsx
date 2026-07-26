@@ -4,7 +4,7 @@ import { Chart } from 'react-chartjs-2';
 import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
 import { createAdoptionTrendChartConfig, createAdoptionTrendSummaryStats, getAdoptionTrendMetrics, padAdoptionTrendData } from './utils/adoptionTrendChart';
-import { computeCliInsights } from '../../domain/cliAdoptionInsights';
+import { computeCliInsights } from './utils/cliAdoptionInsights';
 import type { DailyCliAdoptionTrend } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 import InsightsCard from '../ui/InsightsCard';

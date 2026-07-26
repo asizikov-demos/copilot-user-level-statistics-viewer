@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AGGREGATED_METRICS_FIELD_KEYS,
   AGGREGATED_METRICS_SLICE_KEYS,
-  FORMER_FLAT_AGGREGATE_KEYS,
-  projectFormerFlatAggregate,
 } from '../../__tests__/factories/aggregatedMetrics';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
@@ -298,25 +297,104 @@ describe('metrics aggregation orchestration characterization', () => {
       cliAggregation,
       aiAggregation,
     });
-    const expectedFormerFlat = {
-      ...coreStatsAggregation,
-      ...userSummaryAggregation,
-      ...engagementAdoptionAggregation,
-      ...impactAggregation,
-      ...languageAggregation,
-      ...clientAggregation,
-      ...modelAggregation,
-      ...cliAggregation,
-      ...aiAggregation,
-    };
-    const actualFormerFlat = projectFormerFlatAggregate(aggregated);
-
-    for (const key of FORMER_FLAT_AGGREGATE_KEYS) {
-      expect(actualFormerFlat[key]).toBe(expectedFormerFlat[key]);
-    }
+    expect(aggregated.overview.stats).toBe(coreStatsAggregation.stats);
+    expect(aggregated.overview.engagementData).toBe(
+      engagementAdoptionAggregation.engagementData
+    );
+    expect(aggregated.overview.chatUsersData).toBe(
+      engagementAdoptionAggregation.chatUsersData
+    );
+    expect(aggregated.overview.chatRequestsData).toBe(
+      engagementAdoptionAggregation.chatRequestsData
+    );
+    expect(aggregated.users.userSummaries).toBe(
+      userSummaryAggregation.userSummaries
+    );
+    expect(aggregated.adoption.featureAdoptionData).toBe(
+      engagementAdoptionAggregation.featureAdoptionData
+    );
+    expect(aggregated.adoption.agentModeHeatmapData).toBe(
+      modelAggregation.agentModeHeatmapData
+    );
+    expect(aggregated.adoption.dailyAdoptionTrend).toBe(
+      engagementAdoptionAggregation.dailyAdoptionTrend
+    );
+    expect(aggregated.adoption.dailyCloudAgentAdoptionData).toBe(
+      engagementAdoptionAggregation.dailyCloudAgentAdoptionData
+    );
+    expect(aggregated.adoption.dailyCodeReviewAdoptionData).toBe(
+      engagementAdoptionAggregation.dailyCodeReviewAdoptionData
+    );
+    expect(aggregated.impact.agentImpactData).toBe(
+      impactAggregation.agentImpactData
+    );
+    expect(aggregated.impact.codeCompletionImpactData).toBe(
+      impactAggregation.codeCompletionImpactData
+    );
+    expect(aggregated.impact.editModeImpactData).toBe(
+      impactAggregation.editModeImpactData
+    );
+    expect(aggregated.impact.inlineModeImpactData).toBe(
+      impactAggregation.inlineModeImpactData
+    );
+    expect(aggregated.impact.askModeImpactData).toBe(
+      impactAggregation.askModeImpactData
+    );
+    expect(aggregated.impact.cliImpactData).toBe(
+      impactAggregation.cliImpactData
+    );
+    expect(aggregated.impact.joinedImpactData).toBe(
+      impactAggregation.joinedImpactData
+    );
+    expect(aggregated.languages.languageStats).toBe(
+      languageAggregation.languageStats
+    );
+    expect(aggregated.languages.languageFeatureImpactData).toBe(
+      languageAggregation.languageFeatureImpactData
+    );
+    expect(aggregated.languages.dailyLanguageGenerationsData).toBe(
+      languageAggregation.dailyLanguageGenerationsData
+    );
+    expect(aggregated.languages.dailyLanguageLocData).toBe(
+      languageAggregation.dailyLanguageLocData
+    );
+    expect(aggregated.clients.ideStats).toBe(clientAggregation.ideStats);
+    expect(aggregated.clients.multiIDEUsersCount).toBe(
+      clientAggregation.multiIDEUsersCount
+    );
+    expect(aggregated.clients.totalUniqueIDEUsers).toBe(
+      clientAggregation.totalUniqueIDEUsers
+    );
+    expect(aggregated.clients.pluginVersionData).toBe(
+      clientAggregation.pluginVersionData
+    );
+    expect(aggregated.models.modelUsageData).toBe(
+      modelAggregation.modelUsageData
+    );
+    expect(aggregated.models.modelBreakdownData).toBe(
+      modelAggregation.modelBreakdownData
+    );
+    expect(aggregated.cli.dailyCliSessionData).toBe(
+      cliAggregation.dailyCliSessionData
+    );
+    expect(aggregated.cli.dailyCliTokenData).toBe(
+      cliAggregation.dailyCliTokenData
+    );
+    expect(aggregated.cli.dailyCliAdoptionTrend).toBe(
+      cliAggregation.dailyCliAdoptionTrend
+    );
+    expect(aggregated.ai.aiAdoptionPhaseData).toBe(
+      aiAggregation.aiAdoptionPhaseData
+    );
+    expect(aggregated.ai.usageDistributionData).toBe(
+      aiAggregation.usageDistributionData
+    );
+    expect(aggregated.ai.dailyAiCreditsData).toBe(
+      aiAggregation.dailyAiCreditsData
+    );
   });
 
-  it('owns every former field once and measures grouped serialization', () => {
+  it('owns every aggregate field once and uses a single raw-record pass', () => {
     const source = [
       makeMetric({
         user_id: 1,
@@ -390,13 +468,9 @@ describe('metrics aggregation orchestration characterization', () => {
     });
 
     const { aggregated } = aggregateMetrics(metrics);
-    const flat = projectFormerFlatAggregate(aggregated);
     const groupedBytes = new TextEncoder().encode(
       JSON.stringify(aggregated)
     ).byteLength;
-    const flatBytes = new TextEncoder().encode(JSON.stringify(flat)).byteLength;
-    const deltaBytes = groupedBytes - flatBytes;
-    const percentageDelta = (deltaBytes / flatBytes) * 100;
 
     expect(Object.keys(aggregated)).toEqual(aggregateSliceKeys);
     expect(Object.keys(aggregated.overview)).toEqual(
@@ -426,22 +500,14 @@ describe('metrics aggregation orchestration characterization', () => {
     expect(Object.keys(aggregated.ai)).toEqual(
       AGGREGATED_METRICS_SLICE_KEYS.ai
     );
-    expect(Object.keys(flat)).toEqual(FORMER_FLAT_AGGREGATE_KEYS);
-    expect(new Set(FORMER_FLAT_AGGREGATE_KEYS).size).toBe(
-      FORMER_FLAT_AGGREGATE_KEYS.length
+    expect(new Set(AGGREGATED_METRICS_FIELD_KEYS).size).toBe(
+      AGGREGATED_METRICS_FIELD_KEYS.length
     );
-    for (const key of FORMER_FLAT_AGGREGATE_KEYS) {
+    for (const key of AGGREGATED_METRICS_FIELD_KEYS) {
       expect(aggregated).not.toHaveProperty(key);
     }
     expect(aggregated).not.toHaveProperty('metrics');
     expect(groupedBytes).toBeGreaterThan(0);
-    expect(flatBytes).toBeGreaterThan(0);
-    expect(groupedBytes).toBe(flatBytes + deltaBytes);
-    expect(Number.isFinite(percentageDelta)).toBe(true);
-    console.info(
-      `[aggregate-payload-size] grouped=${groupedBytes} flat=${flatBytes} `
-      + `delta=${deltaBytes} percentage=${percentageDelta.toFixed(2)}%`
-    );
     expect(iteratorRequests).toBe(1);
     expect(source).toEqual(original);
   });

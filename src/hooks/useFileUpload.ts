@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MultiFileProgress } from '../infra/metricsFileParser';
-import { useMetricsWorker } from '../workers/MetricsWorkerContext';
+import { useMetricsWorker } from '../state/MetricsWorkerContext';
 import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';
 
