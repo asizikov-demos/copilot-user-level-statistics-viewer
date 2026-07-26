@@ -122,19 +122,19 @@ describe('standard route registry', () => {
     const onUserSelect = vi.fn();
 
     overviewModel = {
-      reportStartDay: aggregatedMetrics.stats.reportStartDay,
-      reportEndDay: aggregatedMetrics.stats.reportEndDay,
-      engagementData: aggregatedMetrics.engagementData,
-      chatUsersData: aggregatedMetrics.chatUsersData,
-      chatRequestsData: aggregatedMetrics.chatRequestsData,
+      reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+      reportEndDay: aggregatedMetrics.overview.stats.reportEndDay,
+      engagementData: aggregatedMetrics.overview.engagementData,
+      chatUsersData: aggregatedMetrics.overview.chatUsersData,
+      chatRequestsData: aggregatedMetrics.overview.chatRequestsData,
     };
-    usersModel = { users: aggregatedMetrics.userSummaries };
+    usersModel = { users: aggregatedMetrics.users.userSummaries };
     aiCreditsModel = {
-      reportStartDay: aggregatedMetrics.stats.reportStartDay,
-      reportEndDay: aggregatedMetrics.stats.reportEndDay,
-      dailyAiCreditsData: aggregatedMetrics.dailyAiCreditsData,
-      userSummaries: aggregatedMetrics.userSummaries,
-      usageDistributionData: aggregatedMetrics.usageDistributionData,
+      reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+      reportEndDay: aggregatedMetrics.overview.stats.reportEndDay,
+      dailyAiCreditsData: aggregatedMetrics.ai.dailyAiCreditsData,
+      userSummaries: aggregatedMetrics.users.userSummaries,
+      usageDistributionData: aggregatedMetrics.ai.usageDistributionData,
       totalAiCreditsUsed: 0,
       onUserClick: onUserSelect,
     };

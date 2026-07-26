@@ -10,40 +10,46 @@ function makeAiCreditsMetrics(): AggregatedMetrics {
   const defaults = makeAggregatedMetrics();
 
   return makeAggregatedMetrics({
-    stats: {
-      ...defaults.stats,
-      reportStartDay: '2026-01-15',
-      reportEndDay: '2026-01-17',
+    overview: {
+      stats: {
+        ...defaults.overview.stats,
+        reportStartDay: '2026-01-15',
+        reportEndDay: '2026-01-17',
+      },
     },
-    dailyAiCreditsData: [
-      { date: '2026-01-17', aiCreditsUsed: -0.25, users: 1 },
-      { date: '2026-01-15', aiCreditsUsed: 2.5, users: 2 },
-    ],
-    userSummaries: [
-      makeUserSummary({
-        user_login: 'fractional',
-        user_id: 1,
-        total_ai_credits_used: 2.5,
-      }),
-      makeUserSummary({
-        user_login: 'signed',
-        user_id: 2,
-        total_ai_credits_used: -0.25,
-      }),
-    ],
-    usageDistributionData: [{
-      id: 'power',
-      label: 'Power Users',
-      description: 'Top users',
-      userCount: 1,
-      totalAiCreditsUsed: 2.5,
-      avgAiCreditsUsed: 2.5,
-      avgDaysActive: 1.5,
-      totalLocAdded: 10,
-      totalLocDeleted: 2,
-      topModels: [{ name: 'gpt-5', total: 4, uniqueUsers: 1 }],
-      topClients: [{ name: 'vscode', total: 3, uniqueUsers: 1 }],
-    }],
+    users: {
+      userSummaries: [
+        makeUserSummary({
+          user_login: 'fractional',
+          user_id: 1,
+          total_ai_credits_used: 2.5,
+        }),
+        makeUserSummary({
+          user_login: 'signed',
+          user_id: 2,
+          total_ai_credits_used: -0.25,
+        }),
+      ],
+    },
+    ai: {
+      dailyAiCreditsData: [
+        { date: '2026-01-17', aiCreditsUsed: -0.25, users: 1 },
+        { date: '2026-01-15', aiCreditsUsed: 2.5, users: 2 },
+      ],
+      usageDistributionData: [{
+        id: 'power',
+        label: 'Power Users',
+        description: 'Top users',
+        userCount: 1,
+        totalAiCreditsUsed: 2.5,
+        avgAiCreditsUsed: 2.5,
+        avgDaysActive: 1.5,
+        totalLocAdded: 10,
+        totalLocDeleted: 2,
+        topModels: [{ name: 'gpt-5', total: 4, uniqueUsers: 1 }],
+        topClients: [{ name: 'vscode', total: 3, uniqueUsers: 1 }],
+      }],
+    },
   });
 }
 
@@ -57,31 +63,31 @@ describe('AI Credits read model', () => {
     expect(model).toEqual({
       reportStartDay: '2026-01-15',
       reportEndDay: '2026-01-17',
-      dailyAiCreditsData: metrics.dailyAiCreditsData,
-      userSummaries: metrics.userSummaries,
-      usageDistributionData: metrics.usageDistributionData,
+      dailyAiCreditsData: metrics.ai.dailyAiCreditsData,
+      userSummaries: metrics.users.userSummaries,
+      usageDistributionData: metrics.ai.usageDistributionData,
       totalAiCreditsUsed: 2.25,
       onUserClick,
     });
-    expect(model.dailyAiCreditsData).toBe(metrics.dailyAiCreditsData);
-    expect(model.dailyAiCreditsData[0]).toBe(metrics.dailyAiCreditsData[0]);
-    expect(model.userSummaries).toBe(metrics.userSummaries);
-    expect(model.userSummaries[0]).toBe(metrics.userSummaries[0]);
-    expect(model.usageDistributionData).toBe(metrics.usageDistributionData);
+    expect(model.dailyAiCreditsData).toBe(metrics.ai.dailyAiCreditsData);
+    expect(model.dailyAiCreditsData[0]).toBe(metrics.ai.dailyAiCreditsData[0]);
+    expect(model.userSummaries).toBe(metrics.users.userSummaries);
+    expect(model.userSummaries[0]).toBe(metrics.users.userSummaries[0]);
+    expect(model.usageDistributionData).toBe(metrics.ai.usageDistributionData);
     expect(model.usageDistributionData[0]).toBe(
-      metrics.usageDistributionData[0]
+      metrics.ai.usageDistributionData[0]
     );
     expect(model.usageDistributionData[0].topModels).toBe(
-      metrics.usageDistributionData[0].topModels
+      metrics.ai.usageDistributionData[0].topModels
     );
     expect(model.usageDistributionData[0].topModels[0]).toBe(
-      metrics.usageDistributionData[0].topModels[0]
+      metrics.ai.usageDistributionData[0].topModels[0]
     );
     expect(model.usageDistributionData[0].topClients).toBe(
-      metrics.usageDistributionData[0].topClients
+      metrics.ai.usageDistributionData[0].topClients
     );
     expect(model.usageDistributionData[0].topClients[0]).toBe(
-      metrics.usageDistributionData[0].topClients[0]
+      metrics.ai.usageDistributionData[0].topClients[0]
     );
     expect(model.onUserClick).toBe(onUserClick);
     expect(Object.keys(model)).toEqual([
@@ -109,25 +115,27 @@ describe('AI Credits read model', () => {
       reportEndDay: '',
       dailyAiCreditsData: [],
       userSummaries: [],
-      usageDistributionData: metrics.usageDistributionData,
+      usageDistributionData: metrics.ai.usageDistributionData,
       totalAiCreditsUsed: 0,
       onUserClick,
     });
-    expect(model.dailyAiCreditsData).toBe(metrics.dailyAiCreditsData);
-    expect(model.userSummaries).toBe(metrics.userSummaries);
-    expect(model.usageDistributionData).toBe(metrics.usageDistributionData);
+    expect(model.dailyAiCreditsData).toBe(metrics.ai.dailyAiCreditsData);
+    expect(model.userSummaries).toBe(metrics.users.userSummaries);
+    expect(model.usageDistributionData).toBe(metrics.ai.usageDistributionData);
   });
 
   it('keeps the existing runtime array fallbacks and date scalar semantics', () => {
     const metrics = makeAggregatedMetrics({
-      stats: {
-        ...makeAggregatedMetrics().stats,
-        reportStartDay: 'not-a-start-date',
-        reportEndDay: 'not-an-end-date',
+      overview: {
+        stats: {
+          ...makeAggregatedMetrics().overview.stats,
+          reportStartDay: 'not-a-start-date',
+          reportEndDay: 'not-an-end-date',
+        },
       },
     });
-    Reflect.set(metrics, 'dailyAiCreditsData', undefined);
-    Reflect.set(metrics, 'usageDistributionData', undefined);
+    Reflect.set(metrics.ai, 'dailyAiCreditsData', undefined);
+    Reflect.set(metrics.ai, 'usageDistributionData', undefined);
 
     const model = selectAiCreditsReadModel(metrics, vi.fn());
 
@@ -139,10 +147,12 @@ describe('AI Credits read model', () => {
 
   it('keeps signed and fractional totals without rounding or clamping', () => {
     const metrics = makeAggregatedMetrics({
-      userSummaries: [
-        makeUserSummary({ total_ai_credits_used: -4.75 }),
-        makeUserSummary({ total_ai_credits_used: 1.125 }),
-      ],
+      users: {
+        userSummaries: [
+          makeUserSummary({ total_ai_credits_used: -4.75 }),
+          makeUserSummary({ total_ai_credits_used: 1.125 }),
+        ],
+      },
     });
 
     const model = selectAiCreditsReadModel(metrics, vi.fn());

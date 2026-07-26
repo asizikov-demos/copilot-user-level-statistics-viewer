@@ -22,64 +22,72 @@ function makeFeatureMetrics(): AggregatedMetrics {
   const defaults = makeAggregatedMetrics();
 
   return makeAggregatedMetrics({
-    featureAdoptionData: {
-      ...defaults.featureAdoptionData,
-      totalUsers: 4,
-      agentModeUsers: 2,
-    },
-    agentModeHeatmapData: [{
-      date: '2026-01-15',
-      agentModeRequests: 8,
-      uniqueUsers: 2,
-      intensity: 4,
-    }],
-    stats: {
-      ...defaults.stats,
-      reportStartDay: '2026-01-15',
-      reportEndDay: '2026-01-16',
-    },
-    dailyAdoptionTrend: [{
-      date: '2026-01-15',
-      newUsers: 2,
-      returningUsers: 1,
-      totalActiveUsers: 3,
-      cumulativeUsers: 4,
-    }],
-    dailyCloudAgentAdoptionData: [{
-      date: '2026-01-15',
-      uniqueUsers: 1,
-    }],
-    dailyCodeReviewAdoptionData: [{
-      date: '2026-01-15',
-      activeUsers: 1,
-      passiveUsers: 1,
-      totalUsers: 2,
-    }],
-    aiAdoptionPhaseData: [{
-      phase: {
-        phase_number: 2,
-        phase: 'Phase 2',
-        version: 'v1',
+    overview: {
+      stats: {
+        ...defaults.overview.stats,
+        reportStartDay: '2026-01-15',
+        reportEndDay: '2026-01-16',
       },
-      userCount: 2,
-      avgUserInitiatedInteractions: 5,
-      totalLocAdded: 20,
-      totalLocDeleted: 4,
-      avgLocAdded: 10,
-      avgLocDeleted: 2,
-      avgAiCreditsUsed: 1.5,
-      avgDaysActive: 3,
-      topModels: [{ name: 'gpt-4.1', total: 8, uniqueUsers: 2 }],
-      topClients: [{ name: 'vscode', total: 7, uniqueUsers: 2 }],
-      topLanguages: [{ name: 'typescript', total: 6, uniqueUsers: 2 }],
-    }],
-    agentImpactData: [{ ...IMPACT_POINT, locAdded: 13, netChange: 10 }],
-    codeCompletionImpactData: [{ ...IMPACT_POINT, locAdded: 14, netChange: 11 }],
-    editModeImpactData: [{ ...IMPACT_POINT, locAdded: 15, netChange: 12 }],
-    inlineModeImpactData: [{ ...IMPACT_POINT, locAdded: 16, netChange: 13 }],
-    askModeImpactData: [{ ...IMPACT_POINT, locAdded: 17, netChange: 14 }],
-    cliImpactData: [{ ...IMPACT_POINT, locAdded: 18, netChange: 15 }],
-    joinedImpactData: [{ ...IMPACT_POINT, locAdded: 19, netChange: 16 }],
+    },
+    adoption: {
+      featureAdoptionData: {
+        ...defaults.adoption.featureAdoptionData,
+        totalUsers: 4,
+        agentModeUsers: 2,
+      },
+      agentModeHeatmapData: [{
+        date: '2026-01-15',
+        agentModeRequests: 8,
+        uniqueUsers: 2,
+        intensity: 4,
+      }],
+      dailyAdoptionTrend: [{
+        date: '2026-01-15',
+        newUsers: 2,
+        returningUsers: 1,
+        totalActiveUsers: 3,
+        cumulativeUsers: 4,
+      }],
+      dailyCloudAgentAdoptionData: [{
+        date: '2026-01-15',
+        uniqueUsers: 1,
+      }],
+      dailyCodeReviewAdoptionData: [{
+        date: '2026-01-15',
+        activeUsers: 1,
+        passiveUsers: 1,
+        totalUsers: 2,
+      }],
+    },
+    impact: {
+      agentImpactData: [{ ...IMPACT_POINT, locAdded: 13, netChange: 10 }],
+      codeCompletionImpactData: [{ ...IMPACT_POINT, locAdded: 14, netChange: 11 }],
+      editModeImpactData: [{ ...IMPACT_POINT, locAdded: 15, netChange: 12 }],
+      inlineModeImpactData: [{ ...IMPACT_POINT, locAdded: 16, netChange: 13 }],
+      askModeImpactData: [{ ...IMPACT_POINT, locAdded: 17, netChange: 14 }],
+      cliImpactData: [{ ...IMPACT_POINT, locAdded: 18, netChange: 15 }],
+      joinedImpactData: [{ ...IMPACT_POINT, locAdded: 19, netChange: 16 }],
+    },
+    ai: {
+      aiAdoptionPhaseData: [{
+        phase: {
+          phase_number: 2,
+          phase: 'Phase 2',
+          version: 'v1',
+        },
+        userCount: 2,
+        avgUserInitiatedInteractions: 5,
+        totalLocAdded: 20,
+        totalLocDeleted: 4,
+        avgLocAdded: 10,
+        avgLocDeleted: 2,
+        avgAiCreditsUsed: 1.5,
+        avgDaysActive: 3,
+        topModels: [{ name: 'gpt-4.1', total: 8, uniqueUsers: 2 }],
+        topClients: [{ name: 'vscode', total: 7, uniqueUsers: 2 }],
+        topLanguages: [{ name: 'typescript', total: 6, uniqueUsers: 2 }],
+      }],
+    },
   });
 }
 
@@ -90,19 +98,19 @@ describe('adoption and impact read models', () => {
     const model = selectCopilotAdoptionReadModel(metrics);
 
     expect(model).toEqual({
-      featureAdoptionData: metrics.featureAdoptionData,
-      agentModeHeatmapData: metrics.agentModeHeatmapData,
-      stats: metrics.stats,
-      dailyAdoptionTrend: metrics.dailyAdoptionTrend,
-      dailyCloudAgentAdoptionData: metrics.dailyCloudAgentAdoptionData,
-      dailyCodeReviewAdoptionData: metrics.dailyCodeReviewAdoptionData,
+      featureAdoptionData: metrics.adoption.featureAdoptionData,
+      agentModeHeatmapData: metrics.adoption.agentModeHeatmapData,
+      stats: metrics.overview.stats,
+      dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
+      dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,
+      dailyCodeReviewAdoptionData: metrics.adoption.dailyCodeReviewAdoptionData,
     });
-    expect(model.featureAdoptionData).toBe(metrics.featureAdoptionData);
-    expect(model.agentModeHeatmapData).toBe(metrics.agentModeHeatmapData);
-    expect(model.stats).toBe(metrics.stats);
-    expect(model.dailyAdoptionTrend).toBe(metrics.dailyAdoptionTrend);
-    expect(model.dailyCloudAgentAdoptionData).toBe(metrics.dailyCloudAgentAdoptionData);
-    expect(model.dailyCodeReviewAdoptionData).toBe(metrics.dailyCodeReviewAdoptionData);
+    expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
+    expect(model.agentModeHeatmapData).toBe(metrics.adoption.agentModeHeatmapData);
+    expect(model.stats).toBe(metrics.overview.stats);
+    expect(model.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
+    expect(model.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
+    expect(model.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
     expect(Object.keys(model)).toEqual([
       'featureAdoptionData',
       'agentModeHeatmapData',
@@ -120,9 +128,9 @@ describe('adoption and impact read models', () => {
     const model = selectAiAdoptionPhaseReadModel(metrics);
 
     expect(model).toEqual({
-      aiAdoptionPhaseData: metrics.aiAdoptionPhaseData,
+      aiAdoptionPhaseData: metrics.ai.aiAdoptionPhaseData,
     });
-    expect(model.aiAdoptionPhaseData).toBe(metrics.aiAdoptionPhaseData);
+    expect(model.aiAdoptionPhaseData).toBe(metrics.ai.aiAdoptionPhaseData);
     expect(Object.keys(model)).toEqual(['aiAdoptionPhaseData']);
     expect(model).not.toHaveProperty('featureAdoptionData');
   });
@@ -133,21 +141,21 @@ describe('adoption and impact read models', () => {
     const model = selectCopilotImpactReadModel(metrics);
 
     expect(model).toEqual({
-      agentImpactData: metrics.agentImpactData,
-      codeCompletionImpactData: metrics.codeCompletionImpactData,
-      editModeImpactData: metrics.editModeImpactData,
-      inlineModeImpactData: metrics.inlineModeImpactData,
-      askModeImpactData: metrics.askModeImpactData,
-      cliImpactData: metrics.cliImpactData,
-      joinedImpactData: metrics.joinedImpactData,
+      agentImpactData: metrics.impact.agentImpactData,
+      codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
+      editModeImpactData: metrics.impact.editModeImpactData,
+      inlineModeImpactData: metrics.impact.inlineModeImpactData,
+      askModeImpactData: metrics.impact.askModeImpactData,
+      cliImpactData: metrics.impact.cliImpactData,
+      joinedImpactData: metrics.impact.joinedImpactData,
     });
-    expect(model.agentImpactData).toBe(metrics.agentImpactData);
-    expect(model.codeCompletionImpactData).toBe(metrics.codeCompletionImpactData);
-    expect(model.editModeImpactData).toBe(metrics.editModeImpactData);
-    expect(model.inlineModeImpactData).toBe(metrics.inlineModeImpactData);
-    expect(model.askModeImpactData).toBe(metrics.askModeImpactData);
-    expect(model.cliImpactData).toBe(metrics.cliImpactData);
-    expect(model.joinedImpactData).toBe(metrics.joinedImpactData);
+    expect(model.agentImpactData).toBe(metrics.impact.agentImpactData);
+    expect(model.codeCompletionImpactData).toBe(metrics.impact.codeCompletionImpactData);
+    expect(model.editModeImpactData).toBe(metrics.impact.editModeImpactData);
+    expect(model.inlineModeImpactData).toBe(metrics.impact.inlineModeImpactData);
+    expect(model.askModeImpactData).toBe(metrics.impact.askModeImpactData);
+    expect(model.cliImpactData).toBe(metrics.impact.cliImpactData);
+    expect(model.joinedImpactData).toBe(metrics.impact.joinedImpactData);
     expect(Object.keys(model)).toEqual([
       'agentImpactData',
       'codeCompletionImpactData',
@@ -167,19 +175,19 @@ describe('adoption and impact read models', () => {
     const phases = selectAiAdoptionPhaseReadModel(metrics);
     const impact = selectCopilotImpactReadModel(metrics);
 
-    expect(adoption.agentModeHeatmapData).toBe(metrics.agentModeHeatmapData);
-    expect(adoption.dailyAdoptionTrend).toBe(metrics.dailyAdoptionTrend);
-    expect(adoption.dailyCloudAgentAdoptionData).toBe(metrics.dailyCloudAgentAdoptionData);
-    expect(adoption.dailyCodeReviewAdoptionData).toBe(metrics.dailyCodeReviewAdoptionData);
-    expect(phases.aiAdoptionPhaseData).toBe(metrics.aiAdoptionPhaseData);
+    expect(adoption.agentModeHeatmapData).toBe(metrics.adoption.agentModeHeatmapData);
+    expect(adoption.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
+    expect(adoption.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
+    expect(adoption.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
+    expect(phases.aiAdoptionPhaseData).toBe(metrics.ai.aiAdoptionPhaseData);
     expect(Object.values(impact)).toEqual([
-      metrics.agentImpactData,
-      metrics.codeCompletionImpactData,
-      metrics.editModeImpactData,
-      metrics.inlineModeImpactData,
-      metrics.askModeImpactData,
-      metrics.cliImpactData,
-      metrics.joinedImpactData,
+      metrics.impact.agentImpactData,
+      metrics.impact.codeCompletionImpactData,
+      metrics.impact.editModeImpactData,
+      metrics.impact.inlineModeImpactData,
+      metrics.impact.askModeImpactData,
+      metrics.impact.cliImpactData,
+      metrics.impact.joinedImpactData,
     ]);
     expect([
       adoption.agentModeHeatmapData,

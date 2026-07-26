@@ -82,7 +82,7 @@ describe('metrics aggregation modularization boundary', () => {
     const { aggregated } = aggregateMetrics(metrics);
 
     expect(metrics).toEqual(originalMetrics);
-    expect(aggregated.engagementData).toEqual([
+    expect(aggregated.overview.engagementData).toEqual([
       {
         date: '2024-01-15',
         activeUsers: 2,
@@ -96,7 +96,7 @@ describe('metrics aggregation modularization boundary', () => {
         engagementPercentage: 50,
       },
     ]);
-    expect(aggregated.chatUsersData).toEqual([
+    expect(aggregated.overview.chatUsersData).toEqual([
       {
         date: '2024-01-15',
         askModeUsers: 0,
@@ -116,7 +116,7 @@ describe('metrics aggregation modularization boundary', () => {
         cliUsers: 1,
       },
     ]);
-    expect(aggregated.chatRequestsData).toEqual([
+    expect(aggregated.overview.chatRequestsData).toEqual([
       {
         date: '2024-01-15',
         askModeRequests: 0,
@@ -136,7 +136,7 @@ describe('metrics aggregation modularization boundary', () => {
         cliSessions: 2,
       },
     ]);
-    expect(aggregated.featureAdoptionData).toEqual({
+    expect(aggregated.adoption.featureAdoptionData).toEqual({
       totalUsers: 2,
       completionUsers: 1,
       completionOnlyUsers: 0,
@@ -150,10 +150,10 @@ describe('metrics aggregation modularization boundary', () => {
       codeReviewUsers: 2,
       advancedUsers: 1,
     });
-    expect(aggregated.dailyCloudAgentAdoptionData).toEqual([
+    expect(aggregated.adoption.dailyCloudAgentAdoptionData).toEqual([
       { date: '2024-01-16', uniqueUsers: 1 },
     ]);
-    expect(aggregated.dailyCodeReviewAdoptionData).toEqual([
+    expect(aggregated.adoption.dailyCodeReviewAdoptionData).toEqual([
       {
         date: '2024-01-15',
         activeUsers: 1,
@@ -167,7 +167,7 @@ describe('metrics aggregation modularization boundary', () => {
         totalUsers: 1,
       },
     ]);
-    expect(aggregated.agentModeHeatmapData).toEqual([
+    expect(aggregated.adoption.agentModeHeatmapData).toEqual([
       {
         date: '2024-01-16',
         agentModeRequests: 4,
@@ -176,7 +176,7 @@ describe('metrics aggregation modularization boundary', () => {
       },
     ]);
 
-    expect(aggregated.agentImpactData).toEqual([
+    expect(aggregated.impact.agentImpactData).toEqual([
       {
         date: '2024-01-15',
         locAdded: 0,
@@ -194,17 +194,17 @@ describe('metrics aggregation modularization boundary', () => {
         totalUniqueUsers: 2,
       },
     ]);
-    expect(aggregated.codeCompletionImpactData.map(day => day.netChange)).toEqual([
+    expect(aggregated.impact.codeCompletionImpactData.map(day => day.netChange)).toEqual([
       3,
       15,
     ]);
-    expect(aggregated.editModeImpactData.map(day => day.netChange)).toEqual([0, 0]);
-    expect(aggregated.inlineModeImpactData.map(day => day.netChange)).toEqual([3, 0]);
-    expect(aggregated.askModeImpactData.map(day => day.netChange)).toEqual([0, 8]);
-    expect(aggregated.cliImpactData.map(day => day.netChange)).toEqual([0, 5]);
-    expect(aggregated.joinedImpactData.map(day => day.netChange)).toEqual([6, 35]);
+    expect(aggregated.impact.editModeImpactData.map(day => day.netChange)).toEqual([0, 0]);
+    expect(aggregated.impact.inlineModeImpactData.map(day => day.netChange)).toEqual([3, 0]);
+    expect(aggregated.impact.askModeImpactData.map(day => day.netChange)).toEqual([0, 8]);
+    expect(aggregated.impact.cliImpactData.map(day => day.netChange)).toEqual([0, 5]);
+    expect(aggregated.impact.joinedImpactData.map(day => day.netChange)).toEqual([6, 35]);
 
-    expect(aggregated.aiAdoptionPhaseData.map(data => ({
+    expect(aggregated.ai.aiAdoptionPhaseData.map(data => ({
       phase: data.phase.phase_number,
       users: data.userCount,
       credits: data.avgAiCreditsUsed,
@@ -212,19 +212,19 @@ describe('metrics aggregation modularization boundary', () => {
       { phase: 2, users: 1, credits: 12 },
       { phase: -1, users: 1, credits: 0 },
     ]);
-    expect(aggregated.usageDistributionData.map(bucket => bucket.id)).toEqual([
+    expect(aggregated.ai.usageDistributionData.map(bucket => bucket.id)).toEqual([
       'power',
       'heavy',
       'typical',
       'light',
     ]);
-    expect(aggregated.usageDistributionData.map(bucket => bucket.userCount)).toEqual([
+    expect(aggregated.ai.usageDistributionData.map(bucket => bucket.userCount)).toEqual([
       0,
       0,
       2,
       0,
     ]);
-    expect(aggregated.dailyAiCreditsData).toEqual([
+    expect(aggregated.ai.dailyAiCreditsData).toEqual([
       { date: '2024-01-15', aiCreditsUsed: 5, users: 1 },
       { date: '2024-01-16', aiCreditsUsed: 7, users: 1 },
     ]);
