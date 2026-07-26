@@ -1,10 +1,70 @@
-import type { UserDayData } from './metrics';
 import type {
+  DailyLanguageChartData,
+  IDEStatsData,
+  LanguageFeatureImpactData,
+  MetricsStats,
+  ModelBreakdownData,
+  PluginVersionAnalysisData,
+  UserDayData,
+  UserSummary,
+} from './metrics';
+import type {
+  AgentModeHeatmapData,
   DailyModelUsageData,
+  DailyEngagementData,
+  DailyAdoptionTrend,
+  DailyChatUsersData,
+  DailyChatRequestsData,
+  LanguageStats,
+  FeatureAdoptionData,
   AgentImpactData,
   CodeCompletionImpactData,
   ModeImpactData,
-} from '../domain/calculators/metricCalculators';
+  DailyCliSessionData,
+  DailyCliTokenData,
+  DailyCliAdoptionTrend,
+  DailyCloudAgentAdoptionData,
+  DailyCodeReviewAdoptionData,
+  AiAdoptionPhaseData,
+  UsageDistributionBucket,
+  DailyAiCreditsData,
+} from '../domain/calculators';
+
+export interface AggregatedMetrics {
+  stats: MetricsStats;
+  userSummaries: UserSummary[];
+  engagementData: DailyEngagementData[];
+  chatUsersData: DailyChatUsersData[];
+  chatRequestsData: DailyChatRequestsData[];
+  languageStats: LanguageStats[];
+  modelUsageData: DailyModelUsageData[];
+  featureAdoptionData: FeatureAdoptionData;
+  agentModeHeatmapData: AgentModeHeatmapData[];
+  agentImpactData: AgentImpactData[];
+  codeCompletionImpactData: CodeCompletionImpactData[];
+  editModeImpactData: ModeImpactData[];
+  inlineModeImpactData: ModeImpactData[];
+  askModeImpactData: ModeImpactData[];
+  cliImpactData: ModeImpactData[];
+  joinedImpactData: ModeImpactData[];
+  ideStats: IDEStatsData[];
+  multiIDEUsersCount: number;
+  totalUniqueIDEUsers: number;
+  pluginVersionData: PluginVersionAnalysisData;
+  languageFeatureImpactData: LanguageFeatureImpactData;
+  dailyLanguageGenerationsData: DailyLanguageChartData;
+  dailyLanguageLocData: DailyLanguageChartData;
+  modelBreakdownData: ModelBreakdownData;
+  dailyCliSessionData: DailyCliSessionData[];
+  dailyCliTokenData: DailyCliTokenData[];
+  dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
+  dailyAdoptionTrend: DailyAdoptionTrend[];
+  dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
+  dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
+  aiAdoptionPhaseData: AiAdoptionPhaseData[];
+  usageDistributionData: UsageDistributionBucket[];
+  dailyAiCreditsData: DailyAiCreditsData[];
+}
 
 export interface UserDetailedMetrics {
   totalModelRequests: number;

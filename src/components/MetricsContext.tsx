@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import type { AggregatedMetrics } from '../domain/metricsAggregator';
+import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 interface MetricsState {
   hasData: boolean;
