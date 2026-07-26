@@ -8,6 +8,12 @@ import { useFileUpload } from '../../hooks/useFileUpload';
 import { useResetAppState } from '../../hooks/useResetAppState';
 import { useMetricsWorker } from '../../workers/MetricsWorkerContext';
 import {
+  selectExecutiveSummaryReadModel,
+  selectOverviewReadModel,
+} from '../../read-models/overview';
+import { selectUsersReadModel } from '../../read-models/users';
+import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
+import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
 } from './userDetailsRouteState';
@@ -46,11 +52,13 @@ const ViewRouter: React.FC = () => {
   });
   const [userDetailsRetryKey, setUserDetailsRetryKey] = useState(0);
   const userDetailsRequestVersion = useRef(0);
+  const userDetailsReadModel = selectUserDetailsRouteReadModel(
+    aggregatedMetrics,
+    selectedUser
+  );
   const userDetailsRouteState = resolveUserDetailsRouteState({
     currentView,
-    selectedUser,
-    userSummaries: aggregatedMetrics?.userSummaries ?? null,
-    dataset: aggregatedMetrics,
+    routeModel: userDetailsReadModel,
     loadState: userDetailsLoadState,
   });
 
@@ -65,22 +73,13 @@ const ViewRouter: React.FC = () => {
     }
   }, [userDetailsRouteState.status, navigateTo]);
 
-  let userDetailsRequestUserId: number | null = null;
-  let userDetailsRequestLogin: string | null = null;
-  if (
-    userDetailsRouteState.status === 'error'
-    || userDetailsRouteState.status === 'ready'
-    || (
-      userDetailsRouteState.status === 'loading'
-      && userDetailsRouteState.userSummary !== null
-    )
-  ) {
-    userDetailsRequestUserId = userDetailsRouteState.selectedUser.id;
-    userDetailsRequestLogin = userDetailsRouteState.selectedUser.login;
-  }
-  const userDetailsRequestDataset = userDetailsRequestUserId === null
-    ? null
-    : aggregatedMetrics;
+  const userDetailsRequest = currentView === VIEW_MODES.USER_DETAILS
+    && userDetailsReadModel.status === 'resolved'
+    ? userDetailsReadModel
+    : null;
+  const userDetailsRequestUserId = userDetailsRequest?.selectedUser.id ?? null;
+  const userDetailsRequestLogin = userDetailsRequest?.selectedUser.login ?? null;
+  const userDetailsRequestDataset = userDetailsRequest?.datasetKey ?? null;
 
   useEffect(() => {
     if (!userDetailsRequestDataset || userDetailsRequestUserId === null) {
@@ -181,9 +180,6 @@ const ViewRouter: React.FC = () => {
   const { 
     stats, 
     userSummaries, 
-    engagementData, 
-    chatUsersData, 
-    chatRequestsData, 
     languageStats,
     featureAdoptionData,
     agentModeHeatmapData,
@@ -212,17 +208,16 @@ const ViewRouter: React.FC = () => {
     dailyAiCreditsData = [],
     usageDistributionData = [],
   } = aggregatedMetrics;
+  const overviewReadModel = selectOverviewReadModel(aggregatedMetrics);
+  const executiveSummaryReadModel = selectExecutiveSummaryReadModel(aggregatedMetrics);
+  const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
     case VIEW_MODES.EXECUTIVE_SUMMARY:
       return (
         <ExecutiveSummaryView
-          stats={stats}
+          model={executiveSummaryReadModel}
           enterpriseName={enterpriseName}
-          joinedImpactData={joinedImpactData}
-          agentImpactData={agentImpactData}
-          codeCompletionImpactData={codeCompletionImpactData}
-          featureAdoptionData={featureAdoptionData}
         />
       );
 
@@ -323,7 +318,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.USERS:
       return (
         <UniqueUsersView 
-          users={userSummaries} 
+          model={usersReadModel}
           onUserClick={handleUserClick}
         />
       );
@@ -378,10 +373,7 @@ const ViewRouter: React.FC = () => {
 
       return (
         <UserDetailsView
-          userDetails={userDetailsRouteState.details}
-          userSummary={userDetailsRouteState.userSummary}
-          userLogin={userDetailsRouteState.selectedUser.login}
-          userId={userDetailsRouteState.selectedUser.id}
+          model={userDetailsRouteState.model}
         />
       );
 
@@ -396,11 +388,8 @@ const ViewRouter: React.FC = () => {
     default:
       return (
         <OverviewDashboard
-          stats={stats}
+          model={overviewReadModel}
           enterpriseName={enterpriseName}
-          engagementData={engagementData}
-          chatUsersData={chatUsersData}
-          chatRequestsData={chatRequestsData}
         />
       );
   }

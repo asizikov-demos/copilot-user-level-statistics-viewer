@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { MetricsStats } from '../../../types/metrics';
-import { DailyEngagementData, DailyChatUsersData, DailyChatRequestsData } from '../../../domain/calculators/metricCalculators';
+import type { OverviewReadModel } from '../../../read-models/overview';
 import EngagementChart from '../../charts/EngagementChart';
 import ChatUsersChart from '../../charts/ChatUsersChart';
 import ChatRequestsChart from '../../charts/ChatRequestsChart';
@@ -11,20 +10,21 @@ import { OVERVIEW_SECTIONS } from './overviewSections';
 const [engagementSection, chatUsersSection, chatRequestsSection] = OVERVIEW_SECTIONS;
 
 interface OverviewDashboardProps {
-  stats: MetricsStats;
+  model: OverviewReadModel;
   enterpriseName: string | null;
-  engagementData: DailyEngagementData[];
-  chatUsersData: DailyChatUsersData[];
-  chatRequestsData: DailyChatRequestsData[];
 }
 
 const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
-  stats,
+  model,
   enterpriseName,
-  engagementData,
-  chatUsersData,
-  chatRequestsData,
 }) => {
+  const {
+    reportStartDay,
+    reportEndDay,
+    engagementData,
+    chatUsersData,
+    chatRequestsData,
+  } = model;
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -39,7 +39,7 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <h2 className="text-xl text-gray-900">
           <span className="font-semibold">Metrics Overview</span>
           <br />
-          <span className="text-sm font-normal text-gray-600">Data covers the period from <strong>{formatDate(stats.reportStartDay)}</strong> to <strong>{formatDate(stats.reportEndDay)}</strong>{enterpriseName && <> for Enterprise <strong>{enterpriseName}</strong></>}</span>
+          <span className="text-sm font-normal text-gray-600">Data covers the period from <strong>{formatDate(reportStartDay)}</strong> to <strong>{formatDate(reportEndDay)}</strong>{enterpriseName && <> for Enterprise <strong>{enterpriseName}</strong></>}</span>
         </h2>
       </div>
 
