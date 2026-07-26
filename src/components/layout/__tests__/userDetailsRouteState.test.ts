@@ -55,9 +55,12 @@ const details: UserDetailedMetrics = {
 function resolve(loadState: UserDetailsLoadState) {
   return resolveUserDetailsRouteState({
     currentView: VIEW_MODES.USER_DETAILS,
-    selectedUser,
-    userSummaries: [userSummary],
-    dataset,
+    routeModel: {
+      status: 'resolved',
+      selectedUser,
+      userSummary,
+      datasetKey: dataset,
+    },
     loadState,
   });
 }
@@ -66,9 +69,12 @@ describe('resolveUserDetailsRouteState', () => {
   it('returns inactive outside the user-details view', () => {
     const state = resolveUserDetailsRouteState({
       currentView: VIEW_MODES.USERS,
-      selectedUser,
-      userSummaries: [userSummary],
-      dataset,
+      routeModel: {
+        status: 'resolved',
+        selectedUser,
+        userSummary,
+        datasetKey: dataset,
+      },
       loadState: { status: 'idle' },
     });
 
@@ -78,9 +84,7 @@ describe('resolveUserDetailsRouteState', () => {
   it('redirects when no user is selected', () => {
     const state = resolveUserDetailsRouteState({
       currentView: VIEW_MODES.USER_DETAILS,
-      selectedUser: null,
-      userSummaries: [userSummary],
-      dataset,
+      routeModel: { status: 'missing-selection' },
       loadState: { status: 'idle' },
     });
 
@@ -90,9 +94,7 @@ describe('resolveUserDetailsRouteState', () => {
   it('redirects when the selected user has no aggregate summary', () => {
     const state = resolveUserDetailsRouteState({
       currentView: VIEW_MODES.USER_DETAILS,
-      selectedUser,
-      userSummaries: [],
-      dataset,
+      routeModel: { status: 'missing-summary', selectedUser },
       loadState: { status: 'idle' },
     });
 
@@ -122,7 +124,15 @@ describe('resolveUserDetailsRouteState', () => {
       dataset,
       userId: selectedUser.id,
       details,
-    })).toMatchObject({ status: 'ready', details, userSummary });
+    })).toMatchObject({
+      status: 'ready',
+      model: {
+        userDetails: details,
+        userSummary,
+        userLogin: selectedUser.login,
+        userId: selectedUser.id,
+      },
+    });
   });
 
   it('treats results from an obsolete dataset as loading', () => {

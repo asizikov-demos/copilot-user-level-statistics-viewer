@@ -4,20 +4,11 @@ import React from 'react';
 import { ViewPanel } from './ui';
 import ModeImpactChart from './charts/ModeImpactChart';
 import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
-import type {
-  ModeImpactData,
-  AgentImpactData,
-  CodeCompletionImpactData,
-  FeatureAdoptionData,
-} from '../domain/calculators/metricCalculators';
-import type { MetricsStats } from '../types/metrics';
+import type { ExecutiveSummaryReadModel } from '../read-models/overview';
+
 interface ExecutiveSummaryViewProps {
-  stats: MetricsStats;
+  model: ExecutiveSummaryReadModel;
   enterpriseName: string | null;
-  joinedImpactData: ModeImpactData[];
-  agentImpactData: AgentImpactData[];
-  codeCompletionImpactData: CodeCompletionImpactData[];
-  featureAdoptionData: FeatureAdoptionData;
 }
 
 function formatLongDate(dateString: string) {
@@ -44,14 +35,18 @@ function sumNetChange(data: Array<{ netChange: number }>): number {
 }
 
 export default function ExecutiveSummaryView({
-  stats,
+  model,
   enterpriseName,
-  joinedImpactData,
-  agentImpactData,
-  codeCompletionImpactData,
-  featureAdoptionData,
 }: ExecutiveSummaryViewProps) {
-  const reportRange = `${formatLongDate(stats.reportStartDay)} – ${formatLongDate(stats.reportEndDay)}`;
+  const {
+    reportStartDay,
+    reportEndDay,
+    joinedImpactData,
+    agentImpactData,
+    codeCompletionImpactData,
+    featureAdoptionData,
+  } = model;
+  const reportRange = `${formatLongDate(reportStartDay)} – ${formatLongDate(reportEndDay)}`;
   const generatedOn = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',

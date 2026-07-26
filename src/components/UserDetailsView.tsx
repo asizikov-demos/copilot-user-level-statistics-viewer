@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import type { UserSummary, UserDayData } from '../types/metrics';
-import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
+import type { UserDayData } from '../types/metrics';
+import type { UserDetailsViewModel } from '../read-models/userDetails';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../utils/formatters';
@@ -33,10 +33,7 @@ import { USER_DETAILS_SECTIONS } from './layout/contextSections';
 registerChartJS();
 
 interface UserDetailsViewProps {
-  userDetails: UserDetailedMetrics;
-  userSummary: UserSummary;
-  userLogin: string;
-  userId: number;
+  model: UserDetailsViewModel;
 }
 
 type UserDayWithCliTotals = UserDayData & {
@@ -71,7 +68,8 @@ function buildDailyCliSeries<T>(
   );
 }
 
-export default function UserDetailsView({ userDetails, userSummary, userLogin, userId }: UserDetailsViewProps) {
+export default function UserDetailsView({ model }: UserDetailsViewProps) {
+  const { userDetails, userSummary, userLogin, userId } = model;
   const { navigateTo } = useNavigation();
   const filledCombinedImpact = useMemo(() => fillDateRange(userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledAgentImpact = useMemo(() => fillDateRange(userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay]);

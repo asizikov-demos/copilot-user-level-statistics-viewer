@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
 import {
   aggregateMetrics,
-  type AggregatedMetrics,
 } from '../../../domain/metricsAggregator';
+import type { AggregatedMetrics } from '../../../types/aggregatedMetrics';
 import { VIEW_MODES } from '../../../types/navigation';
 import ViewRouter from '../ViewRouter';
 

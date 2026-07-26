@@ -1,4 +1,9 @@
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import {
+  selectUserDetailsViewModel,
+  type UserDetailsRouteReadModel,
+  type UserDetailsViewModel,
+} from '../../read-models/userDetails';
 import type { UserSummary } from '../../types/metrics';
 import type { SelectedUser, ViewMode } from '../../types/navigation';
 import { VIEW_MODES } from '../../types/navigation';
@@ -14,58 +19,52 @@ export type UserDetailsRouteState =
   | { status: 'redirect'; reason: 'missing-selection' | 'missing-summary' }
   | { status: 'loading'; selectedUser: SelectedUser; userSummary: UserSummary | null }
   | { status: 'error'; selectedUser: SelectedUser; userSummary: UserSummary; message: string }
-  | {
-      status: 'ready';
-      selectedUser: SelectedUser;
-      userSummary: UserSummary;
-      details: UserDetailedMetrics;
-    };
+  | { status: 'ready'; model: UserDetailsViewModel };
 
 interface ResolveUserDetailsRouteStateOptions {
   currentView: ViewMode;
-  selectedUser: SelectedUser | null;
-  userSummaries: UserSummary[] | null;
-  dataset: object | null;
+  routeModel: UserDetailsRouteReadModel;
   loadState: UserDetailsLoadState;
 }
 
 export function resolveUserDetailsRouteState({
   currentView,
-  selectedUser,
-  userSummaries,
-  dataset,
+  routeModel,
   loadState,
 }: ResolveUserDetailsRouteStateOptions): UserDetailsRouteState {
   if (currentView !== VIEW_MODES.USER_DETAILS) {
     return { status: 'inactive' };
   }
 
-  if (!selectedUser) {
+  if (routeModel.status === 'missing-selection') {
     return { status: 'redirect', reason: 'missing-selection' };
   }
 
-  if (!userSummaries || !dataset) {
-    return { status: 'loading', selectedUser, userSummary: null };
+  if (routeModel.status === 'pending') {
+    return { status: 'loading', selectedUser: routeModel.selectedUser, userSummary: null };
   }
 
-  const userSummary = userSummaries.find((summary) => summary.user_id === selectedUser.id);
-  if (!userSummary) {
+  if (routeModel.status === 'missing-summary') {
     return { status: 'redirect', reason: 'missing-summary' };
   }
 
   if (
     loadState.status === 'idle'
-    || loadState.dataset !== dataset
-    || loadState.userId !== selectedUser.id
+    || loadState.dataset !== routeModel.datasetKey
+    || loadState.userId !== routeModel.selectedUser.id
   ) {
-    return { status: 'loading', selectedUser, userSummary };
+    return {
+      status: 'loading',
+      selectedUser: routeModel.selectedUser,
+      userSummary: routeModel.userSummary,
+    };
   }
 
   if (loadState.status === 'error') {
     return {
       status: 'error',
-      selectedUser,
-      userSummary,
+      selectedUser: routeModel.selectedUser,
+      userSummary: routeModel.userSummary,
       message: loadState.message,
     };
   }
@@ -73,11 +72,13 @@ export function resolveUserDetailsRouteState({
   if (loadState.status === 'ready') {
     return {
       status: 'ready',
-      selectedUser,
-      userSummary,
-      details: loadState.details,
+      model: selectUserDetailsViewModel(routeModel, loadState.details),
     };
   }
 
-  return { status: 'loading', selectedUser, userSummary };
+  return {
+    status: 'loading',
+    selectedUser: routeModel.selectedUser,
+    userSummary: routeModel.userSummary,
+  };
 }

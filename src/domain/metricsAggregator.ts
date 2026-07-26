@@ -1,13 +1,8 @@
 import {
   CopilotMetrics,
-  MetricsStats,
   UserSummary,
-  IDEStatsData,
-  PluginVersionAnalysisData,
-  LanguageFeatureImpactData,
-  DailyLanguageChartData,
-  ModelBreakdownData,
 } from '../types/metrics';
+import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import {
   createStatsAccumulator,
@@ -17,34 +12,26 @@ import {
   accumulateModelEngagement,
   computeStats,
 
-  DailyEngagementData,
-  DailyAdoptionTrend,
   createEngagementAccumulator,
   accumulateEngagement,
   computeEngagementData,
   computeAdoptionTrend,
 
-  DailyChatUsersData,
-  DailyChatRequestsData,
   createChatAccumulator,
   accumulateChatFeature,
   computeChatUsersData,
   computeChatRequestsData,
 
-  LanguageStats,
   createLanguageAccumulator,
   accumulateLanguageStats,
   computeLanguageStats,
 
-  DailyModelUsageData,
-  AgentModeHeatmapData,
   createModelUsageAccumulator,
   accumulateModelFeature,
   accumulateAgentHeatmapFromFeature,
   computeDailyModelUsageData,
   computeAgentModeHeatmapData,
 
-  FeatureAdoptionData,
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
   accumulateCliAdoption,
@@ -52,10 +39,7 @@ import {
   accumulateCodeReviewAdoption,
   computeFeatureAdoptionData,
 
-  AgentImpactData,
-  CodeCompletionImpactData,
-  ModeImpactData,
-  FeatureImpactInput,
+  type FeatureImpactInput,
   createImpactAccumulator,
   ensureImpactDates,
   createFeatureImpactInput,
@@ -87,13 +71,10 @@ import {
   accumulateModelBreakdown,
   computeModelBreakdownData,
 
-  UserDetailAccumulator,
+  type UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
 
-  DailyCliSessionData,
-  DailyCliTokenData,
-  DailyCliAdoptionTrend,
   createCliUsageAccumulator,
   accumulateCliUsage,
   ensureCliDates,
@@ -101,65 +82,24 @@ import {
   computeDailyCliTokenData,
   computeCliAdoptionTrend,
 
-  DailyCloudAgentAdoptionData,
-  DailyCodeReviewAdoptionData,
   createAdvancedAdoptionAccumulator,
   accumulateCloudAgentAdoption,
   accumulateCodeReviewAdoptionSignal,
   computeDailyCloudAgentAdoptionData,
   computeDailyCodeReviewAdoptionData,
 
-  AiAdoptionPhaseData,
   createAiAdoptionPhaseAccumulator,
   accumulateAiAdoptionPhase,
   computeAiAdoptionPhaseData,
 
-  UsageDistributionBucket,
   computeUsageDistributionData,
 
-  DailyAiCreditsData,
   createAiCreditsAccumulator,
   accumulateAiCredits,
   computeDailyAiCreditsData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
 import { getCanonicalUserInitiatedInteractionCount } from './assumedInteractions';
-
-export interface AggregatedMetrics {
-  stats: MetricsStats;
-  userSummaries: UserSummary[];
-  engagementData: DailyEngagementData[];
-  chatUsersData: DailyChatUsersData[];
-  chatRequestsData: DailyChatRequestsData[];
-  languageStats: LanguageStats[];
-  modelUsageData: DailyModelUsageData[];
-  featureAdoptionData: FeatureAdoptionData;
-  agentModeHeatmapData: AgentModeHeatmapData[];
-  agentImpactData: AgentImpactData[];
-  codeCompletionImpactData: CodeCompletionImpactData[];
-  editModeImpactData: ModeImpactData[];
-  inlineModeImpactData: ModeImpactData[];
-  askModeImpactData: ModeImpactData[];
-  cliImpactData: ModeImpactData[];
-  joinedImpactData: ModeImpactData[];
-  ideStats: IDEStatsData[];
-  multiIDEUsersCount: number;
-  totalUniqueIDEUsers: number;
-  pluginVersionData: PluginVersionAnalysisData;
-  languageFeatureImpactData: LanguageFeatureImpactData;
-  dailyLanguageGenerationsData: DailyLanguageChartData;
-  dailyLanguageLocData: DailyLanguageChartData;
-  modelBreakdownData: ModelBreakdownData;
-  dailyCliSessionData: DailyCliSessionData[];
-  dailyCliTokenData: DailyCliTokenData[];
-  dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
-  dailyAdoptionTrend: DailyAdoptionTrend[];
-  dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
-  dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
-  aiAdoptionPhaseData: AiAdoptionPhaseData[];
-  usageDistributionData: UsageDistributionBucket[];
-  dailyAiCreditsData: DailyAiCreditsData[];
-}
 
 interface UserSummaryAccumulator {
   userMap: Map<number, UserSummary>;

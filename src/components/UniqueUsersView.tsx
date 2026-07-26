@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import type { UsersReadModel } from '../read-models/users';
 import type { UserSummary } from '../types/metrics';
 import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
 import { useSortableTable } from '../hooks/useSortableTable';
@@ -13,7 +14,7 @@ import StatsGrid from './ui/StatsGrid';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 
 interface UniqueUsersViewProps {
-  users: UserSummary[];
+  model: UsersReadModel;
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
@@ -30,7 +31,8 @@ function ClientIcon({ client }: { client: string }) {
   );
 }
 
-export default function UniqueUsersView({ users, onUserClick }: UniqueUsersViewProps) {
+export default function UniqueUsersView({ model, onUserClick }: UniqueUsersViewProps) {
+  const { users } = model;
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,

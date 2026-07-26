@@ -1,5 +1,4 @@
-import type { AggregatedMetrics } from '../domain/metricsAggregator';
-import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
+import type { AggregatedMetrics, UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';
 
 export type WorkerRequest =
