@@ -5,6 +5,17 @@ import {
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import {
+  accumulateClientAggregation,
+  createClientAggregationAccumulator,
+  finalizeClientAggregation,
+} from './aggregation/clientAggregation';
+import {
+  accumulateCliAggregation,
+  createCliAggregationAccumulator,
+  finalizeCliAggregation,
+  getCliUsageForDownstreamCalculations,
+} from './aggregation/cliAggregation';
+import {
   accumulateLanguageAggregation,
   createLanguageAggregationAccumulator,
   finalizeLanguageAggregation,
@@ -17,7 +28,6 @@ import {
 import {
   createStatsAccumulator,
   accumulateUserUsage,
-  accumulateIdeUser,
   computeStats,
 
   createEngagementAccumulator,
@@ -50,25 +60,9 @@ import {
   computeCliImpactData,
   computeJoinedImpactData,
 
-  createIDEStatsAccumulator,
-  accumulateIDEStats,
-  markCliUser,
-  computeIDEStatsData,
-
-  createPluginVersionAccumulator,
-  accumulatePluginVersion,
-  computePluginVersionData,
-
   type UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
-
-  createCliUsageAccumulator,
-  accumulateCliUsage,
-  ensureCliDates,
-  computeDailyCliSessionData,
-  computeDailyCliTokenData,
-  computeCliAdoptionTrend,
 
   createAdvancedAdoptionAccumulator,
   accumulateCloudAgentAdoption,
@@ -250,13 +244,12 @@ export function aggregateMetrics(
   const userSummaryAccumulator = createUserSummaryAccumulator();
   const engagementAccumulator = createEngagementAccumulator();
   const chatAccumulator = createChatAccumulator();
+  const clientAggregationAccumulator = createClientAggregationAccumulator();
+  const cliAggregationAccumulator = createCliAggregationAccumulator();
   const languageAggregationAccumulator = createLanguageAggregationAccumulator();
   const modelAggregationAccumulator = createModelAggregationAccumulator();
   const featureAdoptionAccumulator = createFeatureAdoptionAccumulator();
   const impactAccumulator = createImpactAccumulator();
-  const ideStatsAccumulator = createIDEStatsAccumulator();
-  const pluginVersionAccumulator = createPluginVersionAccumulator();
-  const cliUsageAccumulator = createCliUsageAccumulator();
   const advancedAdoptionAccumulator = createAdvancedAdoptionAccumulator();
   const aiAdoptionPhaseAccumulator = createAiAdoptionPhaseAccumulator();
   const aiCreditsAccumulator = createAiCreditsAccumulator();
@@ -286,17 +279,12 @@ export function aggregateMetrics(
     accumulateEngagement(engagementAccumulator, date, userId);
 
     ensureImpactDates(impactAccumulator, date);
-    ensureCliDates(cliUsageAccumulator, date);
-
-    for (const ideTotal of metric.totals_by_ide) {
-      accumulateIdeUser(statsAccumulator, ideTotal.ide, userId);
-      accumulateIDEStats(ideStatsAccumulator, userId, ideTotal);
-      accumulatePluginVersion(pluginVersionAccumulator, metric.user_login, ideTotal);
-    }
-
-    if (metric.used_cli) {
-      markCliUser(ideStatsAccumulator, userId);
-    }
+    accumulateClientAggregation(
+      clientAggregationAccumulator,
+      statsAccumulator,
+      metric
+    );
+    accumulateCliAggregation(cliAggregationAccumulator, metric);
 
     accumulateLanguageAggregation(
       languageAggregationAccumulator,
@@ -326,8 +314,6 @@ export function aggregateMetrics(
       metric.used_copilot_code_review_active ?? false,
       metric.used_copilot_code_review_passive ?? false
     );
-    accumulateCliUsage(cliUsageAccumulator, date, userId, metric);
-
     for (const feature of metric.totals_by_feature) {
       accumulateFeatureAdoption(
         featureAdoptionAccumulator,
@@ -355,14 +341,21 @@ export function aggregateMetrics(
     languageAggregationAccumulator
   );
   const modelAggregation = finalizeModelAggregation(modelAggregationAccumulator);
+  const clientAggregation = finalizeClientAggregation(
+    clientAggregationAccumulator
+  );
+  const cliAggregation = finalizeCliAggregation(cliAggregationAccumulator);
+  const cliUsage = getCliUsageForDownstreamCalculations(
+    cliAggregationAccumulator
+  );
 
   return {
     aggregated: {
       stats: computeStats(statsAccumulator, filteredMetricsCount),
       userSummaries,
-      engagementData: computeEngagementData(engagementAccumulator, cliUsageAccumulator),
-      chatUsersData: computeChatUsersData(chatAccumulator, cliUsageAccumulator),
-      chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsageAccumulator),
+      engagementData: computeEngagementData(engagementAccumulator, cliUsage),
+      chatUsersData: computeChatUsersData(chatAccumulator, cliUsage),
+      chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsage),
       languageStats: languageAggregation.languageStats,
       modelUsageData: modelAggregation.modelUsageData,
       featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),
@@ -374,17 +367,19 @@ export function aggregateMetrics(
       askModeImpactData: computeAskModeImpactData(impactAccumulator),
       cliImpactData: computeCliImpactData(impactAccumulator),
       joinedImpactData: computeJoinedImpactData(impactAccumulator),
-      ...computeIDEStatsData(ideStatsAccumulator),
-      pluginVersionData: computePluginVersionData(pluginVersionAccumulator),
+      ideStats: clientAggregation.ideStats,
+      multiIDEUsersCount: clientAggregation.multiIDEUsersCount,
+      totalUniqueIDEUsers: clientAggregation.totalUniqueIDEUsers,
+      pluginVersionData: clientAggregation.pluginVersionData,
       languageFeatureImpactData: languageAggregation.languageFeatureImpactData,
       dailyLanguageGenerationsData:
         languageAggregation.dailyLanguageGenerationsData,
       dailyLanguageLocData: languageAggregation.dailyLanguageLocData,
       modelBreakdownData: modelAggregation.modelBreakdownData,
-      dailyCliSessionData: computeDailyCliSessionData(cliUsageAccumulator),
-      dailyCliTokenData: computeDailyCliTokenData(cliUsageAccumulator),
-      dailyCliAdoptionTrend: computeCliAdoptionTrend(cliUsageAccumulator),
-      dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsageAccumulator),
+      dailyCliSessionData: cliAggregation.dailyCliSessionData,
+      dailyCliTokenData: cliAggregation.dailyCliTokenData,
+      dailyCliAdoptionTrend: cliAggregation.dailyCliAdoptionTrend,
+      dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsage),
       dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
       dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
       aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),

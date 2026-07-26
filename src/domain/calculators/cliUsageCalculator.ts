@@ -33,13 +33,27 @@ export interface DailyCliTokenData {
   requestCount: number;
 }
 
+interface CliDailySessionAccumulator {
+  sessionCount: number;
+  requestCount: number;
+  promptCount: number;
+  users: Set<number>;
+}
+
+export interface CliUsageForDownstreamCalculations {
+  readonly dailySessions: ReadonlyMap<
+    string,
+    {
+      readonly sessionCount: number;
+      readonly requestCount: number;
+      readonly promptCount: number;
+      readonly users: ReadonlySet<number>;
+    }
+  >;
+}
+
 export interface CliUsageAccumulator {
-  dailySessions: Map<string, {
-    sessionCount: number;
-    requestCount: number;
-    promptCount: number;
-    users: Set<number>;
-  }>;
+  dailySessions: Map<string, CliDailySessionAccumulator>;
   dailyTokens: Map<string, {
     outputTokens: number;
     promptTokens: number;

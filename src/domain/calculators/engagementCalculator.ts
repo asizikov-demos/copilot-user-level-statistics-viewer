@@ -1,4 +1,4 @@
-import { CliUsageAccumulator } from './cliUsageCalculator';
+import type { CliUsageForDownstreamCalculations } from './cliUsageCalculator';
 import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -36,7 +36,7 @@ export function accumulateEngagement(
 
 export function computeEngagementData(
   accumulator: EngagementAccumulator,
-  cliAccumulator?: CliUsageAccumulator
+  cliAccumulator?: CliUsageForDownstreamCalculations
 ): DailyEngagementData[] {
   const cliAllUsers = new Set<number>();
   if (cliAccumulator) {
@@ -85,7 +85,7 @@ export type DailyAdoptionTrend = AdoptionTrendEntry;
 
 export function computeAdoptionTrend(
   accumulator: EngagementAccumulator,
-  cliAccumulator?: CliUsageAccumulator
+  cliAccumulator?: CliUsageForDownstreamCalculations
 ): DailyAdoptionTrend[] {
   const allDates = new Set(accumulator.dailyEngagement.keys());
   if (cliAccumulator) {
