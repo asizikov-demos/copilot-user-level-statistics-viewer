@@ -14,28 +14,38 @@ interface StandardRouteOutletProps {
 }
 
 const mocks = vi.hoisted(() => ({
+  currentView: 'userDetails' as ViewMode,
+  hasData: true,
+  enterpriseName: 'test-enterprise' as string | null,
+  aggregatedMetrics: null as AggregatedMetrics | null,
+  isLoading: false,
+  error: null as string | null,
   navigateTo: vi.fn(),
   selectUser: vi.fn(),
+  resetAppState: vi.fn(),
+  handleFileUpload: vi.fn(),
+  handleSampleLoad: vi.fn(),
   standardRouteOutlet: vi.fn<(props: StandardRouteOutletProps) => void>(),
-  currentView: 'userDetails' as ViewMode,
-  selectedUser: null as { id: number; login: string } | null,
-  aggregatedMetrics: null as AggregatedMetrics | null,
+  userDetailsRoute: vi.fn(),
+  fileUploadArea: vi.fn<(props: {
+    isLoading: boolean;
+    error: string | null;
+  }) => void>(),
 }));
 
 vi.mock('../../MetricsContext', () => ({
   useMetrics: () => ({
-    hasData: true,
-    enterpriseName: 'test-enterprise',
+    hasData: mocks.hasData,
+    enterpriseName: mocks.enterpriseName,
     aggregatedMetrics: mocks.aggregatedMetrics,
-    isLoading: false,
-    error: null,
+    isLoading: mocks.isLoading,
+    error: mocks.error,
   }),
 }));
 
 vi.mock('../../../state/NavigationContext', () => ({
   useNavigation: () => ({
     currentView: mocks.currentView,
-    selectedUser: mocks.selectedUser,
     navigateTo: mocks.navigateTo,
     selectUser: mocks.selectUser,
   }),
@@ -43,22 +53,24 @@ vi.mock('../../../state/NavigationContext', () => ({
 
 vi.mock('../../../hooks/useFileUpload', () => ({
   useFileUpload: () => ({
-    handleFileUpload: vi.fn(),
-    handleSampleLoad: vi.fn(),
+    handleFileUpload: mocks.handleFileUpload,
+    handleSampleLoad: mocks.handleSampleLoad,
     uploadProgress: null,
   }),
 }));
 
 vi.mock('../../../hooks/useResetAppState', () => ({
-  useResetAppState: () => vi.fn(),
+  useResetAppState: () => mocks.resetAppState,
 }));
 
-vi.mock('../../../workers/MetricsWorkerContext', () => ({
-  useMetricsWorker: () => ({
-    computeUserDetails: vi.fn(),
-    parseAndAggregate: vi.fn(),
-    reset: vi.fn(),
-  }),
+vi.mock('../../features/file-upload', () => ({
+  FileUploadArea: (props: {
+    isLoading: boolean;
+    error: string | null;
+  }) => {
+    mocks.fileUploadArea(props);
+    return null;
+  },
 }));
 
 vi.mock('../routes', () => ({
@@ -66,39 +78,76 @@ vi.mock('../routes', () => ({
     mocks.standardRouteOutlet(props);
     return null;
   },
+  UserDetailsRoute: () => {
+    mocks.userDetailsRoute();
+    return null;
+  },
 }));
 
 describe('ViewRouter', () => {
   beforeEach(() => {
-    mocks.navigateTo.mockClear();
-    mocks.selectUser.mockClear();
-    mocks.standardRouteOutlet.mockClear();
+    vi.clearAllMocks();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
-    mocks.selectedUser = null;
+    mocks.hasData = true;
+    mocks.enterpriseName = 'test-enterprise';
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
+    mocks.isLoading = false;
+    mocks.error = null;
   });
 
-  describe('user-detail redirects', () => {
-    it('does not navigate during render when no user is selected', () => {
-      renderToStaticMarkup(<ViewRouter />);
+  it('keeps metrics-wide fatal errors ahead of route delegation', () => {
+    mocks.error = 'Invalid report';
 
-      expect(mocks.navigateTo).not.toHaveBeenCalled();
-    });
+    const markup = renderToStaticMarkup(<ViewRouter />);
 
-    it('does not navigate during render when the selected user summary is missing', () => {
-      mocks.selectedUser = { id: 999, login: 'missing-user' };
-
-      renderToStaticMarkup(<ViewRouter />);
-
-      expect(mocks.navigateTo).not.toHaveBeenCalled();
-    });
+    expect(markup).toContain('Failed to process metrics');
+    expect(markup).toContain('Invalid report');
+    expect(mocks.userDetailsRoute).not.toHaveBeenCalled();
+    expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
   });
 
-  it('delegates a standard view with the shared route context', () => {
+  it('keeps the no-data upload state ahead of route delegation', () => {
+    mocks.hasData = false;
+    mocks.error = 'Choose another file';
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.fileUploadArea).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isLoading: false,
+        error: 'Choose another file',
+        onFileUpload: mocks.handleFileUpload,
+        onSampleLoad: mocks.handleSampleLoad,
+      })
+    );
+    expect(mocks.userDetailsRoute).not.toHaveBeenCalled();
+    expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
+  });
+
+  it('keeps metrics-wide processing ahead of route delegation', () => {
+    mocks.isLoading = true;
+
+    const markup = renderToStaticMarkup(<ViewRouter />);
+
+    expect(markup).toContain('Processing metrics...');
+    expect(mocks.userDetailsRoute).not.toHaveBeenCalled();
+    expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
+  });
+
+  it('delegates the specialized route without user-detail props', () => {
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.userDetailsRoute).toHaveBeenCalledOnce();
+    expect(mocks.userDetailsRoute).toHaveBeenCalledWith();
+    expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
+  });
+
+  it('keeps the specialized lifecycle mounted beside a standard route', () => {
     mocks.currentView = VIEW_MODES.LANGUAGES;
 
     renderToStaticMarkup(<ViewRouter />);
 
+    expect(mocks.userDetailsRoute).toHaveBeenCalledOnce();
     expect(mocks.standardRouteOutlet).toHaveBeenCalledOnce();
     const props = mocks.standardRouteOutlet.mock.calls[0][0];
     expect(props.view).toBe(VIEW_MODES.LANGUAGES);
@@ -110,11 +159,5 @@ describe('ViewRouter', () => {
       login: 'octocat',
       id: 42,
     });
-  });
-
-  it('keeps user details out of the standard route outlet', () => {
-    renderToStaticMarkup(<ViewRouter />);
-
-    expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
   });
 });

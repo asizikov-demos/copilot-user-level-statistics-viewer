@@ -1,4 +1,5 @@
 export { default as StandardRouteOutlet } from './StandardRouteOutlet';
+export { default as UserDetailsRoute } from './UserDetailsRoute';
 export {
   STANDARD_ROUTE_REGISTRY,
   STANDARD_VIEW_MODES,
