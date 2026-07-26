@@ -86,7 +86,9 @@ export function accumulateModelBreakdown(
     }
     accumulator.autoModeUsersByDate.get(date)!.add(userId);
 
-    const autoUsageCount = interactionCount > 0 ? interactionCount : activityCount;
+    const autoUsageCount = modelFeature.user_initiated_interaction_count > 0
+      ? modelFeature.user_initiated_interaction_count
+      : activityCount;
     accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount);
     return;
   }

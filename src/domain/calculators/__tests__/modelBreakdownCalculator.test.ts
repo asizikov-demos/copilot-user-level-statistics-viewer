@@ -124,6 +124,13 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
     });
 
+    it('should preserve generation and acceptance activity for auto code completion', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'code_completion', 0, 5, 3));
+
+      expect(acc.autoModels.get('auto')?.total).toBe(8);
+    });
+
     it('should not record auto model when all activity counts are zero', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'chat_panel', 0, 0, 0));
