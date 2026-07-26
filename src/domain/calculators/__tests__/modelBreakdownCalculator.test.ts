@@ -75,6 +75,15 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.modelTotal).toBe(10);
       expect(acc.allModels.get('unknown')?.total).toBe(10);
     });
+
+    it('should include assumed code completion interactions in neutral model totals', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-4o', 'code_completion', 0, 44, 2));
+
+      expect(acc.modelTotal).toBe(44);
+      expect(acc.unknownTotal).toBe(0);
+      expect(acc.allModels.get('gpt-4o')?.total).toBe(44);
+    });
   });
 
   describe('auto model handling', () => {
@@ -113,6 +122,13 @@ describe('modelBreakdownCalculator', () => {
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'code_completion', 0, 0, 2));
       expect(acc.autoModels.size).toBe(1);
       expect(acc.autoModeUsersByDate.get('2024-01-15')?.has(1)).toBe(true);
+    });
+
+    it('should preserve generation and acceptance activity for auto code completion', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('auto', 'code_completion', 0, 5, 3));
+
+      expect(acc.autoModels.get('auto')?.total).toBe(8);
     });
 
     it('should not record auto model when all activity counts are zero', () => {

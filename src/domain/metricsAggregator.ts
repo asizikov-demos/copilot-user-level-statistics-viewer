@@ -123,6 +123,7 @@ import {
   computeDailyAiCreditsData,
 } from './calculators';
 import { isActiveAutoModeFeature } from './autoMode';
+import { getCanonicalUserInitiatedInteractionCount } from './assumedInteractions';
 
 export interface AggregatedMetrics {
   stats: MetricsStats;
@@ -400,7 +401,7 @@ export function aggregateMetrics(
         modelUsageAccumulator,
         date,
         modelFeature.model,
-        modelFeature.user_initiated_interaction_count
+        getCanonicalUserInitiatedInteractionCount(modelFeature)
       );
 
       accumulateModelBreakdown(modelBreakdownAccumulator, date, userId, modelFeature);

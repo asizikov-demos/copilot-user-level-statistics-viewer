@@ -8,6 +8,7 @@ import type {
 import { isCliFeature } from '../featureCategories';
 import { isActiveAutoModeFeature } from '../autoMode';
 import { classifyModelRequest, getModelCategory } from '../modelConfig';
+import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 
@@ -68,7 +69,7 @@ export function accumulateModelBreakdown(
     code_acceptance_activity_count: number;
   }
 ): void {
-  const interactionCount = modelFeature.user_initiated_interaction_count || 0;
+  const interactionCount = getCanonicalUserInitiatedInteractionCount(modelFeature);
   const activityCount = (modelFeature.code_generation_activity_count || 0) + (modelFeature.code_acceptance_activity_count || 0);
   const { normalizedModel, isUnknown } = classifyModelRequest(modelFeature.model);
 
@@ -85,7 +86,9 @@ export function accumulateModelBreakdown(
     }
     accumulator.autoModeUsersByDate.get(date)!.add(userId);
 
-    const autoUsageCount = interactionCount > 0 ? interactionCount : activityCount;
+    const autoUsageCount = modelFeature.user_initiated_interaction_count > 0
+      ? modelFeature.user_initiated_interaction_count
+      : activityCount;
     accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount);
     return;
   }

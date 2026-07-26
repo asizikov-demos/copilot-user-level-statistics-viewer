@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { aggregateMetrics } from '../metricsAggregator';
 import type { CopilotMetrics } from '../../types/metrics';
 import { makeMetric } from '../../__tests__/factories/metrics';
+import { computeSingleUserDetailedMetrics } from '../calculators/userDetailCalculator';
 
 describe('metricsAggregator', () => {
   const createBasicMetric = (overrides: Partial<CopilotMetrics> = {}): CopilotMetrics =>
@@ -575,8 +576,47 @@ describe('metricsAggregator', () => {
 
       expect(aggregated.modelUsageData).toBeDefined();
       expect(aggregated.modelUsageData.length).toBeGreaterThan(0);
-      expect(aggregated.modelUsageData[0].modelInteractions).toBe(10);
+      expect(aggregated.modelUsageData[0].modelInteractions).toBe(15);
       expect(aggregated.modelUsageData[0].unknownModels).toBe(0);
+    });
+
+    it('should include assumed code completion interactions in aggregate model usage', () => {
+      const metric = createBasicMetric({
+        totals_by_model_feature: [
+          {
+            model: 'gpt-4o',
+            feature: 'code_completion',
+            user_initiated_interaction_count: 0,
+            code_generation_activity_count: 44,
+            code_acceptance_activity_count: 2,
+            loc_added_sum: 2,
+            loc_deleted_sum: 0,
+            loc_suggested_to_add_sum: 64,
+            loc_suggested_to_delete_sum: 0,
+          },
+        ],
+      });
+
+      const { aggregated, userDetailAccumulator } = aggregateMetrics([metric]);
+      const userDetails = computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id);
+
+      expect(aggregated.modelUsageData).toEqual([
+        {
+          date: '2024-01-15',
+          modelInteractions: 44,
+          unknownModels: 0,
+        },
+      ]);
+      expect(aggregated.modelBreakdownData.modelTotal).toBe(44);
+      expect(aggregated.modelBreakdownData.allModels).toEqual([
+        {
+          model: 'gpt-4o',
+          total: 44,
+          dailyData: { '2024-01-15': 44 },
+        },
+      ]);
+      expect(userDetails?.dailyModelUsage).toEqual(aggregated.modelUsageData);
+      expect(userDetails?.totalModelRequests).toBe(44);
     });
 
     it('should expose neutral model totals and entries', () => {
