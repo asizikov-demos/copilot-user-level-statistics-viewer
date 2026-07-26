@@ -41,7 +41,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate aggregate-backed UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits consume only their typed projections. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate aggregate-backed UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits consume only their typed projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -49,6 +49,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 |---|---|
 | `src/app/` | Next.js App Router entry points and providers |
 | `src/components/` | View components, charts, layout, UI primitives |
+| `src/components/layout/routes/` | Typed standard-route adapters and registry |
 | `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
 | `src/domain/` | Business logic: aggregator, model config, calculators |
 | `src/domain/aggregation/` | Concrete metric-family accumulator lifecycle orchestration |
@@ -80,7 +81,7 @@ Established boundaries cover:
 - model details and CLI adoption
 - AI credits
 
-Phase 4 feature read-model boundaries are complete for every aggregate-backed feature surface. The worker payload remains flat and unchanged; grouping it, moving component files, and decomposing the general `ViewRouter` registry remain separate work.
+Phase 4 feature read-model boundaries are complete for every aggregate-backed feature surface. The worker payload remains flat and unchanged. The typed standard-route registry now delegates all non-user-details routes without moving feature components; user-details request orchestration remains the only specialized route logic in `ViewRouter` pending the next slice.
 
 ---
 
@@ -92,8 +93,10 @@ flowchart LR
   B --> C[MetricsWorkerProvider-owned client]
   C -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
   W -->|parseAndAggregateResult| D[MetricsContext stores AggregatedMetrics + warnings]
-  D --> RM[Feature read-model selectors]
-  RM --> E[ViewRouter renders current view]
+  D --> VR[ViewRouter resolves current route]
+  VR --> SR[Selected standard route adapter]
+  SR --> RM[Feature read-model selector]
+  RM --> E[Existing feature view]
   E --> F[Chart components]
 ```
 
@@ -115,7 +118,7 @@ Phase 5 modular aggregation orchestration is complete. The top-level coordinator
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) maps the current `ViewMode` to the appropriate component. Migrated views receive typed read models rather than the full aggregate contract. Views include: overview dashboard, users list, user details, languages, IDEs, Copilot impact, model usage analysis, adoption, AI adoption phases, and model details.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) retains global upload, fatal-error, loading, and specialized user-details request states. Every standard `ViewMode` delegates through the typed registry in `src/components/layout/routes/`; the selected adapter invokes its feature selector lazily and renders the existing view with a narrow shared route context. User-details orchestration remains in `ViewRouter` for the next routing slice.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 
@@ -152,8 +155,10 @@ flowchart TB
 		WT[metricsWorker.ts]
 	end
 
-	VR --> Views[View Components + Charts]
-	VR --> RM[read-models/]
+	VR --> SR[Standard route outlet + registry]
+	SR --> Views[View Components + Charts]
+	SR --> RM[read-models/]
+	VR --> UD[User-details orchestration]
 
 	MWP --> MWC
 	MWC --> WC
