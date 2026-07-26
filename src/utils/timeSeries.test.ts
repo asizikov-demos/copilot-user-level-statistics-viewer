@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  mapReportRangeData,
   padSeriesWithDefaults,
   padSeriesWithCarryForward,
   padReportRangeWithDefaults,
@@ -206,6 +207,45 @@ describe('padReportRangeWithDefaults', () => {
       { day: '2024-01-01', value: 5 },
       { day: '2024-01-02', value: 0 },
       { day: '2024-01-03', value: 10 },
+    ]);
+  });
+});
+
+describe('mapReportRangeData', () => {
+  it('maps the full report range and passes undefined for missing days', () => {
+    const result = mapReportRangeData(
+      [
+        { day: '2024-01-01', value: 5 },
+        { day: '2024-01-03', value: 10 },
+      ],
+      '2024-01-01',
+      '2024-01-03',
+      entry => entry.day,
+      (day, entry) => ({
+        day,
+        value: entry?.value ?? 0,
+      }),
+    );
+
+    expect(result).toEqual([
+      { day: '2024-01-01', value: 5 },
+      { day: '2024-01-02', value: 0 },
+      { day: '2024-01-03', value: 10 },
+    ]);
+  });
+
+  it('maps every report day even when the source data is empty', () => {
+    const result = mapReportRangeData<{ day: string; value: number }, string>(
+      [],
+      '2024-01-01',
+      '2024-01-02',
+      entry => entry.day,
+      (day, entry) => `${day}:${entry === undefined ? 'missing' : 'present'}`,
+    );
+
+    expect(result).toEqual([
+      '2024-01-01:missing',
+      '2024-01-02:missing',
     ]);
   });
 });

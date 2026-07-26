@@ -49,6 +49,25 @@ export function padReportRangeWithDefaults<T>(
 }
 
 /**
+ * Iterates the full report range and maps each day to an output entry, exposing
+ * the existing source entry for that date when one is present.
+ *
+ * Useful when callers need full-window display series derived from sparse daily
+ * source data but want the shared report-range iteration to stay centralized.
+ */
+export function mapReportRangeData<T, R>(
+  data: T[],
+  reportStartDay: string,
+  reportEndDay: string,
+  getDate: (entry: T) => string,
+  mapEntry: (date: string, entry: T | undefined) => R,
+): R[] {
+  const reportDays = generateDateRange(reportStartDay, reportEndDay);
+  const dataMap = new Map(data.map(entry => [getDate(entry), entry]));
+  return reportDays.map(date => mapEntry(date, dataMap.get(date)));
+}
+
+/**
  * Pads a keyed data series across the supplied date list, carrying forward a
  * piece of state across missing days.
  *

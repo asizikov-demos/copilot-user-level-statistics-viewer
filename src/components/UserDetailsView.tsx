@@ -6,7 +6,7 @@ import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import { translateFeature } from '../domain/featureTranslations';
 import { formatIDEName } from './icons/IDEIcons';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../utils/formatters';
-import { padSeriesWithDefaults } from '../utils/timeSeries';
+import { mapReportRangeData, padReportRangeWithDefaults } from '../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
@@ -39,12 +39,14 @@ interface UserDetailsViewProps {
   userId: number;
 }
 
+type UserDayWithCliTotals = UserDayData & {
+  totals_by_cli: NonNullable<UserDayData['totals_by_cli']>;
+};
+
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
   if (data.length === 0) return [];
-  const dates = generateDateRange(startDay, endDay);
-  const dataMap = new Map(data.map(d => [d.date, d]));
   const totalUniqueUsers = data[0]?.totalUniqueUsers ?? 0;
-  return padSeriesWithDefaults(dates, dataMap, date => ({
+  return padReportRangeWithDefaults(data, startDay, endDay, entry => entry.date, date => ({
     date,
     locAdded: 0,
     locDeleted: 0,
@@ -60,13 +62,13 @@ function buildDailyCliSeries<T>(
   endDay: string,
   buildItem: (date: string, cli: NonNullable<UserDayData['totals_by_cli']> | undefined) => T,
 ): T[] {
-  const dates = generateDateRange(startDay, endDay);
-  const cliMap = new Map<string, NonNullable<UserDayData['totals_by_cli']>>(
-    days
-      .filter(d => d.totals_by_cli)
-      .map(d => [d.day, d.totals_by_cli as NonNullable<UserDayData['totals_by_cli']>]),
+  return mapReportRangeData(
+    days.filter((day): day is UserDayWithCliTotals => Boolean(day.totals_by_cli)),
+    startDay,
+    endDay,
+    day => day.day,
+    (date, day) => buildItem(date, day?.totals_by_cli),
   );
-  return dates.map(date => buildItem(date, cliMap.get(date)));
 }
 
 export default function UserDetailsView({ userDetails, userSummary, userLogin, userId }: UserDetailsViewProps) {
@@ -519,17 +521,18 @@ export default function UserDetailsView({ userDetails, userSummary, userLogin, u
   const hasCliActivity = userDetails.days.some(d => d.totals_by_cli);
 
   const cloudAgentsUsageData = useMemo(() => {
-    const dates = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
-    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
-    return dates.map(date => {
-      const day = dayMap.get(date);
-      return {
+    return mapReportRangeData(
+      userDetails.days,
+      userDetails.reportStartDay,
+      userDetails.reportEndDay,
+      day => day.day,
+      (date, day) => ({
         date,
         cloudAgent: day?.used_copilot_coding_agent ? 1 : 0,
         codeReviewActive: day?.used_copilot_code_review_active ? 1 : 0,
         codeReviewPassive: day?.used_copilot_code_review_passive ? 1 : 0,
-      };
-    });
+      }),
+    );
   }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
