@@ -41,7 +41,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The `AggregatedMetrics` type (see `src/types/aggregatedMetrics.ts`) is the sole data contract between the worker and the UI.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The `AggregatedMetrics` type is declared in `src/domain/metricsAggregator.ts` and is the primary data contract between the worker and the UI. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -50,7 +50,8 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 | `src/app/` | Next.js App Router entry points and providers |
 | `src/components/` | View components, charts, layout, UI primitives |
 | `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
-| `src/domain/` | Business logic: parser, aggregator, model config |
+| `src/domain/` | Business logic: aggregator, model config, calculators |
+| `src/infra/` | Streaming metrics file parser |
 | `src/domain/calculators/` | Individual metric calculators (stats, engagement, model usage, impact, etc.) |
 | `src/hooks/` | Reusable React hooks (file upload, sorting, search) |
 | `src/workers/` | Web Worker entry point, client API, message types |
@@ -78,9 +79,9 @@ flowchart LR
 ### 4.1. Upload and Parsing
 
 1. `useFileUpload` validates file extension and sends files to the worker via `parseAndAggregateInWorker()`
-2. The worker streams each file using `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
+2. The worker streams each file through `src/infra/metricsFileParser.ts` using the `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
 3. Records using deprecated LOC fields or missing required fields are skipped
-4. The worker runs `aggregateMetrics()` on the parsed data and returns the `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur)
+4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). Raw records remain off the main thread.
 
 ### 4.2. Aggregation
 
@@ -111,7 +112,7 @@ flowchart TB
 	end
 
 	subgraph WebWorker[Web Worker]
-		MFP[metricsFileParser.ts]
+		MFP[infra/metricsFileParser.ts]
 		MA[metricsAggregator.ts]
 		CALC[calculators/]
 		MConf[modelConfig.ts]
