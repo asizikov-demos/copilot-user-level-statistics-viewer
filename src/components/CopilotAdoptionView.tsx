@@ -8,25 +8,13 @@ import CloudAgentAdoptionChart from './charts/CloudAgentAdoptionChart';
 import CodeReviewAdoptionChart from './charts/CodeReviewAdoptionChart';
 import { ViewPanel } from './ui';
 import { COPILOT_ADOPTION_SECTIONS } from './layout/contextSections';
-import type {
-  FeatureAdoptionData,
-  AgentModeHeatmapData,
-  DailyAdoptionTrend,
-  DailyCloudAgentAdoptionData,
-  DailyCodeReviewAdoptionData,
-} from '../domain/calculators/metricCalculators';
-import type { MetricsStats } from '../types/metrics';
+import type { CopilotAdoptionReadModel } from '../read-models/adoption';
 
 interface CopilotAdoptionViewProps {
-  featureAdoptionData: FeatureAdoptionData | null;
-  agentModeHeatmapData: AgentModeHeatmapData[];
-  stats: MetricsStats;
-  dailyAdoptionTrend: DailyAdoptionTrend[];
-  dailyCloudAgentAdoptionData?: DailyCloudAgentAdoptionData[];
-  dailyCodeReviewAdoptionData?: DailyCodeReviewAdoptionData[];
+  model: CopilotAdoptionReadModel;
 }
 
-const EMPTY_FEATURE_ADOPTION_DATA: FeatureAdoptionData = {
+const EMPTY_FEATURE_ADOPTION_DATA: CopilotAdoptionReadModel['featureAdoptionData'] = {
   totalUsers: 0,
   completionUsers: 0,
   completionOnlyUsers: 0,
@@ -41,14 +29,15 @@ const EMPTY_FEATURE_ADOPTION_DATA: FeatureAdoptionData = {
   advancedUsers: 0,
 };
 
-export default function CopilotAdoptionView({
-  featureAdoptionData,
-  agentModeHeatmapData,
-  stats,
-  dailyAdoptionTrend,
-  dailyCloudAgentAdoptionData = [],
-  dailyCodeReviewAdoptionData = [],
-}: CopilotAdoptionViewProps) {
+export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps) {
+  const {
+    featureAdoptionData,
+    agentModeHeatmapData,
+    stats,
+    dailyAdoptionTrend,
+    dailyCloudAgentAdoptionData,
+    dailyCodeReviewAdoptionData,
+  } = model;
   const adoptionData = featureAdoptionData ?? EMPTY_FEATURE_ADOPTION_DATA;
   const hasCloudAgentAdoption = adoptionData.codingAgentUsers > 0;
   const hasCodeReviewAdoption = adoptionData.codeReviewUsers > 0;

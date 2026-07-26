@@ -5,18 +5,22 @@ import ModeImpactChart from './charts/ModeImpactChart';
 import { ViewPanel } from './ui';
 import InsightsCard from './ui/InsightsCard';
 import { COPILOT_IMPACT_SECTIONS } from './layout/contextSections';
-import type { AgentImpactData, CodeCompletionImpactData, ModeImpactData } from '../domain/calculators/metricCalculators';
+import type { CopilotImpactReadModel } from '../read-models/impact';
+
 interface CopilotImpactViewProps {
-  agentImpactData: AgentImpactData[];
-  codeCompletionImpactData: CodeCompletionImpactData[];
-  editModeImpactData: ModeImpactData[];
-  inlineModeImpactData: ModeImpactData[];
-  askModeImpactData: ModeImpactData[];
-  cliImpactData: ModeImpactData[];
-  joinedImpactData: ModeImpactData[];
+  model: CopilotImpactReadModel;
 }
 
-export default function CopilotImpactView({ agentImpactData, codeCompletionImpactData, editModeImpactData, inlineModeImpactData, askModeImpactData, cliImpactData, joinedImpactData }: CopilotImpactViewProps) {
+export default function CopilotImpactView({ model }: CopilotImpactViewProps) {
+  const {
+    agentImpactData,
+    codeCompletionImpactData,
+    editModeImpactData,
+    inlineModeImpactData,
+    askModeImpactData,
+    cliImpactData,
+    joinedImpactData,
+  } = model;
   const [
     combinedSection,
     agentSection,
