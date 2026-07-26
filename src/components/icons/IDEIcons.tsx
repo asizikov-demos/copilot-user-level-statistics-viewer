@@ -1,4 +1,5 @@
 import React from 'react';
+import { getIDEMetadata, type IDEIconKey } from '../../utils/ideMetadata';
 
 // VS Code — simplified ribbon logo
 const VSCodeIcon = () => (
@@ -180,12 +181,10 @@ const DefaultIDEIcon = () => (
   </svg>
 );
 
-const ideIconMap: Record<string, React.ComponentType> = {
+const ideIconMap: Record<IDEIconKey, React.ComponentType> = {
   vscode: VSCodeIcon,
   jetbrains: JetBrainsIcon,
-  intellij: JetBrainsIcon,
   visualstudio: VisualStudioIcon,
-  visual_studio: VisualStudioIcon,
   pycharm: PyCharmIcon,
   webstorm: WebStormIcon,
   rider: RiderIcon,
@@ -203,13 +202,12 @@ const ideIconMap: Record<string, React.ComponentType> = {
   eclipse: EclipseIcon,
   xcode: XcodeIcon,
   zed: ZedIcon,
-  'zed:zed-copilot': ZedIcon,
   copilot_cli: CopilotIcon,
 };
 
 export const getIDEIcon = (ideName: string): React.ComponentType => {
-  const normalizedName = ideName.toLowerCase().trim();
-  return ideIconMap[normalizedName] || DefaultIDEIcon;
+  const iconKey = getIDEMetadata(ideName)?.iconKey;
+  return iconKey ? ideIconMap[iconKey] : DefaultIDEIcon;
 };
 
 export { formatIDEName } from '../../utils/ideNames';
