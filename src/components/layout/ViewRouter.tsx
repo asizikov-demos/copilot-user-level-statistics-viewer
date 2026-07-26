@@ -19,6 +19,8 @@ import {
   selectClientsReadModel,
   selectClientVersionsReadModel,
 } from '../../read-models/clients';
+import { selectModelDetailsReadModel } from '../../read-models/models';
+import { selectCliAdoptionReadModel } from '../../read-models/cliAdoption';
 import { selectUsersReadModel } from '../../read-models/users';
 import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
 import {
@@ -187,11 +189,7 @@ const ViewRouter: React.FC = () => {
 
   const { 
     stats, 
-    userSummaries, 
-    modelBreakdownData,
-    dailyCliSessionData,
-    dailyCliTokenData,
-    dailyCliAdoptionTrend,
+    userSummaries,
     dailyAiCreditsData = [],
     usageDistributionData = [],
   } = aggregatedMetrics;
@@ -203,6 +201,8 @@ const ViewRouter: React.FC = () => {
   const languagesReadModel = selectLanguagesReadModel(aggregatedMetrics);
   const clientsReadModel = selectClientsReadModel(aggregatedMetrics);
   const clientVersionsReadModel = selectClientVersionsReadModel(aggregatedMetrics);
+  const modelDetailsReadModel = selectModelDetailsReadModel(aggregatedMetrics);
+  const cliAdoptionReadModel = selectCliAdoptionReadModel(aggregatedMetrics);
   const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
@@ -273,17 +273,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.CLI_ADOPTION:
       return (
         <CLIAdoptionView
-          stats={stats}
-          dailyCliSessionData={dailyCliSessionData}
-          dailyCliTokenData={dailyCliTokenData}
-          dailyCliAdoptionTrend={dailyCliAdoptionTrend}
-          cliModelEntries={modelBreakdownData.cliModels ?? []}
-          cliModelDates={
-            dailyCliSessionData.length > 0
-              ? dailyCliSessionData.map((entry) => entry.date)
-              : modelBreakdownData.dates
-          }
-          cliModelTotal={modelBreakdownData.cliTotal ?? 0}
+          model={cliAdoptionReadModel}
         />
       );
 
@@ -352,7 +342,7 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.MODEL_DETAILS:
       return (
         <ModelDetailsView
-          modelBreakdownData={modelBreakdownData}
+          model={modelDetailsReadModel}
         />
       );
 

@@ -1,27 +1,27 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import ModelCategoryDistributionChart from './charts/ModelCategoryDistributionChart';
 import AutoModeAdoptionTrendChart from './charts/AutoModeAdoptionTrendChart';
-import type { ModelBreakdownData } from '../types/metrics';
+import type { ModelDetailsReadModel } from '../read-models/models';
 import { ViewPanel } from './ui';
 import { MODEL_DETAILS_SECTIONS } from './layout/contextSections';
 
 interface ModelDetailsViewProps {
-  modelBreakdownData: ModelBreakdownData;
+  model: ModelDetailsReadModel;
 }
 
-export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsViewProps) {
-  const modelEntries = modelBreakdownData.allModels;
-  const modelTotal = modelBreakdownData.modelTotal;
-  const autoModels = modelBreakdownData.autoModels ?? [];
-  const autoModeAdoptionTrend = modelBreakdownData.autoModeAdoptionTrend ?? [];
-
-  const autoTotal = useMemo(
-    () => autoModels.reduce((sum, entry) => sum + entry.total, 0),
-    [autoModels]
-  );
+export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
+  const {
+    allModels,
+    modelCategories,
+    autoModels,
+    autoModeAdoptionTrend,
+    dates,
+    modelTotal,
+    autoTotal,
+  } = model;
   const [allModelsSection, modelTypesSection, autoModelsSection, autoAdoptionSection] = MODEL_DETAILS_SECTIONS;
 
   return (
@@ -34,17 +34,17 @@ export default function ModelDetailsView({ modelBreakdownData }: ModelDetailsVie
     >
       <div className="space-y-6">
         <div id={allModelsSection.id} className="scroll-mt-28">
-          <ModelsUsageChart modelEntries={modelEntries} dates={modelBreakdownData.dates} totalInteractions={modelTotal} variant="all" />
+          <ModelsUsageChart modelEntries={allModels} dates={dates} totalInteractions={modelTotal} variant="all" />
         </div>
         <div id={modelTypesSection.id} className="scroll-mt-28">
           <ModelCategoryDistributionChart
-            entries={modelBreakdownData.modelCategories}
-            dates={modelBreakdownData.dates}
+            entries={modelCategories}
+            dates={dates}
             totalInteractions={modelTotal}
           />
         </div>
         <div id={autoModelsSection.id} className="scroll-mt-28">
-          <ModelsUsageChart modelEntries={autoModels} dates={modelBreakdownData.dates} totalInteractions={autoTotal} variant="auto" />
+          <ModelsUsageChart modelEntries={autoModels} dates={dates} totalInteractions={autoTotal} variant="auto" />
         </div>
         <div id={autoAdoptionSection.id} className="scroll-mt-28">
           <AutoModeAdoptionTrendChart data={autoModeAdoptionTrend} />

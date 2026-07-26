@@ -14,6 +14,8 @@ import type {
   ClientsReadModel,
   ClientVersionsReadModel,
 } from '../../../read-models/clients';
+import type { ModelDetailsReadModel } from '../../../read-models/models';
+import type { CliAdoptionReadModel } from '../../../read-models/cliAdoption';
 import ViewRouter from '../ViewRouter';
 
 const mocks = vi.hoisted(() => ({
@@ -39,6 +41,12 @@ const mocks = vi.hoisted(() => ({
   clientVersionsView: vi.fn<
     (props: { model: ClientVersionsReadModel }) => void
   >(),
+  modelDetailsView: vi.fn<
+    (props: { model: ModelDetailsReadModel }) => void
+  >(),
+  cliAdoptionView: vi.fn<
+    (props: { model: CliAdoptionReadModel }) => void
+  >(),
   selectLanguagesReadModel: vi.fn<
     (metrics: AggregatedMetrics) => LanguagesReadModel
   >(),
@@ -47,6 +55,12 @@ const mocks = vi.hoisted(() => ({
   >(),
   selectClientVersionsReadModel: vi.fn<
     (metrics: AggregatedMetrics) => ClientVersionsReadModel
+  >(),
+  selectModelDetailsReadModel: vi.fn<
+    (metrics: AggregatedMetrics) => ModelDetailsReadModel
+  >(),
+  selectCliAdoptionReadModel: vi.fn<
+    (metrics: AggregatedMetrics) => CliAdoptionReadModel
   >(),
 }));
 
@@ -131,6 +145,20 @@ vi.mock('../../ClientVersionsView', () => ({
   },
 }));
 
+vi.mock('../../ModelDetailsView', () => ({
+  default: (props: { model: ModelDetailsReadModel }) => {
+    mocks.modelDetailsView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../CLIAdoptionView', () => ({
+  default: (props: { model: CliAdoptionReadModel }) => {
+    mocks.cliAdoptionView(props);
+    return null;
+  },
+}));
+
 vi.mock('../../../read-models/languages', () => ({
   selectLanguagesReadModel: mocks.selectLanguagesReadModel,
 }));
@@ -138,6 +166,14 @@ vi.mock('../../../read-models/languages', () => ({
 vi.mock('../../../read-models/clients', () => ({
   selectClientsReadModel: mocks.selectClientsReadModel,
   selectClientVersionsReadModel: mocks.selectClientVersionsReadModel,
+}));
+
+vi.mock('../../../read-models/models', () => ({
+  selectModelDetailsReadModel: mocks.selectModelDetailsReadModel,
+}));
+
+vi.mock('../../../read-models/cliAdoption', () => ({
+  selectCliAdoptionReadModel: mocks.selectCliAdoptionReadModel,
 }));
 
 describe('ViewRouter', () => {
@@ -149,9 +185,13 @@ describe('ViewRouter', () => {
     mocks.languagesView.mockClear();
     mocks.clientsView.mockClear();
     mocks.clientVersionsView.mockClear();
+    mocks.modelDetailsView.mockClear();
+    mocks.cliAdoptionView.mockClear();
     mocks.selectLanguagesReadModel.mockReset();
     mocks.selectClientsReadModel.mockReset();
     mocks.selectClientVersionsReadModel.mockReset();
+    mocks.selectModelDetailsReadModel.mockReset();
+    mocks.selectCliAdoptionReadModel.mockReset();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
     mocks.selectedUser = null;
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -173,6 +213,26 @@ describe('ViewRouter', () => {
     mocks.selectClientVersionsReadModel.mockImplementation((metrics) => ({
       pluginVersionData: metrics.pluginVersionData,
       reportStartDay: metrics.stats.reportStartDay,
+    }));
+    mocks.selectModelDetailsReadModel.mockImplementation((metrics) => ({
+      allModels: metrics.modelBreakdownData.allModels,
+      modelCategories: metrics.modelBreakdownData.modelCategories,
+      autoModels: metrics.modelBreakdownData.autoModels ?? [],
+      autoModeAdoptionTrend:
+        metrics.modelBreakdownData.autoModeAdoptionTrend ?? [],
+      dates: metrics.modelBreakdownData.dates,
+      modelTotal: metrics.modelBreakdownData.modelTotal,
+      autoTotal: 0,
+    }));
+    mocks.selectCliAdoptionReadModel.mockImplementation((metrics) => ({
+      stats: metrics.stats,
+      dailyCliSessionData: metrics.dailyCliSessionData,
+      dailyCliTokenData: metrics.dailyCliTokenData,
+      dailyCliAdoptionTrend: metrics.dailyCliAdoptionTrend,
+      cliModelEntries: metrics.modelBreakdownData.cliModels ?? [],
+      cliModelDates: metrics.modelBreakdownData.dates,
+      cliModelTotal: metrics.modelBreakdownData.cliTotal ?? 0,
+      cliShare: 0,
     }));
   });
 
@@ -300,6 +360,58 @@ describe('ViewRouter', () => {
     );
     expect(mocks.clientVersionsView).toHaveBeenCalledOnce();
     const props = mocks.clientVersionsView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
+  });
+
+  it('routes model details through the selector and one cohesive read model', () => {
+    mocks.currentView = VIEW_MODES.MODEL_DETAILS;
+    const expectedModel: ModelDetailsReadModel = {
+      allModels: mocks.aggregatedMetrics!.modelBreakdownData.allModels,
+      modelCategories:
+        mocks.aggregatedMetrics!.modelBreakdownData.modelCategories,
+      autoModels: mocks.aggregatedMetrics!.modelBreakdownData.autoModels ?? [],
+      autoModeAdoptionTrend:
+        mocks.aggregatedMetrics!.modelBreakdownData.autoModeAdoptionTrend ?? [],
+      dates: mocks.aggregatedMetrics!.modelBreakdownData.dates,
+      modelTotal: 10,
+      autoTotal: 4,
+    };
+    mocks.selectModelDetailsReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectModelDetailsReadModel).toHaveBeenCalledWith(
+      mocks.aggregatedMetrics
+    );
+    expect(mocks.modelDetailsView).toHaveBeenCalledOnce();
+    const props = mocks.modelDetailsView.mock.calls[0][0];
+    expect(Object.keys(props)).toEqual(['model']);
+    expect(props.model).toBe(expectedModel);
+  });
+
+  it('routes CLI adoption through the selector and one cohesive read model', () => {
+    mocks.currentView = VIEW_MODES.CLI_ADOPTION;
+    const expectedModel: CliAdoptionReadModel = {
+      stats: mocks.aggregatedMetrics!.stats,
+      dailyCliSessionData: mocks.aggregatedMetrics!.dailyCliSessionData,
+      dailyCliTokenData: mocks.aggregatedMetrics!.dailyCliTokenData,
+      dailyCliAdoptionTrend: mocks.aggregatedMetrics!.dailyCliAdoptionTrend,
+      cliModelEntries:
+        mocks.aggregatedMetrics!.modelBreakdownData.cliModels ?? [],
+      cliModelDates: ['2026-01-15'],
+      cliModelTotal: 7,
+      cliShare: 12.5,
+    };
+    mocks.selectCliAdoptionReadModel.mockReturnValueOnce(expectedModel);
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.selectCliAdoptionReadModel).toHaveBeenCalledWith(
+      mocks.aggregatedMetrics
+    );
+    expect(mocks.cliAdoptionView).toHaveBeenCalledOnce();
+    const props = mocks.cliAdoptionView.mock.calls[0][0];
     expect(Object.keys(props)).toEqual(['model']);
     expect(props.model).toBe(expectedModel);
   });
