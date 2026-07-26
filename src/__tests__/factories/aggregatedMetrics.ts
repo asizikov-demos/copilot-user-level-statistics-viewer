@@ -44,23 +44,9 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   [Slice in keyof AggregatedMetrics]: readonly (keyof AggregatedMetrics[Slice])[];
 };
 
-export const FORMER_FLAT_AGGREGATE_KEYS = Object.values(
+export const AGGREGATED_METRICS_FIELD_KEYS = Object.values(
   AGGREGATED_METRICS_SLICE_KEYS
 ).flat();
-
-export function projectFormerFlatAggregate(metrics: AggregatedMetrics) {
-  return {
-    ...metrics.overview,
-    ...metrics.users,
-    ...metrics.adoption,
-    ...metrics.impact,
-    ...metrics.languages,
-    ...metrics.clients,
-    ...metrics.models,
-    ...metrics.cli,
-    ...metrics.ai,
-  };
-}
 
 export function makeAggregatedMetrics(
   overrides: AggregatedMetricsOverrides = {}

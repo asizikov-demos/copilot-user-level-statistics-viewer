@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { DailyCliAdoptionTrend } from './calculators/metricCalculators';
-import type { MetricsStats } from '../types/metrics';
+import type { DailyCliAdoptionTrend } from '../../../domain/calculators/metricCalculators';
+import type { MetricsStats } from '../../../types/metrics';
 
 export interface CliInsight {
   title: string;

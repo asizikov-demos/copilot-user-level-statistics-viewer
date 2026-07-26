@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { computeCliInsights } from '../cliAdoptionInsights';
-import type { MetricsStats } from '../../types/metrics';
-import type { DailyCliAdoptionTrend } from '../calculators/metricCalculators';
+import { computeCliInsights } from './cliAdoptionInsights';
+import type { MetricsStats } from '../../../types/metrics';
+import type { DailyCliAdoptionTrend } from '../../../domain/calculators/metricCalculators';
 
 function makeStats(overrides: Partial<MetricsStats> = {}): MetricsStats {
   return {

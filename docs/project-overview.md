@@ -37,9 +37,10 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 **Raw metrics never leave the worker.** The `parseAndAggregate` flow parses files and aggregates them into a compact, grouped `AggregatedMetrics` object entirely within the worker. Only this pre-aggregated result is transferred to the main thread. This significantly reduces memory footprint for large datasets.
 
-**Two React contexts for state:**
+**Three React contexts for main-thread state and worker access:**
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
-- `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
+- `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view and selected user
+- `MetricsWorkerContext` (`src/state/MetricsWorkerContext.tsx`) — owns the main-thread worker client lifecycle and exposes parse, user-detail, and reset operations
 
 **All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The specialized `UserDetailsRoute` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
 
@@ -56,8 +57,8 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 | `src/infra/` | Streaming metrics file parser |
 | `src/domain/calculators/` | Individual metric calculators (stats, engagement, model usage, impact, etc.) |
 | `src/hooks/` | Reusable React hooks (file upload, sorting, search) |
-| `src/workers/` | Web Worker entry point, client API, message types |
-| `src/state/` | Navigation context |
+| `src/workers/` | Framework-free Web Worker entry point, client API, message types |
+| `src/state/` | Navigation context and main-thread worker provider |
 | `src/read-models/` | Pure feature projections over the aggregate contract |
 | `src/types/` | TypeScript type definitions |
 | `src/utils/` | Formatting and utility helpers |
@@ -68,7 +69,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ### 3.4. Feature Read-Model Boundaries
 
-The successful worker payload is one grouped `AggregatedMetrics` object. Each former root field has exactly one owner:
+The successful worker payload is one grouped `AggregatedMetrics` object. Each aggregate field has exactly one owning slice:
 
 ```text
 AggregatedMetrics
@@ -96,7 +97,35 @@ Established boundaries cover:
 - model details and CLI adoption
 - AI credits
 
-Phase 4 feature read-model boundaries, Phase 7 thin view routing, and Phase 8 grouped aggregate contract migration are complete. The typed standard-route registry delegates all non-user-details routes, while `UserDetailsRoute` owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 6 feature-view organization remains deferred.
+Phase 4 feature read-model boundaries, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while `UserDetailsRoute` owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 6 feature-view organization remains deferred. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
+
+### 3.5. Enforced Dependency Direction
+
+Phase 10 adds targeted ESLint import restrictions that make the current layering difficult to regress without introducing a new architecture framework:
+
+```text
+app/providers
+  -> state contexts + UI contexts
+state + hooks + layout routes
+  -> worker client, navigation, metrics context, read models
+read-models
+  -> grouped aggregate contract and pure domain helpers
+components/views
+  -> read models, shared UI, charts, contract types
+components/ui + components/charts
+  -> shared types/utilities only; no layout routes or feature modules
+workers
+  -> infra parser, domain aggregation, worker message contracts
+domain
+  -> contracts, calculators, and pure domain helpers only
+```
+
+The automated boundaries are intentionally focused:
+- UI components, layout routes, and read models cannot import `src/domain/metricsAggregator.ts` or `src/domain/aggregation/**`
+- production `src/domain/**` and `src/workers/**` modules cannot import React, Next.js, component, or state-context modules
+- shared UI primitives and shared charts cannot import feature modules or layout route modules
+
+Tests may import lower-level helpers to build fixtures and characterize behavior, but production code must follow the directions above.
 
 ---
 
@@ -105,7 +134,7 @@ Phase 4 feature read-model boundaries, Phase 7 thin view routing, and Phase 8 gr
 ```mermaid
 flowchart LR
   A[User uploads .ndjson file] --> B[useFileUpload hook]
-  B --> C[MetricsWorkerProvider-owned client]
+  B --> C[state/MetricsWorkerContext-owned client]
   C -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
   W -->|parseAndAggregateResult: grouped slices| D[MetricsContext stores AggregatedMetrics + warnings]
   D --> VR[ViewRouter resolves current route]
@@ -122,9 +151,9 @@ flowchart LR
 
 1. `useFileUpload` validates file extensions and requests parsing through the typed worker client exposed by `MetricsWorkerProvider`
 2. The worker streams each file through `src/infra/metricsFileParser.ts` using the `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
-3. Records using deprecated LOC fields or missing required fields are skipped
+3. Records using deprecated LOC fields or missing required fields are skipped; broader input validation is intentionally external to the app
 4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the grouped `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). The request protocol and lifecycle are unchanged; raw records remain off the main thread.
-5. `MetricsWorkerProvider` is the application-level lifecycle owner. Its client creates the browser Worker lazily, correlates requests and progress responses, cancels pending work on reusable resets, and permanently disposes the Worker when the provider unmounts.
+5. `MetricsWorkerProvider` in `src/state/` is the application-level lifecycle owner. Its client creates the browser Worker lazily, correlates requests and progress responses, cancels pending work on reusable resets, and permanently disposes the Worker when the provider unmounts.
 
 ### 4.2. Aggregation
 
@@ -136,7 +165,7 @@ Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly 
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the specialized `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the existing view with a narrow shared route context. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. This completes Phase 7 thin view routing; Phase 6 feature-view moves and decomposition remain deferred.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the specialized `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the existing view with a narrow shared route context. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. This completes Phase 7 thin view routing. Phase 10 keeps these dependencies enforced; Phase 6 feature-view moves and decomposition remain deferred.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 
@@ -157,6 +186,7 @@ flowchart TB
 	subgraph State
 		MC[MetricsContext]
 		NC[NavigationContext]
+		MWP[MetricsWorkerProvider]
 	end
 
 	subgraph WebWorker[Web Worker]
@@ -169,9 +199,14 @@ flowchart TB
 	end
 
 	subgraph WorkerBridge
-		MWC[MetricsWorkerContext.tsx]
 		WC[metricsWorkerClient.ts]
 		WT[metricsWorker.ts]
+	end
+
+	subgraph Boundaries[ESLint boundaries]
+		BR1[UI/read-models cannot import aggregation implementation]
+		BR2[domain/workers stay framework-free]
+		BR3[shared UI/charts avoid layout and feature routes]
 	end
 
 	VR --> SR[Standard route outlet + registry]
@@ -181,10 +216,9 @@ flowchart TB
 	UD --> UDV[UserDetailsView]
 	UD --> RM
 
-	MWP --> MWC
-	MWC --> WC
-	UFU[useFileUpload] --> MWC
-	UD -->|user detail requests| MWC
+	MWP --> WC
+	UFU[useFileUpload] --> MWP
+	UD -->|user detail requests| MWP
 	WC -->|postMessage| WT
 	WT --> MFP
 	WT --> MA
@@ -197,4 +231,9 @@ flowchart TB
 
 	MC --> VR
 	NC --> VR
+	BR1 -.enforces.-> SR
+	BR1 -.enforces.-> RM
+	BR2 -.enforces.-> WT
+	BR2 -.enforces.-> MA
+	BR3 -.enforces.-> Views
 ```

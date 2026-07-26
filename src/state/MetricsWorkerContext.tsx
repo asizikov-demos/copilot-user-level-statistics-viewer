@@ -12,7 +12,7 @@ import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import {
   MetricsWorkerClient,
   type ParseAndAggregateResult,
-} from './metricsWorkerClient';
+} from '../workers/metricsWorkerClient';
 
 interface MetricsWorkerOperations {
   parseAndAggregate: (

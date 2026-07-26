@@ -103,12 +103,10 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
   );
 };
 
-export const MetricsProvider = MetricsContextProvider;
-
 export function useMetrics(): MetricsContextValue {
   const ctx = useContext(MetricsContext);
   if (!ctx) {
-    throw new Error('useMetrics must be used within a MetricsProvider');
+    throw new Error('useMetrics must be used within a MetricsContextProvider');
   }
   return ctx;
 }

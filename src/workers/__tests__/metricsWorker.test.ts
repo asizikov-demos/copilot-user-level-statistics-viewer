@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  AGGREGATED_METRICS_FIELD_KEYS,
   AGGREGATED_METRICS_SLICE_KEYS,
-  FORMER_FLAT_AGGREGATE_KEYS,
 } from '../../__tests__/factories/aggregatedMetrics';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import type { WorkerRequest, WorkerResponse } from '../types';
@@ -148,7 +148,7 @@ describe('metricsWorker protocol', () => {
     expect(Object.keys(parseResult!.result)).toEqual(
       Object.keys(AGGREGATED_METRICS_SLICE_KEYS)
     );
-    for (const key of FORMER_FLAT_AGGREGATE_KEYS) {
+    for (const key of AGGREGATED_METRICS_FIELD_KEYS) {
       expect(parseResult!.result).not.toHaveProperty(key);
     }
     expect(parseResult!.result).not.toHaveProperty('metrics');
