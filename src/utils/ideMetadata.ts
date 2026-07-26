@@ -22,7 +22,7 @@ export type IDEIconKey =
   | 'copilot_cli';
 
 interface IDEMetadataDefinition {
-  keys: readonly string[];
+  keys: readonly [string, ...string[]];
   label?: string;
   iconKey?: IDEIconKey;
   color?: string;
@@ -68,10 +68,10 @@ function createIDEMetadataByKey(): Record<string, IDEMetadata> {
   const metadataByKey: Record<string, IDEMetadata> = {};
 
   for (const definition of IDE_METADATA_DEFINITIONS) {
-    const canonicalKey = definition.keys[0];
+    const canonicalKey = normalizeIDEKey(definition.keys[0]);
 
     for (const key of definition.keys) {
-      metadataByKey[key] = {
+      metadataByKey[normalizeIDEKey(key)] = {
         canonicalKey,
         label: definition.label,
         iconKey: definition.iconKey,
