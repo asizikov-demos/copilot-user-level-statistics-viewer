@@ -112,7 +112,3 @@ export function useMetrics(): MetricsContextValue {
   }
   return ctx;
 }
-
-export function useRawMetrics(): MetricsContextValue {
-  return useMetrics();
-}
