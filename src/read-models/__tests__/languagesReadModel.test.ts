@@ -5,36 +5,38 @@ import { selectLanguagesReadModel } from '../languages';
 
 function makeLanguageMetrics(): AggregatedMetrics {
   return makeAggregatedMetrics({
-    languageStats: [{
-      language: 'typescript',
-      totalGenerations: 12,
-      totalAcceptances: 6,
-      totalEngagements: 18,
-      uniqueUsers: 2,
-      locAdded: 24,
-      locDeleted: 4,
-      locSuggestedToAdd: 30,
-      locSuggestedToDelete: 5,
-    }],
-    languageFeatureImpactData: {
-      features: ['code_completion'],
-      rows: [{
+    languages: {
+      languageStats: [{
         language: 'typescript',
-        total: 28,
-        features: { code_completion: 28 },
+        totalGenerations: 12,
+        totalAcceptances: 6,
+        totalEngagements: 18,
+        uniqueUsers: 2,
+        locAdded: 24,
+        locDeleted: 4,
+        locSuggestedToAdd: 30,
+        locSuggestedToDelete: 5,
       }],
-    },
-    dailyLanguageGenerationsData: {
-      dates: ['2026-01-15'],
-      languages: ['typescript'],
-      data: { '2026-01-15': { typescript: 12 } },
-      totals: { typescript: 12 },
-    },
-    dailyLanguageLocData: {
-      dates: ['2026-01-15'],
-      languages: ['typescript'],
-      data: { '2026-01-15': { typescript: 28 } },
-      totals: { typescript: 28 },
+      languageFeatureImpactData: {
+        features: ['code_completion'],
+        rows: [{
+          language: 'typescript',
+          total: 28,
+          features: { code_completion: 28 },
+        }],
+      },
+      dailyLanguageGenerationsData: {
+        dates: ['2026-01-15'],
+        languages: ['typescript'],
+        data: { '2026-01-15': { typescript: 12 } },
+        totals: { typescript: 12 },
+      },
+      dailyLanguageLocData: {
+        dates: ['2026-01-15'],
+        languages: ['typescript'],
+        data: { '2026-01-15': { typescript: 28 } },
+        totals: { typescript: 28 },
+      },
     },
   });
 }
@@ -46,57 +48,57 @@ describe('languages read model', () => {
     const model = selectLanguagesReadModel(metrics);
 
     expect(model).toEqual({
-      languageStats: metrics.languageStats,
-      languageFeatureImpactData: metrics.languageFeatureImpactData,
-      dailyLanguageGenerationsData: metrics.dailyLanguageGenerationsData,
-      dailyLanguageLocData: metrics.dailyLanguageLocData,
+      languageStats: metrics.languages.languageStats,
+      languageFeatureImpactData: metrics.languages.languageFeatureImpactData,
+      dailyLanguageGenerationsData: metrics.languages.dailyLanguageGenerationsData,
+      dailyLanguageLocData: metrics.languages.dailyLanguageLocData,
     });
-    expect(model.languageStats).toBe(metrics.languageStats);
-    expect(model.languageFeatureImpactData).toBe(metrics.languageFeatureImpactData);
-    expect(model.dailyLanguageGenerationsData).toBe(metrics.dailyLanguageGenerationsData);
-    expect(model.dailyLanguageLocData).toBe(metrics.dailyLanguageLocData);
-    expect(model.languageStats[0]).toBe(metrics.languageStats[0]);
+    expect(model.languageStats).toBe(metrics.languages.languageStats);
+    expect(model.languageFeatureImpactData).toBe(metrics.languages.languageFeatureImpactData);
+    expect(model.dailyLanguageGenerationsData).toBe(metrics.languages.dailyLanguageGenerationsData);
+    expect(model.dailyLanguageLocData).toBe(metrics.languages.dailyLanguageLocData);
+    expect(model.languageStats[0]).toBe(metrics.languages.languageStats[0]);
     expect(model.languageFeatureImpactData.features).toBe(
-      metrics.languageFeatureImpactData.features
+      metrics.languages.languageFeatureImpactData.features
     );
     expect(model.languageFeatureImpactData.rows).toBe(
-      metrics.languageFeatureImpactData.rows
+      metrics.languages.languageFeatureImpactData.rows
     );
     expect(model.languageFeatureImpactData.rows[0]).toBe(
-      metrics.languageFeatureImpactData.rows[0]
+      metrics.languages.languageFeatureImpactData.rows[0]
     );
     expect(model.languageFeatureImpactData.rows[0].features).toBe(
-      metrics.languageFeatureImpactData.rows[0].features
+      metrics.languages.languageFeatureImpactData.rows[0].features
     );
     expect(model.dailyLanguageGenerationsData.dates).toBe(
-      metrics.dailyLanguageGenerationsData.dates
+      metrics.languages.dailyLanguageGenerationsData.dates
     );
     expect(model.dailyLanguageGenerationsData.languages).toBe(
-      metrics.dailyLanguageGenerationsData.languages
+      metrics.languages.dailyLanguageGenerationsData.languages
     );
     expect(model.dailyLanguageGenerationsData.data).toBe(
-      metrics.dailyLanguageGenerationsData.data
+      metrics.languages.dailyLanguageGenerationsData.data
     );
     expect(model.dailyLanguageGenerationsData.data['2026-01-15']).toBe(
-      metrics.dailyLanguageGenerationsData.data['2026-01-15']
+      metrics.languages.dailyLanguageGenerationsData.data['2026-01-15']
     );
     expect(model.dailyLanguageGenerationsData.totals).toBe(
-      metrics.dailyLanguageGenerationsData.totals
+      metrics.languages.dailyLanguageGenerationsData.totals
     );
     expect(model.dailyLanguageLocData.dates).toBe(
-      metrics.dailyLanguageLocData.dates
+      metrics.languages.dailyLanguageLocData.dates
     );
     expect(model.dailyLanguageLocData.languages).toBe(
-      metrics.dailyLanguageLocData.languages
+      metrics.languages.dailyLanguageLocData.languages
     );
     expect(model.dailyLanguageLocData.data).toBe(
-      metrics.dailyLanguageLocData.data
+      metrics.languages.dailyLanguageLocData.data
     );
     expect(model.dailyLanguageLocData.data['2026-01-15']).toBe(
-      metrics.dailyLanguageLocData.data['2026-01-15']
+      metrics.languages.dailyLanguageLocData.data['2026-01-15']
     );
     expect(model.dailyLanguageLocData.totals).toBe(
-      metrics.dailyLanguageLocData.totals
+      metrics.languages.dailyLanguageLocData.totals
     );
     expect(Object.keys(model)).toEqual([
       'languageStats',
@@ -114,10 +116,10 @@ describe('languages read model', () => {
 
     const model = selectLanguagesReadModel(metrics);
 
-    expect(model.languageStats).toBe(metrics.languageStats);
-    expect(model.languageFeatureImpactData).toBe(metrics.languageFeatureImpactData);
-    expect(model.dailyLanguageGenerationsData).toBe(metrics.dailyLanguageGenerationsData);
-    expect(model.dailyLanguageLocData).toBe(metrics.dailyLanguageLocData);
+    expect(model.languageStats).toBe(metrics.languages.languageStats);
+    expect(model.languageFeatureImpactData).toBe(metrics.languages.languageFeatureImpactData);
+    expect(model.dailyLanguageGenerationsData).toBe(metrics.languages.dailyLanguageGenerationsData);
+    expect(model.dailyLanguageLocData).toBe(metrics.languages.dailyLanguageLocData);
     expect(model).toEqual({
       languageStats: [],
       languageFeatureImpactData: {

@@ -2,12 +2,81 @@ import { aggregateMetrics } from '../../domain/metricsAggregator';
 import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
 import type { UserSummary } from '../../types/metrics';
 
-export function makeAggregatedMetrics(
-  overrides: Partial<AggregatedMetrics> = {}
-): AggregatedMetrics {
+type AggregatedMetricsOverrides = {
+  [Slice in keyof AggregatedMetrics]?: Partial<AggregatedMetrics[Slice]>;
+};
+
+export const AGGREGATED_METRICS_SLICE_KEYS = {
+  overview: ['stats', 'engagementData', 'chatUsersData', 'chatRequestsData'],
+  users: ['userSummaries'],
+  adoption: [
+    'featureAdoptionData',
+    'agentModeHeatmapData',
+    'dailyAdoptionTrend',
+    'dailyCloudAgentAdoptionData',
+    'dailyCodeReviewAdoptionData',
+  ],
+  impact: [
+    'agentImpactData',
+    'codeCompletionImpactData',
+    'editModeImpactData',
+    'inlineModeImpactData',
+    'askModeImpactData',
+    'cliImpactData',
+    'joinedImpactData',
+  ],
+  languages: [
+    'languageStats',
+    'languageFeatureImpactData',
+    'dailyLanguageGenerationsData',
+    'dailyLanguageLocData',
+  ],
+  clients: [
+    'ideStats',
+    'multiIDEUsersCount',
+    'totalUniqueIDEUsers',
+    'pluginVersionData',
+  ],
+  models: ['modelUsageData', 'modelBreakdownData'],
+  cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],
+  ai: ['aiAdoptionPhaseData', 'usageDistributionData', 'dailyAiCreditsData'],
+} as const satisfies {
+  [Slice in keyof AggregatedMetrics]: readonly (keyof AggregatedMetrics[Slice])[];
+};
+
+export const FORMER_FLAT_AGGREGATE_KEYS = Object.values(
+  AGGREGATED_METRICS_SLICE_KEYS
+).flat();
+
+export function projectFormerFlatAggregate(metrics: AggregatedMetrics) {
   return {
-    ...aggregateMetrics([]).aggregated,
-    ...overrides,
+    ...metrics.overview,
+    ...metrics.users,
+    ...metrics.adoption,
+    ...metrics.impact,
+    ...metrics.languages,
+    ...metrics.clients,
+    ...metrics.models,
+    ...metrics.cli,
+    ...metrics.ai,
+  };
+}
+
+export function makeAggregatedMetrics(
+  overrides: AggregatedMetricsOverrides = {}
+): AggregatedMetrics {
+  const defaults = aggregateMetrics([]).aggregated;
+
+  return {
+    overview: { ...defaults.overview, ...overrides.overview },
+    users: { ...defaults.users, ...overrides.users },
+    adoption: { ...defaults.adoption, ...overrides.adoption },
+    impact: { ...defaults.impact, ...overrides.impact },
+    languages: { ...defaults.languages, ...overrides.languages },
+    clients: { ...defaults.clients, ...overrides.clients },
+    models: { ...defaults.models, ...overrides.models },
+    cli: { ...defaults.cli, ...overrides.cli },
+    ai: { ...defaults.ai, ...overrides.ai },
   };
 }
 

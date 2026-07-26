@@ -1,13 +1,13 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface AiAdoptionPhaseReadModel {
-  aiAdoptionPhaseData: AggregatedMetrics['aiAdoptionPhaseData'];
+  aiAdoptionPhaseData: AggregatedMetrics['ai']['aiAdoptionPhaseData'];
 }
 
 export function selectAiAdoptionPhaseReadModel(
   metrics: AggregatedMetrics
 ): AiAdoptionPhaseReadModel {
   return {
-    aiAdoptionPhaseData: metrics.aiAdoptionPhaseData,
+    aiAdoptionPhaseData: metrics.ai.aiAdoptionPhaseData,
   };
 }

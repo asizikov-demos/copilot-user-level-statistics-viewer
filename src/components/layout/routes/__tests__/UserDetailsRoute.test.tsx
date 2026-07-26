@@ -238,7 +238,7 @@ describe('UserDetailsRoute', () => {
 
     expect(mocks.userDetailsView).toHaveBeenCalledWith({
       userDetails: details,
-      userSummary: mocks.aggregatedMetrics?.userSummaries[0],
+      userSummary: mocks.aggregatedMetrics?.users.userSummaries[0],
       userLogin: 'testuser',
       userId: 1,
     });

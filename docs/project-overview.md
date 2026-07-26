@@ -35,13 +35,13 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 **Web Worker for parsing and aggregation.** All CPU-intensive work (file parsing, metrics aggregation) runs in a dedicated Web Worker (`src/workers/`). The worker is pre-bundled via esbuild into `public/workers/metricsWorker.js` as a self-contained IIFE — this is required for compatibility with Next.js static export (`output: 'export'`).
 
-**Raw metrics never leave the worker.** The `parseAndAggregate` flow parses files and aggregates them into a compact `AggregatedMetrics` object entirely within the worker. Only this pre-aggregated result is transferred to the main thread. This significantly reduces memory footprint for large datasets.
+**Raw metrics never leave the worker.** The `parseAndAggregate` flow parses files and aggregates them into a compact, grouped `AggregatedMetrics` object entirely within the worker. Only this pre-aggregated result is transferred to the main thread. This significantly reduces memory footprint for large datasets.
 
 **Two React contexts for state:**
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate aggregate-backed UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits consume only their typed projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The specialized `UserDetailsRoute` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The specialized `UserDetailsRoute` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -68,7 +68,22 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 ### 3.4. Feature Read-Model Boundaries
 
-The worker payload remains the flat, unchanged `AggregatedMetrics` object. Pure selectors under `src/read-models/` project stable references from that payload into narrow UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total.
+The successful worker payload is one grouped `AggregatedMetrics` object. Each former root field has exactly one owner:
+
+```text
+AggregatedMetrics
+├── overview  stats, engagementData, chatUsersData, chatRequestsData
+├── users     userSummaries
+├── adoption  featureAdoptionData, agentModeHeatmapData, adoption series
+├── impact    agent, completion, edit, inline, ask, CLI, and joined impact
+├── languages language stats, feature impact, generation and LOC series
+├── clients   IDE stats/counts and plugin versions
+├── models    daily model usage and model breakdown
+├── cli       session, token, and adoption series
+└── ai        adoption phases, usage distribution, and credits
+```
+
+Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview`, `impact`, and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
 
 Established boundaries cover:
 - overview and executive summary
@@ -81,7 +96,7 @@ Established boundaries cover:
 - model details and CLI adoption
 - AI credits
 
-Phase 4 feature read-model boundaries and Phase 7 thin view routing are complete. The worker payload remains flat and unchanged. The typed standard-route registry delegates all non-user-details routes, while `UserDetailsRoute` owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 6 feature-view organization remains deferred.
+Phase 4 feature read-model boundaries, Phase 7 thin view routing, and Phase 8 grouped aggregate contract migration are complete. The typed standard-route registry delegates all non-user-details routes, while `UserDetailsRoute` owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 6 feature-view organization remains deferred.
 
 ---
 
@@ -92,7 +107,7 @@ flowchart LR
   A[User uploads .ndjson file] --> B[useFileUpload hook]
   B --> C[MetricsWorkerProvider-owned client]
   C -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
-  W -->|parseAndAggregateResult| D[MetricsContext stores AggregatedMetrics + warnings]
+  W -->|parseAndAggregateResult: grouped slices| D[MetricsContext stores AggregatedMetrics + warnings]
   D --> VR[ViewRouter resolves current route]
   VR --> SR[Selected standard route adapter]
   VR --> UR[Specialized UserDetailsRoute]
@@ -108,7 +123,7 @@ flowchart LR
 1. `useFileUpload` validates file extensions and requests parsing through the typed worker client exposed by `MetricsWorkerProvider`
 2. The worker streams each file through `src/infra/metricsFileParser.ts` using the `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
 3. Records using deprecated LOC fields or missing required fields are skipped
-4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). Raw records remain off the main thread.
+4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the grouped `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). The request protocol and lifecycle are unchanged; raw records remain off the main thread.
 5. `MetricsWorkerProvider` is the application-level lifecycle owner. Its client creates the browser Worker lazily, correlates requests and progress responses, cancels pending work on reusable resets, and permanently disposes the Worker when the provider unmounts.
 
 ### 4.2. Aggregation
@@ -117,7 +132,7 @@ flowchart LR
 
 The coordinator resolves the Copilot Cloud Agent compatibility signal exactly once per raw record and passes that boolean to core stats, user summaries, user detail, and engagement/adoption. CLI usage is accumulated once by the CLI family, including zero-filled dates. Its narrow, read-only daily-session dependency is consumed by engagement/adoption finalization so engagement, chat, and adoption retain CLI users and sessions without duplicating accumulation or exposing token internals. Model aggregation retains ownership of agent heatmap state through an explicit feature-signal entry point while the engagement/adoption and impact families independently consume the feature fields required by their calculators.
 
-Phase 5 modular aggregation orchestration is complete. The top-level coordinator deliberately retains only accumulator wiring, one raw-record loop, shared-signal resolution, narrow cross-family dependencies, finalization, and ordered assembly. Every family result still maps into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged. The payload remains flat until the planned Phase 8 contract migration.
+Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly are complete. The top-level coordinator deliberately retains only accumulator wiring, one raw-record loop, shared-signal resolution, narrow cross-family dependencies, finalization, and grouped assembly. Concrete family results map directly into `overview`, `users`, `adoption`, `impact`, `languages`, `clients`, `models`, `cli`, and `ai` without recomputation, compatibility aliases, or duplicate ownership. The worker still returns the compact user-detail accumulator separately for retained on-demand use.
 
 ### 4.3. Views
 
@@ -150,6 +165,7 @@ flowchart TB
 		AGG[aggregation/]
 		CALC[calculators/]
 		MConf[modelConfig.ts]
+		GAM[Grouped AggregatedMetrics slices]
 	end
 
 	subgraph WorkerBridge
@@ -173,8 +189,11 @@ flowchart TB
 	WT --> MFP
 	WT --> MA
 	MA --> AGG
+	MA --> GAM
 	AGG --> CALC
 	CALC --> MConf
+	GAM -->|parseAndAggregateResult| WC
+	WC --> MC
 
 	MC --> VR
 	NC --> VR

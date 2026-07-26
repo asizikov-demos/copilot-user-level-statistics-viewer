@@ -1,7 +1,7 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface ClientsReadModel {
-  ideStats: AggregatedMetrics['ideStats'];
+  ideStats: AggregatedMetrics['clients']['ideStats'];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
   cliUsers: number;
@@ -11,7 +11,7 @@ export interface ClientsReadModel {
 }
 
 export interface ClientVersionsReadModel {
-  pluginVersionData: AggregatedMetrics['pluginVersionData'];
+  pluginVersionData: AggregatedMetrics['clients']['pluginVersionData'];
   reportStartDay: string;
 }
 
@@ -19,19 +19,19 @@ export function selectClientsReadModel(
   metrics: AggregatedMetrics
 ): ClientsReadModel {
   return {
-    ideStats: metrics.ideStats,
-    multiIDEUsersCount: metrics.multiIDEUsersCount,
-    totalUniqueIDEUsers: metrics.totalUniqueIDEUsers,
-    cliUsers: metrics.stats.cliUsers,
-    cliSessions: metrics.dailyCliSessionData.reduce(
+    ideStats: metrics.clients.ideStats,
+    multiIDEUsersCount: metrics.clients.multiIDEUsersCount,
+    totalUniqueIDEUsers: metrics.clients.totalUniqueIDEUsers,
+    cliUsers: metrics.overview.stats.cliUsers,
+    cliSessions: metrics.cli.dailyCliSessionData.reduce(
       (sum, day) => sum + day.sessionCount,
       0
     ),
-    cliLocAdded: metrics.cliImpactData.reduce(
+    cliLocAdded: metrics.impact.cliImpactData.reduce(
       (sum, day) => sum + day.locAdded,
       0
     ),
-    cliLocDeleted: metrics.cliImpactData.reduce(
+    cliLocDeleted: metrics.impact.cliImpactData.reduce(
       (sum, day) => sum + day.locDeleted,
       0
     ),
@@ -42,7 +42,7 @@ export function selectClientVersionsReadModel(
   metrics: AggregatedMetrics
 ): ClientVersionsReadModel {
   return {
-    pluginVersionData: metrics.pluginVersionData,
-    reportStartDay: metrics.stats.reportStartDay,
+    pluginVersionData: metrics.clients.pluginVersionData,
+    reportStartDay: metrics.overview.stats.reportStartDay,
   };
 }

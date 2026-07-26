@@ -16,15 +16,15 @@ describe('feature read models', () => {
     const model = selectOverviewReadModel(metrics);
 
     expect(model).toEqual({
-      reportStartDay: metrics.stats.reportStartDay,
-      reportEndDay: metrics.stats.reportEndDay,
-      engagementData: metrics.engagementData,
-      chatUsersData: metrics.chatUsersData,
-      chatRequestsData: metrics.chatRequestsData,
+      reportStartDay: metrics.overview.stats.reportStartDay,
+      reportEndDay: metrics.overview.stats.reportEndDay,
+      engagementData: metrics.overview.engagementData,
+      chatUsersData: metrics.overview.chatUsersData,
+      chatRequestsData: metrics.overview.chatRequestsData,
     });
-    expect(model.engagementData).toBe(metrics.engagementData);
-    expect(model.chatUsersData).toBe(metrics.chatUsersData);
-    expect(model.chatRequestsData).toBe(metrics.chatRequestsData);
+    expect(model.engagementData).toBe(metrics.overview.engagementData);
+    expect(model.chatUsersData).toBe(metrics.overview.chatUsersData);
+    expect(model.chatRequestsData).toBe(metrics.overview.chatRequestsData);
     expect(Object.keys(model)).toEqual([
       'reportStartDay',
       'reportEndDay',
@@ -39,17 +39,17 @@ describe('feature read models', () => {
     const model = selectExecutiveSummaryReadModel(metrics);
 
     expect(model).toEqual({
-      reportStartDay: metrics.stats.reportStartDay,
-      reportEndDay: metrics.stats.reportEndDay,
-      joinedImpactData: metrics.joinedImpactData,
-      agentImpactData: metrics.agentImpactData,
-      codeCompletionImpactData: metrics.codeCompletionImpactData,
-      featureAdoptionData: metrics.featureAdoptionData,
+      reportStartDay: metrics.overview.stats.reportStartDay,
+      reportEndDay: metrics.overview.stats.reportEndDay,
+      joinedImpactData: metrics.impact.joinedImpactData,
+      agentImpactData: metrics.impact.agentImpactData,
+      codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
+      featureAdoptionData: metrics.adoption.featureAdoptionData,
     });
-    expect(model.joinedImpactData).toBe(metrics.joinedImpactData);
-    expect(model.agentImpactData).toBe(metrics.agentImpactData);
-    expect(model.codeCompletionImpactData).toBe(metrics.codeCompletionImpactData);
-    expect(model.featureAdoptionData).toBe(metrics.featureAdoptionData);
+    expect(model.joinedImpactData).toBe(metrics.impact.joinedImpactData);
+    expect(model.agentImpactData).toBe(metrics.impact.agentImpactData);
+    expect(model.codeCompletionImpactData).toBe(metrics.impact.codeCompletionImpactData);
+    expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
     expect(Object.keys(model)).toEqual([
       'reportStartDay',
       'reportEndDay',
@@ -62,7 +62,7 @@ describe('feature read models', () => {
 
   it('projects the users list without copying it', () => {
     const users = [makeUserSummary()];
-    const metrics = makeAggregatedMetrics({ userSummaries: users });
+    const metrics = makeAggregatedMetrics({ users: { userSummaries: users } });
     const model = selectUsersReadModel(metrics);
 
     expect(model).toEqual({ users });
@@ -72,7 +72,9 @@ describe('feature read models', () => {
 
   it('resolves a selected user while preserving summary and dataset identity', () => {
     const userSummary = makeUserSummary();
-    const metrics = makeAggregatedMetrics({ userSummaries: [userSummary] });
+    const metrics = makeAggregatedMetrics({
+      users: { userSummaries: [userSummary] },
+    });
     const selectedUser = { id: userSummary.user_id, login: userSummary.user_login };
 
     const model = selectUserDetailsRouteReadModel(metrics, selectedUser);
@@ -115,7 +117,7 @@ describe('feature read models', () => {
 
   it('does not mutate the aggregate input', () => {
     const metrics = makeAggregatedMetrics({
-      userSummaries: [makeUserSummary()],
+      users: { userSummaries: [makeUserSummary()] },
     });
     const before = structuredClone(metrics);
 

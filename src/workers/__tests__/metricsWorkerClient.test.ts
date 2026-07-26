@@ -80,7 +80,7 @@ describe('MetricsWorkerClient', () => {
 
     await expect(detailsPromise).resolves.toBeNull();
     await expect(parsePromise).resolves.toEqual({
-      result: expect.objectContaining({ stats: expect.any(Object) }),
+      result: expect.objectContaining({ overview: expect.any(Object) }),
       enterpriseName: 'acme',
       recordCount: 1,
       errors: [],

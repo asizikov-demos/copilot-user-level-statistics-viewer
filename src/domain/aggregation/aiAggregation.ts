@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { AiMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateAiAdoptionPhase,
@@ -21,10 +21,7 @@ export interface AiAggregationAccumulator {
   credits: AiCreditsAccumulator;
 }
 
-export type AiAggregationResult = Pick<
-  AggregatedMetrics,
-  'aiAdoptionPhaseData' | 'usageDistributionData' | 'dailyAiCreditsData'
->;
+export type AiAggregationResult = AiMetricsSlice;
 
 export function createAiAggregationAccumulator(): AiAggregationAccumulator {
   return {

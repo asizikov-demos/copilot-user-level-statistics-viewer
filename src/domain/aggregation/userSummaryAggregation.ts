@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { UsersMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics, UserSummary } from '../../types/metrics';
 import { isActiveAutoModeFeature } from '../autoMode';
 
@@ -11,10 +11,7 @@ export interface UserSummaryAggregationAccumulator {
   userAiAdoptionPhaseDays: Map<number, string>;
 }
 
-export type UserSummaryAggregationResult = Pick<
-  AggregatedMetrics,
-  'userSummaries'
->;
+export type UserSummaryAggregationResult = UsersMetricsSlice;
 
 export function createUserSummaryAggregationAccumulator(
 ): UserSummaryAggregationAccumulator {

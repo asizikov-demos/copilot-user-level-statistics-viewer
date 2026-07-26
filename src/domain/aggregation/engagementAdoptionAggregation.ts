@@ -1,4 +1,7 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type {
+  AdoptionMetricsSlice,
+  OverviewMetricsSlice,
+} from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateCloudAgentAdoption,
@@ -41,10 +44,12 @@ export interface EngagementAdoptionAggregationAccumulator {
 }
 
 export type EngagementAdoptionAggregationResult = Pick<
-  AggregatedMetrics,
+  OverviewMetricsSlice,
   | 'engagementData'
   | 'chatUsersData'
   | 'chatRequestsData'
+> & Pick<
+  AdoptionMetricsSlice,
   | 'featureAdoptionData'
   | 'dailyAdoptionTrend'
   | 'dailyCloudAgentAdoptionData'

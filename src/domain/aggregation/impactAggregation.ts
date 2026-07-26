@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { ImpactMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateFeatureImpactRecord,
@@ -18,16 +18,7 @@ export interface ImpactAggregationAccumulator {
   impact: ImpactAccumulator;
 }
 
-export type ImpactAggregationResult = Pick<
-  AggregatedMetrics,
-  | 'agentImpactData'
-  | 'codeCompletionImpactData'
-  | 'editModeImpactData'
-  | 'inlineModeImpactData'
-  | 'askModeImpactData'
-  | 'cliImpactData'
-  | 'joinedImpactData'
->;
+export type ImpactAggregationResult = ImpactMetricsSlice;
 
 export function createImpactAggregationAccumulator(
 ): ImpactAggregationAccumulator {

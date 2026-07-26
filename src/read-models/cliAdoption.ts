@@ -1,12 +1,12 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface CliAdoptionReadModel {
-  stats: AggregatedMetrics['stats'];
-  dailyCliSessionData: AggregatedMetrics['dailyCliSessionData'];
-  dailyCliTokenData: AggregatedMetrics['dailyCliTokenData'];
-  dailyCliAdoptionTrend: AggregatedMetrics['dailyCliAdoptionTrend'];
+  stats: AggregatedMetrics['overview']['stats'];
+  dailyCliSessionData: AggregatedMetrics['cli']['dailyCliSessionData'];
+  dailyCliTokenData: AggregatedMetrics['cli']['dailyCliTokenData'];
+  dailyCliAdoptionTrend: AggregatedMetrics['cli']['dailyCliAdoptionTrend'];
   cliModelEntries: NonNullable<
-    AggregatedMetrics['modelBreakdownData']['cliModels']
+    AggregatedMetrics['models']['modelBreakdownData']['cliModels']
   >;
   cliModelDates: string[];
   cliModelTotal: number;
@@ -16,9 +16,11 @@ export interface CliAdoptionReadModel {
 export function selectCliAdoptionReadModel(
   metrics: AggregatedMetrics
 ): CliAdoptionReadModel {
-  const { stats, dailyCliSessionData, dailyCliTokenData, dailyCliAdoptionTrend } =
-    metrics;
-  const { cliModels = [], dates, cliTotal = 0 } = metrics.modelBreakdownData;
+  const { stats } = metrics.overview;
+  const { dailyCliSessionData, dailyCliTokenData, dailyCliAdoptionTrend } =
+    metrics.cli;
+  const { cliModels = [], dates, cliTotal = 0 } =
+    metrics.models.modelBreakdownData;
 
   return {
     stats,

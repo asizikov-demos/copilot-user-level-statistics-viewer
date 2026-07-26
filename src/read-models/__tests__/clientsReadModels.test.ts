@@ -10,72 +10,80 @@ function makeClientMetrics(): AggregatedMetrics {
   const defaults = makeAggregatedMetrics();
 
   return makeAggregatedMetrics({
-    stats: {
-      ...defaults.stats,
-      cliUsers: 7,
-      reportStartDay: '2026-01-15',
+    overview: {
+      stats: {
+        ...defaults.overview.stats,
+        cliUsers: 7,
+        reportStartDay: '2026-01-15',
+      },
     },
-    ideStats: [{
-      ide: 'vscode',
-      uniqueUsers: 4,
-      cliOverlapUsers: 1,
-      totalEngagements: 12,
-      totalGenerations: 8,
-      totalAcceptances: 5,
-      locAdded: 21,
-      locDeleted: 3,
-      locSuggestedToAdd: 30,
-      locSuggestedToDelete: 4,
-    }],
-    multiIDEUsersCount: 2,
-    totalUniqueIDEUsers: 5,
-    dailyCliSessionData: [
-      {
-        date: '2026-01-15',
-        sessionCount: 3,
-        requestCount: 4,
-        promptCount: 5,
-        uniqueUsers: 2,
-      },
-      {
-        date: '2026-01-16',
-        sessionCount: 8,
-        requestCount: 9,
-        promptCount: 10,
-        uniqueUsers: 3,
-      },
-    ],
-    cliImpactData: [
-      {
-        date: '2026-01-15',
-        locAdded: 13,
-        locDeleted: 2,
-        netChange: 11,
-        userCount: 2,
-        totalUniqueUsers: 7,
-      },
-      {
-        date: '2026-01-16',
-        locAdded: 17,
-        locDeleted: 5,
-        netChange: 12,
-        userCount: 3,
-        totalUniqueUsers: 7,
-      },
-    ],
-    pluginVersionData: {
-      jetbrains: [{
-        version: '1.5.0',
-        userCount: 2,
-        usernames: ['octocat', 'hubot'],
+    clients: {
+      ideStats: [{
+        ide: 'vscode',
+        uniqueUsers: 4,
+        cliOverlapUsers: 1,
+        totalEngagements: 12,
+        totalGenerations: 8,
+        totalAcceptances: 5,
+        locAdded: 21,
+        locDeleted: 3,
+        locSuggestedToAdd: 30,
+        locSuggestedToDelete: 4,
       }],
-      vscode: [{
-        version: '1.250.0',
-        userCount: 3,
-        usernames: ['octocat', 'hubot', 'monalisa'],
-      }],
-      totalUniqueIntellijUsers: 2,
-      totalUniqueVsCodeUsers: 3,
+      multiIDEUsersCount: 2,
+      totalUniqueIDEUsers: 5,
+      pluginVersionData: {
+        jetbrains: [{
+          version: '1.5.0',
+          userCount: 2,
+          usernames: ['octocat', 'hubot'],
+        }],
+        vscode: [{
+          version: '1.250.0',
+          userCount: 3,
+          usernames: ['octocat', 'hubot', 'monalisa'],
+        }],
+        totalUniqueIntellijUsers: 2,
+        totalUniqueVsCodeUsers: 3,
+      },
+    },
+    cli: {
+      dailyCliSessionData: [
+        {
+          date: '2026-01-15',
+          sessionCount: 3,
+          requestCount: 4,
+          promptCount: 5,
+          uniqueUsers: 2,
+        },
+        {
+          date: '2026-01-16',
+          sessionCount: 8,
+          requestCount: 9,
+          promptCount: 10,
+          uniqueUsers: 3,
+        },
+      ],
+    },
+    impact: {
+      cliImpactData: [
+        {
+          date: '2026-01-15',
+          locAdded: 13,
+          locDeleted: 2,
+          netChange: 11,
+          userCount: 2,
+          totalUniqueUsers: 7,
+        },
+        {
+          date: '2026-01-16',
+          locAdded: 17,
+          locDeleted: 5,
+          netChange: 12,
+          userCount: 3,
+          totalUniqueUsers: 7,
+        },
+      ],
     },
   });
 }
@@ -87,7 +95,7 @@ describe('client read models', () => {
     const model = selectClientsReadModel(metrics);
 
     expect(model).toEqual({
-      ideStats: metrics.ideStats,
+      ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: 2,
       totalUniqueIDEUsers: 5,
       cliUsers: 7,
@@ -95,8 +103,8 @@ describe('client read models', () => {
       cliLocAdded: 30,
       cliLocDeleted: 7,
     });
-    expect(model.ideStats).toBe(metrics.ideStats);
-    expect(model.ideStats[0]).toBe(metrics.ideStats[0]);
+    expect(model.ideStats).toBe(metrics.clients.ideStats);
+    expect(model.ideStats[0]).toBe(metrics.clients.ideStats[0]);
     expect(Object.keys(model)).toEqual([
       'ideStats',
       'multiIDEUsersCount',
@@ -115,47 +123,55 @@ describe('client read models', () => {
   it('uses additive totals without filtering or changing signed values', () => {
     const defaults = makeAggregatedMetrics();
     const metrics = makeAggregatedMetrics({
-      stats: { ...defaults.stats, cliUsers: -1 },
-      multiIDEUsersCount: -2,
-      totalUniqueIDEUsers: -3,
-      dailyCliSessionData: [
-        {
-          date: 'invalid',
-          sessionCount: 4.5,
-          requestCount: 0,
-          promptCount: 0,
-          uniqueUsers: 0,
-        },
-        {
-          date: '',
-          sessionCount: -1.25,
-          requestCount: 0,
-          promptCount: 0,
-          uniqueUsers: 0,
-        },
-      ],
-      cliImpactData: [
-        {
-          date: 'invalid',
-          locAdded: 6.5,
-          locDeleted: -2,
-          netChange: 8.5,
-          userCount: 0,
-          totalUniqueUsers: 0,
-        },
-        {
-          date: '',
-          locAdded: -1.5,
-          locDeleted: 3,
-          netChange: -4.5,
-          userCount: 0,
-          totalUniqueUsers: 0,
-        },
-      ],
+      overview: {
+        stats: { ...defaults.overview.stats, cliUsers: -1 },
+      },
+      clients: {
+        multiIDEUsersCount: -2,
+        totalUniqueIDEUsers: -3,
+      },
+      cli: {
+        dailyCliSessionData: [
+          {
+            date: 'invalid',
+            sessionCount: 4.5,
+            requestCount: 0,
+            promptCount: 0,
+            uniqueUsers: 0,
+          },
+          {
+            date: '',
+            sessionCount: -1.25,
+            requestCount: 0,
+            promptCount: 0,
+            uniqueUsers: 0,
+          },
+        ],
+      },
+      impact: {
+        cliImpactData: [
+          {
+            date: 'invalid',
+            locAdded: 6.5,
+            locDeleted: -2,
+            netChange: 8.5,
+            userCount: 0,
+            totalUniqueUsers: 0,
+          },
+          {
+            date: '',
+            locAdded: -1.5,
+            locDeleted: 3,
+            netChange: -4.5,
+            userCount: 0,
+            totalUniqueUsers: 0,
+          },
+        ],
+      },
     });
 
     expect(selectClientsReadModel(metrics)).toEqual({
-      ideStats: metrics.ideStats,
+      ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: -2,
       totalUniqueIDEUsers: -3,
       cliUsers: -1,
@@ -171,18 +187,18 @@ describe('client read models', () => {
     const model = selectClientVersionsReadModel(metrics);
 
     expect(model).toEqual({
-      pluginVersionData: metrics.pluginVersionData,
+      pluginVersionData: metrics.clients.pluginVersionData,
       reportStartDay: '2026-01-15',
     });
-    expect(model.pluginVersionData).toBe(metrics.pluginVersionData);
-    expect(model.pluginVersionData.jetbrains).toBe(metrics.pluginVersionData.jetbrains);
+    expect(model.pluginVersionData).toBe(metrics.clients.pluginVersionData);
+    expect(model.pluginVersionData.jetbrains).toBe(metrics.clients.pluginVersionData.jetbrains);
     expect(model.pluginVersionData.jetbrains[0]).toBe(
-      metrics.pluginVersionData.jetbrains[0]
+      metrics.clients.pluginVersionData.jetbrains[0]
     );
     expect(model.pluginVersionData.jetbrains[0].usernames).toBe(
-      metrics.pluginVersionData.jetbrains[0].usernames
+      metrics.clients.pluginVersionData.jetbrains[0].usernames
     );
-    expect(model.pluginVersionData.vscode).toBe(metrics.pluginVersionData.vscode);
+    expect(model.pluginVersionData.vscode).toBe(metrics.clients.pluginVersionData.vscode);
     expect(Object.keys(model)).toEqual(['pluginVersionData', 'reportStartDay']);
     expect(model).not.toHaveProperty('stats');
     expect(model).not.toHaveProperty('ideStats');
@@ -204,26 +220,28 @@ describe('client read models', () => {
       cliLocAdded: 0,
       cliLocDeleted: 0,
     });
-    expect(clients.ideStats).toBe(metrics.ideStats);
+    expect(clients.ideStats).toBe(metrics.clients.ideStats);
     expect(clientVersions).toEqual({
-      pluginVersionData: metrics.pluginVersionData,
+      pluginVersionData: metrics.clients.pluginVersionData,
       reportStartDay: '',
     });
-    expect(clientVersions.pluginVersionData).toBe(metrics.pluginVersionData);
+    expect(clientVersions.pluginVersionData).toBe(metrics.clients.pluginVersionData);
     expect(clientVersions.pluginVersionData.jetbrains).toBe(
-      metrics.pluginVersionData.jetbrains
+      metrics.clients.pluginVersionData.jetbrains
     );
     expect(clientVersions.pluginVersionData.vscode).toBe(
-      metrics.pluginVersionData.vscode
+      metrics.clients.pluginVersionData.vscode
     );
   });
 
   it('passes report dates through verbatim without adding fallback semantics', () => {
     const defaults = makeAggregatedMetrics();
     const metrics = makeAggregatedMetrics({
-      stats: {
-        ...defaults.stats,
-        reportStartDay: 'not-a-report-date',
+      overview: {
+        stats: {
+          ...defaults.overview.stats,
+          reportStartDay: 'not-a-report-date',
+        },
       },
     });
 

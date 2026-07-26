@@ -1,4 +1,7 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type {
+  AdoptionMetricsSlice,
+  ModelsMetricsSlice,
+} from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 import {
@@ -26,9 +29,9 @@ export interface ModelAggregationAccumulator {
 }
 
 export type ModelAggregationResult = Pick<
-  AggregatedMetrics,
-  'modelUsageData' | 'agentModeHeatmapData' | 'modelBreakdownData'
->;
+  AdoptionMetricsSlice,
+  'agentModeHeatmapData'
+> & ModelsMetricsSlice;
 
 export function createModelAggregationAccumulator(): ModelAggregationAccumulator {
   return {
