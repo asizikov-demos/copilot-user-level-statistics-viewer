@@ -137,6 +137,7 @@ export {
   type DailyCliTokenData,
   type DailyCliAdoptionTrend,
   type CliUsageAccumulator,
+  type CliUsageForDownstreamCalculations,
   createCliUsageAccumulator,
   accumulateCliUsage,
   ensureCliDates,

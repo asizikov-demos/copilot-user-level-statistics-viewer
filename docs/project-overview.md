@@ -107,9 +107,11 @@ flowchart LR
 
 ### 4.2. Aggregation
 
-`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Language and model orchestration now own their accumulator creation, per-record nested consumption, and narrow finalization while sharing the parent-owned stats accumulator. Their family results map into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged.
+`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Language, model, client, and CLI orchestration own their accumulator creation, per-record consumption, and narrow finalization. Language, model, and client families update the parent-owned stats accumulator where their dimensions contribute to global statistics. The client family also owns exact `used_cli` participation in IDE overlap statistics and plugin-version grouping while iterating every reported IDE total.
 
-Phase 5 modular aggregation orchestration has begun with the language and model families. User summaries, engagement/chat, feature adoption, impact, IDE/plugin versions, CLI, advanced adoption, AI adoption phases, AI credits, and user-detail orchestration remain in the top-level coordinator for later slices.
+CLI usage is accumulated once by the CLI family, including zero-filled dates. A narrow, read-only daily-session dependency is shared with engagement, chat, and adoption finalization so those existing calculations retain CLI users and sessions without duplicating accumulation or exposing token internals. Every family result still maps into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged.
+
+Phase 5 modular aggregation orchestration now covers language, model, client/plugin-version, and CLI families. User summaries, engagement/chat, feature adoption, impact, advanced adoption, AI adoption phases, AI credits, and user-detail orchestration remain in the top-level coordinator for later slices.
 
 ### 4.3. Views
 

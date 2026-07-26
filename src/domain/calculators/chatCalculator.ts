@@ -1,4 +1,4 @@
-import { CliUsageAccumulator } from './cliUsageCalculator';
+import type { CliUsageForDownstreamCalculations } from './cliUsageCalculator';
 import { compareByDateAsc } from './statsCalculators';
 import { getChatModeBucket } from '../featureCategories';
 
@@ -104,7 +104,10 @@ export function accumulateChatFeature(
   }
 }
 
-export function computeChatUsersData(accumulator: ChatAccumulator, cliAccumulator?: CliUsageAccumulator): DailyChatUsersData[] {
+export function computeChatUsersData(
+  accumulator: ChatAccumulator,
+  cliAccumulator?: CliUsageForDownstreamCalculations
+): DailyChatUsersData[] {
   const allDates = new Set<string>(accumulator.dailyChatUsers.keys());
   if (cliAccumulator) {
     for (const date of cliAccumulator.dailySessions.keys()) {
@@ -129,7 +132,10 @@ export function computeChatUsersData(accumulator: ChatAccumulator, cliAccumulato
     .sort(compareByDateAsc);
 }
 
-export function computeChatRequestsData(accumulator: ChatAccumulator, cliAccumulator?: CliUsageAccumulator): DailyChatRequestsData[] {
+export function computeChatRequestsData(
+  accumulator: ChatAccumulator,
+  cliAccumulator?: CliUsageForDownstreamCalculations
+): DailyChatRequestsData[] {
   const allDates = new Set<string>(accumulator.dailyChatRequests.keys());
   if (cliAccumulator) {
     for (const date of cliAccumulator.dailySessions.keys()) {
