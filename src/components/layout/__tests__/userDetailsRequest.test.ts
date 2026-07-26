@@ -61,6 +61,30 @@ describe('runUserDetailsRequest', () => {
     expect(onError).not.toHaveBeenCalled();
   });
 
+  it('ignores late errors from an obsolete request', async () => {
+    let rejectRequest: (reason: Error) => void = () => undefined;
+    const load = vi.fn(() => new Promise<UserDetailedMetrics | null>((_, reject) => {
+      rejectRequest = reject;
+    }));
+    let isCurrent = true;
+    const onSuccess = vi.fn();
+    const onError = vi.fn();
+
+    const request = runUserDetailsRequest({
+      userId: 42,
+      load,
+      isCurrent: () => isCurrent,
+      onSuccess,
+      onError,
+    });
+    isCurrent = false;
+    rejectRequest(new Error('Obsolete failure'));
+    await request;
+
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+  });
+
   it('makes a fresh request when retried for the same user', async () => {
     const load = vi.fn()
       .mockRejectedValueOnce(new Error('First request failed'))
