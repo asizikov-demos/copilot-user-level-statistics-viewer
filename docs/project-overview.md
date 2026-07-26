@@ -41,7 +41,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view, selected user/model, and navigation actions
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate migrated UI paths from that flat payload; overview, executive summary, users, and user details consume only their typed projections. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The flat `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts`. Feature read-model selectors in `src/read-models/` insulate migrated UI paths from that flat payload; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, and Copilot impact consume only their typed projections. The worker also retains a compact user-detail accumulator so it can serve user details on demand without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -63,6 +63,19 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 ### 3.3. Model Configuration
 
 `src/domain/modelConfig.ts` contains a curated catalog of known LLM models. Calculators use model helpers for normalization, known-model alias recognition, and explicit unknown/empty model detection.
+
+### 3.4. Feature Read-Model Boundaries
+
+The worker payload remains the flat `AggregatedMetrics` object. Pure selectors under `src/read-models/` project stable references from that payload into narrow UI contracts without copying, sorting, filtering, mutation, or additional aggregation.
+
+Established boundaries cover:
+- overview and executive summary
+- users and on-demand user details
+- Copilot adoption
+- AI adoption phases
+- Copilot impact
+
+Remaining Phase 4 slices are languages, clients and client versions, models and CLI, and AI credits. Grouping the worker payload, moving component files, and decomposing the general `ViewRouter` registry remain separate work.
 
 ---
 

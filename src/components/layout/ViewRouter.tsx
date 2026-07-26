@@ -11,6 +11,9 @@ import {
   selectExecutiveSummaryReadModel,
   selectOverviewReadModel,
 } from '../../read-models/overview';
+import { selectCopilotAdoptionReadModel } from '../../read-models/adoption';
+import { selectAiAdoptionPhaseReadModel } from '../../read-models/aiAdoptionPhases';
+import { selectCopilotImpactReadModel } from '../../read-models/impact';
 import { selectUsersReadModel } from '../../read-models/users';
 import { selectUserDetailsRouteReadModel } from '../../read-models/userDetails';
 import {
@@ -181,15 +184,7 @@ const ViewRouter: React.FC = () => {
     stats, 
     userSummaries, 
     languageStats,
-    featureAdoptionData,
-    agentModeHeatmapData,
-    agentImpactData,
-    codeCompletionImpactData,
-    editModeImpactData,
-    inlineModeImpactData,
-    askModeImpactData,
     cliImpactData,
-    joinedImpactData,
     ideStats,
     multiIDEUsersCount,
     totalUniqueIDEUsers,
@@ -201,15 +196,14 @@ const ViewRouter: React.FC = () => {
     dailyCliSessionData,
     dailyCliTokenData,
     dailyCliAdoptionTrend,
-    dailyAdoptionTrend,
-    dailyCloudAgentAdoptionData = [],
-    dailyCodeReviewAdoptionData = [],
-    aiAdoptionPhaseData = [],
     dailyAiCreditsData = [],
     usageDistributionData = [],
   } = aggregatedMetrics;
   const overviewReadModel = selectOverviewReadModel(aggregatedMetrics);
   const executiveSummaryReadModel = selectExecutiveSummaryReadModel(aggregatedMetrics);
+  const copilotAdoptionReadModel = selectCopilotAdoptionReadModel(aggregatedMetrics);
+  const aiAdoptionPhaseReadModel = selectAiAdoptionPhaseReadModel(aggregatedMetrics);
+  const copilotImpactReadModel = selectCopilotImpactReadModel(aggregatedMetrics);
   const usersReadModel = selectUsersReadModel(aggregatedMetrics);
 
   switch (currentView) {
@@ -269,32 +263,21 @@ const ViewRouter: React.FC = () => {
     case VIEW_MODES.COPILOT_IMPACT:
       return (
         <CopilotImpactView
-          agentImpactData={agentImpactData}
-          codeCompletionImpactData={codeCompletionImpactData}
-          editModeImpactData={editModeImpactData}
-          inlineModeImpactData={inlineModeImpactData}
-          askModeImpactData={askModeImpactData}
-          cliImpactData={cliImpactData}
-          joinedImpactData={joinedImpactData}
+          model={copilotImpactReadModel}
         />
       );
 
     case VIEW_MODES.COPILOT_ADOPTION:
       return (
         <CopilotAdoptionView
-          featureAdoptionData={featureAdoptionData}
-          agentModeHeatmapData={agentModeHeatmapData}
-          stats={stats}
-          dailyAdoptionTrend={dailyAdoptionTrend}
-          dailyCloudAgentAdoptionData={dailyCloudAgentAdoptionData}
-          dailyCodeReviewAdoptionData={dailyCodeReviewAdoptionData}
+          model={copilotAdoptionReadModel}
         />
       );
 
     case VIEW_MODES.AI_ADOPTION_PHASES:
       return (
         <AiAdoptionPhaseView
-          phaseData={aiAdoptionPhaseData}
+          model={aiAdoptionPhaseReadModel}
         />
       );
 

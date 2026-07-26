@@ -5,14 +5,16 @@ import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import { ViewPanel } from './ui';
 import TopEntriesList from './ui/TopEntriesList';
 import { AI_ADOPTION_PHASE_SECTIONS } from './layout/contextSections';
-import type { AiAdoptionPhaseData } from '../domain/calculators/metricCalculators';
+import type { AiAdoptionPhaseReadModel } from '../read-models/aiAdoptionPhases';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
 import { getModelIcon } from './icons/ModelIcons';
 
 interface AiAdoptionPhaseViewProps {
-  phaseData: AiAdoptionPhaseData[];
+  model: AiAdoptionPhaseReadModel;
 }
+
+type AiAdoptionPhaseData = AiAdoptionPhaseReadModel['aiAdoptionPhaseData'][number];
 
 const AI_ADOPTION_PHASE_BLOG_URL = 'https://github.blog/changelog/2026-05-29-copilot-usage-metrics-api-adds-cohorts-for-ai-adoption/#whats-new';
 const PHASE_PILL_CLASS = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800';
@@ -45,7 +47,8 @@ function formatAverage(value: number): string {
   return formatNumber(value, 1);
 }
 
-export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewProps) {
+export default function AiAdoptionPhaseView({ model }: AiAdoptionPhaseViewProps) {
+  const { aiAdoptionPhaseData } = model;
   const rightHeaderClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
   const rightCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
   const [comparisonSection, assignmentSection] = AI_ADOPTION_PHASE_SECTIONS;
@@ -164,7 +167,7 @@ export default function AiAdoptionPhaseView({ phaseData }: AiAdoptionPhaseViewPr
           <p className="mt-1 text-sm text-gray-600">Averages are calculated per user in each phase.</p>
         </div>
         <MetricsTable<AiAdoptionPhaseData>
-          data={phaseData}
+          data={aiAdoptionPhaseData}
           columns={columns}
           tableClassName="w-full divide-y divide-gray-200"
           tableContainerClassName="overflow-x-auto"
