@@ -22,64 +22,35 @@ import {
 } from './aggregation/languageAggregation';
 import {
   accumulateModelAggregation,
+  accumulateModelFeatureSignals,
   createModelAggregationAccumulator,
   finalizeModelAggregation,
 } from './aggregation/modelAggregation';
 import {
+  accumulateEngagementAdoptionAggregation,
+  createEngagementAdoptionAggregationAccumulator,
+  finalizeEngagementAdoptionAggregation,
+} from './aggregation/engagementAdoptionAggregation';
+import {
+  accumulateImpactAggregation,
+  createImpactAggregationAccumulator,
+  finalizeImpactAggregation,
+} from './aggregation/impactAggregation';
+import {
+  accumulateAiAggregation,
+  createAiAggregationAccumulator,
+  finalizeAiAggregation,
+} from './aggregation/aiAggregation';
+import {
   createStatsAccumulator,
   accumulateUserUsage,
   computeStats,
-
-  createEngagementAccumulator,
-  accumulateEngagement,
-  computeEngagementData,
-  computeAdoptionTrend,
-
-  createChatAccumulator,
-  accumulateChatFeature,
-  computeChatUsersData,
-  computeChatRequestsData,
-
-  createFeatureAdoptionAccumulator,
-  accumulateFeatureAdoption,
-  accumulateCliAdoption,
-  accumulateCodingAgentAdoption,
-  accumulateCodeReviewAdoption,
-  computeFeatureAdoptionData,
-
-  type FeatureImpactInput,
-  createImpactAccumulator,
-  ensureImpactDates,
-  createFeatureImpactInput,
-  accumulateFeatureImpacts,
-  computeAgentImpactData,
-  computeCodeCompletionImpactData,
-  computeEditModeImpactData,
-  computeInlineModeImpactData,
-  computeAskModeImpactData,
-  computeCliImpactData,
-  computeJoinedImpactData,
-
+} from './calculators/statsCalculator';
+import {
   type UserDetailAccumulator,
   createUserDetailAccumulator,
   accumulateUserDetail,
-
-  createAdvancedAdoptionAccumulator,
-  accumulateCloudAgentAdoption,
-  accumulateCodeReviewAdoptionSignal,
-  computeDailyCloudAgentAdoptionData,
-  computeDailyCodeReviewAdoptionData,
-
-  createAiAdoptionPhaseAccumulator,
-  accumulateAiAdoptionPhase,
-  computeAiAdoptionPhaseData,
-
-  computeUsageDistributionData,
-
-  createAiCreditsAccumulator,
-  accumulateAiCredits,
-  computeDailyAiCreditsData,
-} from './calculators';
+} from './calculators/userDetailCalculator';
 import { isActiveAutoModeFeature } from './autoMode';
 
 interface UserSummaryAccumulator {
@@ -242,17 +213,14 @@ export function aggregateMetrics(
 
   const statsAccumulator = createStatsAccumulator();
   const userSummaryAccumulator = createUserSummaryAccumulator();
-  const engagementAccumulator = createEngagementAccumulator();
-  const chatAccumulator = createChatAccumulator();
+  const engagementAdoptionAggregationAccumulator =
+    createEngagementAdoptionAggregationAccumulator();
   const clientAggregationAccumulator = createClientAggregationAccumulator();
   const cliAggregationAccumulator = createCliAggregationAccumulator();
   const languageAggregationAccumulator = createLanguageAggregationAccumulator();
   const modelAggregationAccumulator = createModelAggregationAccumulator();
-  const featureAdoptionAccumulator = createFeatureAdoptionAccumulator();
-  const impactAccumulator = createImpactAccumulator();
-  const advancedAdoptionAccumulator = createAdvancedAdoptionAccumulator();
-  const aiAdoptionPhaseAccumulator = createAiAdoptionPhaseAccumulator();
-  const aiCreditsAccumulator = createAiCreditsAccumulator();
+  const impactAggregationAccumulator = createImpactAggregationAccumulator();
+  const aiAggregationAccumulator = createAiAggregationAccumulator();
   const userDetailAccumulator = createUserDetailAccumulator();
 
   for (const metric of metrics) {
@@ -265,20 +233,21 @@ export function aggregateMetrics(
       userDetailAccumulator.reportEndDay = metric.report_end_day;
     }
 
-    const date = metric.day;
     const userId = metric.user_id;
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
 
     accumulateUserSummary(userSummaryAccumulator, metric, usedCopilotCloudAgent);
-    accumulateAiAdoptionPhase(aiAdoptionPhaseAccumulator, metric);
-    accumulateAiCredits(aiCreditsAccumulator, metric);
+    accumulateAiAggregation(aiAggregationAccumulator, metric);
     accumulateUserDetail(userDetailAccumulator, metric);
 
     accumulateUserUsage(statsAccumulator, userId, metric.used_chat, metric.used_agent, metric.used_cli, usedCopilotCloudAgent);
 
-    accumulateEngagement(engagementAccumulator, date, userId);
-
-    ensureImpactDates(impactAccumulator, date);
+    accumulateEngagementAdoptionAggregation(
+      engagementAdoptionAggregationAccumulator,
+      metric,
+      usedCopilotCloudAgent
+    );
+    accumulateImpactAggregation(impactAggregationAccumulator, metric);
     accumulateClientAggregation(
       clientAggregationAccumulator,
       statsAccumulator,
@@ -296,45 +265,7 @@ export function aggregateMetrics(
       statsAccumulator,
       metric
     );
-
-    const featureImpacts: FeatureImpactInput[] = [];
-
-    accumulateCliAdoption(featureAdoptionAccumulator, userId, metric.used_cli);
-    accumulateCodingAgentAdoption(featureAdoptionAccumulator, userId, usedCopilotCloudAgent);
-    accumulateCodeReviewAdoption(
-      featureAdoptionAccumulator,
-      userId,
-      (metric.used_copilot_code_review_active ?? false) || (metric.used_copilot_code_review_passive ?? false)
-    );
-    accumulateCloudAgentAdoption(advancedAdoptionAccumulator, date, userId, usedCopilotCloudAgent);
-    accumulateCodeReviewAdoptionSignal(
-      advancedAdoptionAccumulator,
-      date,
-      userId,
-      metric.used_copilot_code_review_active ?? false,
-      metric.used_copilot_code_review_passive ?? false
-    );
-    for (const feature of metric.totals_by_feature) {
-      accumulateFeatureAdoption(
-        featureAdoptionAccumulator,
-        userId,
-        feature.feature,
-        feature.user_initiated_interaction_count,
-        feature.code_generation_activity_count
-      );
-
-      accumulateChatFeature(
-        chatAccumulator,
-        date,
-        userId,
-        feature.feature,
-        feature.user_initiated_interaction_count
-      );
-
-      featureImpacts.push(createFeatureImpactInput(feature));
-    }
-
-    accumulateFeatureImpacts(impactAccumulator, date, userId, featureImpacts);
+    accumulateModelFeatureSignals(modelAggregationAccumulator, metric);
   }
   const userSummaries = computeUserSummaries(userSummaryAccumulator);
   const languageAggregation = finalizeLanguageAggregation(
@@ -348,25 +279,34 @@ export function aggregateMetrics(
   const cliUsage = getCliUsageForDownstreamCalculations(
     cliAggregationAccumulator
   );
+  const engagementAdoptionAggregation =
+    finalizeEngagementAdoptionAggregation(
+      engagementAdoptionAggregationAccumulator,
+      cliUsage
+    );
+  const impactAggregation = finalizeImpactAggregation(
+    impactAggregationAccumulator
+  );
+  const aiAggregation = finalizeAiAggregation(aiAggregationAccumulator);
 
   return {
     aggregated: {
       stats: computeStats(statsAccumulator, filteredMetricsCount),
       userSummaries,
-      engagementData: computeEngagementData(engagementAccumulator, cliUsage),
-      chatUsersData: computeChatUsersData(chatAccumulator, cliUsage),
-      chatRequestsData: computeChatRequestsData(chatAccumulator, cliUsage),
+      engagementData: engagementAdoptionAggregation.engagementData,
+      chatUsersData: engagementAdoptionAggregation.chatUsersData,
+      chatRequestsData: engagementAdoptionAggregation.chatRequestsData,
       languageStats: languageAggregation.languageStats,
       modelUsageData: modelAggregation.modelUsageData,
-      featureAdoptionData: computeFeatureAdoptionData(featureAdoptionAccumulator),
+      featureAdoptionData: engagementAdoptionAggregation.featureAdoptionData,
       agentModeHeatmapData: modelAggregation.agentModeHeatmapData,
-      agentImpactData: computeAgentImpactData(impactAccumulator),
-      codeCompletionImpactData: computeCodeCompletionImpactData(impactAccumulator),
-      editModeImpactData: computeEditModeImpactData(impactAccumulator),
-      inlineModeImpactData: computeInlineModeImpactData(impactAccumulator),
-      askModeImpactData: computeAskModeImpactData(impactAccumulator),
-      cliImpactData: computeCliImpactData(impactAccumulator),
-      joinedImpactData: computeJoinedImpactData(impactAccumulator),
+      agentImpactData: impactAggregation.agentImpactData,
+      codeCompletionImpactData: impactAggregation.codeCompletionImpactData,
+      editModeImpactData: impactAggregation.editModeImpactData,
+      inlineModeImpactData: impactAggregation.inlineModeImpactData,
+      askModeImpactData: impactAggregation.askModeImpactData,
+      cliImpactData: impactAggregation.cliImpactData,
+      joinedImpactData: impactAggregation.joinedImpactData,
       ideStats: clientAggregation.ideStats,
       multiIDEUsersCount: clientAggregation.multiIDEUsersCount,
       totalUniqueIDEUsers: clientAggregation.totalUniqueIDEUsers,
@@ -379,12 +319,14 @@ export function aggregateMetrics(
       dailyCliSessionData: cliAggregation.dailyCliSessionData,
       dailyCliTokenData: cliAggregation.dailyCliTokenData,
       dailyCliAdoptionTrend: cliAggregation.dailyCliAdoptionTrend,
-      dailyAdoptionTrend: computeAdoptionTrend(engagementAccumulator, cliUsage),
-      dailyCloudAgentAdoptionData: computeDailyCloudAgentAdoptionData(advancedAdoptionAccumulator),
-      dailyCodeReviewAdoptionData: computeDailyCodeReviewAdoptionData(advancedAdoptionAccumulator),
-      aiAdoptionPhaseData: computeAiAdoptionPhaseData(aiAdoptionPhaseAccumulator),
-      usageDistributionData: computeUsageDistributionData(aiAdoptionPhaseAccumulator),
-      dailyAiCreditsData: computeDailyAiCreditsData(aiCreditsAccumulator),
+      dailyAdoptionTrend: engagementAdoptionAggregation.dailyAdoptionTrend,
+      dailyCloudAgentAdoptionData:
+        engagementAdoptionAggregation.dailyCloudAgentAdoptionData,
+      dailyCodeReviewAdoptionData:
+        engagementAdoptionAggregation.dailyCodeReviewAdoptionData,
+      aiAdoptionPhaseData: aiAggregation.aiAdoptionPhaseData,
+      usageDistributionData: aiAggregation.usageDistributionData,
+      dailyAiCreditsData: aiAggregation.dailyAiCreditsData,
     },
     userDetailAccumulator,
   };
