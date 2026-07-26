@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { CliMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateCliUsage,
@@ -15,10 +15,7 @@ export interface CliAggregationAccumulator {
   usage: CliUsageAccumulator;
 }
 
-export type CliAggregationResult = Pick<
-  AggregatedMetrics,
-  'dailyCliSessionData' | 'dailyCliTokenData' | 'dailyCliAdoptionTrend'
->;
+export type CliAggregationResult = CliMetricsSlice;
 
 export function createCliAggregationAccumulator(): CliAggregationAccumulator {
   return {

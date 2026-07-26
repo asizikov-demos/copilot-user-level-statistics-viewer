@@ -1,11 +1,11 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface AiCreditsReadModel {
-  reportStartDay: AggregatedMetrics['stats']['reportStartDay'];
-  reportEndDay: AggregatedMetrics['stats']['reportEndDay'];
-  dailyAiCreditsData: AggregatedMetrics['dailyAiCreditsData'];
-  userSummaries: AggregatedMetrics['userSummaries'];
-  usageDistributionData: AggregatedMetrics['usageDistributionData'];
+  reportStartDay: AggregatedMetrics['overview']['stats']['reportStartDay'];
+  reportEndDay: AggregatedMetrics['overview']['stats']['reportEndDay'];
+  dailyAiCreditsData: AggregatedMetrics['ai']['dailyAiCreditsData'];
+  userSummaries: AggregatedMetrics['users']['userSummaries'];
+  usageDistributionData: AggregatedMetrics['ai']['usageDistributionData'];
   totalAiCreditsUsed: number;
   onUserClick: (userLogin: string, userId: number) => void;
 }
@@ -16,10 +16,9 @@ export function selectAiCreditsReadModel(
 ): AiCreditsReadModel {
   const {
     stats: { reportStartDay, reportEndDay },
-    dailyAiCreditsData = [],
-    userSummaries,
-    usageDistributionData = [],
-  } = metrics;
+  } = metrics.overview;
+  const { userSummaries } = metrics.users;
+  const { dailyAiCreditsData = [], usageDistributionData = [] } = metrics.ai;
 
   return {
     reportStartDay,

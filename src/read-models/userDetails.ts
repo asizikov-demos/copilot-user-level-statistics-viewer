@@ -36,7 +36,7 @@ export function selectUserDetailsRouteReadModel(
     return { status: 'pending', selectedUser };
   }
 
-  const userSummary = metrics.userSummaries.find(
+  const userSummary = metrics.users.userSummaries.find(
     (summary) => summary.user_id === selectedUser.id
   );
   if (!userSummary) {

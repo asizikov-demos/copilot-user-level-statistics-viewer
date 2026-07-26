@@ -6,11 +6,13 @@ import {
   createCoreStatsAggregationAccumulator,
   finalizeCoreStatsAggregation,
   getStatsAccumulatorForDimensions,
+  type CoreStatsAggregationResult,
 } from './aggregation/coreStatsAggregation';
 import {
   accumulateUserSummaryAggregation,
   createUserSummaryAggregationAccumulator,
   finalizeUserSummaryAggregation,
+  type UserSummaryAggregationResult,
 } from './aggregation/userSummaryAggregation';
 import {
   accumulateUserDetailAggregation,
@@ -22,39 +24,99 @@ import {
   accumulateClientAggregation,
   createClientAggregationAccumulator,
   finalizeClientAggregation,
+  type ClientAggregationResult,
 } from './aggregation/clientAggregation';
 import {
   accumulateCliAggregation,
   createCliAggregationAccumulator,
   finalizeCliAggregation,
   getCliUsageForDownstreamCalculations,
+  type CliAggregationResult,
 } from './aggregation/cliAggregation';
 import {
   accumulateLanguageAggregation,
   createLanguageAggregationAccumulator,
   finalizeLanguageAggregation,
+  type LanguageAggregationResult,
 } from './aggregation/languageAggregation';
 import {
   accumulateModelAggregation,
   accumulateModelFeatureSignals,
   createModelAggregationAccumulator,
   finalizeModelAggregation,
+  type ModelAggregationResult,
 } from './aggregation/modelAggregation';
 import {
   accumulateEngagementAdoptionAggregation,
   createEngagementAdoptionAggregationAccumulator,
   finalizeEngagementAdoptionAggregation,
+  type EngagementAdoptionAggregationResult,
 } from './aggregation/engagementAdoptionAggregation';
 import {
   accumulateImpactAggregation,
   createImpactAggregationAccumulator,
   finalizeImpactAggregation,
+  type ImpactAggregationResult,
 } from './aggregation/impactAggregation';
 import {
   accumulateAiAggregation,
   createAiAggregationAccumulator,
   finalizeAiAggregation,
+  type AiAggregationResult,
 } from './aggregation/aiAggregation';
+
+interface FinalizedAggregationResults {
+  coreStatsAggregation: CoreStatsAggregationResult;
+  userSummaryAggregation: UserSummaryAggregationResult;
+  engagementAdoptionAggregation: EngagementAdoptionAggregationResult;
+  impactAggregation: ImpactAggregationResult;
+  languageAggregation: LanguageAggregationResult;
+  clientAggregation: ClientAggregationResult;
+  modelAggregation: ModelAggregationResult;
+  cliAggregation: CliAggregationResult;
+  aiAggregation: AiAggregationResult;
+}
+
+export function assembleAggregatedMetrics({
+  coreStatsAggregation,
+  userSummaryAggregation,
+  engagementAdoptionAggregation,
+  impactAggregation,
+  languageAggregation,
+  clientAggregation,
+  modelAggregation,
+  cliAggregation,
+  aiAggregation,
+}: FinalizedAggregationResults): AggregatedMetrics {
+  return {
+    overview: {
+      stats: coreStatsAggregation.stats,
+      engagementData: engagementAdoptionAggregation.engagementData,
+      chatUsersData: engagementAdoptionAggregation.chatUsersData,
+      chatRequestsData: engagementAdoptionAggregation.chatRequestsData,
+    },
+    users: userSummaryAggregation,
+    adoption: {
+      featureAdoptionData: engagementAdoptionAggregation.featureAdoptionData,
+      agentModeHeatmapData: modelAggregation.agentModeHeatmapData,
+      dailyAdoptionTrend: engagementAdoptionAggregation.dailyAdoptionTrend,
+      dailyCloudAgentAdoptionData:
+        engagementAdoptionAggregation.dailyCloudAgentAdoptionData,
+      dailyCodeReviewAdoptionData:
+        engagementAdoptionAggregation.dailyCodeReviewAdoptionData,
+    },
+    impact: impactAggregation,
+    languages: languageAggregation,
+    clients: clientAggregation,
+    models: {
+      modelUsageData: modelAggregation.modelUsageData,
+      modelBreakdownData: modelAggregation.modelBreakdownData,
+    },
+    cli: cliAggregation,
+    ai: aiAggregation,
+  };
+}
+
 export function aggregateMetrics(
   metrics: CopilotMetrics[]
 ): { aggregated: AggregatedMetrics; userDetailAccumulator: UserDetailAccumulator } {
@@ -151,44 +213,17 @@ export function aggregateMetrics(
   const aiAggregation = finalizeAiAggregation(aiAggregationAccumulator);
 
   return {
-    aggregated: {
-      stats: coreStatsAggregation.stats,
-      userSummaries: userSummaryAggregation.userSummaries,
-      engagementData: engagementAdoptionAggregation.engagementData,
-      chatUsersData: engagementAdoptionAggregation.chatUsersData,
-      chatRequestsData: engagementAdoptionAggregation.chatRequestsData,
-      languageStats: languageAggregation.languageStats,
-      modelUsageData: modelAggregation.modelUsageData,
-      featureAdoptionData: engagementAdoptionAggregation.featureAdoptionData,
-      agentModeHeatmapData: modelAggregation.agentModeHeatmapData,
-      agentImpactData: impactAggregation.agentImpactData,
-      codeCompletionImpactData: impactAggregation.codeCompletionImpactData,
-      editModeImpactData: impactAggregation.editModeImpactData,
-      inlineModeImpactData: impactAggregation.inlineModeImpactData,
-      askModeImpactData: impactAggregation.askModeImpactData,
-      cliImpactData: impactAggregation.cliImpactData,
-      joinedImpactData: impactAggregation.joinedImpactData,
-      ideStats: clientAggregation.ideStats,
-      multiIDEUsersCount: clientAggregation.multiIDEUsersCount,
-      totalUniqueIDEUsers: clientAggregation.totalUniqueIDEUsers,
-      pluginVersionData: clientAggregation.pluginVersionData,
-      languageFeatureImpactData: languageAggregation.languageFeatureImpactData,
-      dailyLanguageGenerationsData:
-        languageAggregation.dailyLanguageGenerationsData,
-      dailyLanguageLocData: languageAggregation.dailyLanguageLocData,
-      modelBreakdownData: modelAggregation.modelBreakdownData,
-      dailyCliSessionData: cliAggregation.dailyCliSessionData,
-      dailyCliTokenData: cliAggregation.dailyCliTokenData,
-      dailyCliAdoptionTrend: cliAggregation.dailyCliAdoptionTrend,
-      dailyAdoptionTrend: engagementAdoptionAggregation.dailyAdoptionTrend,
-      dailyCloudAgentAdoptionData:
-        engagementAdoptionAggregation.dailyCloudAgentAdoptionData,
-      dailyCodeReviewAdoptionData:
-        engagementAdoptionAggregation.dailyCodeReviewAdoptionData,
-      aiAdoptionPhaseData: aiAggregation.aiAdoptionPhaseData,
-      usageDistributionData: aiAggregation.usageDistributionData,
-      dailyAiCreditsData: aiAggregation.dailyAiCreditsData,
-    },
+    aggregated: assembleAggregatedMetrics({
+      coreStatsAggregation,
+      userSummaryAggregation,
+      engagementAdoptionAggregation,
+      impactAggregation,
+      languageAggregation,
+      clientAggregation,
+      modelAggregation,
+      cliAggregation,
+      aiAggregation,
+    }),
     userDetailAccumulator,
   };
 }

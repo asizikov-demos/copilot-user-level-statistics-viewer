@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { OverviewMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateUserUsage,
@@ -12,7 +12,7 @@ export interface CoreStatsAggregationAccumulator {
   filteredMetricsCount: number;
 }
 
-export type CoreStatsAggregationResult = Pick<AggregatedMetrics, 'stats'>;
+export type CoreStatsAggregationResult = Pick<OverviewMetricsSlice, 'stats'>;
 
 export function createCoreStatsAggregationAccumulator(
 ): CoreStatsAggregationAccumulator {

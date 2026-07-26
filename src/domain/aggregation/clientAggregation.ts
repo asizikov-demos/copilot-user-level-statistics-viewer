@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { ClientsMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateIDEStats,
@@ -23,13 +23,7 @@ export interface ClientAggregationAccumulator {
   pluginVersions: PluginVersionAccumulator;
 }
 
-export type ClientAggregationResult = Pick<
-  AggregatedMetrics,
-  | 'ideStats'
-  | 'multiIDEUsersCount'
-  | 'totalUniqueIDEUsers'
-  | 'pluginVersionData'
->;
+export type ClientAggregationResult = ClientsMetricsSlice;
 
 export function createClientAggregationAccumulator(): ClientAggregationAccumulator {
   return {

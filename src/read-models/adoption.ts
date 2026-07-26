@@ -1,23 +1,23 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface CopilotAdoptionReadModel {
-  featureAdoptionData: AggregatedMetrics['featureAdoptionData'];
-  agentModeHeatmapData: AggregatedMetrics['agentModeHeatmapData'];
-  stats: AggregatedMetrics['stats'];
-  dailyAdoptionTrend: AggregatedMetrics['dailyAdoptionTrend'];
-  dailyCloudAgentAdoptionData: AggregatedMetrics['dailyCloudAgentAdoptionData'];
-  dailyCodeReviewAdoptionData: AggregatedMetrics['dailyCodeReviewAdoptionData'];
+  featureAdoptionData: AggregatedMetrics['adoption']['featureAdoptionData'];
+  agentModeHeatmapData: AggregatedMetrics['adoption']['agentModeHeatmapData'];
+  stats: AggregatedMetrics['overview']['stats'];
+  dailyAdoptionTrend: AggregatedMetrics['adoption']['dailyAdoptionTrend'];
+  dailyCloudAgentAdoptionData: AggregatedMetrics['adoption']['dailyCloudAgentAdoptionData'];
+  dailyCodeReviewAdoptionData: AggregatedMetrics['adoption']['dailyCodeReviewAdoptionData'];
 }
 
 export function selectCopilotAdoptionReadModel(
   metrics: AggregatedMetrics
 ): CopilotAdoptionReadModel {
   return {
-    featureAdoptionData: metrics.featureAdoptionData,
-    agentModeHeatmapData: metrics.agentModeHeatmapData,
-    stats: metrics.stats,
-    dailyAdoptionTrend: metrics.dailyAdoptionTrend,
-    dailyCloudAgentAdoptionData: metrics.dailyCloudAgentAdoptionData,
-    dailyCodeReviewAdoptionData: metrics.dailyCodeReviewAdoptionData,
+    featureAdoptionData: metrics.adoption.featureAdoptionData,
+    agentModeHeatmapData: metrics.adoption.agentModeHeatmapData,
+    stats: metrics.overview.stats,
+    dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
+    dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,
+    dailyCodeReviewAdoptionData: metrics.adoption.dailyCodeReviewAdoptionData,
   };
 }

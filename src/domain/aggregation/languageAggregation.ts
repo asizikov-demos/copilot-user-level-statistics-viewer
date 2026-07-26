@@ -1,4 +1,4 @@
-import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
+import type { LanguagesMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
   accumulateLanguageFeatureImpact,
@@ -24,13 +24,7 @@ export interface LanguageAggregationAccumulator {
   featureImpact: LanguageFeatureImpactAccumulator;
 }
 
-export type LanguageAggregationResult = Pick<
-  AggregatedMetrics,
-  | 'languageStats'
-  | 'languageFeatureImpactData'
-  | 'dailyLanguageGenerationsData'
-  | 'dailyLanguageLocData'
->;
+export type LanguageAggregationResult = LanguagesMetricsSlice;
 
 export function createLanguageAggregationAccumulator(): LanguageAggregationAccumulator {
   return {

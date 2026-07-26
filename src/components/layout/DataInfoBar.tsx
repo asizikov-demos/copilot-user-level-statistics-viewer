@@ -8,7 +8,7 @@ const DataInfoBar: React.FC = () => {
 
   if (!aggregatedMetrics) return null;
 
-  const { reportStartDay, reportEndDay } = aggregatedMetrics.stats;
+  const { reportStartDay, reportEndDay } = aggregatedMetrics.overview.stats;
 
   return (
     <div className="fixed top-16 left-0 right-0 z-30 hidden h-9 items-center border-b border-[#d1d9e0] bg-[#f6f8fa] print:hidden lg:flex">

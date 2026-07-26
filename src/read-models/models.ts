@@ -1,13 +1,13 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface ModelDetailsReadModel {
-  allModels: AggregatedMetrics['modelBreakdownData']['allModels'];
-  modelCategories: AggregatedMetrics['modelBreakdownData']['modelCategories'];
-  autoModels: NonNullable<AggregatedMetrics['modelBreakdownData']['autoModels']>;
+  allModels: AggregatedMetrics['models']['modelBreakdownData']['allModels'];
+  modelCategories: AggregatedMetrics['models']['modelBreakdownData']['modelCategories'];
+  autoModels: NonNullable<AggregatedMetrics['models']['modelBreakdownData']['autoModels']>;
   autoModeAdoptionTrend: NonNullable<
-    AggregatedMetrics['modelBreakdownData']['autoModeAdoptionTrend']
+    AggregatedMetrics['models']['modelBreakdownData']['autoModeAdoptionTrend']
   >;
-  dates: AggregatedMetrics['modelBreakdownData']['dates'];
+  dates: AggregatedMetrics['models']['modelBreakdownData']['dates'];
   modelTotal: number;
   autoTotal: number;
 }
@@ -22,7 +22,7 @@ export function selectModelDetailsReadModel(
     autoModeAdoptionTrend = [],
     dates,
     modelTotal,
-  } = metrics.modelBreakdownData;
+  } = metrics.models.modelBreakdownData;
 
   return {
     allModels,

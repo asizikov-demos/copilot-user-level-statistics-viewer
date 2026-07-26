@@ -30,16 +30,26 @@ import type {
   DailyAiCreditsData,
 } from '../domain/calculators';
 
-export interface AggregatedMetrics {
+export interface OverviewMetricsSlice {
   stats: MetricsStats;
-  userSummaries: UserSummary[];
   engagementData: DailyEngagementData[];
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
-  languageStats: LanguageStats[];
-  modelUsageData: DailyModelUsageData[];
+}
+
+export interface UsersMetricsSlice {
+  userSummaries: UserSummary[];
+}
+
+export interface AdoptionMetricsSlice {
   featureAdoptionData: FeatureAdoptionData;
   agentModeHeatmapData: AgentModeHeatmapData[];
+  dailyAdoptionTrend: DailyAdoptionTrend[];
+  dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
+  dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
+}
+
+export interface ImpactMetricsSlice {
   agentImpactData: AgentImpactData[];
   codeCompletionImpactData: CodeCompletionImpactData[];
   editModeImpactData: ModeImpactData[];
@@ -47,23 +57,49 @@ export interface AggregatedMetrics {
   askModeImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
+}
+
+export interface LanguagesMetricsSlice {
+  languageStats: LanguageStats[];
+  languageFeatureImpactData: LanguageFeatureImpactData;
+  dailyLanguageGenerationsData: DailyLanguageChartData;
+  dailyLanguageLocData: DailyLanguageChartData;
+}
+
+export interface ClientsMetricsSlice {
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
   pluginVersionData: PluginVersionAnalysisData;
-  languageFeatureImpactData: LanguageFeatureImpactData;
-  dailyLanguageGenerationsData: DailyLanguageChartData;
-  dailyLanguageLocData: DailyLanguageChartData;
+}
+
+export interface ModelsMetricsSlice {
+  modelUsageData: DailyModelUsageData[];
   modelBreakdownData: ModelBreakdownData;
+}
+
+export interface CliMetricsSlice {
   dailyCliSessionData: DailyCliSessionData[];
   dailyCliTokenData: DailyCliTokenData[];
   dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
-  dailyAdoptionTrend: DailyAdoptionTrend[];
-  dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
-  dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
+}
+
+export interface AiMetricsSlice {
   aiAdoptionPhaseData: AiAdoptionPhaseData[];
   usageDistributionData: UsageDistributionBucket[];
   dailyAiCreditsData: DailyAiCreditsData[];
+}
+
+export interface AggregatedMetrics {
+  overview: OverviewMetricsSlice;
+  users: UsersMetricsSlice;
+  adoption: AdoptionMetricsSlice;
+  impact: ImpactMetricsSlice;
+  languages: LanguagesMetricsSlice;
+  clients: ClientsMetricsSlice;
+  models: ModelsMetricsSlice;
+  cli: CliMetricsSlice;
+  ai: AiMetricsSlice;
 }
 
 export interface UserDetailedMetrics {
