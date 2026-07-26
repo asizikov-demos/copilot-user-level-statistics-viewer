@@ -8,31 +8,23 @@ import CLISessionChart from './charts/CLISessionChart';
 import CLITokensChart from './charts/CLITokensChart';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import { CLI_ADOPTION_SECTIONS } from './layout/contextSections';
-import type { MetricsStats, ModelDailyUsageEntry } from '../types/metrics';
-import type { DailyCliSessionData, DailyCliTokenData, DailyCliAdoptionTrend } from '../domain/calculators/metricCalculators';
+import type { CliAdoptionReadModel } from '../read-models/cliAdoption';
+
 interface CLIAdoptionViewProps {
-  stats: MetricsStats;
-  dailyCliSessionData: DailyCliSessionData[];
-  dailyCliTokenData: DailyCliTokenData[];
-  dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
-  cliModelEntries: ModelDailyUsageEntry[];
-  cliModelDates: string[];
-  cliModelTotal: number;
+  model: CliAdoptionReadModel;
 }
 
-export default function CLIAdoptionView({
-  stats,
-  dailyCliSessionData,
-  dailyCliTokenData,
-  dailyCliAdoptionTrend,
-  cliModelEntries,
-  cliModelDates,
-  cliModelTotal,
-}: CLIAdoptionViewProps) {
-  const cliShare = stats.uniqueUsers > 0
-    ? Math.round((stats.cliUsers / stats.uniqueUsers) * 1000) / 10
-    : 0;
-
+export default function CLIAdoptionView({ model }: CLIAdoptionViewProps) {
+  const {
+    stats,
+    dailyCliSessionData,
+    dailyCliTokenData,
+    dailyCliAdoptionTrend,
+    cliModelEntries,
+    cliModelDates,
+    cliModelTotal,
+    cliShare,
+  } = model;
   const [trendSection, usersSection, sessionsSection, tokensSection, modelsSection] = CLI_ADOPTION_SECTIONS;
 
   return (
