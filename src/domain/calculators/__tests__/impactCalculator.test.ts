@@ -176,7 +176,6 @@ describe('impactCalculator', () => {
         totals_by_feature: [
           {
             feature: 'code_completion',
-            loc_added_sum: undefined as unknown as number,
             loc_deleted_sum: 5,
           },
         ],

@@ -74,7 +74,6 @@ export {
   type ModeImpactData,
   type ImpactAccumulator,
   type FeatureImpactInput,
-  type FeatureImpactSource,
   createImpactAccumulator,
   ensureImpactDates,
   accumulateFeatureImpacts,

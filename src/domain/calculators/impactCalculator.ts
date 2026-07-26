@@ -86,11 +86,11 @@ export interface FeatureImpactInput {
 
 interface FeatureImpactSourceEntry {
   feature: string;
-  loc_added_sum: number;
-  loc_deleted_sum: number;
+  loc_added_sum?: number;
+  loc_deleted_sum?: number;
 }
 
-export interface FeatureImpactSource {
+interface FeatureImpactSource {
   totals_by_feature: FeatureImpactSourceEntry[];
 }
 
