@@ -107,11 +107,11 @@ flowchart LR
 
 ### 4.2. Aggregation
 
-`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Language, model, client, CLI, engagement/adoption, impact, and AI orchestration own their accumulator creation, per-record consumption, and narrow finalization. Language, model, and client families update the parent-owned stats accumulator where their dimensions contribute to global statistics. The client family also owns exact `used_cli` participation in IDE overlap statistics and plugin-version grouping while iterating every reported IDE total.
+`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Core stats, user summaries, user detail, language, model, client, CLI, engagement/adoption, impact, and AI orchestration each own accumulator creation, per-record consumption, and narrow finalization. The core-stats lifecycle owns first-record report metadata, filtered-record counting, and per-user usage signals while exposing its stats accumulator explicitly to the language, model, and client families for their dimension-specific contributions. The user-detail lifecycle returns the same compact calculator accumulator retained by the worker for on-demand requests.
 
-CLI usage is accumulated once by the CLI family, including zero-filled dates. Its narrow, read-only daily-session dependency is consumed by engagement/adoption finalization so engagement, chat, and adoption retain CLI users and sessions without duplicating accumulation or exposing token internals. Model aggregation retains ownership of agent heatmap state through an explicit feature-signal entry point while the engagement/adoption and impact families independently consume the feature fields required by their calculators. Every family result still maps into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged.
+The coordinator resolves the Copilot Cloud Agent compatibility signal exactly once per raw record and passes that boolean to core stats, user summaries, user detail, and engagement/adoption. CLI usage is accumulated once by the CLI family, including zero-filled dates. Its narrow, read-only daily-session dependency is consumed by engagement/adoption finalization so engagement, chat, and adoption retain CLI users and sessions without duplicating accumulation or exposing token internals. Model aggregation retains ownership of agent heatmap state through an explicit feature-signal entry point while the engagement/adoption and impact families independently consume the feature fields required by their calculators.
 
-Phase 5 modular aggregation orchestration now covers language, model, client/plugin-version, CLI, engagement/chat/feature adoption, advanced adoption, impact, AI adoption phases, usage distribution, and AI credits. Core statistics, user summaries, and user-detail orchestration remain in the top-level coordinator for the final Phase 5 slice.
+Phase 5 modular aggregation orchestration is complete. The top-level coordinator deliberately retains only accumulator wiring, one raw-record loop, shared-signal resolution, narrow cross-family dependencies, finalization, and ordered assembly. Every family result still maps into the same flat `AggregatedMetrics` object declared in `src/types/aggregatedMetrics.ts`, so the worker protocol and UI payload remain unchanged. The payload remains flat until the planned Phase 8 contract migration.
 
 ### 4.3. Views
 
@@ -164,7 +164,6 @@ flowchart TB
 	WT --> MA
 	MA --> AGG
 	AGG --> CALC
-	MA --> CALC
 	CALC --> MConf
 
 	MC --> VR
