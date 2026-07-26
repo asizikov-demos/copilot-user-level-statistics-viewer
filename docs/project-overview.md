@@ -70,18 +70,20 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 ```mermaid
 flowchart LR
   A[User uploads .ndjson file] --> B[useFileUpload hook]
-  B -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
-  W -->|parseAndAggregateResult| C[MetricsContext stores AggregatedMetrics + warnings]
-  C --> D[ViewRouter renders current view]
-  D --> E[Chart components]
+  B --> C[MetricsWorkerProvider-owned client]
+  C -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
+  W -->|parseAndAggregateResult| D[MetricsContext stores AggregatedMetrics + warnings]
+  D --> E[ViewRouter renders current view]
+  E --> F[Chart components]
 ```
 
 ### 4.1. Upload and Parsing
 
-1. `useFileUpload` validates file extension and sends files to the worker via `parseAndAggregateInWorker()`
+1. `useFileUpload` validates file extensions and requests parsing through the typed worker client exposed by `MetricsWorkerProvider`
 2. The worker streams each file through `src/infra/metricsFileParser.ts` using the `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
 3. Records using deprecated LOC fields or missing required fields are skipped
 4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). Raw records remain off the main thread.
+5. `MetricsWorkerProvider` is the application-level lifecycle owner. Its client creates the browser Worker lazily, correlates requests and progress responses, cancels pending work on reusable resets, and permanently disposes the Worker when the provider unmounts.
 
 ### 4.2. Aggregation
 
@@ -104,6 +106,7 @@ flowchart TB
 		L[layout.tsx] --> P[providers.tsx]
 		P --> H[page.tsx]
 		H --> VR[ViewRouter]
+		P --> MWP[MetricsWorkerProvider]
 	end
 
 	subgraph State
@@ -119,13 +122,17 @@ flowchart TB
 	end
 
 	subgraph WorkerBridge
+		MWC[MetricsWorkerContext.tsx]
 		WC[metricsWorkerClient.ts]
 		WT[metricsWorker.ts]
 	end
 
 	VR --> Views[View Components + Charts]
 
-	UFU[useFileUpload] --> WC
+	MWP --> MWC
+	MWC --> WC
+	UFU[useFileUpload] --> MWC
+	VR -->|user detail requests| MWC
 	WC -->|postMessage| WT
 	WT --> MFP
 	WT --> MA
