@@ -64,7 +64,12 @@ export function accumulateModelAggregation(
       modelFeature
     );
   }
+}
 
+export function accumulateModelFeatureSignals(
+  accumulator: ModelAggregationAccumulator,
+  metric: CopilotMetrics
+): void {
   for (const feature of metric.totals_by_feature) {
     accumulateAgentHeatmapFromFeature(
       accumulator.usage,

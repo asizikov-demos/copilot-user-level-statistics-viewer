@@ -6,6 +6,7 @@ import {
 } from '../../calculators/statsCalculator';
 import {
   accumulateModelAggregation,
+  accumulateModelFeatureSignals,
   createModelAggregationAccumulator,
   finalizeModelAggregation,
 } from '../modelAggregation';
@@ -110,7 +111,9 @@ describe('model aggregation orchestration', () => {
     });
 
     accumulateModelAggregation(accumulator, statsAccumulator, laterMetric);
+    accumulateModelFeatureSignals(accumulator, laterMetric);
     accumulateModelAggregation(accumulator, statsAccumulator, earlierMetric);
+    accumulateModelFeatureSignals(accumulator, earlierMetric);
 
     const result = finalizeModelAggregation(accumulator);
     expect(computeStats(statsAccumulator, 2).topModel).toEqual({
@@ -162,6 +165,40 @@ describe('model aggregation orchestration', () => {
         model: 'unknown',
         total: 3,
         dailyData: { '2024-01-16': 3 },
+      },
+    ]);
+  });
+
+  it('keeps feature-signal accumulation explicit while retaining model heatmap ownership', () => {
+    const statsAccumulator = createStatsAccumulator();
+    const accumulator = createModelAggregationAccumulator();
+    const metric = makeMetric({
+      day: '2024-01-15',
+      user_id: 1,
+      totals_by_feature: [
+        {
+          feature: 'chat_panel_agent_mode',
+          user_initiated_interaction_count: 3,
+          code_generation_activity_count: 0,
+          code_acceptance_activity_count: 0,
+          loc_added_sum: 0,
+          loc_deleted_sum: 0,
+          loc_suggested_to_add_sum: 0,
+          loc_suggested_to_delete_sum: 0,
+        },
+      ],
+    });
+
+    accumulateModelAggregation(accumulator, statsAccumulator, metric);
+    expect(finalizeModelAggregation(accumulator).agentModeHeatmapData).toEqual([]);
+
+    accumulateModelFeatureSignals(accumulator, metric);
+    expect(finalizeModelAggregation(accumulator).agentModeHeatmapData).toEqual([
+      {
+        date: '2024-01-15',
+        agentModeRequests: 3,
+        uniqueUsers: 1,
+        intensity: 5,
       },
     ]);
   });
