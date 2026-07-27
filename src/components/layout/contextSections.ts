@@ -1,4 +1,5 @@
 import { VIEW_MODES, type ViewMode } from '../../types/navigation';
+import { LANGUAGES_SECTIONS } from '../features/languages/languagesSections';
 import { OVERVIEW_SECTIONS } from '../features/overview/overviewSections';
 import { USER_DETAILS_SECTIONS } from '../features/user-details/userDetailsSections';
 
@@ -41,14 +42,6 @@ export const COPILOT_ADOPTION_SECTIONS: ContextSection[] = [
 export const AI_ADOPTION_PHASE_SECTIONS: ContextSection[] = [
   { id: 'ai-adoption-phase-comparison', label: 'Phase Comparison' },
   { id: 'ai-adoption-phase-assignment', label: 'How Phases Are Assigned' },
-];
-
-export const LANGUAGES_SECTIONS: ContextSection[] = [
-  { id: 'languages-summary', label: 'Summary' },
-  { id: 'languages-daily-charts', label: 'Daily Language Charts' },
-  { id: 'languages-top-lists', label: 'Top Language Lists' },
-  { id: 'languages-net-impact', label: 'Net Productivity Impact' },
-  { id: 'languages-complete-breakdown', label: 'Complete Breakdown' },
 ];
 
 export const CLIENT_VERSIONS_SECTIONS: ContextSection[] = [

@@ -8,6 +8,7 @@ import type {
   ExecutiveSummaryReadModel,
   OverviewReadModel,
 } from '../../../../read-models/overview';
+import type { LanguagesReadModel } from '../../../../read-models/languages';
 import type { UsersReadModel } from '../../../../read-models/users';
 import type { AggregatedMetrics } from '../../../../types/aggregatedMetrics';
 import { VIEW_MODES } from '../../../../types/navigation';
@@ -49,6 +50,8 @@ const mocks = vi.hoisted(() => ({
   >(),
   selectClientVersionsReadModel:
     vi.fn<(metrics: AggregatedMetrics) => ClientVersionsReadModel>(),
+  selectLanguagesReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => LanguagesReadModel>(),
   overviewView:
     vi.fn<
       (props: {
@@ -66,6 +69,8 @@ const mocks = vi.hoisted(() => ({
   aiCreditsView: vi.fn<(props: { model: AiCreditsReadModel }) => void>(),
   clientVersionsView:
     vi.fn<(props: { model: ClientVersionsReadModel }) => void>(),
+  languagesView:
+    vi.fn<(props: { model: LanguagesReadModel }) => void>(),
   aboutView: vi.fn(),
 }));
 
@@ -90,9 +95,20 @@ vi.mock('../../../../read-models/clients', async (importOriginal) => {
   };
 });
 
+vi.mock('../../../../read-models/languages', () => ({
+  selectLanguagesReadModel: mocks.selectLanguagesReadModel,
+}));
+
 vi.mock('../../../features/client-versions', () => ({
   ClientVersionsView: (props: { model: ClientVersionsReadModel }) => {
     mocks.clientVersionsView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../features/languages', () => ({
+  LanguagesView: (props: { model: LanguagesReadModel }) => {
+    mocks.languagesView(props);
     return null;
   },
 }));
@@ -137,6 +153,7 @@ describe('standard route registry', () => {
   let usersModel: UsersReadModel;
   let aiCreditsModel: AiCreditsReadModel;
   let clientVersionsModel: ClientVersionsReadModel;
+  let languagesModel: LanguagesReadModel;
 
   beforeEach(() => {
     const aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -163,6 +180,12 @@ describe('standard route registry', () => {
       pluginVersionData: aggregatedMetrics.clients.pluginVersionData,
       reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
     };
+    languagesModel = {
+      languageStats: aggregatedMetrics.languages.languageStats,
+      languageFeatureImpactData: aggregatedMetrics.languages.languageFeatureImpactData,
+      dailyLanguageGenerationsData: aggregatedMetrics.languages.dailyLanguageGenerationsData,
+      dailyLanguageLocData: aggregatedMetrics.languages.dailyLanguageLocData,
+    };
     context = {
       aggregatedMetrics,
       enterpriseName: 'test-enterprise',
@@ -174,6 +197,7 @@ describe('standard route registry', () => {
     mocks.selectUsersReadModel.mockReturnValue(usersModel);
     mocks.selectAiCreditsReadModel.mockReturnValue(aiCreditsModel);
     mocks.selectClientVersionsReadModel.mockReturnValue(clientVersionsModel);
+    mocks.selectLanguagesReadModel.mockReturnValue(languagesModel);
   });
 
   it('covers every view mode except specialized user details', () => {
@@ -262,6 +286,22 @@ describe('standard route registry', () => {
     );
     expect(mocks.clientVersionsView).toHaveBeenCalledWith({
       model: clientVersionsModel,
+    });
+    expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectAiCreditsReadModel).not.toHaveBeenCalled();
+  });
+
+  it('selects and renders the feature-owned languages adapter', () => {
+    const LanguagesAdapter = resolveStandardRouteAdapter(VIEW_MODES.LANGUAGES);
+
+    renderToStaticMarkup(<LanguagesAdapter {...context} />);
+
+    expect(mocks.selectLanguagesReadModel).toHaveBeenCalledWith(
+      context.aggregatedMetrics
+    );
+    expect(mocks.languagesView).toHaveBeenCalledWith({
+      model: languagesModel,
     });
     expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
     expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();
