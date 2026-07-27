@@ -105,7 +105,7 @@ export class MetricsWorkerClient {
       this.handleMessage(event.data);
     };
     worker.onerror = (event) => {
-      this.handleWorkerError(worker, event.message);
+      this.handleWorkerError(worker, this.errorFromErrorEvent(event));
     };
     this.worker = worker;
     return worker;
@@ -172,10 +172,52 @@ export class MetricsWorkerClient {
     return new Error(`Unexpected response type '${responseType}' for '${requestKind}' request`);
   }
 
-  private handleWorkerError(failedWorker: MetricsWorkerPort, message: string): void {
+  private errorFromErrorEvent(event: ErrorEvent): Error {
+    if (event.error instanceof Error) {
+      return event.error;
+    }
+
+    const errorLike = this.errorLikeFromUnknown(event.error);
+    if (errorLike) {
+      return errorLike;
+    }
+
+    const message = event.message.trim();
+    const location = [
+      event.filename,
+      event.lineno > 0 ? event.lineno : null,
+      event.colno > 0 ? event.colno : null,
+    ].filter((value) => value !== null && value !== '').join(':');
+    const details = [message, location].filter((value) => value !== '').join(' at ');
+
+    return new Error(`Worker error: ${details || 'Unknown worker error'}`);
+  }
+
+  private errorLikeFromUnknown(value: unknown): Error | null {
+    if (typeof value !== 'object' || value === null) {
+      return null;
+    }
+
+    const record = value as Record<string, unknown>;
+    if (typeof record.message !== 'string' || record.message.trim() === '') {
+      return null;
+    }
+
+    const error = new Error(record.message, { cause: record.cause });
+    if (typeof record.name === 'string' && record.name.trim() !== '') {
+      error.name = record.name;
+    }
+    if (typeof record.stack === 'string' && record.stack.trim() !== '') {
+      error.stack = record.stack;
+    }
+
+    return error;
+  }
+
+  private handleWorkerError(failedWorker: MetricsWorkerPort, error: Error): void {
     if (this.worker !== failedWorker) return;
 
-    this.releaseWorker(new Error(`Worker error: ${message}`));
+    this.releaseWorker(error);
   }
 
   private releaseWorker(error: Error): void {
