@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { UserDetailedMetrics } from '../../../types/aggregatedMetrics';
+import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import { runUserDetailsRequest } from '../userDetailsRequest';
 
 const details: UserDetailedMetrics = {

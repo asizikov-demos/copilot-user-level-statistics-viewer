@@ -1,7 +1,7 @@
 'use client';
 
-import type { UserDayData } from '../../types/metrics';
-import { formatShortDate } from '../../utils/formatters';
+import type { UserDayData } from '../../../../types/metrics';
+import { formatShortDate } from '../../../../utils/formatters';
 
 interface ActivityCalendarProps {
   days: UserDayData[];

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useId, useMemo, useState } from 'react';
-import type { UserDayData } from '../../types/metrics';
-import { translateFeature } from '../../domain/featureTranslations';
-import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import type { UserDayData } from '../../../../types/metrics';
+import { translateFeature } from '../../../../domain/featureTranslations';
+import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 type FeatureRow = UserDayData['totals_by_feature'][number];
 type LanguageFeatureRow = UserDayData['totals_by_language_feature'][number];

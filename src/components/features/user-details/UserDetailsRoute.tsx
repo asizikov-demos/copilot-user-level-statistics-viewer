@@ -5,13 +5,13 @@ import { selectUserDetailsRouteReadModel } from '../../../read-models/userDetail
 import { useNavigation } from '../../../state/NavigationContext';
 import { useMetricsWorker } from '../../../state/MetricsWorkerContext';
 import { VIEW_MODES } from '../../../types/navigation';
-import UserDetailsView from '../../UserDetailsView';
+import UserDetailsView from './UserDetailsView';
 import { useMetrics } from '../../MetricsContext';
-import { runUserDetailsRequest } from '../userDetailsRequest';
+import { runUserDetailsRequest } from './userDetailsRequest';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
-} from '../userDetailsRouteState';
+} from './userDetailsRouteState';
 
 export default function UserDetailsRoute() {
   const { aggregatedMetrics } = useMetrics();

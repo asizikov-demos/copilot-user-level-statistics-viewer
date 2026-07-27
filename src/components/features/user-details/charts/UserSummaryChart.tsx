@@ -2,8 +2,8 @@
 
 import { Pie } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
-import { registerChartJS } from './utils/chartSetup';
-import ChartContainer from '../ui/ChartContainer';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import ChartContainer from '../../../ui/ChartContainer';
 
 registerChartJS();
 

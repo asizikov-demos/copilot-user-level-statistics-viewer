@@ -78,6 +78,9 @@ vi.mock('../routes', () => ({
     mocks.standardRouteOutlet(props);
     return null;
   },
+}));
+
+vi.mock('../../features/user-details', () => ({
   UserDetailsRoute: () => {
     mocks.userDetailsRoute();
     return null;

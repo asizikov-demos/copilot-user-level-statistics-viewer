@@ -3,15 +3,15 @@
 import React from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
-import { registerChartJS } from './utils/chartSetup';
-import { createDoughnutChartOptions } from './utils/chartOptions';
-import { createDoughnutDataset } from './utils/chartStyles';
-import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
-import ChartContainer from '../ui/ChartContainer';
-import { formatIDEName } from '../icons/IDEIcons';
-import { sortBySelector } from '../../utils/sorting';
-import type { UserDayData } from '../../types/metrics';
-import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { createDoughnutChartOptions } from '../../../charts/utils/chartOptions';
+import { createDoughnutDataset } from '../../../charts/utils/chartStyles';
+import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
+import ChartContainer from '../../../ui/ChartContainer';
+import { formatIDEName } from '../../../icons/IDEIcons';
+import { sortBySelector } from '../../../../utils/sorting';
+import type { UserDayData } from '../../../../types/metrics';
+import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 registerChartJS();
 

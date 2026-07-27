@@ -1,34 +1,34 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import type { UserDayData } from '../types/metrics';
-import type { UserDetailsViewModel } from '../read-models/userDetails';
-import { translateFeature } from '../domain/featureTranslations';
-import { formatIDEName } from './icons/IDEIcons';
-import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../utils/formatters';
-import { mapReportRangeData, padReportRangeWithDefaults } from '../utils/timeSeries';
+import type { UserDayData } from '../../../types/metrics';
+import type { UserDetailsViewModel } from '../../../read-models/userDetails';
+import { formatIDEName } from '../../icons/IDEIcons';
+import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../../../utils/formatters';
+import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
-import CLISessionChart from './charts/CLISessionChart';
-import CLITokensChart from './charts/CLITokensChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
-import AiCreditsChart from './charts/AiCreditsChart';
-import FeatureAdoptionRadarChart from './charts/FeatureAdoptionRadarChart';
-import ModeImpactChart from './charts/ModeImpactChart';
+import AiCreditsChart from '../../charts/AiCreditsChart';
+import ModeImpactChart from '../../charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
 import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndFeatureChart';
-import ActivityCalendar from './ui/ActivityCalendar';
-import DayDetailsModal from './ui/DayDetailsModal';
-import { ViewPanel } from './ui';
-import { VIEW_MODES } from '../types/navigation';
-import { useNavigation } from '../state/NavigationContext';
-import type { ModeImpactData } from '../domain/calculators/metricCalculators';
-import type { DailyAiCreditsData } from '../domain/calculators/metricCalculators';
+import DayDetailsModal from './day-details/DayDetailsModal';
+import UserDetailsCliUsageSection from './sections/UserDetailsCliUsageSection';
+import UserDetailsFeatureActivitySection from './sections/UserDetailsFeatureActivitySection';
+import UserDetailsHeader from './sections/UserDetailsHeader';
+import UserDetailsImpactBreakdownSection from './sections/UserDetailsImpactBreakdownSection';
+import UserDetailsOverviewSection from './sections/UserDetailsOverviewSection';
+import { ViewPanel } from '../../ui';
+import { VIEW_MODES } from '../../../types/navigation';
+import { useNavigation } from '../../../state/NavigationContext';
+import type { ModeImpactData } from '../../../domain/calculators/metricCalculators';
+import type { DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
 import type { TooltipItem } from 'chart.js';
-import { registerChartJS } from './charts/utils/chartSetup';
-import { isActiveAutoModeFeature } from '../domain/autoMode';
-import { getTotalUserInitiatedInteractionCount } from '../domain/assumedInteractions';
-import { USER_DETAILS_SECTIONS } from './layout/contextSections';
+import { registerChartJS } from '../../charts/utils/chartSetup';
+import { isActiveAutoModeFeature } from '../../../domain/autoMode';
+import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
+import { USER_DETAILS_SECTIONS } from './userDetailsSections';
 
 registerChartJS();
 
@@ -563,79 +563,31 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   return (
     <ViewPanel
       header={(
-        <div>
-          <nav aria-label="Breadcrumb">
-            <ol className="flex flex-wrap items-center gap-2">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigateTo(VIEW_MODES.USERS)}
-                  className="text-2xl font-semibold tracking-tight text-[#0969da] hover:underline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm"
-                >
-                  users
-                </button>
-              </li>
-              <li aria-hidden="true" className="text-2xl font-semibold tracking-tight text-[#8c959f]">/</li>
-              <li aria-current="page">
-                <button
-                  type="button"
-                  onClick={handleCopyUserLogin}
-                  title="Click to copy username"
-                  aria-label={`Copy username ${userLogin}`}
-                  className="group inline-flex items-center gap-2 rounded-sm text-2xl font-semibold tracking-tight text-[#1f2328] transition-colors duration-150 hover:text-indigo-600 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                >
-                  <span>{userLogin}</span>
-                  <svg
-                    className="h-5 w-5 text-[#636c76] transition-colors duration-150 group-hover:text-indigo-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                    />
-                  </svg>
-                </button>
-              </li>
-            </ol>
-          </nav>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
-            <span>User ID: {userId}</span>
-            <span aria-hidden="true" className="text-gray-300">•</span>
-            <span>AI adoption phase: {aiAdoptionPhaseLabel}</span>
-            <span aria-hidden="true" className="text-gray-300">•</span>
-            <span>AI cost: {formatAiCreditCost(aiCreditsUsed)}</span>
-          </p>
-        </div>
+        <UserDetailsHeader
+          userLogin={userLogin}
+          userId={userId}
+          aiAdoptionPhaseLabel={aiAdoptionPhaseLabel}
+          aiCreditCost={formatAiCreditCost(aiCreditsUsed)}
+          onBackToUsers={() => navigateTo(VIEW_MODES.USERS)}
+          onCopyUserLogin={handleCopyUserLogin}
+        />
       )}
       contentClassName="space-y-8"
     >
-      <div id={overviewSection.id} className="grid grid-cols-1 lg:grid-cols-3 gap-6 scroll-mt-28">
-        <div className="lg:col-span-2">
-          <ActivityCalendar
-            days={userDetails.days}
-            reportStartDay={userDetails.reportStartDay}
-            reportEndDay={userDetails.reportEndDay}
-            title="Activity Calendar"
-            activeDaysCount={daysActive}
-            onDayClick={handleDayClick}
-          />
-        </div>
-        <div className="lg:col-span-1">
-          <FeatureAdoptionRadarChart
-            agentInteractions={agentInteractions}
-            planInteractions={planInteractions}
-            cliInteractions={cliInteractions}
-            askModeInteractions={askModeInteractions}
-            editModeInteractions={editModeInteractions}
-            completionInteractions={completionInteractions}
-          />
-        </div>
-      </div>
+      <UserDetailsOverviewSection
+        sectionId={overviewSection.id}
+        days={userDetails.days}
+        reportStartDay={userDetails.reportStartDay}
+        reportEndDay={userDetails.reportEndDay}
+        daysActive={daysActive}
+        onDayClick={handleDayClick}
+        agentInteractions={agentInteractions}
+        planInteractions={planInteractions}
+        cliInteractions={cliInteractions}
+        askModeInteractions={askModeInteractions}
+        editModeInteractions={editModeInteractions}
+        completionInteractions={completionInteractions}
+      />
 
       <div id={aiCreditsSection.id} className="scroll-mt-28">
         <AiCreditsChart
@@ -656,60 +608,21 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         />
       </div>
 
-      {/* Impact Breakdown Section */}
-      <div id={impactBreakdownSection.id} className="border-t border-gray-200 pt-6 scroll-mt-28">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Impact Breakdown</h3>
-            <p className="text-sm text-gray-600 mt-1">View detailed impact by mode</p>
-          </div>
-          <button
-            onClick={() => setIsImpactBreakdownExpanded(!isImpactBreakdownExpanded)}
-            className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-          >
-            {isImpactBreakdownExpanded ? 'Hide Breakdown' : 'Show Breakdown'}
-          </button>
-        </div>
-        
-        {isImpactBreakdownExpanded && (
-          <div className="space-y-8 mt-6">
-            <ModeImpactChart
-              data={filledAgentImpact}
-              title="Copilot Agent Mode Impact"
-              description="Daily lines of code added and deleted through Copilot Agent Mode sessions."
-              emptyStateMessage="No agent mode impact data available."
-            />
-            <ModeImpactChart
-              data={filledAskModeImpact}
-              title="Ask Mode Impact"
-              description="Daily lines of code added and deleted through Copilot Chat Ask Mode sessions."
-              emptyStateMessage="No Ask Mode impact data available."
-            />
-            <ModeImpactChart
-              data={filledCompletionImpact}
-              title="Completions Impact"
-              description="Daily lines of code added and deleted when developers accept Copilot code completions."
-              emptyStateMessage="No code completion impact data available."
-            />
-            <ModeImpactChart
-              data={filledCliImpact}
-              title="CLI Impact"
-              description="Daily lines of code added and deleted through Copilot CLI sessions."
-              emptyStateMessage="No CLI impact data available."
-            />
-          </div>
-        )}
-      </div>
+      <UserDetailsImpactBreakdownSection
+        sectionId={impactBreakdownSection.id}
+        isExpanded={isImpactBreakdownExpanded}
+        onToggle={() => setIsImpactBreakdownExpanded(!isImpactBreakdownExpanded)}
+        agentImpact={filledAgentImpact}
+        askModeImpact={filledAskModeImpact}
+        completionImpact={filledCompletionImpact}
+        cliImpact={filledCliImpact}
+      />
 
-      {/* Copilot CLI Usage */}
       {hasCliActivity && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Usage</h3>
-          <div className="space-y-8">
-            <CLITokensChart data={dailyCliTokenData} />
-            <CLISessionChart data={dailyCliSessionData} />
-          </div>
-        </div>
+        <UserDetailsCliUsageSection
+          tokenData={dailyCliTokenData}
+          sessionData={dailyCliSessionData}
+        />
       )}
 
       <div id={summarySection.id} className="scroll-mt-28">
@@ -742,40 +655,10 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         />
       </div>
 
-      {/* Totals by Feature */}
-      <div id={featureActivitySection.id} className="mt-8 pt-6 border-t border-gray-200 scroll-mt-28">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity by Feature</h3>
-        <div className="overflow-x-auto border border-gray-200">
-          <table className="w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Add</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Delete</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {featureAggregates.map((feature) => (
-                <tr key={feature.feature}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{translateFeature(feature.feature)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{getTotalUserInitiatedInteractionCount(feature).toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.code_generation_activity_count.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.code_acceptance_activity_count.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.loc_added_sum.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.loc_deleted_sum.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.loc_suggested_to_add_sum.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{feature.loc_suggested_to_delete_sum.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <UserDetailsFeatureActivitySection
+        sectionId={featureActivitySection.id}
+        featureAggregates={featureAggregates}
+      />
 
       <div id={languageActivitySection.id} className="scroll-mt-28">
         <UserActivityByLanguageAndFeatureChart
