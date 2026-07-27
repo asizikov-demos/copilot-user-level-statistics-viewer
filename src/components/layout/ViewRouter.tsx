@@ -7,7 +7,8 @@ import { useMetrics } from '../MetricsContext';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { useResetAppState } from '../../hooks/useResetAppState';
 import { FileUploadArea } from '../features/file-upload';
-import { StandardRouteOutlet, UserDetailsRoute } from './routes';
+import { UserDetailsRoute } from '../features/user-details';
+import { StandardRouteOutlet } from './routes';
 
 const ViewRouter: React.FC = () => {
   const { 

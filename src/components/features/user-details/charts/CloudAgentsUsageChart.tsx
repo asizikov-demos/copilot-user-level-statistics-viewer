@@ -1,7 +1,7 @@
 'use client';
 
-import { formatShortDate } from '../../utils/formatters';
-import ChartContainer from '../ui/ChartContainer';
+import { formatShortDate } from '../../../../utils/formatters';
+import ChartContainer from '../../../ui/ChartContainer';
 
 export interface CloudAgentsUsageDatum {
   date: string;

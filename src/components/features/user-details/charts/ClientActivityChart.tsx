@@ -2,19 +2,19 @@
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
-import { registerChartJS } from './utils/chartSetup';
-import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
-import { createBarDataset } from './utils/chartStyles';
-import { createBaseChartOptions } from './utils/chartOptions';
-import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
-import { computeCliDayTotals, type CliDayTotals } from '../../domain/calculators/cliUsageCalculator';
-import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../domain/calculators/clientActivityRows';
-import { formatShortDate } from '../../utils/formatters';
-import { padReportRangeWithDefaults } from '../../utils/timeSeries';
-import ChartContainer from '../ui/ChartContainer';
-import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
-import type { UserDayData } from '../../types/metrics';
-import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
+import { createBarDataset } from '../../../charts/utils/chartStyles';
+import { createBaseChartOptions } from '../../../charts/utils/chartOptions';
+import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
+import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
+import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
+import { formatShortDate } from '../../../../utils/formatters';
+import { padReportRangeWithDefaults } from '../../../../utils/timeSeries';
+import ChartContainer from '../../../ui/ChartContainer';
+import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import type { UserDayData } from '../../../../types/metrics';
+import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 registerChartJS();
 

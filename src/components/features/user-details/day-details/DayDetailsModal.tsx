@@ -1,17 +1,17 @@
 'use client';
 
 import React from 'react';
-import type { UserDayData } from '../../types/metrics';
-import { computeCliDayTotals } from '../../domain/calculators/cliUsageCalculator';
-import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../domain/calculators/clientActivityRows';
-import { formatIDEName, getIDEIcon } from '../icons/IDEIcons';
-import MetricsTable, { type TableColumn } from './MetricsTable';
+import type { UserDayData } from '../../../../types/metrics';
+import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
+import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
+import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
+import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
-import type { VoidCallback } from '../../types/events';
-import { isAgentFeature, isCliFeature, isCodeCompletionFeature } from '../../domain/featureCategories';
-import { formatAiCreditCost } from '../../utils/formatters';
+import type { VoidCallback } from '../../../../types/events';
+import { isAgentFeature, isCliFeature, isCodeCompletionFeature } from '../../../../domain/featureCategories';
+import { formatAiCreditCost } from '../../../../utils/formatters';
 
 interface DayDetailsModalProps {
   isOpen: boolean;

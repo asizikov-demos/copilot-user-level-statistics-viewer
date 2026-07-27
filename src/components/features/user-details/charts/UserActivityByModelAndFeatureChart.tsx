@@ -1,10 +1,10 @@
 'use client';
 
 import { ChartData, ChartOptions } from 'chart.js';
-import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
-import ActivityBreakdownChart from './ActivityBreakdownChart';
-import { getTotalUserInitiatedInteractionCount } from '../../domain/assumedInteractions';
-import { getModelIcon } from '../icons/ModelIcons';
+import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
+import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
+import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
+import { getModelIcon } from '../../../icons/ModelIcons';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 

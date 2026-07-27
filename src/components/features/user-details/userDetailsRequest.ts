@@ -1,4 +1,4 @@
-import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import type { UserDetailedMetrics } from '../../../types/aggregatedMetrics';
 
 interface RunUserDetailsRequestOptions {
   userId: number;

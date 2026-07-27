@@ -2,12 +2,12 @@
 
 import { Radar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
-import { registerChartJS } from './utils/chartSetup';
-import { createRadarChartOptions } from './utils/chartOptions';
-import { createRadarDataset } from './utils/chartStyles';
-import { chartColors } from './utils/chartColors';
-import ChartContainer from '../ui/ChartContainer';
-import { FEATURE_ADOPTION_RADAR_METADATA } from '../../domain/featureCategories';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { createRadarChartOptions } from '../../../charts/utils/chartOptions';
+import { createRadarDataset } from '../../../charts/utils/chartStyles';
+import { chartColors } from '../../../charts/utils/chartColors';
+import ChartContainer from '../../../ui/ChartContainer';
+import { FEATURE_ADOPTION_RADAR_METADATA } from '../../../../domain/featureCategories';
 
 registerChartJS();
 

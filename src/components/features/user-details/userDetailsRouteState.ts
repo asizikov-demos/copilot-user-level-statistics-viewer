@@ -1,12 +1,12 @@
-import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import type { UserDetailedMetrics } from '../../../types/aggregatedMetrics';
 import {
   selectUserDetailsViewModel,
   type UserDetailsRouteReadModel,
   type UserDetailsViewModel,
-} from '../../read-models/userDetails';
-import type { UserSummary } from '../../types/metrics';
-import type { SelectedUser, ViewMode } from '../../types/navigation';
-import { VIEW_MODES } from '../../types/navigation';
+} from '../../../read-models/userDetails';
+import type { UserSummary } from '../../../types/metrics';
+import type { SelectedUser, ViewMode } from '../../../types/navigation';
+import { VIEW_MODES } from '../../../types/navigation';
 
 export type UserDetailsLoadState =
   | { status: 'idle' }

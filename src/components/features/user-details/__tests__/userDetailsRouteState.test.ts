@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { UserDetailedMetrics } from '../../../types/aggregatedMetrics';
-import type { UserSummary } from '../../../types/metrics';
-import { VIEW_MODES } from '../../../types/navigation';
+import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
+import type { UserSummary } from '../../../../types/metrics';
+import { VIEW_MODES } from '../../../../types/navigation';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,

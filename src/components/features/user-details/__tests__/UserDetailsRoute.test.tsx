@@ -65,7 +65,7 @@ vi.mock('../../../../state/MetricsWorkerContext', () => ({
   useMetricsWorker: () => mocks.workerOperations,
 }));
 
-vi.mock('../../../UserDetailsView', () => ({
+vi.mock('../UserDetailsView', () => ({
   default: ({ model }: { model: UserDetailsViewModel }) => {
     mocks.userDetailsView(model);
     return <div>{model.userLogin}</div>;

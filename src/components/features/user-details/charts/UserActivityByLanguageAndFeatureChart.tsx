@@ -1,8 +1,8 @@
 'use client';
 
 import { ChartData, ChartOptions } from 'chart.js';
-import { CopilotMetrics } from '../../types/metrics';
-import ActivityBreakdownChart from './ActivityBreakdownChart';
+import { CopilotMetrics } from '../../../../types/metrics';
+import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
 
 export type LanguageFeatureAggregate = CopilotMetrics['totals_by_language_feature'][number];
 
