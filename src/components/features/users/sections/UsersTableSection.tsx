@@ -1,24 +1,22 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { UsersReadModel } from '../read-models/users';
-import type { UserSummary } from '../types/metrics';
-import { useUsernameTrieSearch } from '../hooks/useUsernameTrieSearch';
-import { useSortableTable } from '../hooks/useSortableTable';
-import { formatAiAdoptionPhase, formatAiCreditCost } from '../utils/formatters';
-import { formatIDEName } from '../utils/ideNames';
-import { getIDEIcon } from './icons/IDEIcons';
-import { ViewPanel } from './ui';
-import DashboardStatsCard from './ui/DashboardStatsCard';
-import StatsGrid from './ui/StatsGrid';
-import MetricsTable, { TableColumn } from './ui/MetricsTable';
+import type { UserSummary } from '../../../../types/metrics';
+import { useUsernameTrieSearch } from '../../../../hooks/useUsernameTrieSearch';
+import { useSortableTable } from '../../../../hooks/useSortableTable';
+import { formatAiAdoptionPhase, formatAiCreditCost } from '../../../../utils/formatters';
+import { formatIDEName } from '../../../../utils/ideNames';
+import { getIDEIcon } from '../../../icons/IDEIcons';
+import MetricsTable, { TableColumn } from '../../../ui/MetricsTable';
 
-interface UniqueUsersViewProps {
-  model: UsersReadModel;
+interface UsersTableSectionProps {
+  sectionId: string;
+  users: UserSummary[];
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
 type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
+
 const USERS_PER_PAGE = 500;
 
 function ClientIcon({ client }: { client: string }) {
@@ -31,8 +29,11 @@ function ClientIcon({ client }: { client: string }) {
   );
 }
 
-export default function UniqueUsersView({ model, onUserClick }: UniqueUsersViewProps) {
-  const { users } = model;
+export default function UsersTableSection({
+  sectionId,
+  users,
+  onUserClick,
+}: UsersTableSectionProps) {
   const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,
@@ -222,91 +223,68 @@ export default function UniqueUsersView({ model, onUserClick }: UniqueUsersViewP
       ),
     },
   ];
-  const chatUsers = users.filter(user => user.used_chat).length;
-  const agentUsers = users.filter(user => user.used_agent).length;
-  const codeReviewUsers = users.filter(user => user.used_copilot_code_review_active || user.used_copilot_code_review_passive).length;
-  const cliUsers = users.filter(user => user.used_cli).length;
-  const completionUsers = users.filter(user => user.total_code_generation_activities > 0).length;
 
   return (
-    <ViewPanel
-      headerProps={{
-        title: 'Unique Users',
-      }}
-      contentClassName="space-y-6"
-    >
-      {/* Summary Stats */}
-      <StatsGrid className="mb-6" columns={{ base: 2, md: 6 }} gapClassName="gap-4">
-        <DashboardStatsCard value={users.length} label="Total Users" accent="blue" />
-        <DashboardStatsCard value={chatUsers} label="Chat Users" accent="teal" />
-        <DashboardStatsCard value={agentUsers} label="Agent Users" accent="indigo" />
-        <DashboardStatsCard value={codeReviewUsers} label="Code Review Users" accent="cyan" />
-        <DashboardStatsCard value={cliUsers} label="CLI Users" accent="rose" />
-        <DashboardStatsCard value={completionUsers} label="Completion Users" accent="amber" />
-      </StatsGrid>
-
-      {/* Users Table */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="mb-4">
-          <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
-            Search by user login
-          </label>
-          <input
-            id="userSearch"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Start typing a username..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div className="overflow-x-auto border border-gray-200">
-          <MetricsTable<UserSummary>
-            data={pagedUsers}
-            columns={columns}
-            sortState={tableSortState}
-            onSortChange={({ field }) => handleSort(field as SortField)}
-            rowClassName={() => 'hover:bg-gray-50 cursor-pointer transition-colors'}
-            tableClassName="w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            onRowClick={(user) => handleUserClick(user)}
-          />
-        </div>
-        {sortedUsers.length > USERS_PER_PAGE && (
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-gray-600">
-              Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-gray-600">
-                Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
-              </span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
-              >
-                Next
-              </button>
-            </div>
+    <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200">
+      <div className="mb-4">
+        <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
+          Search by user login
+        </label>
+        <input
+          id="userSearch"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Start typing a username..."
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+      </div>
+      <div className="overflow-x-auto border border-gray-200">
+        <MetricsTable<UserSummary>
+          data={pagedUsers}
+          columns={columns}
+          sortState={tableSortState}
+          onSortChange={({ field }) => handleSort(field as SortField)}
+          rowClassName={() => 'hover:bg-gray-50 cursor-pointer transition-colors'}
+          tableClassName="w-full divide-y divide-gray-200"
+          theadClassName="bg-gray-50"
+          onRowClick={(user) => handleUserClick(user)}
+        />
+      </div>
+      {sortedUsers.length > USERS_PER_PAGE && (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+            >
+              Next
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
       {users.length === 0 && (
         <div className="text-center py-8">
-            <p className="text-gray-500">No user data available</p>
+          <p className="text-gray-500">No user data available</p>
         </div>
       )}
-      </div>
-    </ViewPanel>
+    </div>
   );
 }
