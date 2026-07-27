@@ -42,15 +42,16 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view and selected user
 - `MetricsWorkerContext` (`src/state/MetricsWorkerContext.tsx`) — owns the main-thread worker client lifecycle and exposes parse, user-detail, and reset operations
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The specialized `UserDetailsRoute` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and existing view for each non-user-details route, so only the selected route computes its projection. The feature-owned `UserDetailsRoute` in `src/components/features/user-details/` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
 | Directory | Purpose |
 |---|---|
 | `src/app/` | Next.js App Router entry points and providers |
-| `src/components/` | View components, charts, layout, UI primitives |
-| `src/components/layout/routes/` | Typed standard-route adapters/registry and specialized user-details route |
+| `src/components/` | View components, charts, layout, feature folders, UI primitives |
+| `src/components/features/` | Feature-owned view boundaries such as overview, file upload, and user details |
+| `src/components/layout/routes/` | Typed standard-route adapters/registry |
 | `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
 | `src/domain/` | Business logic: aggregator, model config, calculators |
 | `src/domain/aggregation/` | Concrete metric-family accumulator lifecycle orchestration |
@@ -97,7 +98,7 @@ Established boundaries cover:
 - model details and CLI adoption
 - AI credits
 
-Phase 4 feature read-model boundaries, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while `UserDetailsRoute` owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 6 feature-view organization remains deferred. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
+Phase 4 feature read-model boundaries, Phase 6 user-details feature organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
 
 ### 3.5. Enforced Dependency Direction
 
@@ -139,11 +140,11 @@ flowchart LR
   W -->|parseAndAggregateResult: grouped slices| D[MetricsContext stores AggregatedMetrics + warnings]
   D --> VR[ViewRouter resolves current route]
   VR --> SR[Selected standard route adapter]
-  VR --> UR[Specialized UserDetailsRoute]
+  VR --> UR[Feature-owned UserDetailsRoute]
   SR --> RM[Feature read-model selector]
   RM --> E[Existing feature view]
   UR -->|computeUserDetails| C
-  UR --> UDV[UserDetailsView]
+  UR --> UDV[UserDetails feature view]
   E --> F[Chart components]
 ```
 
@@ -165,7 +166,7 @@ Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly 
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the specialized `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the existing view with a narrow shared route context. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. This completes Phase 7 thin view routing. Phase 10 keeps these dependencies enforced; Phase 6 feature-view moves and decomposition remain deferred.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the feature-owned `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the existing view with a narrow shared route context. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. User-details presentation, feature-only charts, day-details helpers, and route-focused tests are co-located under `src/components/features/user-details/`; pure read-model selectors remain in `src/read-models/` as the shared application projection layer. This completes Phase 6 user-details feature organization while preserving Phase 7 routing and Phase 10 dependency enforcement.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 
