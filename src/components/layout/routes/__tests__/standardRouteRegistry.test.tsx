@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../../domain/metricsAggregator';
 import type { AiCreditsReadModel } from '../../../../read-models/aiCredits';
+import type { ClientVersionsReadModel } from '../../../../read-models/clients';
 import type {
   ExecutiveSummaryReadModel,
   OverviewReadModel,
@@ -46,6 +47,8 @@ const mocks = vi.hoisted(() => ({
       onUserSelect: AiCreditsReadModel['onUserClick']
     ) => AiCreditsReadModel
   >(),
+  selectClientVersionsReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => ClientVersionsReadModel>(),
   overviewView:
     vi.fn<
       (props: {
@@ -61,6 +64,8 @@ const mocks = vi.hoisted(() => ({
       }) => void
     >(),
   aiCreditsView: vi.fn<(props: { model: AiCreditsReadModel }) => void>(),
+  clientVersionsView:
+    vi.fn<(props: { model: ClientVersionsReadModel }) => void>(),
   aboutView: vi.fn(),
 }));
 
@@ -75,6 +80,21 @@ vi.mock('../../../../read-models/users', () => ({
 
 vi.mock('../../../../read-models/aiCredits', () => ({
   selectAiCreditsReadModel: mocks.selectAiCreditsReadModel,
+}));
+
+vi.mock('../../../../read-models/clients', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../../read-models/clients')>();
+  return {
+    ...actual,
+    selectClientVersionsReadModel: mocks.selectClientVersionsReadModel,
+  };
+});
+
+vi.mock('../../../features/client-versions', () => ({
+  ClientVersionsView: (props: { model: ClientVersionsReadModel }) => {
+    mocks.clientVersionsView(props);
+    return null;
+  },
 }));
 
 vi.mock('../../../features/overview', () => ({
@@ -116,6 +136,7 @@ describe('standard route registry', () => {
   let overviewModel: OverviewReadModel;
   let usersModel: UsersReadModel;
   let aiCreditsModel: AiCreditsReadModel;
+  let clientVersionsModel: ClientVersionsReadModel;
 
   beforeEach(() => {
     const aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -138,6 +159,10 @@ describe('standard route registry', () => {
       totalAiCreditsUsed: 0,
       onUserClick: onUserSelect,
     };
+    clientVersionsModel = {
+      pluginVersionData: aggregatedMetrics.clients.pluginVersionData,
+      reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+    };
     context = {
       aggregatedMetrics,
       enterpriseName: 'test-enterprise',
@@ -148,6 +173,7 @@ describe('standard route registry', () => {
     mocks.selectOverviewReadModel.mockReturnValue(overviewModel);
     mocks.selectUsersReadModel.mockReturnValue(usersModel);
     mocks.selectAiCreditsReadModel.mockReturnValue(aiCreditsModel);
+    mocks.selectClientVersionsReadModel.mockReturnValue(clientVersionsModel);
   });
 
   it('covers every view mode except specialized user details', () => {
@@ -222,6 +248,24 @@ describe('standard route registry', () => {
     expect(mocks.aiCreditsView).toHaveBeenCalledWith({
       model: aiCreditsModel,
     });
+  });
+
+  it('selects and renders the feature-owned client versions adapter', () => {
+    const ClientVersionsAdapter = resolveStandardRouteAdapter(
+      VIEW_MODES.CLIENT_VERSIONS
+    );
+
+    renderToStaticMarkup(<ClientVersionsAdapter {...context} />);
+
+    expect(mocks.selectClientVersionsReadModel).toHaveBeenCalledWith(
+      context.aggregatedMetrics
+    );
+    expect(mocks.clientVersionsView).toHaveBeenCalledWith({
+      model: clientVersionsModel,
+    });
+    expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectAiCreditsReadModel).not.toHaveBeenCalled();
   });
 
   it('renders about without selecting aggregate-backed models', () => {
