@@ -50,9 +50,9 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 |---|---|
 | `src/app/` | Next.js App Router entry points and providers |
 | `src/components/` | View components, charts, layout, feature folders, UI primitives |
-| `src/components/features/` | Feature-owned view boundaries such as overview, file upload, users, languages, client versions, and user details |
+| `src/components/features/` | Feature-owned view boundaries such as overview, file upload, adoption, AI adoption phases, impact, users, languages, client versions, and user details |
 | `src/components/layout/routes/` | Typed standard-route adapters/registry |
-| `src/components/charts/` | Chart.js visualizations (via react-chartjs-2) |
+| `src/components/charts/` | Shared Chart.js visualizations and chart utilities (via react-chartjs-2) |
 | `src/domain/` | Business logic: aggregator, model config, calculators |
 | `src/domain/aggregation/` | Concrete metric-family accumulator lifecycle orchestration |
 | `src/infra/` | Streaming metrics file parser |
@@ -98,7 +98,7 @@ Established boundaries cover:
 - model details and CLI adoption
 - AI credits
 
-Phase 4 feature read-model boundaries, Phase 6 user-details feature organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
+Phase 4 feature read-model boundaries, Phase 6 feature-oriented component organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
 
 ### 3.5. Enforced Dependency Direction
 
@@ -142,7 +142,7 @@ flowchart LR
   VR --> SR[Selected standard route adapter]
   VR --> UR[Feature-owned UserDetailsRoute]
   SR --> RM[Feature read-model selector]
-  RM --> E[Existing feature view]
+  RM --> E[Feature view]
   UR -->|computeUserDetails| C
   UR --> UDV[UserDetails feature view]
   E --> F[Chart components]
@@ -166,7 +166,7 @@ Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly 
 
 ### 4.3. Views
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the feature-owned `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the relevant presentation boundary with a narrow shared route context. `UsersView` presentation, visible summary/table sections, feature constants, and focused tests are co-located under `src/components/features/users/`. `LanguagesView` presentation, feature-only daily chart, visible sections, and focused tests are co-located under `src/components/features/languages/`. `ClientVersionsView` presentation and its JetBrains/VS Code version sections are co-located under `src/components/features/client-versions/`. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. User-details presentation, feature-only charts, day-details helpers, and route-focused tests are co-located under `src/components/features/user-details/`; pure read-model selectors remain in `src/read-models/` as the shared application projection layer. This keeps Phase 6 feature organization moving while preserving Phase 7 routing and Phase 10 dependency enforcement.
+`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the feature-owned `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the relevant presentation boundary with a narrow shared route context. `CopilotAdoptionView` presentation, adoption-only charts, visible sections, and focused tests are co-located under `src/components/features/adoption/`; shared adoption chart utilities remain in `src/components/charts/utils/` because CLI adoption and model details also consume them. `AiAdoptionPhaseView` presentation, table column metadata, phase definitions, visible sections, and focused tests are co-located under `src/components/features/ai-adoption-phases/`. `CopilotImpactView` presentation, impact mode metadata, visible sections, and focused tests are co-located under `src/components/features/impact/`; `ModeImpactChart` remains shared because executive summary and user details also render it. `UsersView` presentation, visible summary/table sections, feature constants, and focused tests are co-located under `src/components/features/users/`. `LanguagesView` presentation, feature-only daily chart, visible sections, and focused tests are co-located under `src/components/features/languages/`. `ClientVersionsView` presentation and its JetBrains/VS Code version sections are co-located under `src/components/features/client-versions/`. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. User-details presentation, feature-only charts, day-details helpers, and route-focused tests are co-located under `src/components/features/user-details/`; pure read-model selectors remain in `src/read-models/` as the shared application projection layer. This completes Phase 6 feature organization while preserving Phase 7 routing and Phase 10 dependency enforcement.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
 

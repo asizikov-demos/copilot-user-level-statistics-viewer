@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
-import { registerChartJS } from './utils/chartSetup';
-import { createBaseChartOptions, createDualAxisChartOptions } from './utils/chartOptions';
-import { formatShortDate } from '../../utils/formatters';
-import { calculateTotal, calculateAverage, findMaxItem, findMaxValue } from '../../domain/calculators/statsCalculators';
-import { chartColors } from './utils/chartColors';
-import { AgentModeHeatmapData } from '../../domain/calculators/metricCalculators';
-import ChartContainer from '../ui/ChartContainer';
-import ChartToggleButtons from '../ui/ChartToggleButtons';
-import InsightsCard from '../ui/InsightsCard';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { createBaseChartOptions, createDualAxisChartOptions } from '../../../charts/utils/chartOptions';
+import { formatShortDate } from '../../../../utils/formatters';
+import { calculateTotal, calculateAverage, findMaxItem, findMaxValue } from '../../../../domain/calculators/statsCalculators';
+import { chartColors } from '../../../charts/utils/chartColors';
+import { AgentModeHeatmapData } from '../../../../domain/calculators/metricCalculators';
+import ChartContainer from '../../../ui/ChartContainer';
+import ChartToggleButtons from '../../../ui/ChartToggleButtons';
+import InsightsCard from '../../../ui/InsightsCard';
 
 registerChartJS();
 
