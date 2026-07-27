@@ -17,9 +17,14 @@ async function settleMicrotasks() {
   });
 }
 
-afterEach(() => {
-  renderer?.unmount();
-  renderer = null;
+afterEach(async () => {
+  if (renderer) {
+    await act(async () => {
+      renderer?.unmount();
+    });
+    renderer = null;
+    await settleMicrotasks();
+  }
   vi.restoreAllMocks();
 });
 

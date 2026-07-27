@@ -176,7 +176,7 @@ describe('MetricsWorkerClient', () => {
     workers[0].fail({
       error: {
         name: 'TypeError',
-        message: 'cross-realm worker failed',
+        message: '  cross-realm worker failed  ',
         stack: 'TypeError: cross-realm worker failed\n    at metricsWorker.js:20:8',
         cause: rootCause,
       },

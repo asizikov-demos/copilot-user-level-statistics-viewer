@@ -199,11 +199,16 @@ export class MetricsWorkerClient {
     }
 
     const record = value as Record<string, unknown>;
-    if (typeof record.message !== 'string' || record.message.trim() === '') {
+    if (typeof record.message !== 'string') {
       return null;
     }
 
-    const error = new Error(record.message, { cause: record.cause });
+    const message = record.message.trim();
+    if (message === '') {
+      return null;
+    }
+
+    const error = new Error(message, { cause: record.cause });
     if (typeof record.name === 'string' && record.name.trim() !== '') {
       error.name = record.name;
     }
