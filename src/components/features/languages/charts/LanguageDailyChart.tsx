@@ -3,14 +3,14 @@
 import { useMemo } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { registerChartJS } from './utils/chartSetup';
-import { createStackedBarChartOptions } from './utils/chartOptions';
-import { createBarDataset } from './utils/chartStyles';
-import { createStackedTotalFooter } from './utils/tooltipFooters';
-import { formatShortDate } from '../../utils/formatters';
-import { takeTopBySelector } from '../../utils/sorting';
-import type { DailyLanguageChartData } from '../../types/metrics';
-import ChartContainer from '../ui/ChartContainer';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
+import { createBarDataset } from '../../../charts/utils/chartStyles';
+import { createStackedTotalFooter } from '../../../charts/utils/tooltipFooters';
+import { formatShortDate } from '../../../../utils/formatters';
+import { takeTopBySelector } from '../../../../utils/sorting';
+import type { DailyLanguageChartData } from '../../../../types/metrics';
+import ChartContainer from '../../../ui/ChartContainer';
 
 registerChartJS();
 
