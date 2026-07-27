@@ -1,14 +1,14 @@
 'use client';
 
-import { LanguageStats } from '../domain/calculators/metricCalculators';
+import { LanguageStats } from '../../../domain/calculators/metricCalculators';
 import { useMemo, useState } from 'react';
-import MetricsTable, { SortState as TableSortState, TableColumn } from './ui/MetricsTable';
-import { DashboardStatsCardGroup, ViewPanel } from './ui';
+import MetricsTable, { SortState as TableSortState, TableColumn } from '../../ui/MetricsTable';
+import { DashboardStatsCardGroup, ViewPanel } from '../../ui';
 import LanguageDailyChart from './charts/LanguageDailyChart';
-import { translateFeature } from '../domain/featureTranslations';
-import { sortBySelector, rankBySelector } from '../utils/sorting';
-import { LANGUAGES_SECTIONS } from './layout/contextSections';
-import type { LanguagesReadModel } from '../read-models/languages';
+import { translateFeature } from '../../../domain/featureTranslations';
+import { sortBySelector, rankBySelector } from '../../../utils/sorting';
+import { LANGUAGES_SECTIONS } from '../../layout/contextSections';
+import type { LanguagesReadModel } from '../../../read-models/languages';
 
 interface LanguagesViewProps {
   model: LanguagesReadModel;

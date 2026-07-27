@@ -24,10 +24,10 @@ import ClientsView from '../../ClientsView';
 import CopilotAdoptionView from '../../CopilotAdoptionView';
 import CopilotImpactView from '../../CopilotImpactView';
 import ExecutiveSummaryView from '../../ExecutiveSummaryView';
-import LanguagesView from '../../LanguagesView';
 import ModelDetailsView from '../../ModelDetailsView';
 import UniqueUsersView from '../../UniqueUsersView';
 import { ClientVersionsView } from '../../features/client-versions';
+import { LanguagesView } from '../../features/languages';
 import { OverviewDashboard } from '../../features/overview';
 
 export interface StandardRouteContext {
