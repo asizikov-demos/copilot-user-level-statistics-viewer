@@ -20,7 +20,6 @@ import AboutView from '../../AboutView';
 import AiAdoptionPhaseView from '../../AiAdoptionPhaseView';
 import AiCreditsView from '../../AiCreditsView';
 import CLIAdoptionView from '../../CLIAdoptionView';
-import ClientVersionsView from '../../ClientVersionsView';
 import ClientsView from '../../ClientsView';
 import CopilotAdoptionView from '../../CopilotAdoptionView';
 import CopilotImpactView from '../../CopilotImpactView';
@@ -28,6 +27,7 @@ import ExecutiveSummaryView from '../../ExecutiveSummaryView';
 import LanguagesView from '../../LanguagesView';
 import ModelDetailsView from '../../ModelDetailsView';
 import UniqueUsersView from '../../UniqueUsersView';
+import { ClientVersionsView } from '../../features/client-versions';
 import { OverviewDashboard } from '../../features/overview';
 
 export interface StandardRouteContext {
