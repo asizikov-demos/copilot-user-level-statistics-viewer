@@ -123,8 +123,8 @@ vi.mock('../../../features/overview', () => ({
   },
 }));
 
-vi.mock('../../../UniqueUsersView', () => ({
-  default: (props: {
+vi.mock('../../../features/users', () => ({
+  UsersView: (props: {
     model: UsersReadModel;
     onUserClick: StandardRouteContext['onUserSelect'];
   }) => {

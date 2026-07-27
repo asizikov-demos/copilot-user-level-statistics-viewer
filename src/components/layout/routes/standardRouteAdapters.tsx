@@ -25,10 +25,10 @@ import CopilotAdoptionView from '../../CopilotAdoptionView';
 import CopilotImpactView from '../../CopilotImpactView';
 import ExecutiveSummaryView from '../../ExecutiveSummaryView';
 import ModelDetailsView from '../../ModelDetailsView';
-import UniqueUsersView from '../../UniqueUsersView';
 import { ClientVersionsView } from '../../features/client-versions';
 import { LanguagesView } from '../../features/languages';
 import { OverviewDashboard } from '../../features/overview';
+import { UsersView } from '../../features/users';
 
 export interface StandardRouteContext {
   aggregatedMetrics: AggregatedMetrics;
@@ -90,7 +90,7 @@ export function UsersRouteAdapter({
   onUserSelect,
 }: StandardRouteContext) {
   return (
-    <UniqueUsersView
+    <UsersView
       model={selectUsersReadModel(aggregatedMetrics)}
       onUserClick={onUserSelect}
     />
