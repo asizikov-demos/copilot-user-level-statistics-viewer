@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import { parseMetricsFile } from '../../domain/metricsParser';
+import type { MultiFileProgress } from '../metricsFileParser';
 import { parseMultipleMetricsStreams } from '../metricsFileParser';
 
 const encoder = new TextEncoder();
@@ -86,7 +87,7 @@ describe('parseMultipleMetricsStreams', () => {
     const lastFile = createChunkedFile([
       `${JSON.stringify(makeMetric({ user_id: 333, user_login: 'last_user' }))}\n`,
     ], 'last.ndjson');
-    const progress: Array<{ currentFile: number; totalFiles: number; fileName: string; recordsProcessed: number }> = [];
+    const progress: MultiFileProgress[] = [];
 
     const result = await parseMultipleMetricsStreams(
       [firstFile, failingFile, lastFile],
