@@ -17,15 +17,15 @@ import {
 } from '../../../read-models/overview';
 import { selectUsersReadModel } from '../../../read-models/users';
 import AboutView from '../../AboutView';
-import AiAdoptionPhaseView from '../../AiAdoptionPhaseView';
 import AiCreditsView from '../../AiCreditsView';
 import CLIAdoptionView from '../../CLIAdoptionView';
 import ClientsView from '../../ClientsView';
-import CopilotAdoptionView from '../../CopilotAdoptionView';
-import CopilotImpactView from '../../CopilotImpactView';
 import ExecutiveSummaryView from '../../ExecutiveSummaryView';
 import ModelDetailsView from '../../ModelDetailsView';
+import { AiAdoptionPhaseView } from '../../features/ai-adoption-phases';
+import { CopilotAdoptionView } from '../../features/adoption';
 import { ClientVersionsView } from '../../features/client-versions';
+import { CopilotImpactView } from '../../features/impact';
 import { LanguagesView } from '../../features/languages';
 import { OverviewDashboard } from '../../features/overview';
 import { UsersView } from '../../features/users';

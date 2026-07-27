@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../../domain/metricsAggregator';
 import type { AiCreditsReadModel } from '../../../../read-models/aiCredits';
+import type { AiAdoptionPhaseReadModel } from '../../../../read-models/aiAdoptionPhases';
+import type { CopilotAdoptionReadModel } from '../../../../read-models/adoption';
 import type { ClientVersionsReadModel } from '../../../../read-models/clients';
+import type { CopilotImpactReadModel } from '../../../../read-models/impact';
 import type {
   ExecutiveSummaryReadModel,
   OverviewReadModel,
@@ -48,8 +51,14 @@ const mocks = vi.hoisted(() => ({
       onUserSelect: AiCreditsReadModel['onUserClick']
     ) => AiCreditsReadModel
   >(),
+  selectAiAdoptionPhaseReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => AiAdoptionPhaseReadModel>(),
+  selectCopilotAdoptionReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => CopilotAdoptionReadModel>(),
   selectClientVersionsReadModel:
     vi.fn<(metrics: AggregatedMetrics) => ClientVersionsReadModel>(),
+  selectCopilotImpactReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => CopilotImpactReadModel>(),
   selectLanguagesReadModel:
     vi.fn<(metrics: AggregatedMetrics) => LanguagesReadModel>(),
   overviewView:
@@ -67,8 +76,14 @@ const mocks = vi.hoisted(() => ({
       }) => void
     >(),
   aiCreditsView: vi.fn<(props: { model: AiCreditsReadModel }) => void>(),
+  aiAdoptionPhaseView:
+    vi.fn<(props: { model: AiAdoptionPhaseReadModel }) => void>(),
+  copilotAdoptionView:
+    vi.fn<(props: { model: CopilotAdoptionReadModel }) => void>(),
   clientVersionsView:
     vi.fn<(props: { model: ClientVersionsReadModel }) => void>(),
+  copilotImpactView:
+    vi.fn<(props: { model: CopilotImpactReadModel }) => void>(),
   languagesView:
     vi.fn<(props: { model: LanguagesReadModel }) => void>(),
   aboutView: vi.fn(),
@@ -87,6 +102,14 @@ vi.mock('../../../../read-models/aiCredits', () => ({
   selectAiCreditsReadModel: mocks.selectAiCreditsReadModel,
 }));
 
+vi.mock('../../../../read-models/aiAdoptionPhases', () => ({
+  selectAiAdoptionPhaseReadModel: mocks.selectAiAdoptionPhaseReadModel,
+}));
+
+vi.mock('../../../../read-models/adoption', () => ({
+  selectCopilotAdoptionReadModel: mocks.selectCopilotAdoptionReadModel,
+}));
+
 vi.mock('../../../../read-models/clients', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../../read-models/clients')>();
   return {
@@ -99,9 +122,34 @@ vi.mock('../../../../read-models/languages', () => ({
   selectLanguagesReadModel: mocks.selectLanguagesReadModel,
 }));
 
+vi.mock('../../../../read-models/impact', () => ({
+  selectCopilotImpactReadModel: mocks.selectCopilotImpactReadModel,
+}));
+
 vi.mock('../../../features/client-versions', () => ({
   ClientVersionsView: (props: { model: ClientVersionsReadModel }) => {
     mocks.clientVersionsView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../features/adoption', () => ({
+  CopilotAdoptionView: (props: { model: CopilotAdoptionReadModel }) => {
+    mocks.copilotAdoptionView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../features/ai-adoption-phases', () => ({
+  AiAdoptionPhaseView: (props: { model: AiAdoptionPhaseReadModel }) => {
+    mocks.aiAdoptionPhaseView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../features/impact', () => ({
+  CopilotImpactView: (props: { model: CopilotImpactReadModel }) => {
+    mocks.copilotImpactView(props);
     return null;
   },
 }));
@@ -152,7 +200,10 @@ describe('standard route registry', () => {
   let overviewModel: OverviewReadModel;
   let usersModel: UsersReadModel;
   let aiCreditsModel: AiCreditsReadModel;
+  let aiAdoptionPhaseModel: AiAdoptionPhaseReadModel;
+  let copilotAdoptionModel: CopilotAdoptionReadModel;
   let clientVersionsModel: ClientVersionsReadModel;
+  let copilotImpactModel: CopilotImpactReadModel;
   let languagesModel: LanguagesReadModel;
 
   beforeEach(() => {
@@ -176,9 +227,29 @@ describe('standard route registry', () => {
       totalAiCreditsUsed: 0,
       onUserClick: onUserSelect,
     };
+    aiAdoptionPhaseModel = {
+      aiAdoptionPhaseData: aggregatedMetrics.ai.aiAdoptionPhaseData,
+    };
+    copilotAdoptionModel = {
+      featureAdoptionData: aggregatedMetrics.adoption.featureAdoptionData,
+      agentModeHeatmapData: aggregatedMetrics.adoption.agentModeHeatmapData,
+      stats: aggregatedMetrics.overview.stats,
+      dailyAdoptionTrend: aggregatedMetrics.adoption.dailyAdoptionTrend,
+      dailyCloudAgentAdoptionData: aggregatedMetrics.adoption.dailyCloudAgentAdoptionData,
+      dailyCodeReviewAdoptionData: aggregatedMetrics.adoption.dailyCodeReviewAdoptionData,
+    };
     clientVersionsModel = {
       pluginVersionData: aggregatedMetrics.clients.pluginVersionData,
       reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+    };
+    copilotImpactModel = {
+      agentImpactData: aggregatedMetrics.impact.agentImpactData,
+      codeCompletionImpactData: aggregatedMetrics.impact.codeCompletionImpactData,
+      editModeImpactData: aggregatedMetrics.impact.editModeImpactData,
+      inlineModeImpactData: aggregatedMetrics.impact.inlineModeImpactData,
+      askModeImpactData: aggregatedMetrics.impact.askModeImpactData,
+      cliImpactData: aggregatedMetrics.impact.cliImpactData,
+      joinedImpactData: aggregatedMetrics.impact.joinedImpactData,
     };
     languagesModel = {
       languageStats: aggregatedMetrics.languages.languageStats,
@@ -196,7 +267,10 @@ describe('standard route registry', () => {
     mocks.selectOverviewReadModel.mockReturnValue(overviewModel);
     mocks.selectUsersReadModel.mockReturnValue(usersModel);
     mocks.selectAiCreditsReadModel.mockReturnValue(aiCreditsModel);
+    mocks.selectAiAdoptionPhaseReadModel.mockReturnValue(aiAdoptionPhaseModel);
+    mocks.selectCopilotAdoptionReadModel.mockReturnValue(copilotAdoptionModel);
     mocks.selectClientVersionsReadModel.mockReturnValue(clientVersionsModel);
+    mocks.selectCopilotImpactReadModel.mockReturnValue(copilotImpactModel);
     mocks.selectLanguagesReadModel.mockReturnValue(languagesModel);
   });
 
@@ -302,6 +376,44 @@ describe('standard route registry', () => {
     );
     expect(mocks.languagesView).toHaveBeenCalledWith({
       model: languagesModel,
+    });
+    expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();
+    expect(mocks.selectAiCreditsReadModel).not.toHaveBeenCalled();
+  });
+
+  it('selects and renders the feature-owned adoption and impact adapters', () => {
+    const CopilotAdoptionAdapter = resolveStandardRouteAdapter(
+      VIEW_MODES.COPILOT_ADOPTION
+    );
+    const AiAdoptionPhasesAdapter = resolveStandardRouteAdapter(
+      VIEW_MODES.AI_ADOPTION_PHASES
+    );
+    const CopilotImpactAdapter = resolveStandardRouteAdapter(
+      VIEW_MODES.COPILOT_IMPACT
+    );
+
+    renderToStaticMarkup(<CopilotAdoptionAdapter {...context} />);
+    renderToStaticMarkup(<AiAdoptionPhasesAdapter {...context} />);
+    renderToStaticMarkup(<CopilotImpactAdapter {...context} />);
+
+    expect(mocks.selectCopilotAdoptionReadModel).toHaveBeenCalledWith(
+      context.aggregatedMetrics
+    );
+    expect(mocks.copilotAdoptionView).toHaveBeenCalledWith({
+      model: copilotAdoptionModel,
+    });
+    expect(mocks.selectAiAdoptionPhaseReadModel).toHaveBeenCalledWith(
+      context.aggregatedMetrics
+    );
+    expect(mocks.aiAdoptionPhaseView).toHaveBeenCalledWith({
+      model: aiAdoptionPhaseModel,
+    });
+    expect(mocks.selectCopilotImpactReadModel).toHaveBeenCalledWith(
+      context.aggregatedMetrics
+    );
+    expect(mocks.copilotImpactView).toHaveBeenCalledWith({
+      model: copilotImpactModel,
     });
     expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
     expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();

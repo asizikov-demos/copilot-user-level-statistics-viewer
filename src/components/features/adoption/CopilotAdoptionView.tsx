@@ -1,14 +1,14 @@
 "use client";
 
 import React from 'react';
-import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
-import AgentModeHeatmapChart from './charts/AgentModeHeatmapChart';
-import AdoptionTrendChart from './charts/AdoptionTrendChart';
-import CloudAgentAdoptionChart from './charts/CloudAgentAdoptionChart';
-import CodeReviewAdoptionChart from './charts/CodeReviewAdoptionChart';
-import { ViewPanel } from './ui';
-import { COPILOT_ADOPTION_SECTIONS } from './layout/contextSections';
-import type { CopilotAdoptionReadModel } from '../read-models/adoption';
+import { ViewPanel } from '../../ui';
+import { COPILOT_ADOPTION_SECTIONS } from '../../layout/contextSections';
+import type { CopilotAdoptionReadModel } from '../../../read-models/adoption';
+import { AdoptionTrendSection } from './sections/AdoptionTrendSection';
+import { AgentModeHeatmapSection } from './sections/AgentModeHeatmapSection';
+import { CloudAgentAdoptionSection } from './sections/CloudAgentAdoptionSection';
+import { CodeReviewAdoptionSection } from './sections/CodeReviewAdoptionSection';
+import { FeatureAdoptionSection } from './sections/FeatureAdoptionSection';
 
 interface CopilotAdoptionViewProps {
   model: CopilotAdoptionReadModel;
@@ -51,35 +51,28 @@ export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps)
       }}
       contentClassName="space-y-10"
     >
-      <div id={featureSection.id} className="scroll-mt-28">
-        <FeatureAdoptionChart
-          data={adoptionData}
-        />
-      </div>
-      <div id={heatmapSection.id} className="scroll-mt-28">
-        <AgentModeHeatmapChart data={agentModeHeatmapData || []} />
-      </div>
+      <FeatureAdoptionSection sectionId={featureSection.id} data={adoptionData} />
+      <AgentModeHeatmapSection sectionId={heatmapSection.id} data={agentModeHeatmapData || []} />
       {hasCloudAgentAdoption && (
-        <CloudAgentAdoptionChart
+        <CloudAgentAdoptionSection
           data={dailyCloudAgentAdoptionData}
           reportStartDay={stats.reportStartDay}
           reportEndDay={stats.reportEndDay}
         />
       )}
       {hasCodeReviewAdoption && (
-        <CodeReviewAdoptionChart
+        <CodeReviewAdoptionSection
           data={dailyCodeReviewAdoptionData}
           reportStartDay={stats.reportStartDay}
           reportEndDay={stats.reportEndDay}
         />
       )}
-      <div id={trendSection.id} className="scroll-mt-28">
-        <AdoptionTrendChart
-          data={dailyAdoptionTrend}
-          reportStartDay={stats.reportStartDay}
-          reportEndDay={stats.reportEndDay}
-        />
-      </div>
+      <AdoptionTrendSection
+        sectionId={trendSection.id}
+        data={dailyAdoptionTrend}
+        reportStartDay={stats.reportStartDay}
+        reportEndDay={stats.reportEndDay}
+      />
     </ViewPanel>
   );
 }

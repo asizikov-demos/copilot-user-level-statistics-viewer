@@ -2,11 +2,11 @@
 
 import { Bar } from 'react-chartjs-2';
 import { useMemo } from 'react';
-import { registerChartJS } from './utils/chartSetup';
-import { chartColors } from './utils/chartColors';
-import { createDailyBarChartConfig, padDailyReportRangeData } from './utils/dailyBarChart';
-import type { DailyCloudAgentAdoptionData } from '../../domain/calculators/metricCalculators';
-import ChartContainer from '../ui/ChartContainer';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { chartColors } from '../../../charts/utils/chartColors';
+import { createDailyBarChartConfig, padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
+import type { DailyCloudAgentAdoptionData } from '../../../../domain/calculators/metricCalculators';
+import ChartContainer from '../../../ui/ChartContainer';
 
 registerChartJS();
 

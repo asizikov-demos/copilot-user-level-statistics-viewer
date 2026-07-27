@@ -2,15 +2,15 @@
 
 import { Chart } from 'react-chartjs-2';
 import { useMemo } from 'react';
-import { registerChartJS } from './utils/chartSetup';
+import { registerChartJS } from '../../../charts/utils/chartSetup';
 import {
   createAdoptionTrendChartConfig,
   createAdoptionTrendSummaryStats,
   getAdoptionTrendMetrics,
   padAdoptionTrendData,
-} from './utils/adoptionTrendChart';
-import type { DailyAdoptionTrend } from '../../domain/calculators/metricCalculators';
-import ChartContainer from '../ui/ChartContainer';
+} from '../../../charts/utils/adoptionTrendChart';
+import type { DailyAdoptionTrend } from '../../../../domain/calculators/metricCalculators';
+import ChartContainer from '../../../ui/ChartContainer';
 
 registerChartJS();
 
