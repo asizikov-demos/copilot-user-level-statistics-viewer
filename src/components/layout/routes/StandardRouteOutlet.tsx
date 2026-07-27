@@ -1,9 +1,11 @@
 import type { AggregatedMetrics } from '../../../types/aggregatedMetrics';
-import type { ViewMode } from '../../../types/navigation';
-import { resolveStandardRouteAdapter } from './standardRouteRegistry';
+import {
+  resolveStandardRouteAdapter,
+  type StandardViewMode,
+} from './standardRouteRegistry';
 
 interface StandardRouteOutletProps {
-  view: ViewMode;
+  view: StandardViewMode;
   aggregatedMetrics: AggregatedMetrics;
   enterpriseName: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;
