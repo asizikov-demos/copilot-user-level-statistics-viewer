@@ -37,6 +37,34 @@ describe('runUserDetailsRequest', () => {
     expect(onError).toHaveBeenCalledWith('Worker accumulator unavailable');
   });
 
+  it('uses the default error message when an Error has no message', async () => {
+    const onError = vi.fn();
+
+    await runUserDetailsRequest({
+      userId: 42,
+      load: vi.fn().mockRejectedValue(new Error()),
+      isCurrent: () => true,
+      onSuccess: vi.fn(),
+      onError,
+    });
+
+    expect(onError).toHaveBeenCalledWith('Failed to load user details.');
+  });
+
+  it('reports missing user details', async () => {
+    const onError = vi.fn();
+
+    await runUserDetailsRequest({
+      userId: 42,
+      load: vi.fn().mockResolvedValue(null),
+      isCurrent: () => true,
+      onSuccess: vi.fn(),
+      onError,
+    });
+
+    expect(onError).toHaveBeenCalledWith('No user details were returned for this user.');
+  });
+
   it('ignores late results from an obsolete request', async () => {
     let resolveRequest: (value: UserDetailedMetrics | null) => void = () => undefined;
     const load = vi.fn(() => new Promise<UserDetailedMetrics | null>((resolve) => {

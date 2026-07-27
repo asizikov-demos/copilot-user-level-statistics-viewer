@@ -4,10 +4,11 @@ import { makeMetric } from '../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../domain/metricsAggregator';
 import type { AggregatedMetrics } from '../../../types/aggregatedMetrics';
 import { VIEW_MODES, type ViewMode } from '../../../types/navigation';
+import type { StandardViewMode } from '../routes';
 import ViewRouter from '../ViewRouter';
 
 interface StandardRouteOutletProps {
-  view: ViewMode;
+  view: StandardViewMode;
   aggregatedMetrics: AggregatedMetrics;
   enterpriseName: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;

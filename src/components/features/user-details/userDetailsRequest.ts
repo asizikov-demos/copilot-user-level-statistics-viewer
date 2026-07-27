@@ -8,6 +8,8 @@ interface RunUserDetailsRequestOptions {
   onError: (message: string) => void;
 }
 
+const DEFAULT_USER_DETAILS_ERROR_MESSAGE = 'Failed to load user details.';
+
 export async function runUserDetailsRequest({
   userId,
   load,
@@ -32,6 +34,10 @@ export async function runUserDetailsRequest({
       return;
     }
 
-    onError(error instanceof Error ? error.message : 'Failed to load user details.');
+    onError(
+      error instanceof Error && error.message
+        ? error.message
+        : DEFAULT_USER_DETAILS_ERROR_MESSAGE
+    );
   }
 }
