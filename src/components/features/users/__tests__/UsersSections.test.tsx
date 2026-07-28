@@ -43,7 +43,7 @@ function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
 }
 
 describe('Users feature sections', () => {
-  it('renders summary cards with the same feature-user counts', () => {
+  it('renders the total population and feature adoption rails', () => {
     const users = [
       makeUser(),
       makeUser({
@@ -63,13 +63,17 @@ describe('Users feature sections', () => {
     );
 
     expect(markup).toContain('Total Users');
-    expect(markup).toContain('Chat Users');
-    expect(markup).toContain('Agent Users');
-    expect(markup).toContain('Code Review Users');
-    expect(markup).toContain('CLI Users');
-    expect(markup).toContain('Completion Users');
+    expect(markup).toContain('unique users');
+    expect(markup).toContain('Users with Copilot activity in the selected report period');
+    expect(markup).toContain('Chat');
+    expect(markup).toContain('Completions');
+    expect(markup).toContain('Agent mode');
+    expect(markup).toContain('Code review');
+    expect(markup).toContain('CLI');
     expect(markup).toContain('>2<');
     expect(markup.match(/>1</g)?.length).toBeGreaterThanOrEqual(5);
+    expect(markup.match(/users · 50%/g)?.length).toBe(5);
+    expect(markup.match(/role="progressbar"/g)?.length).toBe(5);
   });
 
   it('keeps the paged users table labels, feature chips, and empty state', () => {
