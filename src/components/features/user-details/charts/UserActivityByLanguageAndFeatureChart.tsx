@@ -78,7 +78,7 @@ export default function UserActivityByLanguageAndFeatureChart({
           .filter(item => item.language === language)
           .reduce((sum, item) => sum + item.code_generation_activity_count, 0)
       );
-      return createBarDataset(getSequentialColor(index), language.charAt(0).toUpperCase() + language.slice(1), data);
+      return createBarDataset(getSequentialColor(index), language, data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {

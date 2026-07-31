@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { padDailyReportRangeData } from '../../../../charts/utils/dailyBarChart';
 import { createBarDataset } from '../../../../charts/utils/chartStyles';
 import { getSequentialColor } from '../../../../charts/utils/chartColors';
-import { formatShortDate } from '../../../../../utils/formatters';
+import { formatShortDate, formatModelDisplayName } from '../../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../../domain/assumedInteractions';
 import type { UserDayData } from '../../../../../types/metrics';
 
@@ -34,7 +34,7 @@ function buildModelBarChartData(
         .filter(item => item.model === model)
         .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
     );
-    return createBarDataset(getSequentialColor(index), model.charAt(0).toUpperCase() + model.slice(1), data);
+    return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
   }).filter(dataset => dataset.data.some(value => value > 0));
 
   return {
@@ -95,7 +95,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     expect(result.labels).toHaveLength(3);
     expect(result.labels[1]).toBe(formatShortDate('2024-01-02'));
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Gpt-4o');
+    expect(result.datasets[0].label).toBe(formatModelDisplayName('gpt-4o'));
     expect(result.datasets[0].data).toEqual([7, 0, 4]);
   });
 
@@ -113,7 +113,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
 
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-01');
 
-    expect(result.datasets.map(d => d.label)).toEqual(['Gpt-4o']);
+    expect(result.datasets.map(d => d.label)).toEqual([formatModelDisplayName('gpt-4o')]);
   });
 
   it('filters out datasets where every day has zero interactions', () => {
@@ -124,7 +124,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-02');
 
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Gpt-4o');
+    expect(result.datasets[0].label).toBe(formatModelDisplayName('gpt-4o'));
   });
 
   it('uses getTotalUserInitiatedInteractionCount for interaction totals', () => {

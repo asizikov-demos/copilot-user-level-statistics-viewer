@@ -33,7 +33,7 @@ function buildLanguageBarChartData(
         .filter(item => item.language === language)
         .reduce((sum, item) => sum + item.code_generation_activity_count, 0)
     );
-    return createBarDataset(getSequentialColor(index), language.charAt(0).toUpperCase() + language.slice(1), data);
+    return createBarDataset(getSequentialColor(index), language, data);
   }).filter(dataset => dataset.data.some(value => value > 0));
 
   return {
@@ -93,7 +93,7 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
     expect(result.labels).toHaveLength(3);
     expect(result.labels[1]).toBe(formatShortDate('2024-01-02'));
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Typescript');
+    expect(result.datasets[0].label).toBe('typescript');
     expect(result.datasets[0].data).toEqual([5, 0, 3]);
   });
 
@@ -111,7 +111,7 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
 
     const result = buildLanguageBarChartData(days, '2024-01-01', '2024-01-01');
 
-    expect(result.datasets.map(d => d.label)).toEqual(['Typescript']);
+    expect(result.datasets.map(d => d.label)).toEqual(['typescript']);
   });
 
   it('filters out datasets where every day has zero generations', () => {
@@ -122,7 +122,7 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
     const result = buildLanguageBarChartData(days, '2024-01-01', '2024-01-02');
 
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Typescript');
+    expect(result.datasets[0].label).toBe('typescript');
   });
 
   it('uses shared sequential colors from chartColors', () => {

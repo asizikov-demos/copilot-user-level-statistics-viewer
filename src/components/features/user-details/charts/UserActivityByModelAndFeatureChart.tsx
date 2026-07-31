@@ -11,7 +11,7 @@ import { padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { getSequentialColor } from '../../../charts/utils/chartColors';
 import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
-import { formatShortDate } from '../../../../utils/formatters';
+import { formatShortDate, formatModelDisplayName } from '../../../../utils/formatters';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
@@ -83,7 +83,7 @@ export default function UserActivityByModelAndFeatureChart({
           .filter(item => item.model === model)
           .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
       );
-      return createBarDataset(getSequentialColor(index), model.charAt(0).toUpperCase() + model.slice(1), data);
+      return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     return {
