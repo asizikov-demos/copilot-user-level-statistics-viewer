@@ -146,6 +146,7 @@ describe('metrics aggregation modularization boundary', () => {
       inlineModeUsers: 1,
       planModeUsers: 0,
       cliUsers: 1,
+      appUsers: 0,
       codingAgentUsers: 1,
       codeReviewUsers: 2,
       advancedUsers: 1,

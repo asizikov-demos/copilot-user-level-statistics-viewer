@@ -35,6 +35,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     agentModeUsers: chartColors.red.solid,
     planModeUsers: chartColors.indigo.solid,
     cliUsers: chartColors.pink.solid,
+    appUsers: chartColors.black.solid,
     inlineModeUsers: chartColors.violet.solid,
     codingAgentUsers: chartColors.teal.solid,
     codeReviewUsers: chartColors.cyan.solid,
@@ -52,6 +53,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
   const chatRate = totalUsers > 0 ? (data.chatUsers / totalUsers) * 100 : 0;
   const agentRate = totalUsers > 0 ? (data.agentModeUsers / totalUsers) * 100 : 0;
   const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
+  const appRate = totalUsers > 0 ? (data.appUsers / totalUsers) * 100 : 0;
   const codingAgentRate = totalUsers > 0 ? ((data.codingAgentUsers || 0) / totalUsers) * 100 : 0;
   const codeReviewRate = totalUsers > 0 ? ((data.codeReviewUsers || 0) / totalUsers) * 100 : 0;
   const advancedUsersCount = data?.advancedUsers || 0;
@@ -115,6 +117,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         { value: `${Math.round(chatRate)}%`, label: 'Chat Adoption', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
         { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode Adoption', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
         { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI Adoption', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
+        { value: `${Math.round(appRate)}%`, label: 'Copilot App Adoption', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-gray-900' },
         { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent Adoption', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
         { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review Adoption', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-cyan-600' },
         { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + CLI + Cloud Agent)`, colorClass: 'text-purple-600' },

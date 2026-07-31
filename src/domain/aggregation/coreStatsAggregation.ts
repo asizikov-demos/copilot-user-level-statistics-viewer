@@ -45,6 +45,7 @@ export function accumulateCoreStatsAggregation(
     metric.used_chat,
     metric.used_agent,
     metric.used_cli,
+    metric.used_copilot_app ?? false,
     usedCopilotCloudAgent
   );
 }

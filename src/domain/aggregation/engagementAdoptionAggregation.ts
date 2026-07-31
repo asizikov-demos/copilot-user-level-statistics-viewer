@@ -28,6 +28,7 @@ import {
 } from '../calculators/engagementCalculator';
 import {
   accumulateCliAdoption,
+  accumulateCopilotAppAdoption,
   accumulateCodeReviewAdoption,
   accumulateCodingAgentAdoption,
   accumulateFeatureAdoption,
@@ -78,6 +79,11 @@ export function accumulateEngagementAdoptionAggregation(
 
   accumulateEngagement(accumulator.engagement, date, userId);
   accumulateCliAdoption(accumulator.featureAdoption, userId, metric.used_cli);
+  accumulateCopilotAppAdoption(
+    accumulator.featureAdoption,
+    userId,
+    metric.used_copilot_app ?? false
+  );
   accumulateCodingAgentAdoption(
     accumulator.featureAdoption,
     userId,

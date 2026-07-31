@@ -8,20 +8,24 @@ import CLISessionChart from '../../../charts/CLISessionChart';
 import CLITokensChart from '../../../charts/CLITokensChart';
 
 interface UserDetailsCliUsageSectionProps {
-  tokenData: DailyCliTokenData[];
-  sessionData: DailyCliSessionData[];
+  cliTokenData: DailyCliTokenData[];
+  appTokenData: DailyCliTokenData[];
+  cliSessionData: DailyCliSessionData[];
+  appSessionData: DailyCliSessionData[];
 }
 
 export default function UserDetailsCliUsageSection({
-  tokenData,
-  sessionData,
+  cliTokenData,
+  appTokenData,
+  cliSessionData,
+  appSessionData,
 }: UserDetailsCliUsageSectionProps) {
   return (
     <div className="border-t border-gray-200 pt-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI Usage</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Copilot CLI &amp; App Usage</h3>
       <div className="space-y-8">
-        <CLITokensChart data={tokenData} />
-        <CLISessionChart data={sessionData} />
+        <CLITokensChart data={cliTokenData} appData={appTokenData} />
+        <CLISessionChart data={cliSessionData} appData={appSessionData} />
       </div>
     </div>
   );

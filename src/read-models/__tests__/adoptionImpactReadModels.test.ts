@@ -65,8 +65,9 @@ function makeFeatureMetrics(): AggregatedMetrics {
       editModeImpactData: [{ ...IMPACT_POINT, locAdded: 15, netChange: 12 }],
       inlineModeImpactData: [{ ...IMPACT_POINT, locAdded: 16, netChange: 13 }],
       askModeImpactData: [{ ...IMPACT_POINT, locAdded: 17, netChange: 14 }],
-      cliImpactData: [{ ...IMPACT_POINT, locAdded: 18, netChange: 15 }],
-      joinedImpactData: [{ ...IMPACT_POINT, locAdded: 19, netChange: 16 }],
+      copilotAppImpactData: [{ ...IMPACT_POINT, locAdded: 18, netChange: 15 }],
+      cliImpactData: [{ ...IMPACT_POINT, locAdded: 19, netChange: 16 }],
+      joinedImpactData: [{ ...IMPACT_POINT, locAdded: 20, netChange: 17 }],
     },
     ai: {
       aiAdoptionPhaseData: [{
@@ -146,6 +147,7 @@ describe('adoption and impact read models', () => {
       editModeImpactData: metrics.impact.editModeImpactData,
       inlineModeImpactData: metrics.impact.inlineModeImpactData,
       askModeImpactData: metrics.impact.askModeImpactData,
+      copilotAppImpactData: metrics.impact.copilotAppImpactData,
       cliImpactData: metrics.impact.cliImpactData,
       joinedImpactData: metrics.impact.joinedImpactData,
     });
@@ -154,6 +156,7 @@ describe('adoption and impact read models', () => {
     expect(model.editModeImpactData).toBe(metrics.impact.editModeImpactData);
     expect(model.inlineModeImpactData).toBe(metrics.impact.inlineModeImpactData);
     expect(model.askModeImpactData).toBe(metrics.impact.askModeImpactData);
+    expect(model.copilotAppImpactData).toBe(metrics.impact.copilotAppImpactData);
     expect(model.cliImpactData).toBe(metrics.impact.cliImpactData);
     expect(model.joinedImpactData).toBe(metrics.impact.joinedImpactData);
     expect(Object.keys(model)).toEqual([
@@ -162,6 +165,7 @@ describe('adoption and impact read models', () => {
       'editModeImpactData',
       'inlineModeImpactData',
       'askModeImpactData',
+      'copilotAppImpactData',
       'cliImpactData',
       'joinedImpactData',
     ]);
@@ -186,6 +190,7 @@ describe('adoption and impact read models', () => {
       metrics.impact.editModeImpactData,
       metrics.impact.inlineModeImpactData,
       metrics.impact.askModeImpactData,
+      metrics.impact.copilotAppImpactData,
       metrics.impact.cliImpactData,
       metrics.impact.joinedImpactData,
     ]);

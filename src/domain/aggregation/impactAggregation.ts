@@ -4,6 +4,7 @@ import {
   accumulateFeatureImpactRecord,
   computeAgentImpactData,
   computeAskModeImpactData,
+  computeCopilotAppImpactData,
   computeCliImpactData,
   computeCodeCompletionImpactData,
   computeEditModeImpactData,
@@ -51,6 +52,7 @@ export function finalizeImpactAggregation(
     editModeImpactData: computeEditModeImpactData(accumulator.impact),
     inlineModeImpactData: computeInlineModeImpactData(accumulator.impact),
     askModeImpactData: computeAskModeImpactData(accumulator.impact),
+    copilotAppImpactData: computeCopilotAppImpactData(accumulator.impact),
     cliImpactData: computeCliImpactData(accumulator.impact),
     joinedImpactData: computeJoinedImpactData(accumulator.impact),
   };

@@ -42,6 +42,23 @@ describe('computeIDEInsights', () => {
   });
 
   describe('IDE Concentration', () => {
+    it('does not treat Copilot App as an IDE for standardization insights', () => {
+      const insights = computeIDEInsights([
+        makeIDE('copilot_app', 100, 1000, 400),
+      ], 0, 100, 0);
+
+      expect(insights.find((i) => i.title === 'Strong IDE Standardization')).toBeUndefined();
+    });
+
+    it('uses the IDE-only denominator when App-only users are present', () => {
+      const insights = computeIDEInsights([
+        makeIDE('vscode', 8, 100, 40),
+        makeIDE('copilot_app', 92, 1000, 400),
+      ], 0, 8, 0);
+
+      expect(insights.find((i) => i.title === 'Strong IDE Standardization')).toBeDefined();
+    });
+
     it('triggers Strong IDE Standardization when top IDE >= 80% share', () => {
       const stats = [
         makeIDE('vscode', 85, 1000, 400),
@@ -95,6 +112,14 @@ describe('computeIDEInsights', () => {
   });
 
   describe('CLI Penetration', () => {
+    it('does not recommend CLI based on Copilot App usage', () => {
+      const insights = computeIDEInsights([
+        makeIDE('copilot_app', 30, 500, 200, 0),
+      ], 0, 30, 0);
+
+      expect(insights.find((i) => i.title === 'CLI Opportunity')).toBeUndefined();
+    });
+
     it('triggers CLI Opportunity for IDEs with limited agentic harnesses without CLI', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400, 10),
@@ -143,6 +168,15 @@ describe('computeIDEInsights', () => {
   });
 
   describe('Low-Usage Clients', () => {
+    it('does not include Copilot App in low-usage IDE insights', () => {
+      const insights = computeIDEInsights([
+        makeIDE('vscode', 50, 1000, 400),
+        makeIDE('copilot_app', 1, 10, 4),
+      ], 0, 50, 0);
+
+      expect(insights.find((i) => i.title === 'Low-Usage Clients')).toBeUndefined();
+    });
+
     it('triggers when IDEs have 1-2 users and others have more', () => {
       const stats = [
         makeIDE('vscode', 50, 1000, 400),

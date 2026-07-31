@@ -7,6 +7,7 @@ import {
   computeAgentImpactData,
   computeCodeCompletionImpactData,
   computeEditModeImpactData,
+  computeCopilotAppImpactData,
   computeCliImpactData,
   computeJoinedImpactData,
   type FeatureImpactInput,
@@ -86,6 +87,23 @@ describe('impactCalculator', () => {
       expect(results[0].userCount).toBe(1);
     });
 
+    it('should route copilot_app to Copilot App impact', () => {
+      const accumulator = createImpactAccumulator();
+      ensureImpactDates(accumulator, '2024-01-15');
+
+      accumulateFeatureImpacts(accumulator, '2024-01-15', 1, [
+        { feature: 'copilot_app', locAdded: 90, locDeleted: 15 },
+      ]);
+
+      const results = computeCopilotAppImpactData(accumulator);
+
+      expect(results[0]).toMatchObject({
+        locAdded: 90,
+        locDeleted: 15,
+        userCount: 1,
+      });
+    });
+
     it('should continue routing legacy cli_agent to CLI impact', () => {
       const accumulator = createImpactAccumulator();
       ensureImpactDates(accumulator, '2024-01-15');
@@ -136,6 +154,7 @@ describe('impactCalculator', () => {
         { feature: 'chat_inline', locAdded: 20, locDeleted: 3 },
         { feature: 'chat_panel_agent_mode', locAdded: 40, locDeleted: 8 },
         { feature: 'copilot_cli', locAdded: 10, locDeleted: 2 },
+        { feature: 'copilot_app', locAdded: 12, locDeleted: 3 },
       ];
 
       accumulateFeatureImpacts(accumulator, '2024-01-15', 1, features);
@@ -143,8 +162,8 @@ describe('impactCalculator', () => {
       const results = computeJoinedImpactData(accumulator);
 
       expect(results).toHaveLength(1);
-      expect(results[0].locAdded).toBe(250); // Sum of all
-      expect(results[0].locDeleted).toBe(48); // Sum of all
+      expect(results[0].locAdded).toBe(262); // Sum of all
+      expect(results[0].locDeleted).toBe(51); // Sum of all
     });
 
     it('should exclude non-joined features from joined impact', () => {

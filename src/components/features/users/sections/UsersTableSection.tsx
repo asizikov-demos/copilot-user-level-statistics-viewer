@@ -212,6 +212,11 @@ export default function UsersTableSection({
               CLI
             </span>
           )}
+          {user.used_copilot_app && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              App
+            </span>
+          )}
           {user.used_copilot_coding_agent && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
               Cloud Agent

@@ -19,6 +19,7 @@ export type IDEIconKey =
   | 'eclipse'
   | 'xcode'
   | 'zed'
+  | 'copilot_app'
   | 'copilot_cli';
 
 interface IDEMetadataDefinition {
@@ -56,6 +57,7 @@ const IDE_METADATA_DEFINITIONS: readonly IDEMetadataDefinition[] = [
   { keys: ['eclipse'], label: 'Eclipse', iconKey: 'eclipse', color: '#2C2255' },
   { keys: ['xcode'], label: 'Xcode', iconKey: 'xcode', color: '#29ABE2' },
   { keys: ['zed', 'zed:zed-copilot'], label: 'Zed', iconKey: 'zed', color: '#F9CE49' },
+  { keys: ['copilot_app'], label: 'Copilot App', iconKey: 'copilot_app', color: '#000000' },
   { keys: ['copilot_cli'], label: 'Copilot CLI', iconKey: 'copilot_cli', color: '#DB61A2' },
   { keys: ['sublime_text'], color: '#FF9800' },
 ];

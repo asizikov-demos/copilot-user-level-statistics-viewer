@@ -18,12 +18,14 @@ export default function CopilotImpactView({ model }: CopilotImpactViewProps) {
     editModeImpactData,
     inlineModeImpactData,
     askModeImpactData,
+    copilotAppImpactData,
     cliImpactData,
     joinedImpactData,
   } = model;
   const impactDataByMode = {
     combined: joinedImpactData,
     agent: agentImpactData,
+    copilotApp: copilotAppImpactData,
     cli: cliImpactData,
     codeCompletion: codeCompletionImpactData,
     ask: askModeImpactData,

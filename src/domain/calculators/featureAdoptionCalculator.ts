@@ -15,6 +15,7 @@ export interface FeatureAdoptionData {
   inlineModeUsers: number;
   planModeUsers: number;
   cliUsers: number;
+  appUsers: number;
   codingAgentUsers: number;
   codeReviewUsers: number;
   advancedUsers: number;
@@ -23,6 +24,7 @@ export interface FeatureAdoptionData {
 export interface FeatureAdoptionAccumulator {
   userFeatures: Map<number, Set<string>>;
   cliUsers: Set<number>;
+  copilotAppUsers: Set<number>;
   codingAgentUsers: Set<number>;
   codeReviewUsers: Set<number>;
 }
@@ -31,6 +33,7 @@ export function createFeatureAdoptionAccumulator(): FeatureAdoptionAccumulator {
   return {
     userFeatures: new Map(),
     cliUsers: new Set(),
+    copilotAppUsers: new Set(),
     codingAgentUsers: new Set(),
     codeReviewUsers: new Set(),
   };
@@ -59,6 +62,16 @@ export function accumulateCliAdoption(
   if (!usedCli) return;
 
   accumulator.cliUsers.add(userId);
+}
+
+export function accumulateCopilotAppAdoption(
+  accumulator: FeatureAdoptionAccumulator,
+  userId: number,
+  usedCopilotApp: boolean
+): void {
+  if (!usedCopilotApp) return;
+
+  accumulator.copilotAppUsers.add(userId);
 }
 
 export function accumulateCodingAgentAdoption(
@@ -92,6 +105,7 @@ export function computeFeatureAdoptionData(
   let inlineModeUsers = 0;
   let planModeUsers = 0;
   let cliUsers = 0;
+  let appUsers = 0;
   let codingAgentUsers = 0;
   let codeReviewUsers = 0;
   let advancedUsers = 0;
@@ -99,6 +113,7 @@ export function computeFeatureAdoptionData(
   const userIds = new Set<number>([
     ...accumulator.userFeatures.keys(),
     ...accumulator.cliUsers.values(),
+    ...accumulator.copilotAppUsers.values(),
     ...accumulator.codingAgentUsers.values(),
     ...accumulator.codeReviewUsers.values(),
   ]);
@@ -106,6 +121,7 @@ export function computeFeatureAdoptionData(
   for (const userId of userIds) {
     const features = accumulator.userFeatures.get(userId) || new Set<string>();
     const isCliUser = accumulator.cliUsers.has(userId);
+    const isCopilotAppUser = accumulator.copilotAppUsers.has(userId);
     const isCodingAgentUser = accumulator.codingAgentUsers.has(userId);
     const isCodeReviewUser = accumulator.codeReviewUsers.has(userId);
     let hasCompletionFeature = false;
@@ -136,11 +152,12 @@ export function computeFeatureAdoptionData(
     if (hasInlineMode) inlineModeUsers++;
     if (hasPlanMode) planModeUsers++;
     if (isCliUser) cliUsers++;
+    if (isCopilotAppUser) appUsers++;
     if (isCodingAgentUser) codingAgentUsers++;
     if (isCodeReviewUser) codeReviewUsers++;
     if (hasAgentFeature || isCliUser || isCodingAgentUser) advancedUsers++;
 
-    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCodingAgentUser && !isCodeReviewUser) {
+    if (hasCompletionFeature && !hasChatFeature && !hasAgentFeature && !isCliUser && !isCopilotAppUser && !isCodingAgentUser && !isCodeReviewUser) {
       completionOnlyUsers++;
     }
   }
@@ -155,6 +172,7 @@ export function computeFeatureAdoptionData(
     inlineModeUsers,
     planModeUsers,
     cliUsers,
+    appUsers,
     codingAgentUsers,
     codeReviewUsers,
     advancedUsers,

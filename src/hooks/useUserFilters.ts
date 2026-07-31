@@ -8,6 +8,7 @@ export const USER_FEATURE_FILTERS = [
   { value: 'completions', label: 'Completions' },
   { value: 'agent', label: 'Agent' },
   { value: 'cli', label: 'CLI' },
+  { value: 'app', label: 'App' },
   { value: 'cloud_agent', label: 'Cloud Agent' },
   { value: 'code_review', label: 'Code Review' },
   { value: 'auto_mode', label: 'Auto Mode' },
@@ -50,6 +51,8 @@ function matchesFeature(user: UserSummary, feature: string): boolean {
       return user.used_agent;
     case 'cli':
       return user.used_cli;
+    case 'app':
+      return user.used_copilot_app;
     case 'cloud_agent':
       return user.used_copilot_coding_agent;
     case 'code_review':

@@ -4,7 +4,7 @@ export const IMPACT_MODE_CONFIGS = [
   {
     mode: 'combined',
     title: 'Combined Copilot Impact',
-    description: 'Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, and CLI activities.',
+    description: 'Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, Copilot App, and CLI activities.',
     emptyStateMessage: 'No combined impact data available.',
   },
   {
@@ -12,6 +12,12 @@ export const IMPACT_MODE_CONFIGS = [
     title: 'Copilot Agent Mode Impact',
     description: 'Daily lines of code added and deleted through Copilot Agent Mode sessions.',
     emptyStateMessage: 'No agent mode impact data available.',
+  },
+  {
+    mode: 'copilotApp',
+    title: 'Copilot App Impact',
+    description: 'Daily lines of code added and deleted through Copilot App sessions.',
+    emptyStateMessage: 'No Copilot App impact data available.',
   },
   {
     mode: 'cli',

@@ -44,6 +44,7 @@ describe('adoption sections', () => {
       inlineModeUsers: 1,
       planModeUsers: 1,
       cliUsers: 1,
+      appUsers: 1,
       codingAgentUsers: 1,
       codeReviewUsers: 1,
       advancedUsers: 2,

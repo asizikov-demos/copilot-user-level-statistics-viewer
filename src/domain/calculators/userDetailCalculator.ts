@@ -7,6 +7,7 @@ import {
   computeAgentImpactData,
   computeAskModeImpactData,
   computeCodeCompletionImpactData,
+  computeCopilotAppImpactData,
   computeCliImpactData,
   computeJoinedImpactData,
 } from './impactCalculator';
@@ -193,10 +194,18 @@ export function accumulateUserDetail(
   const state = getOrCreateUserState(accumulator, userId);
   const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
   const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
-  const ideAssumedInteractionCounts = distributeAssumedInteractionsByGeneration(
-    metric.totals_by_ide,
+  const assumptionEligibleIdeEntries = metric.totals_by_ide
+    .map((ide, index) => ({ ide, index }))
+    .filter(({ ide }) => ide.ide !== 'copilot_app');
+  const eligibleIdeAssumedInteractionCounts = distributeAssumedInteractionsByGeneration(
+    assumptionEligibleIdeEntries.map(({ ide }) => ide),
     sumAssumedUserInitiatedInteractions(featureTotals),
   );
+  const ideAssumedInteractionCounts = metric.totals_by_ide.map(() => 0);
+  assumptionEligibleIdeEntries.forEach(({ index }, eligibleIndex) => {
+    ideAssumedInteractionCounts[index] =
+      eligibleIdeAssumedInteractionCounts[eligibleIndex] ?? 0;
+  });
 
   for (const mf of modelFeatureTotals) {
     state.totalModelRequests += getCanonicalUserInitiatedInteractionCount(mf);
@@ -279,6 +288,12 @@ export function accumulateUserDetail(
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
     totals_by_model_feature: modelFeatureTotals.map((mf) => ({ ...mf })),
+    totals_by_copilot_app: metric.totals_by_copilot_app ? {
+      session_count: metric.totals_by_copilot_app.session_count,
+      request_count: metric.totals_by_copilot_app.request_count,
+      prompt_count: metric.totals_by_copilot_app.prompt_count,
+      token_usage: { ...metric.totals_by_copilot_app.token_usage },
+    } : undefined,
     totals_by_cli: metric.totals_by_cli ? {
       session_count: metric.totals_by_cli.session_count,
       request_count: metric.totals_by_cli.request_count,
@@ -352,6 +367,7 @@ export function computeSingleUserDetailedMetrics(
     dailyAgentImpact: computeAgentImpactData(impactAccumulator),
     dailyAskModeImpact: computeAskModeImpactData(impactAccumulator),
     dailyCompletionImpact: computeCodeCompletionImpactData(impactAccumulator),
+    dailyCopilotAppImpact: computeCopilotAppImpactData(impactAccumulator),
     dailyCliImpact: computeCliImpactData(impactAccumulator),
     days: state.days,
     reportStartDay: accumulator.reportStartDay,

@@ -18,11 +18,12 @@ export function computeIDEInsights(
   cliUsers: number,
 ): IDEInsight[] {
   const insights: IDEInsight[] = [];
+  const ideOnlyStats = ideStats.filter((stat) => stat.ide !== 'copilot_app');
 
   // IDE-specific insights (only when IDE data exists)
-  if (ideStats.length > 0) {
+  if (ideOnlyStats.length > 0) {
     // 1. IDE Concentration — top IDE >= 80% share
-    const sorted = [...ideStats].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
+    const sorted = [...ideOnlyStats].sort((a, b) => b.uniqueUsers - a.uniqueUsers);
     const topIDE = sorted[0];
     if (totalUniqueIDEUsers > 0) {
       const topPct = (topIDE.uniqueUsers / totalUniqueIDEUsers) * 100;
@@ -37,7 +38,7 @@ export function computeIDEInsights(
 
     // 2. IDE Fragmentation — 5+ IDEs each with >= 5% share
     if (totalUniqueIDEUsers > 0) {
-      const significantIDEs = ideStats.filter(
+      const significantIDEs = ideOnlyStats.filter(
         (s) => (s.uniqueUsers / totalUniqueIDEUsers) * 100 >= 5,
       );
       if (significantIDEs.length >= 5) {
@@ -69,7 +70,7 @@ export function computeIDEInsights(
       'clion',
       'rustrover',
     ]);
-    const limitedAgenticIDEs = ideStats.filter(
+    const limitedAgenticIDEs = ideOnlyStats.filter(
       (s) => !strongAgenticIDEs.has(s.ide) && s.uniqueUsers > 0,
     );
     if (limitedAgenticIDEs.length > 0) {
@@ -89,8 +90,8 @@ export function computeIDEInsights(
     }
 
     // 4. Low-Usage Clients — IDEs with 1-2 users when others have more
-    const lowUsageIDEs = ideStats.filter((s) => s.uniqueUsers <= 2);
-    const hasLargerIDEs = ideStats.some((s) => s.uniqueUsers > 2);
+    const lowUsageIDEs = ideOnlyStats.filter((s) => s.uniqueUsers <= 2);
+    const hasLargerIDEs = ideOnlyStats.some((s) => s.uniqueUsers > 2);
     if (lowUsageIDEs.length > 0 && hasLargerIDEs) {
       const names = lowUsageIDEs.map((s) => formatIDEName(s.ide)).join(', ');
       insights.push({

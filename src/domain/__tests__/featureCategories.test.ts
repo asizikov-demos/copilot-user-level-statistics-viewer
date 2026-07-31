@@ -23,6 +23,7 @@ describe('featureCategories taxonomy', () => {
   it('classifies known feature membership consistently', () => {
     expect(isCliFeature('copilot_cli')).toBe(true);
     expect(isCliFeature('cli_agent')).toBe(true);
+    expect(isCliFeature('copilot_app')).toBe(false);
     expect(isCliFeature('chat_panel_ask_mode')).toBe(false);
 
     expect(isChatFeature('chat_panel_unknown_mode')).toBe(true);
@@ -34,6 +35,7 @@ describe('featureCategories taxonomy', () => {
 
     expect(isJoinedImpactFeature('code_completion')).toBe(true);
     expect(isJoinedImpactFeature('copilot_cli')).toBe(true);
+    expect(isJoinedImpactFeature('copilot_app')).toBe(true);
     expect(isJoinedImpactFeature('chat_panel_plan_mode')).toBe(false);
 
     expect(getChatModeBucket('chat_panel_ask_mode')).toBe('ask');
@@ -51,6 +53,7 @@ describe('featureCategories taxonomy', () => {
       'agentModeUsers',
       'planModeUsers',
       'cliUsers',
+      'appUsers',
       'inlineModeUsers',
       'codingAgentUsers',
       'codeReviewUsers',

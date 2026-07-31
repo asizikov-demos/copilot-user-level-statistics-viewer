@@ -156,6 +156,38 @@ describe('userDetailCalculator', () => {
   });
 
   describe('accumulateUserDetail — CLI data stored in days', () => {
+    it('should store totals_by_copilot_app in the day entry when present', () => {
+      const acc = createUserDetailAccumulator();
+      acc.reportStartDay = '2024-01-01';
+      acc.reportEndDay = '2024-01-31';
+
+      accumulateUserDetail(acc, createMetric({
+        totals_by_copilot_app: {
+          session_count: 1,
+          request_count: 90,
+          prompt_count: 0,
+          token_usage: {
+            avg_tokens_per_request: 138654.93,
+            output_tokens_sum: 49838,
+            prompt_tokens_sum: 12429106,
+          },
+        },
+      }));
+
+      const result = computeSingleUserDetailedMetrics(acc, 1);
+
+      expect(result?.days[0].totals_by_copilot_app).toEqual({
+        session_count: 1,
+        request_count: 90,
+        prompt_count: 0,
+        token_usage: {
+          avg_tokens_per_request: 138654.93,
+          output_tokens_sum: 49838,
+          prompt_tokens_sum: 12429106,
+        },
+      });
+    });
+
     it('should store totals_by_cli in the day entry when present', () => {
       const acc = createUserDetailAccumulator();
       acc.reportStartDay = '2024-01-01';

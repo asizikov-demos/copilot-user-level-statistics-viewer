@@ -9,6 +9,7 @@ import {
   calculateAskModeImpactFromMetrics,
   calculateAgentImpactFromMetrics,
   calculateCodeCompletionImpactFromMetrics,
+  calculateCopilotAppImpactFromMetrics,
   calculateCliImpactFromMetrics,
 } from './impactCalculator';
 
@@ -72,5 +73,7 @@ export const calculateAskModeImpactData = calculateAskModeImpactFromMetrics;
 export const calculateAgentImpactData = calculateAgentImpactFromMetrics;
 
 export const calculateCodeCompletionImpactData = calculateCodeCompletionImpactFromMetrics;
+
+export const calculateCopilotAppImpactData = calculateCopilotAppImpactFromMetrics;
 
 export const calculateCliImpactData = calculateCliImpactFromMetrics;

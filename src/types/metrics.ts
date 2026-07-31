@@ -4,6 +4,17 @@ export interface AIAdoptionPhase {
   version: string;
 }
 
+export interface CopilotClientUsageTotals {
+  session_count: number;
+  request_count: number;
+  prompt_count: number;
+  token_usage: {
+    output_tokens_sum: number;
+    prompt_tokens_sum: number;
+    avg_tokens_per_request: number;
+  };
+}
+
 export interface CopilotMetrics {
   report_start_day: string;
   report_end_day: string;
@@ -81,20 +92,14 @@ export interface CopilotMetrics {
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;
+  used_copilot_app?: boolean;
   used_copilot_coding_agent: boolean;
   used_copilot_cloud_agent?: boolean;
   used_copilot_code_review_active?: boolean | null;
   used_copilot_code_review_passive?: boolean | null;
   ai_adoption_phase?: AIAdoptionPhase;
-  totals_by_cli?: {
-    session_count: number;
-    request_count: number;
-    prompt_count: number;
-    token_usage: {
-      output_tokens_sum: number;
-      prompt_tokens_sum: number;
-      avg_tokens_per_request: number;
-    };
+  totals_by_copilot_app?: CopilotClientUsageTotals;
+  totals_by_cli?: CopilotClientUsageTotals & {
     last_known_cli_version?: {
       sampled_at: string;
       cli_version: string;
@@ -137,6 +142,7 @@ export interface UserSummary {
   used_agent: boolean;
   used_chat: boolean;
   used_cli: boolean;
+  used_copilot_app: boolean;
   used_copilot_coding_agent: boolean;
   used_copilot_code_review_active: boolean;
   used_copilot_code_review_passive: boolean;
@@ -302,6 +308,7 @@ export interface UserDayData {
     loc_suggested_to_add_sum: number;
     loc_suggested_to_delete_sum: number;
   }>;
+  totals_by_copilot_app?: CopilotClientUsageTotals;
   totals_by_cli?: {
     session_count: number;
     request_count: number;

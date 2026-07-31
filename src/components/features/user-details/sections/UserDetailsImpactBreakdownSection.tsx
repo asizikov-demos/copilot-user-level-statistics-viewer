@@ -10,6 +10,7 @@ interface UserDetailsImpactBreakdownSectionProps {
   agentImpact: ModeImpactData[];
   askModeImpact: ModeImpactData[];
   completionImpact: ModeImpactData[];
+  copilotAppImpact: ModeImpactData[];
   cliImpact: ModeImpactData[];
 }
 
@@ -20,6 +21,7 @@ export default function UserDetailsImpactBreakdownSection({
   agentImpact,
   askModeImpact,
   completionImpact,
+  copilotAppImpact,
   cliImpact,
 }: UserDetailsImpactBreakdownSectionProps) {
   return (
@@ -56,6 +58,12 @@ export default function UserDetailsImpactBreakdownSection({
             title="Completions Impact"
             description="Daily lines of code added and deleted when developers accept Copilot code completions."
             emptyStateMessage="No code completion impact data available."
+          />
+          <ModeImpactChart
+            data={copilotAppImpact}
+            title="Copilot App Impact"
+            description="Daily lines of code added and deleted through Copilot App sessions."
+            emptyStateMessage="No Copilot App impact data available."
           />
           <ModeImpactChart
             data={cliImpact}

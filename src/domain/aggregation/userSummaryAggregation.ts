@@ -65,6 +65,7 @@ function createUserSummary(metric: CopilotMetrics): UserSummary {
     used_agent: false,
     used_chat: false,
     used_cli: false,
+    used_copilot_app: false,
     used_copilot_coding_agent: false,
     used_copilot_code_review_active: false,
     used_copilot_code_review_passive: false,
@@ -143,6 +144,8 @@ export function accumulateUserSummaryAggregation(
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
+  userSummary.used_copilot_app =
+    userSummary.used_copilot_app || (metric.used_copilot_app ?? false);
   userSummary.used_copilot_coding_agent =
     userSummary.used_copilot_coding_agent || usedCopilotCloudAgent;
   userSummary.used_copilot_code_review_active =
@@ -177,6 +180,9 @@ export function accumulateUserSummaryAggregation(
       ideTotal.ide,
       ideTotal.user_initiated_interaction_count || 0
     );
+  }
+  if (metric.used_copilot_app) {
+    userClientsUsed.add('copilot_app');
   }
   if (metric.totals_by_cli || metric.used_cli) {
     if (hasCLIActivity(metric)) {

@@ -37,6 +37,7 @@ export function makeMetric(overrides: Partial<CopilotMetrics> = {}): CopilotMetr
     used_agent: false,
     used_chat: false,
     used_cli: false,
+    used_copilot_app: false,
     used_copilot_coding_agent: false,
     ...overrides,
   };

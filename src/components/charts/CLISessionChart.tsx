@@ -15,20 +15,33 @@ registerChartJS();
 
 interface CLISessionChartProps {
   data: DailyCliSessionData[];
+  appData?: DailyCliSessionData[];
 }
 
-export default function CLISessionChart({ data }: CLISessionChartProps) {
-  const totalSessions = calculateTotal(data, d => d.sessionCount);
-  const totalRequests = calculateTotal(data, d => d.requestCount);
-  const totalPrompts = calculateTotal(data, d => d.promptCount);
+export default function CLISessionChart({ data, appData }: CLISessionChartProps) {
+  const combinedData = [...data, ...(appData ?? [])];
+  const totalSessions = calculateTotal(combinedData, d => d.sessionCount);
+  const totalRequests = calculateTotal(combinedData, d => d.requestCount);
+  const totalPrompts = calculateTotal(combinedData, d => d.promptCount);
+  const showApp = appData !== undefined;
+  const labels = (data.length > 0 ? data : appData ?? []).map(d => formatShortDate(d.date));
 
   const chartData = {
-    labels: data.map(d => formatShortDate(d.date)),
-    datasets: [
-      createBarDataset(chartColors.blue.solid, 'Sessions', data.map(d => d.sessionCount)),
-      createBarDataset(chartColors.green.solid, 'Requests', data.map(d => d.requestCount)),
-      createBarDataset(chartColors.purple.solid, 'Prompts', data.map(d => d.promptCount)),
-    ],
+    labels,
+    datasets: showApp
+      ? [
+          createBarDataset(chartColors.blue.solid, 'CLI Sessions', data.map(d => d.sessionCount)),
+          createBarDataset(chartColors.green.solid, 'CLI Requests', data.map(d => d.requestCount)),
+          createBarDataset(chartColors.purple.solid, 'CLI Prompts', data.map(d => d.promptCount)),
+          createBarDataset(chartColors.black.solid, 'App Sessions', appData.map(d => d.sessionCount)),
+          createBarDataset(chartColors.gray.solid, 'App Requests', appData.map(d => d.requestCount)),
+          createBarDataset(chartColors.orange.solid, 'App Prompts', appData.map(d => d.promptCount)),
+        ]
+      : [
+          createBarDataset(chartColors.blue.solid, 'Sessions', data.map(d => d.sessionCount)),
+          createBarDataset(chartColors.green.solid, 'Requests', data.map(d => d.requestCount)),
+          createBarDataset(chartColors.purple.solid, 'Prompts', data.map(d => d.promptCount)),
+        ],
   };
 
   const options = createBaseChartOptions({
@@ -40,10 +53,12 @@ export default function CLISessionChart({ data }: CLISessionChartProps) {
 
   return (
     <ChartContainer
-      title="Daily CLI Sessions"
-      description="Daily breakdown of CLI sessions, requests, and prompts across all users."
-      isEmpty={data.length === 0}
-      emptyState="No CLI session data available"
+      title={showApp ? 'Daily CLI and App Sessions' : 'Daily CLI Sessions'}
+      description={showApp
+        ? 'Daily breakdown of Copilot CLI and App sessions, requests, and prompts.'
+        : 'Daily breakdown of CLI sessions, requests, and prompts across all users.'}
+      isEmpty={combinedData.length === 0}
+      emptyState={showApp ? 'No CLI or App session data available' : 'No CLI session data available'}
       summaryStats={[
         { value: totalSessions.toLocaleString(), label: 'Total Sessions' },
         { value: totalRequests.toLocaleString(), label: 'Total Requests' },

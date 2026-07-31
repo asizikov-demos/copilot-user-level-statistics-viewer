@@ -197,6 +197,7 @@ describe('metrics aggregation orchestration characterization', () => {
       used_agent: true,
       used_chat: true,
       used_cli: true,
+      used_copilot_app: false,
       used_copilot_coding_agent: true,
       used_copilot_code_review_active: true,
       used_copilot_code_review_passive: true,

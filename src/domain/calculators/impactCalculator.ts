@@ -4,6 +4,7 @@ import {
   isAgentFeature,
   isCliFeature,
   isCodeCompletionFeature,
+  isCopilotAppFeature,
   isJoinedImpactFeature,
 } from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
@@ -27,6 +28,7 @@ export interface ImpactAccumulator {
   dailyEditModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyInlineModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyAskModeImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
+  dailyCopilotAppImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyCliImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   dailyJoinedImpact: Map<string, { locAdded: number; locDeleted: number; userIds: Set<number> }>;
   allUniqueUsers: Set<number>;
@@ -39,6 +41,7 @@ export function createImpactAccumulator(): ImpactAccumulator {
     dailyEditModeImpact: new Map(),
     dailyInlineModeImpact: new Map(),
     dailyAskModeImpact: new Map(),
+    dailyCopilotAppImpact: new Map(),
     dailyCliImpact: new Map(),
     dailyJoinedImpact: new Map(),
     allUniqueUsers: new Set(),
@@ -74,6 +77,7 @@ export function ensureImpactDates(accumulator: ImpactAccumulator, date: string):
   ensureImpactDate(accumulator.dailyEditModeImpact, date);
   ensureImpactDate(accumulator.dailyInlineModeImpact, date);
   ensureImpactDate(accumulator.dailyAskModeImpact, date);
+  ensureImpactDate(accumulator.dailyCopilotAppImpact, date);
   ensureImpactDate(accumulator.dailyCliImpact, date);
   ensureImpactDate(accumulator.dailyJoinedImpact, date);
 }
@@ -185,6 +189,16 @@ export function accumulateFeatureImpacts(
       );
     }
 
+    if (isCopilotAppFeature(feature) && hasLoc) {
+      accumulateToMap(
+        accumulator.dailyCopilotAppImpact,
+        date,
+        userId,
+        locAdded,
+        locDeleted
+      );
+    }
+
     if (isJoinedImpactFeature(feature) && hasLoc) {
       joinedLocAdded += locAdded;
       joinedLocDeleted += locDeleted;
@@ -264,6 +278,15 @@ export function computeCliImpactData(accumulator: ImpactAccumulator): ModeImpact
   return formatImpactMap(accumulator.dailyCliImpact, accumulator.allUniqueUsers.size);
 }
 
+export function computeCopilotAppImpactData(
+  accumulator: ImpactAccumulator
+): ModeImpactData[] {
+  return formatImpactMap(
+    accumulator.dailyCopilotAppImpact,
+    accumulator.allUniqueUsers.size
+  );
+}
+
 export function computeJoinedImpactData(accumulator: ImpactAccumulator): ModeImpactData[] {
   return formatImpactMap(accumulator.dailyJoinedImpact, accumulator.allUniqueUsers.size);
 }
@@ -315,4 +338,11 @@ export function calculateCodeCompletionImpactFromMetrics(metrics: CopilotMetrics
 export function calculateCliImpactFromMetrics(metrics: CopilotMetrics[]): ModeImpactData[] {
   const accumulator = processMetricsForImpact(metrics);
   return computeCliImpactData(accumulator);
+}
+
+export function calculateCopilotAppImpactFromMetrics(
+  metrics: CopilotMetrics[]
+): ModeImpactData[] {
+  const accumulator = processMetricsForImpact(metrics);
+  return computeCopilotAppImpactData(accumulator);
 }

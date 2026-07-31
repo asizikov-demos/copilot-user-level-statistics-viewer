@@ -6,6 +6,7 @@ export interface CopilotImpactReadModel {
   editModeImpactData: AggregatedMetrics['impact']['editModeImpactData'];
   inlineModeImpactData: AggregatedMetrics['impact']['inlineModeImpactData'];
   askModeImpactData: AggregatedMetrics['impact']['askModeImpactData'];
+  copilotAppImpactData: AggregatedMetrics['impact']['copilotAppImpactData'];
   cliImpactData: AggregatedMetrics['impact']['cliImpactData'];
   joinedImpactData: AggregatedMetrics['impact']['joinedImpactData'];
 }
@@ -19,6 +20,7 @@ export function selectCopilotImpactReadModel(
     editModeImpactData: metrics.impact.editModeImpactData,
     inlineModeImpactData: metrics.impact.inlineModeImpactData,
     askModeImpactData: metrics.impact.askModeImpactData,
+    copilotAppImpactData: metrics.impact.copilotAppImpactData,
     cliImpactData: metrics.impact.cliImpactData,
     joinedImpactData: metrics.impact.joinedImpactData,
   };

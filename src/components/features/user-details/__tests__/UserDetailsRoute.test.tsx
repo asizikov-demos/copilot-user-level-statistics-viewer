@@ -86,6 +86,7 @@ const details: UserDetailedMetrics = {
   dailyAgentImpact: [],
   dailyAskModeImpact: [],
   dailyCompletionImpact: [],
+  dailyCopilotAppImpact: [],
   dailyCliImpact: [],
   days: [],
   reportStartDay: '2024-01-01',

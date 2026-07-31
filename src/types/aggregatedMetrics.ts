@@ -55,6 +55,7 @@ export interface ImpactMetricsSlice {
   editModeImpactData: ModeImpactData[];
   inlineModeImpactData: ModeImpactData[];
   askModeImpactData: ModeImpactData[];
+  copilotAppImpactData: ModeImpactData[];
   cliImpactData: ModeImpactData[];
   joinedImpactData: ModeImpactData[];
 }
@@ -163,6 +164,7 @@ export interface UserDetailedMetrics {
   dailyAgentImpact: AgentImpactData[];
   dailyAskModeImpact: ModeImpactData[];
   dailyCompletionImpact: CodeCompletionImpactData[];
+  dailyCopilotAppImpact: ModeImpactData[];
   dailyCliImpact: ModeImpactData[];
   days: UserDayData[];
   reportStartDay: string;
