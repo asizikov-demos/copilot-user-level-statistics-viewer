@@ -171,6 +171,8 @@ export function accumulateSurfaceProductivity(
 ): void {
   const userDayKey = `${metric.day}:${metric.user_id}`;
   const activity = getSurfaceActivity(metric);
+  if (!SURFACES.some(surface => activity[surface])) return;
+
   const loc = getSurfaceLoc(metric);
   const daily = accumulator.daily.get(metric.day) ?? createDailyAccumulator();
   const user = accumulator.users.get(metric.user_id) ?? {

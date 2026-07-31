@@ -91,6 +91,10 @@ describe('surface productivity aggregation', () => {
         user_id: 3,
         used_cli: true,
       }),
+      makeMetric({
+        day: '2024-01-17',
+        user_id: 4,
+      }),
     ];
 
     for (const record of records) {
@@ -100,6 +104,7 @@ describe('surface productivity aggregation', () => {
     const result = finalizeSurfaceProductivityAggregation(accumulator);
 
     expect(result.totalActiveUsers).toBe(3);
+    expect(result.dailyProductivity).toHaveLength(2);
     expect(result.surfaceSummaries).toEqual([
       {
         surface: 'ide',
