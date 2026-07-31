@@ -1,3 +1,5 @@
+import { type AggMetricTotals, accumulateAggMetricTotals } from './aggMetricTotals';
+
 export interface LanguageStats {
   language: string;
   totalGenerations: number;
@@ -10,16 +12,12 @@ export interface LanguageStats {
   locSuggestedToDelete: number;
 }
 
+interface LanguageAccumulatorEntry extends AggMetricTotals {
+  users: Set<number>;
+}
+
 export interface LanguageAccumulator {
-  languageStatsMap: Map<string, {
-    totalGenerations: number;
-    totalAcceptances: number;
-    locAdded: number;
-    locDeleted: number;
-    locSuggestedToAdd: number;
-    locSuggestedToDelete: number;
-    users: Set<number>;
-  }>;
+  languageStatsMap: Map<string, LanguageAccumulatorEntry>;
 }
 
 export function createLanguageAccumulator(): LanguageAccumulator {
@@ -41,23 +39,25 @@ export function accumulateLanguageStats(
 ): void {
   if (!accumulator.languageStatsMap.has(language)) {
     accumulator.languageStatsMap.set(language, {
-      totalGenerations: 0,
-      totalAcceptances: 0,
-      locAdded: 0,
-      locDeleted: 0,
-      locSuggestedToAdd: 0,
-      locSuggestedToDelete: 0,
+      code_generation_activity_count: 0,
+      code_acceptance_activity_count: 0,
+      loc_added_sum: 0,
+      loc_deleted_sum: 0,
+      loc_suggested_to_add_sum: 0,
+      loc_suggested_to_delete_sum: 0,
       users: new Set(),
     });
   }
 
   const stats = accumulator.languageStatsMap.get(language)!;
-  stats.totalGenerations += generations;
-  stats.totalAcceptances += acceptances;
-  stats.locAdded += locAdded;
-  stats.locDeleted += locDeleted;
-  stats.locSuggestedToAdd += locSuggestedToAdd;
-  stats.locSuggestedToDelete += locSuggestedToDelete;
+  accumulateAggMetricTotals(stats, {
+    code_generation_activity_count: generations,
+    code_acceptance_activity_count: acceptances,
+    loc_added_sum: locAdded,
+    loc_deleted_sum: locDeleted,
+    loc_suggested_to_add_sum: locSuggestedToAdd,
+    loc_suggested_to_delete_sum: locSuggestedToDelete,
+  });
   stats.users.add(userId);
 }
 
@@ -65,14 +65,14 @@ export function computeLanguageStats(accumulator: LanguageAccumulator): Language
   return Array.from(accumulator.languageStatsMap.entries())
     .map(([language, stats]) => ({
       language,
-      totalGenerations: stats.totalGenerations,
-      totalAcceptances: stats.totalAcceptances,
-      totalEngagements: stats.totalGenerations + stats.totalAcceptances,
+      totalGenerations: stats.code_generation_activity_count,
+      totalAcceptances: stats.code_acceptance_activity_count,
+      totalEngagements: stats.code_generation_activity_count + stats.code_acceptance_activity_count,
       uniqueUsers: stats.users.size,
-      locAdded: stats.locAdded,
-      locDeleted: stats.locDeleted,
-      locSuggestedToAdd: stats.locSuggestedToAdd,
-      locSuggestedToDelete: stats.locSuggestedToDelete,
+      locAdded: stats.loc_added_sum,
+      locDeleted: stats.loc_deleted_sum,
+      locSuggestedToAdd: stats.loc_suggested_to_add_sum,
+      locSuggestedToDelete: stats.loc_suggested_to_delete_sum,
     }))
     .sort((a, b) => b.totalEngagements - a.totalEngagements);
 }

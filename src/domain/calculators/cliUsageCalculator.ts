@@ -2,6 +2,7 @@ import { CopilotMetrics, type UserDayData } from '../../types/metrics';
 import { isCliFeature } from '../featureCategories';
 import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
+import { type AggMetricTotals, accumulateAggMetricTotals } from './aggMetricTotals';
 
 export interface CliFeatureTotals {
   interactions: number;
@@ -68,32 +69,32 @@ export function createCliUsageAccumulator(): CliUsageAccumulator {
   };
 }
 
-function createEmptyCliFeatureTotals(): CliFeatureTotals {
-  return {
-    interactions: 0,
-    generations: 0,
-    acceptances: 0,
-    locAdded: 0,
-    locDeleted: 0,
-    locSuggestedToAdd: 0,
-    locSuggestedToDelete: 0,
-  };
-}
-
 export function computeCliFeatureTotals(totalsByFeature: UserDayData['totals_by_feature']): CliFeatureTotals {
-  return totalsByFeature.reduce((acc, feature) => {
-    if (!isCliFeature(feature.feature)) return acc;
+  const totals: AggMetricTotals = {
+    code_generation_activity_count: 0,
+    code_acceptance_activity_count: 0,
+    loc_added_sum: 0,
+    loc_deleted_sum: 0,
+    loc_suggested_to_add_sum: 0,
+    loc_suggested_to_delete_sum: 0,
+  };
+  let interactions = 0;
 
-    acc.interactions += feature.user_initiated_interaction_count;
-    acc.generations += feature.code_generation_activity_count;
-    acc.acceptances += feature.code_acceptance_activity_count;
-    acc.locAdded += feature.loc_added_sum;
-    acc.locDeleted += feature.loc_deleted_sum;
-    acc.locSuggestedToAdd += feature.loc_suggested_to_add_sum;
-    acc.locSuggestedToDelete += feature.loc_suggested_to_delete_sum;
+  for (const feature of totalsByFeature) {
+    if (!isCliFeature(feature.feature)) continue;
+    interactions += feature.user_initiated_interaction_count;
+    accumulateAggMetricTotals(totals, feature);
+  }
 
-    return acc;
-  }, createEmptyCliFeatureTotals());
+  return {
+    interactions,
+    generations: totals.code_generation_activity_count,
+    acceptances: totals.code_acceptance_activity_count,
+    locAdded: totals.loc_added_sum,
+    locDeleted: totals.loc_deleted_sum,
+    locSuggestedToAdd: totals.loc_suggested_to_add_sum,
+    locSuggestedToDelete: totals.loc_suggested_to_delete_sum,
+  };
 }
 
 export function computeCliDayTotals(

@@ -183,3 +183,10 @@ export {
 } from './aiCreditsCalculator';
 
 export { compareDatesAsc, compareByDateAsc } from './statsCalculators';
+
+export {
+  type AggMetricTotals,
+  type InteractionAggMetricTotals,
+  accumulateAggMetricTotals,
+  accumulateInteractionAggMetricTotals,
+} from './aggMetricTotals';

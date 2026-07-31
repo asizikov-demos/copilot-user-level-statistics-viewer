@@ -1,14 +1,15 @@
 import type { IDEStatsData } from '../../types/metrics';
+import { accumulateAggMetricTotals } from './aggMetricTotals';
 
 interface IDEAccumulatorEntry {
   users: Set<number>;
   totalEngagements: number;
-  totalGenerations: number;
-  totalAcceptances: number;
-  locAdded: number;
-  locDeleted: number;
-  locSuggestedToAdd: number;
-  locSuggestedToDelete: number;
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+  loc_added_sum: number;
+  loc_deleted_sum: number;
+  loc_suggested_to_add_sum: number;
+  loc_suggested_to_delete_sum: number;
 }
 
 export interface IDEStatsAccumulator {
@@ -45,24 +46,26 @@ export function accumulateIDEStats(
     accumulator.ideMap.set(ide, {
       users: new Set(),
       totalEngagements: 0,
-      totalGenerations: 0,
-      totalAcceptances: 0,
-      locAdded: 0,
-      locDeleted: 0,
-      locSuggestedToAdd: 0,
-      locSuggestedToDelete: 0,
+      code_generation_activity_count: 0,
+      code_acceptance_activity_count: 0,
+      loc_added_sum: 0,
+      loc_deleted_sum: 0,
+      loc_suggested_to_add_sum: 0,
+      loc_suggested_to_delete_sum: 0,
     });
   }
 
   const entry = accumulator.ideMap.get(ide)!;
   entry.users.add(userId);
   entry.totalEngagements += ideTotal.user_initiated_interaction_count;
-  entry.totalGenerations += ideTotal.code_generation_activity_count;
-  entry.totalAcceptances += ideTotal.code_acceptance_activity_count;
-  entry.locAdded += ideTotal.loc_added_sum;
-  entry.locDeleted += ideTotal.loc_deleted_sum;
-  entry.locSuggestedToAdd += ideTotal.loc_suggested_to_add_sum;
-  entry.locSuggestedToDelete += ideTotal.loc_suggested_to_delete_sum;
+  accumulateAggMetricTotals(entry, {
+    code_generation_activity_count: ideTotal.code_generation_activity_count,
+    code_acceptance_activity_count: ideTotal.code_acceptance_activity_count,
+    loc_added_sum: ideTotal.loc_added_sum,
+    loc_deleted_sum: ideTotal.loc_deleted_sum,
+    loc_suggested_to_add_sum: ideTotal.loc_suggested_to_add_sum,
+    loc_suggested_to_delete_sum: ideTotal.loc_suggested_to_delete_sum,
+  });
 
   if (!accumulator.userIDEs.has(userId)) {
     accumulator.userIDEs.set(userId, new Set());
@@ -88,12 +91,12 @@ export function computeIDEStatsData(
         uniqueUsers: entry.users.size,
         cliOverlapUsers,
         totalEngagements: entry.totalEngagements,
-        totalGenerations: entry.totalGenerations,
-        totalAcceptances: entry.totalAcceptances,
-        locAdded: entry.locAdded,
-        locDeleted: entry.locDeleted,
-        locSuggestedToAdd: entry.locSuggestedToAdd,
-        locSuggestedToDelete: entry.locSuggestedToDelete,
+        totalGenerations: entry.code_generation_activity_count,
+        totalAcceptances: entry.code_acceptance_activity_count,
+        locAdded: entry.loc_added_sum,
+        locDeleted: entry.loc_deleted_sum,
+        locSuggestedToAdd: entry.loc_suggested_to_add_sum,
+        locSuggestedToDelete: entry.loc_suggested_to_delete_sum,
       };
     }
   );
