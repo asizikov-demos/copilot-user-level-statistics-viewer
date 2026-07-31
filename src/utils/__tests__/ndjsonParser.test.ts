@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { flushNdjsonRemainder, splitNdjsonChunk, splitNdjsonLines } from '../ndjsonParser';
+import { flushNdjsonRemainder, parseNdjsonRecordsLenient, parseNdjsonRecordsStrict, splitNdjsonChunk, splitNdjsonLines } from '../ndjsonParser';
 
 describe('splitNdjsonLines', () => {
   describe('line endings', () => {
@@ -120,5 +120,76 @@ describe('splitNdjsonLines', () => {
       const result = splitNdjsonLines('hello');
       expect(result).toEqual([{ line: 'hello', lineNumber: 1 }]);
     });
+  });
+});
+
+describe('parseNdjsonRecordsLenient', () => {
+  it('parses valid NDJSON and returns values with line numbers', () => {
+    const result = parseNdjsonRecordsLenient('{"a":1}\n{"b":2}');
+    expect(result).toEqual([
+      { value: { a: 1 }, lineNumber: 1 },
+      { value: { b: 2 }, lineNumber: 2 },
+    ]);
+  });
+
+  it('skips invalid JSON lines and continues parsing', () => {
+    const result = parseNdjsonRecordsLenient('{"a":1}\nNOT_JSON\n{"c":3}');
+    expect(result).toEqual([
+      { value: { a: 1 }, lineNumber: 1 },
+      { value: { c: 3 }, lineNumber: 3 },
+    ]);
+  });
+
+  it('calls onInvalidLine with the correct line number and message', () => {
+    const errors: Array<{ lineNumber: number; message: string }> = [];
+    parseNdjsonRecordsLenient('{"a":1}\nNOT_JSON\n{"c":3}', (lineNumber, message) => {
+      errors.push({ lineNumber, message });
+    });
+    expect(errors).toHaveLength(1);
+    expect(errors[0].lineNumber).toBe(2);
+    expect(errors[0].message).toMatch(/JSON/i);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(parseNdjsonRecordsLenient('')).toEqual([]);
+  });
+
+  it('skips blank lines without invoking onInvalidLine', () => {
+    const errors: unknown[] = [];
+    const result = parseNdjsonRecordsLenient('{"a":1}\n\n{"b":2}', () => errors.push(true));
+    expect(result).toHaveLength(2);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('parses non-object JSON values such as arrays and primitives', () => {
+    const result = parseNdjsonRecordsLenient('[1,2]\n42\n"hello"');
+    expect(result.map(r => r.value)).toEqual([[1, 2], 42, 'hello']);
+  });
+});
+
+describe('parseNdjsonRecordsStrict', () => {
+  it('parses valid NDJSON and returns values with line numbers', () => {
+    const result = parseNdjsonRecordsStrict('{"a":1}\n{"b":2}');
+    expect(result).toEqual([
+      { value: { a: 1 }, lineNumber: 1 },
+      { value: { b: 2 }, lineNumber: 2 },
+    ]);
+  });
+
+  it('throws on the first invalid JSON line with the line number in the message', () => {
+    expect(() => parseNdjsonRecordsStrict('{"a":1}\nNOT_JSON\n{"c":3}')).toThrow('line 2');
+  });
+
+  it('includes "Invalid JSON" prefix in the thrown error message', () => {
+    expect(() => parseNdjsonRecordsStrict('BAD')).toThrow(/Invalid JSON on line 1/);
+  });
+
+  it('returns empty array for empty input', () => {
+    expect(parseNdjsonRecordsStrict('')).toEqual([]);
+  });
+
+  it('skips blank lines without throwing', () => {
+    const result = parseNdjsonRecordsStrict('{"a":1}\n\n{"b":2}');
+    expect(result).toHaveLength(2);
   });
 });

@@ -56,3 +56,55 @@ export function splitNdjsonLines(text: string): NdjsonLine[] {
   const { lines, remainder, nextLineNumber } = splitNdjsonChunk(text);
   return [...lines, ...flushNdjsonRemainder(remainder, nextLineNumber)];
 }
+
+export interface NdjsonParsedRecord {
+  value: unknown;
+  lineNumber: number;
+}
+
+/**
+ * Parses all non-empty lines in NDJSON text as JSON, skipping any line that
+ * fails to parse. Calls `onInvalidLine` (if provided) with the 1-based line
+ * number and error message for each skipped line so callers can emit their own
+ * diagnostic.
+ *
+ * Use this for lenient contexts where a single malformed record should not
+ * abort the whole file (e.g. model-inventory scans).
+ */
+export function parseNdjsonRecordsLenient(
+  text: string,
+  onInvalidLine?: (lineNumber: number, message: string) => void
+): NdjsonParsedRecord[] {
+  const records: NdjsonParsedRecord[] = [];
+  for (const { line, lineNumber } of splitNdjsonLines(text)) {
+    try {
+      records.push({ value: JSON.parse(line) as unknown, lineNumber });
+    } catch (e) {
+      onInvalidLine?.(lineNumber, e instanceof Error ? e.message : String(e));
+    }
+  }
+  return records;
+}
+
+/**
+ * Parses all non-empty lines in NDJSON text as JSON, throwing on the first
+ * line that fails to parse. The thrown error includes the 1-based line number
+ * so callers get an actionable diagnostic.
+ *
+ * Use this for strict contexts where any malformed input should be treated as
+ * a fatal error (e.g. anonymization pipelines).
+ */
+export function parseNdjsonRecordsStrict(text: string): NdjsonParsedRecord[] {
+  const records: NdjsonParsedRecord[] = [];
+  for (const { line, lineNumber } of splitNdjsonLines(text)) {
+    try {
+      records.push({ value: JSON.parse(line) as unknown, lineNumber });
+    } catch (e) {
+      throw new Error(
+        `Invalid JSON on line ${lineNumber}: ${e instanceof Error ? e.message : String(e)}`,
+        { cause: e }
+      );
+    }
+  }
+  return records;
+}

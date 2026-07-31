@@ -4,7 +4,7 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { splitNdjsonLines } from '#utils/ndjsonParser';
+import { parseNdjsonRecordsLenient } from '#utils/ndjsonParser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,17 +51,11 @@ async function collectModelNames(customPaths?: string[]): Promise<string[]> {
 }
 
 export function parseNdjsonLines(text: string, fileName: string): JsonValue[] {
-  const records: JsonValue[] = [];
-  for (const { line, lineNumber } of splitNdjsonLines(text)) {
-    try {
-      records.push(JSON.parse(line));
-    } catch (error) {
-      console.warn(
-        `Skipping invalid JSON in ${fileName} (line ${lineNumber}): ${(error as Error).message}`
-      );
-    }
-  }
-  return records;
+  return parseNdjsonRecordsLenient(text, (lineNumber, message) => {
+    console.warn(
+      `Skipping invalid JSON in ${fileName} (line ${lineNumber}): ${message}`
+    );
+  }).map(({ value }) => value);
 }
 
 function parseJsonContent(content: string, fileName: string): JsonValue[] {

@@ -5,7 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomInt } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { splitNdjsonLines } from '#utils/ndjsonParser';
+import { parseNdjsonRecordsStrict } from '#utils/ndjsonParser';
 
 type JsonRecord = Record<string, unknown>;
 interface ParsedRecord {
@@ -323,26 +323,19 @@ export async function main(): Promise<void> {
   );
 
   const content = await readFile(inputPath, 'utf8');
-  const ndjsonLines = splitNdjsonLines(content);
+  const parsedRecords = parseNdjsonRecordsStrict(content);
 
   const records: ParsedRecord[] = [];
   const uniqueLogins = new Set<string>();
 
-  for (const { line, lineNumber } of ndjsonLines) {
-    try {
-      const parsed = JSON.parse(line) as unknown;
-      if (parsed && typeof parsed === 'object') {
-        const rec = parsed as JsonRecord;
-        const login = rec.user_login;
-        if (typeof login === 'string' && login.trim().length > 0) {
-          uniqueLogins.add(login);
-        }
-        records.push({ lineNumber, record: rec });
+  for (const { value, lineNumber } of parsedRecords) {
+    if (value && typeof value === 'object') {
+      const rec = value as JsonRecord;
+      const login = rec.user_login;
+      if (typeof login === 'string' && login.trim().length > 0) {
+        uniqueLogins.add(login);
       }
-    } catch (e) {
-      throw new Error(
-        `Invalid JSON on line ${lineNumber}: ${e instanceof Error ? e.message : String(e)}`,
-      );
+      records.push({ lineNumber, record: rec });
     }
   }
 
