@@ -1,15 +1,22 @@
 'use client';
 
-import { ChartData, ChartOptions } from 'chart.js';
-import { CopilotMetrics } from '../../../../types/metrics';
+import { useMemo } from 'react';
+import type { TooltipItem } from 'chart.js';
+import type { CopilotMetrics, UserDayData } from '../../../../types/metrics';
 import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
+import { padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
+import { createBarDataset } from '../../../charts/utils/chartStyles';
+import { getLanguageColor } from '../../../charts/utils/chartColors';
+import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
+import { formatShortDate } from '../../../../utils/formatters';
 
 export type LanguageFeatureAggregate = CopilotMetrics['totals_by_language_feature'][number];
 
 interface UserActivityByLanguageAndFeatureChartProps {
   languageFeatureAggregates: LanguageFeatureAggregate[];
-  languageBarChartData: ChartData<'bar'>;
-  languageBarChartOptions: ChartOptions<'bar'>;
+  days: UserDayData[];
+  reportStartDay: string;
+  reportEndDay: string;
 }
 
 const languageChartConfig = {
@@ -31,15 +38,68 @@ const languageChartConfig = {
   ],
 };
 
+type PaddedDay = {
+  day: string;
+  totals_by_language_feature: UserDayData['totals_by_language_feature'];
+};
+
+const languageBarChartOptions = createStackedBarChartOptions({
+  xAxisLabel: 'Date',
+  yAxisLabel: 'Generations',
+  tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    const label = context.dataset.label ?? '';
+    const value = context.parsed.y ?? 0;
+    return `${label}: ${value.toLocaleString()} generations`;
+  },
+});
+
+export function buildLanguageBarChartData(
+  days: UserDayData[],
+  reportStartDay: string,
+  reportEndDay: string,
+) {
+  const allLanguages = Array.from(
+    new Set(days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
+  ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
+
+  const paddedDays = padDailyReportRangeData<PaddedDay>(
+    days.map(d => ({ day: d.day, totals_by_language_feature: d.totals_by_language_feature })),
+    reportStartDay,
+    reportEndDay,
+    d => d.day,
+    date => ({ day: date, totals_by_language_feature: [] }),
+  );
+
+  const datasets = allLanguages.map((language, index) => {
+    const data = paddedDays.map(dayData =>
+      dayData.totals_by_language_feature
+        .filter(item => item.language === language)
+        .reduce((sum, item) => sum + item.code_generation_activity_count, 0)
+    );
+    return createBarDataset(getLanguageColor(language, index), language, data);
+  }).filter(dataset => dataset.data.some(value => value > 0));
+
+  return {
+    labels: paddedDays.map(d => formatShortDate(d.day)),
+    datasets,
+  };
+}
+
 export default function UserActivityByLanguageAndFeatureChart({
   languageFeatureAggregates,
-  languageBarChartData,
-  languageBarChartOptions
+  days,
+  reportStartDay,
+  reportEndDay,
 }: UserActivityByLanguageAndFeatureChartProps) {
+  const barChartData = useMemo(
+    () => buildLanguageBarChartData(days, reportStartDay, reportEndDay),
+    [days, reportStartDay, reportEndDay],
+  );
+
   return (
     <ActivityBreakdownChart
       aggregates={languageFeatureAggregates}
-      barChartData={languageBarChartData}
+      barChartData={barChartData}
       barChartOptions={languageBarChartOptions}
       config={languageChartConfig}
     />

@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import type { UserDayData } from '../../../types/metrics';
 import type { UserDetailsViewModel } from '../../../read-models/userDetails';
 import { formatIDEName } from '../../icons/IDEIcons';
-import { formatAiAdoptionPhase, formatAiCreditCost, formatShortDate, generateDateRange } from '../../../utils/formatters';
+import { formatAiAdoptionPhase, formatAiCreditCost, generateDateRange } from '../../../utils/formatters';
 import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
@@ -24,7 +24,6 @@ import { VIEW_MODES } from '../../../types/navigation';
 import { useNavigation } from '../../../state/NavigationContext';
 import type { ModeImpactData } from '../../../domain/calculators/metricCalculators';
 import type { DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
-import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from '../../charts/utils/chartSetup';
 import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
@@ -290,211 +289,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }
   };
 
-  const languageBarChartData = useMemo(() => {
-    const allLanguages = Array.from(
-      new Set(userDetails.days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
-    ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
-
-    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
-    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
-
-    const languageColors: Record<string, string> = {
-      'javascript': '#F7DF1E',
-      'typescript': '#3178C6',
-      'python': '#3776AB',
-      'java': '#ED8B00',
-      'csharp': '#239120',
-      'cpp': '#00599C',
-      'c': '#A8B9CC',
-      'go': '#00ADD8',
-      'rust': '#000000',
-      'php': '#777BB4',
-      'ruby': '#CC342D',
-      'swift': '#FA7343',
-      'kotlin': '#7F52FF',
-      'scala': '#DC322F',
-      'dart': '#0175C2',
-      'html': '#E34F26',
-      'css': '#1572B6',
-      'scss': '#CF649A',
-      'less': '#1D365D',
-      'json': '#000000',
-      'xml': '#0060AC',
-      'yaml': '#CB171E',
-      'markdown': '#083FA1',
-      'shell': '#89E051',
-      'bash': '#4EAA25',
-      'powershell': '#5391FE',
-      'sql': '#E38C00',
-      'r': '#276DC3',
-      'matlab': '#E16737',
-      'perl': '#39457E',
-      'lua': '#2C2D72',
-      'haskell': '#5E5086',
-      'elixir': '#6E4A7E',
-      'erlang': '#B83998',
-      'clojure': '#5881D8',
-      'fsharp': '#378BBA',
-      'ocaml': '#EC6813',
-      'elm': '#60B5CC',
-      'solidity': '#363636',
-      'assembly': '#6E4C13',
-    };
-
-    const fallbackColors = [
-      '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', 
-      '#10B981', '#F97316', '#EF4444', '#3B82F6', '#14B8A6'
-    ];
-
-    const datasets = allLanguages.map((language, index) => {
-      const data = allDays.map(dayStr => {
-        const dayData = dayMap.get(dayStr);
-        const languageData = dayData?.totals_by_language_feature
-          .filter(item => item.language === language)
-          .reduce((sum, item) => sum + item.code_generation_activity_count, 0) || 0;
-        return languageData;
-      });
-
-      return {
-        label: language.charAt(0).toUpperCase() + language.slice(1),
-        data: data,
-        backgroundColor: languageColors[language.toLowerCase()] || fallbackColors[index % fallbackColors.length],
-        borderColor: languageColors[language.toLowerCase()] || fallbackColors[index % fallbackColors.length],
-        borderWidth: 1,
-      };
-    }).filter(dataset => dataset.data.some(value => value > 0));
-
-    return {
-      labels: allDays.map(day => formatShortDate(day)),
-      datasets: datasets,
-    };
-  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
-
-  const modelBarChartData = useMemo(() => {
-    const allModels = Array.from(
-      new Set(userDetails.days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
-    ).filter(model => model && model !== '' && model !== 'unknown').sort();
-
-    const allDays = generateDateRange(userDetails.reportStartDay, userDetails.reportEndDay);
-    const dayMap = new Map(userDetails.days.map(d => [d.day, d]));
-
-    const modelColors: Record<string, string> = {
-      'gpt-4': '#10A37F',
-      'gpt-4o': '#0066CC',
-      'gpt-4-turbo': '#0052A3',
-      'gpt-3.5': '#74AA9C',
-      'gpt-3.5-turbo': '#5D8A7A',
-      'gemini-pro': '#1A73E8',
-    };
-
-    const fallbackColors = [
-      '#6366F1', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6', 
-      '#10B981', '#F97316', '#06B6D4', '#84CC16', '#EC4899'
-    ];
-
-    const datasets = allModels.map((model, index) => {
-      const data = allDays.map(dayStr => {
-        const dayData = dayMap.get(dayStr);
-        const modelData = dayData?.totals_by_model_feature
-          .filter(item => item.model === model)
-          .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0) || 0;
-        return modelData;
-      });
-
-      return {
-        label: model.charAt(0).toUpperCase() + model.slice(1),
-        data: data,
-        backgroundColor: modelColors[model.toLowerCase()] || fallbackColors[index % fallbackColors.length],
-        borderColor: modelColors[model.toLowerCase()] || fallbackColors[index % fallbackColors.length],
-        borderWidth: 1,
-      };
-    }).filter(dataset => dataset.data.some(value => value > 0));
-
-    return {
-      labels: allDays.map(day => formatShortDate(day)),
-      datasets: datasets,
-    };
-  }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
-
-  const languageBarChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: TooltipItem<'bar'>) {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value.toLocaleString()} generations`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Date'
-        },
-        stacked: true,
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Generations'
-        },
-        beginAtZero: true,
-        stacked: true,
-      }
-    }
-  };
-
-  const modelBarChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: TooltipItem<'bar'>) {
-            const label = context.dataset.label || '';
-            const value = context.parsed.y || 0;
-            return `${label}: ${value.toLocaleString()} interactions`;
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Date'
-        },
-        stacked: true,
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Interactions'
-        },
-        beginAtZero: true,
-        stacked: true,
-      }
-    }
-  };
   const dailyCliTokenData = useMemo(
     () => buildDailyCliSeries(userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay, (date, cli) => ({
       date,
@@ -663,16 +457,18 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       <div id={languageActivitySection.id} className="scroll-mt-28">
         <UserActivityByLanguageAndFeatureChart
           languageFeatureAggregates={languageFeatureAggregates}
-          languageBarChartData={languageBarChartData}
-          languageBarChartOptions={languageBarChartOptions}
+          days={userDetails.days}
+          reportStartDay={userDetails.reportStartDay}
+          reportEndDay={userDetails.reportEndDay}
         />
       </div>
 
       <div id={modelActivitySection.id} className="scroll-mt-28">
         <UserActivityByModelAndFeatureChart
           modelFeatureAggregates={modelFeatureAggregates}
-          modelBarChartData={modelBarChartData}
-          modelBarChartOptions={modelBarChartOptions}
+          days={userDetails.days}
+          reportStartDay={userDetails.reportStartDay}
+          reportEndDay={userDetails.reportEndDay}
         />
       </div>
 

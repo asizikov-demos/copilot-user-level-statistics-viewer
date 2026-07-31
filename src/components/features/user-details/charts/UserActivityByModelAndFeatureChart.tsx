@@ -1,18 +1,41 @@
 'use client';
 
-import { ChartData, ChartOptions } from 'chart.js';
+import { useMemo } from 'react';
+import type { TooltipItem } from 'chart.js';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
+import type { UserDayData } from '../../../../types/metrics';
 import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 import { getModelIcon } from '../../../icons/ModelIcons';
+import { padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
+import { createBarDataset } from '../../../charts/utils/chartStyles';
+import { getSequentialColor } from '../../../charts/utils/chartColors';
+import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
+import { formatShortDate, formatModelDisplayName } from '../../../../utils/formatters';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
 interface UserActivityByModelAndFeatureChartProps {
   modelFeatureAggregates: ModelFeatureAggregate[];
-  modelBarChartData: ChartData<'bar'>;
-  modelBarChartOptions: ChartOptions<'bar'>;
+  days: UserDayData[];
+  reportStartDay: string;
+  reportEndDay: string;
 }
+
+type PaddedDay = {
+  day: string;
+  totals_by_model_feature: UserDayData['totals_by_model_feature'];
+};
+
+const modelBarChartOptions = createStackedBarChartOptions({
+  xAxisLabel: 'Date',
+  yAxisLabel: 'Interactions',
+  tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    const label = context.dataset.label ?? '';
+    const value = context.parsed.y ?? 0;
+    return `${label}: ${value.toLocaleString()} interactions`;
+  },
+});
 
 const modelChartConfig = {
   title: 'Activity by Model and Feature',
@@ -35,15 +58,53 @@ const modelChartConfig = {
   ],
 };
 
+export function buildModelBarChartData(
+  days: UserDayData[],
+  reportStartDay: string,
+  reportEndDay: string,
+) {
+  const allModels = Array.from(
+    new Set(days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
+  ).filter(model => model && model !== '' && model !== 'unknown').sort();
+
+  const paddedDays = padDailyReportRangeData<PaddedDay>(
+    days.map(d => ({ day: d.day, totals_by_model_feature: d.totals_by_model_feature })),
+    reportStartDay,
+    reportEndDay,
+    d => d.day,
+    date => ({ day: date, totals_by_model_feature: [] }),
+  );
+
+  const datasets = allModels.map((model, index) => {
+    const data = paddedDays.map(dayData =>
+      dayData.totals_by_model_feature
+        .filter(item => item.model === model)
+        .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
+    );
+    return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
+  }).filter(dataset => dataset.data.some(value => value > 0));
+
+  return {
+    labels: paddedDays.map(d => formatShortDate(d.day)),
+    datasets,
+  };
+}
+
 export default function UserActivityByModelAndFeatureChart({
   modelFeatureAggregates,
-  modelBarChartData,
-  modelBarChartOptions
+  days,
+  reportStartDay,
+  reportEndDay,
 }: UserActivityByModelAndFeatureChartProps) {
+  const barChartData = useMemo(
+    () => buildModelBarChartData(days, reportStartDay, reportEndDay),
+    [days, reportStartDay, reportEndDay],
+  );
+
   return (
     <ActivityBreakdownChart
       aggregates={modelFeatureAggregates}
-      barChartData={modelBarChartData}
+      barChartData={barChartData}
       barChartOptions={modelBarChartOptions}
       config={modelChartConfig}
     />
