@@ -14,7 +14,6 @@ function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
     user_login: 'octocat',
     user_id: 1,
     total_user_initiated_interactions: 10,
-    total_code_generation_activities: 5,
     total_code_acceptance_activities: 3,
     total_loc_added: 20,
     total_loc_deleted: 4,
@@ -26,6 +25,8 @@ function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
     cloud_agent_days: 1,
     code_review_days: 1,
     top_client: 'vscode',
+    clients_used: ['copilot_cli', 'vscode'],
+    used_code_completion: true,
     used_agent: true,
     used_chat: true,
     used_cli: true,
@@ -54,7 +55,7 @@ describe('Users feature sections', () => {
         used_cli: false,
         used_copilot_coding_agent: false,
         used_copilot_code_review_active: false,
-        total_code_generation_activities: 0,
+        used_code_completion: false,
       }),
     ];
 
@@ -91,8 +92,13 @@ describe('Users feature sections', () => {
     );
 
     expect(populatedMarkup).toContain('Search by user login');
+    expect(populatedMarkup).toContain('IDE used');
+    expect(populatedMarkup).toContain('Copilot CLI');
+    expect(populatedMarkup).toContain('Feature used');
+    expect(populatedMarkup).toContain('All features');
     expect(populatedMarkup).toContain('USER');
     expect(populatedMarkup).toContain('DAYS ACTIVE');
+    expect(populatedMarkup).not.toContain('GENERATIONS');
     expect(populatedMarkup).toContain('AI ADOPTION');
     expect(populatedMarkup).toContain('FEATURES USED');
     expect(populatedMarkup).toContain('Cloud Agent');
@@ -101,6 +107,78 @@ describe('Users feature sections', () => {
     expect(populatedMarkup).toContain('Showing 1-500 of 501 users');
     expect(populatedMarkup).toContain('Page 1 of 2');
     expect(emptyMarkup).toContain('No user data available');
+  });
+
+  it('combines client and feature filters and clears them', async () => {
+    let renderer: ReactTestRenderer | undefined;
+
+    await act(async () => {
+      renderer = create(
+        <UsersTableSection
+          sectionId="users-table"
+          users={[
+            makeUser(),
+            makeUser({
+              user_login: 'hubot',
+              user_id: 2,
+              clients_used: ['jetbrains'],
+              top_client: 'jetbrains',
+              used_chat: false,
+              used_cli: false,
+            }),
+            makeUser({
+              user_login: 'monalisa',
+              user_id: 3,
+              clients_used: ['copilot_cli'],
+              top_client: 'copilot_cli',
+              used_chat: false,
+            }),
+          ]}
+          onUserClick={vi.fn()}
+        />
+      );
+    });
+
+    await act(async () => {
+      renderer?.root.findByProps({ id: 'userSearch' }).props.onChange({
+        target: { value: 'oct' },
+      });
+    });
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 250));
+    });
+    await act(async () => {
+      renderer?.root.findByProps({ id: 'clientFilter' }).props.onChange({
+        target: { value: 'copilot_cli' },
+      });
+      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
+        target: { value: 'chat' },
+      });
+    });
+
+    const getResultCount = () => renderer?.root
+      .findAllByType('p')
+      .find(node => node.props.className === 'mb-3 text-sm text-gray-600')
+      ?.children.join('');
+
+    let markup = JSON.stringify(renderer?.toJSON());
+    expect(getResultCount()).toBe('Showing 1 of 3 users');
+    expect(markup).toContain('octocat');
+    expect(markup).not.toContain('hubot');
+    expect(markup).not.toContain('monalisa');
+
+    await act(async () => {
+      renderer?.root.findAllByType('button')[0].props.onClick();
+    });
+
+    markup = JSON.stringify(renderer?.toJSON());
+    expect(getResultCount()).toBe('Showing 3 of 3 users');
+    expect(markup).toContain('hubot');
+    expect(markup).toContain('monalisa');
+
+    await act(async () => {
+      renderer?.unmount();
+    });
   });
 
   it('forwards row selection with the selected user login and id', async () => {

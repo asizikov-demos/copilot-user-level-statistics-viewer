@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { UserSummary } from '../../../../types/metrics';
-import { useUsernameTrieSearch } from '../../../../hooks/useUsernameTrieSearch';
+import {
+  USER_FEATURE_FILTERS,
+  useUserFilters,
+} from '../../../../hooks/useUserFilters';
 import { useSortableTable } from '../../../../hooks/useSortableTable';
 import { formatAiAdoptionPhase, formatAiCreditCost } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
@@ -15,7 +18,7 @@ interface UsersTableSectionProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_code_generation_activities' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
+type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 
 const USERS_PER_PAGE = 500;
 
@@ -34,7 +37,18 @@ export default function UsersTableSection({
   users,
   onUserClick,
 }: UsersTableSectionProps) {
-  const { searchQuery, setSearchQuery, filteredUsers } = useUsernameTrieSearch(users);
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedClient,
+    setSelectedClient,
+    selectedFeature,
+    setSelectedFeature,
+    clientOptions,
+    hasActiveFilters,
+    clearFilters,
+    filteredUsers,
+  } = useUserFilters(users);
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,
     'total_user_initiated_interactions',
@@ -56,7 +70,14 @@ export default function UsersTableSection({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, sortField, sortDirection, users]);
+  }, [
+    searchQuery,
+    selectedClient,
+    selectedFeature,
+    sortField,
+    sortDirection,
+    users,
+  ]);
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
@@ -104,14 +125,6 @@ export default function UsersTableSection({
       header: 'INTERACTIONS',
       sortable: true,
       accessor: 'total_user_initiated_interactions',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
-    },
-    {
-      id: 'total_code_generation_activities',
-      header: 'GENERATIONS',
-      sortable: true,
-      accessor: 'total_code_generation_activities',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
@@ -214,7 +227,7 @@ export default function UsersTableSection({
               Auto Mode
             </span>
           )}
-          {user.total_code_generation_activities > 0 && (
+          {user.used_code_completion && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               Completions
             </span>
@@ -226,19 +239,68 @@ export default function UsersTableSection({
 
   return (
     <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200">
-      <div className="mb-4">
-        <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
-          Search by user login
-        </label>
-        <input
-          id="userSearch"
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Start typing a username..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
+      <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
+        <div>
+          <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
+            Search by user login
+          </label>
+          <input
+            id="userSearch"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Start typing a username..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="clientFilter" className="block text-sm font-medium text-gray-700 mb-2">
+            IDE used
+          </label>
+          <select
+            id="clientFilter"
+            value={selectedClient}
+            onChange={(e) => setSelectedClient(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">All IDEs</option>
+            {clientOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="featureFilter" className="block text-sm font-medium text-gray-700 mb-2">
+            Feature used
+          </label>
+          <select
+            id="featureFilter"
+            value={selectedFeature}
+            onChange={(e) => setSelectedFeature(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">All features</option>
+            {USER_FEATURE_FILTERS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={clearFilters}
+          disabled={!hasActiveFilters}
+          className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+        >
+          Clear
+        </button>
       </div>
+      <p className="mb-3 text-sm text-gray-600">
+        Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
+      </p>
       <div className="overflow-x-auto border border-gray-200">
         <MetricsTable<UserSummary>
           data={pagedUsers}
@@ -283,6 +345,11 @@ export default function UsersTableSection({
       {users.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500">No user data available</p>
+        </div>
+      )}
+      {users.length > 0 && sortedUsers.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">No users match the selected filters</p>
         </div>
       )}
     </div>

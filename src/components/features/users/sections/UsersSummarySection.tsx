@@ -22,7 +22,7 @@ export default function UsersSummarySection({
     },
     {
       label: 'Completions',
-      users: users.filter(user => user.total_code_generation_activities > 0).length,
+      users: users.filter(user => user.used_code_completion).length,
     },
     {
       label: 'Agent mode',

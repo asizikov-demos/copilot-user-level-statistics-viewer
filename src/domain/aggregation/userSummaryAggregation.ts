@@ -8,6 +8,7 @@ export interface UserSummaryAggregationAccumulator {
   userCloudAgentDays: Map<number, Set<string>>;
   userCodeReviewDays: Map<number, Set<string>>;
   userClientInteractions: Map<number, Map<string, number>>;
+  userClientsUsed: Map<number, Set<string>>;
   userAiAdoptionPhaseDays: Map<number, string>;
 }
 
@@ -21,6 +22,7 @@ export function createUserSummaryAggregationAccumulator(
     userCloudAgentDays: new Map(),
     userCodeReviewDays: new Map(),
     userClientInteractions: new Map(),
+    userClientsUsed: new Map(),
     userAiAdoptionPhaseDays: new Map(),
   };
 }
@@ -47,7 +49,6 @@ function createUserSummary(metric: CopilotMetrics): UserSummary {
     user_login: metric.user_login,
     user_id: metric.user_id,
     total_user_initiated_interactions: 0,
-    total_code_generation_activities: 0,
     total_code_acceptance_activities: 0,
     total_loc_added: 0,
     total_loc_deleted: 0,
@@ -59,6 +60,8 @@ function createUserSummary(metric: CopilotMetrics): UserSummary {
     cloud_agent_days: 0,
     code_review_days: 0,
     top_client: null,
+    clients_used: [],
+    used_code_completion: false,
     used_agent: false,
     used_chat: false,
     used_cli: false,
@@ -80,7 +83,37 @@ function initializeUser(
   accumulator.userCloudAgentDays.set(userId, new Set());
   accumulator.userCodeReviewDays.set(userId, new Set());
   accumulator.userClientInteractions.set(userId, new Map());
+  accumulator.userClientsUsed.set(userId, new Set());
   return userSummary;
+}
+
+function hasIDEActivity(
+  ideTotal: CopilotMetrics['totals_by_ide'][number]
+): boolean {
+  return [
+    ideTotal.user_initiated_interaction_count,
+    ideTotal.code_generation_activity_count,
+    ideTotal.code_acceptance_activity_count,
+    ideTotal.loc_added_sum,
+    ideTotal.loc_deleted_sum,
+    ideTotal.loc_suggested_to_add_sum,
+    ideTotal.loc_suggested_to_delete_sum,
+  ].some(value => value !== 0);
+}
+
+function hasCLIActivity(metric: CopilotMetrics): boolean {
+  const cliTotals = metric.totals_by_cli;
+  return metric.used_cli
+    || Boolean(
+      cliTotals
+      && [
+        cliTotals.session_count,
+        cliTotals.request_count,
+        cliTotals.prompt_count,
+        cliTotals.token_usage.output_tokens_sum,
+        cliTotals.token_usage.prompt_tokens_sum,
+      ].some(value => value !== 0)
+    );
 }
 
 export function accumulateUserSummaryAggregation(
@@ -96,8 +129,6 @@ export function accumulateUserSummaryAggregation(
 
   userSummary.total_user_initiated_interactions +=
     metric.user_initiated_interaction_count;
-  userSummary.total_code_generation_activities +=
-    metric.code_generation_activity_count;
   userSummary.total_code_acceptance_activities +=
     metric.code_acceptance_activity_count;
   userSummary.total_loc_added += metric.loc_added_sum;
@@ -106,6 +137,9 @@ export function accumulateUserSummaryAggregation(
   userSummary.total_loc_suggested_to_delete +=
     metric.loc_suggested_to_delete_sum;
   userSummary.total_ai_credits_used += metric.ai_credits_used;
+  userSummary.used_code_completion =
+    userSummary.used_code_completion
+    || metric.code_generation_activity_count > 0;
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
@@ -132,7 +166,12 @@ export function accumulateUserSummaryAggregation(
 
   const userClientInteractions =
     accumulator.userClientInteractions.get(userId)!;
+  const userClientsUsed = accumulator.userClientsUsed.get(userId)!;
   for (const ideTotal of metric.totals_by_ide) {
+    const normalizedClient = ideTotal.ide.trim();
+    if (normalizedClient && hasIDEActivity(ideTotal)) {
+      userClientsUsed.add(normalizedClient);
+    }
     addClientInteractions(
       userClientInteractions,
       ideTotal.ide,
@@ -140,6 +179,9 @@ export function accumulateUserSummaryAggregation(
     );
   }
   if (metric.totals_by_cli || metric.used_cli) {
+    if (hasCLIActivity(metric)) {
+      userClientsUsed.add('copilot_cli');
+    }
     addClientInteractions(
       userClientInteractions,
       'copilot_cli',
@@ -197,6 +239,9 @@ export function finalizeUserSummaryAggregation(
         top_client: getTopClient(
           accumulator.userClientInteractions.get(user.user_id)
         ),
+        clients_used: Array.from(
+          accumulator.userClientsUsed.get(user.user_id) ?? []
+        ).sort((a, b) => a.localeCompare(b)),
         net_loc_contribution: user.total_loc_added - user.total_loc_deleted,
       }))
       .sort(
