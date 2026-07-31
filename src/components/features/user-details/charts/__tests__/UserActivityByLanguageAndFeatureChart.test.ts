@@ -150,4 +150,3 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
     expect(result.datasets).toHaveLength(0);
   });
 });
-
