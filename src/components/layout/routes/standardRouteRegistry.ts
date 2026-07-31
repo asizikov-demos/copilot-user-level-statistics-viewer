@@ -13,6 +13,7 @@ import {
   ModelDetailsRouteAdapter,
   OverviewRouteAdapter,
   UsersRouteAdapter,
+  SurfaceProductivityRouteAdapter,
   type StandardRouteAdapter,
 } from './standardRouteAdapters';
 
@@ -35,6 +36,7 @@ export const STANDARD_VIEW_MODES = [
   VIEW_MODES.AI_ADOPTION_PHASES,
   VIEW_MODES.MODEL_DETAILS,
   VIEW_MODES.CLI_ADOPTION,
+  VIEW_MODES.SURFACE_PRODUCTIVITY,
 ] as const satisfies readonly StandardViewMode[];
 
 export const STANDARD_ROUTE_REGISTRY = {
@@ -51,6 +53,7 @@ export const STANDARD_ROUTE_REGISTRY = {
   [VIEW_MODES.AI_ADOPTION_PHASES]: AiAdoptionPhasesRouteAdapter,
   [VIEW_MODES.MODEL_DETAILS]: ModelDetailsRouteAdapter,
   [VIEW_MODES.CLI_ADOPTION]: CliAdoptionRouteAdapter,
+  [VIEW_MODES.SURFACE_PRODUCTIVITY]: SurfaceProductivityRouteAdapter,
 } satisfies Record<StandardViewMode, StandardRouteAdapter>;
 
 export function isStandardViewMode(view: string): view is StandardViewMode {

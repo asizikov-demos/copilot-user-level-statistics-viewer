@@ -63,6 +63,12 @@ import {
   finalizeAiAggregation,
   type AiAggregationResult,
 } from './aggregation/aiAggregation';
+import {
+  accumulateSurfaceProductivityAggregation,
+  createSurfaceProductivityAggregationAccumulator,
+  finalizeSurfaceProductivityAggregation,
+  type SurfaceProductivityAggregationResult,
+} from './aggregation/surfaceProductivityAggregation';
 
 interface FinalizedAggregationResults {
   coreStatsAggregation: CoreStatsAggregationResult;
@@ -74,6 +80,7 @@ interface FinalizedAggregationResults {
   modelAggregation: ModelAggregationResult;
   cliAggregation: CliAggregationResult;
   aiAggregation: AiAggregationResult;
+  surfaceProductivityAggregation: SurfaceProductivityAggregationResult;
 }
 
 export function assembleAggregatedMetrics({
@@ -86,6 +93,7 @@ export function assembleAggregatedMetrics({
   modelAggregation,
   cliAggregation,
   aiAggregation,
+  surfaceProductivityAggregation,
 }: FinalizedAggregationResults): AggregatedMetrics {
   return {
     overview: {
@@ -112,6 +120,7 @@ export function assembleAggregatedMetrics({
     },
     cli: cliAggregation,
     ai: aiAggregation,
+    productivity: surfaceProductivityAggregation,
   };
 }
 
@@ -133,6 +142,8 @@ export function aggregateMetrics(
   const modelAggregationAccumulator = createModelAggregationAccumulator();
   const impactAggregationAccumulator = createImpactAggregationAccumulator();
   const aiAggregationAccumulator = createAiAggregationAccumulator();
+  const surfaceProductivityAggregationAccumulator =
+    createSurfaceProductivityAggregationAccumulator();
   const userDetailAggregationAccumulator =
     createUserDetailAggregationAccumulator();
 
@@ -155,6 +166,10 @@ export function aggregateMetrics(
       usedCopilotCloudAgent
     );
     accumulateAiAggregation(aiAggregationAccumulator, metric);
+    accumulateSurfaceProductivityAggregation(
+      surfaceProductivityAggregationAccumulator,
+      metric
+    );
     accumulateEngagementAdoptionAggregation(
       engagementAdoptionAggregationAccumulator,
       metric,
@@ -208,6 +223,10 @@ export function aggregateMetrics(
     impactAggregationAccumulator
   );
   const aiAggregation = finalizeAiAggregation(aiAggregationAccumulator);
+  const surfaceProductivityAggregation =
+    finalizeSurfaceProductivityAggregation(
+      surfaceProductivityAggregationAccumulator
+    );
 
   return {
     aggregated: assembleAggregatedMetrics({
@@ -220,6 +239,7 @@ export function aggregateMetrics(
       modelAggregation,
       cliAggregation,
       aiAggregation,
+      surfaceProductivityAggregation,
     }),
     userDetailAccumulator,
   };

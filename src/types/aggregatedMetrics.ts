@@ -28,6 +28,7 @@ import type {
   UsageDistributionBucket,
   DailyAiCreditsData,
 } from '../domain/calculators';
+import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -99,6 +100,7 @@ export interface AggregatedMetrics {
   models: ModelsMetricsSlice;
   cli: CliMetricsSlice;
   ai: AiMetricsSlice;
+  productivity: SurfaceProductivityMetrics;
 }
 
 export interface UserDetailedMetrics {

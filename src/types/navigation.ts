@@ -13,6 +13,7 @@ export const VIEW_MODES = {
   AI_ADOPTION_PHASES: 'aiAdoptionPhases',
   MODEL_DETAILS: 'modelDetails',
   CLI_ADOPTION: 'cliAdoption',
+  SURFACE_PRODUCTIVITY: 'surfaceProductivity',
 } as const;
 
 export type ViewMode = typeof VIEW_MODES[keyof typeof VIEW_MODES];

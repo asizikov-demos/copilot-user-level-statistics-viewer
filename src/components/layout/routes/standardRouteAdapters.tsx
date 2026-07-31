@@ -16,6 +16,7 @@ import {
   selectOverviewReadModel,
 } from '../../../read-models/overview';
 import { selectUsersReadModel } from '../../../read-models/users';
+import { selectSurfaceProductivityReadModel } from '../../../read-models/surfaceProductivity';
 import AboutView from '../../AboutView';
 import AiCreditsView from '../../AiCreditsView';
 import CLIAdoptionView from '../../CLIAdoptionView';
@@ -29,6 +30,7 @@ import { CopilotImpactView } from '../../features/impact';
 import { LanguagesView } from '../../features/languages';
 import { OverviewDashboard } from '../../features/overview';
 import { UsersView } from '../../features/users';
+import { SurfaceProductivityView } from '../../features/surface-productivity';
 
 export interface StandardRouteContext {
   aggregatedMetrics: AggregatedMetrics;
@@ -155,6 +157,16 @@ export function CliAdoptionRouteAdapter({
   return (
     <CLIAdoptionView
       model={selectCliAdoptionReadModel(aggregatedMetrics)}
+    />
+  );
+}
+
+export function SurfaceProductivityRouteAdapter({
+  aggregatedMetrics,
+}: StandardRouteContext) {
+  return (
+    <SurfaceProductivityView
+      model={selectSurfaceProductivityReadModel(aggregatedMetrics)}
     />
   );
 }

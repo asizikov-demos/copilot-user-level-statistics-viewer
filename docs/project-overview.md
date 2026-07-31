@@ -42,7 +42,7 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 - `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view and selected user
 - `MetricsWorkerContext` (`src/state/MetricsWorkerContext.tsx`) — owns the main-thread worker client lifecycle and exposes parse, user-detail, and reset operations
 
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and route each non-specialized view to the relevant presentation boundary, so only the selected route computes its projection. The feature-owned `UserDetailsRoute` in `src/components/features/user-details/` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
+**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, surface productivity, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and route each non-specialized view to the relevant presentation boundary, so only the selected route computes its projection. The feature-owned `UserDetailsRoute` in `src/components/features/user-details/` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
 
 ### 3.2. Code Organization
 
@@ -82,7 +82,8 @@ AggregatedMetrics
 ├── clients   IDE stats/counts and plugin versions
 ├── models    daily model usage and model breakdown
 ├── cli       session, token, and adoption series
-└── ai        adoption phases, usage distribution, and credits
+├── ai        adoption phases, usage distribution, and credits
+└── productivity surface reach, active user-days, attributed LOC, and overlap cohorts
 ```
 
 Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview`, `impact`, and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
@@ -97,6 +98,7 @@ Established boundaries cover:
 - clients and client versions
 - model details and CLI adoption
 - AI credits
+- surface productivity
 
 Phase 4 feature read-model boundaries, Phase 6 feature-oriented component organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
 
