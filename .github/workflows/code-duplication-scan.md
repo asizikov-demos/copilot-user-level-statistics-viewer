@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
   issues: read
+  pull-requests: read
   actions: read
   copilot-requests: write
 
@@ -24,7 +25,7 @@ network: defaults
 
 tools:
   github:
-    toolsets: [issues, repos]
+    toolsets: [issues, pull_requests, repos]
   bash: ["find:*", "grep:*", "sed:*", "awk:*", "sort:*", "uniq:*", "head:*", "tail:*", "wc:*", "git:*", "node:*"]
 
 safe-outputs:
@@ -120,23 +121,25 @@ Pay special attention to this app's architecture:
    - Chart.js setup, chart option factories, dataset construction, color selection, and insight footer composition
    - UI primitives for cards, stats tiles, tables, empty states, and progressive disclosure
    - test fixtures, builders, and repeated setup for metrics records or aggregated metrics
-5. Search existing open issues with the `[duplication]` title prefix before creating a new issue. Do not create a duplicate if an open issue already covers the same root problem.
+5. Search open and closed issues, merged and closed pull requests, existing helpers, and relevant tests before creating a new issue. Include the `[duplication]` title prefix and behavior-specific terms. Do not rediscover work that was already completed or rejected; explain why existing helpers or prior refactors do not already solve the candidate.
 
 ## Candidate gates
 
 Before creating an issue, sketch the likely implementation and reject the candidate unless **every** gate passes:
 
-1. **Complete call-site coverage:** inventory every production call site that implements the behavior, including the canonical path named in the repository architecture. The proposed implementation must migrate all of them. A partial extraction that leaves a primary implementation duplicated cannot become the single source of truth.
-2. **Implementation feasibility:** verify that one helper can preserve every caller's runtime, data-flow, error, streaming, chunk-boundary, memory, and type requirements. Reject a common shape that works only by buffering streamed input, weakening an existing contract, or adding caller-specific workarounds.
-3. **Policy versus mechanics:** classify the duplication explicitly. For shared domain policy, identify the invariant that one owner would enforce. For repeated mechanics, require a measurable reduction large enough to justify extraction without inventing a new policy abstraction. Repeated syntax, field assignment, property access, iteration, or arithmetic alone is insufficient.
-4. **Lower projected production complexity:** estimate production additions and removals before filing. Count the helper, exported types, adapters, wrappers, call-site glue, loops, and branches; exclude tests from the production comparison. The result must remove meaningful logic or branching, not just move it. A net-additive refactor requires an exceptional, measurable correctness or performance payoff.
-5. **No shape-only indirection:** reject wrapper/accessor/type-only helpers, public mutating "totals" abstractions, pass-through property accessors, and field-shape adapters that exist only to make unlike callers fit a generic helper. Do not replace direct code with an equal amount of conversion or mutation glue.
-6. **Coverage-aware value:** inspect existing unit, integration, and architecture coverage for the behavior. State the specific gap the abstraction fixes; existing integration coverage lowers the value of a mechanical extraction unless a concrete untested drift risk remains.
-7. **Concrete drift scenario:** name one plausible future change and the exact inconsistent behavior that would occur if the duplication remains. "Could drift" or "is harder to maintain" is not evidence.
-8. **Measurable payoff:** name the expected reduction, such as production loops/branches/functions/lines removed, independent test matrices consolidated, or a quantified memory/performance improvement. The payoff must exceed the new abstraction cost.
-9. **Bounded implementation:** confirm the change remains one coherent task and does not require unrelated architecture changes.
+1. **Demonstrated current impact:** cite an existing bug, inconsistent behavior, recent multi-file maintenance, measurable performance/memory cost, or concrete testing burden. Hypothetical future drift and generic maintainability claims are insufficient.
+2. **Occurrence threshold:** require at least three production call sites. A candidate with exactly two production call sites may pass only when the demonstrated current impact is substantial and independently evidenced.
+3. **Historical and existing-solution check:** inspect open and closed issues, merged and closed pull requests, helpers, and tests for the same behavior. Account for prior attempts and explain why reuse or a targeted local fix is insufficient.
+4. **Complete call-site coverage:** inventory every production call site that implements the behavior, including the canonical path named in the repository architecture. The proposed implementation must migrate all of them. A partial extraction that leaves a primary implementation duplicated cannot become the single source of truth.
+5. **Implementation feasibility:** verify that one helper can preserve every caller's runtime, data-flow, error, streaming, chunk-boundary, memory, and type requirements. Reject a common shape that works only by buffering streamed input, weakening an existing contract, or adding caller-specific workarounds.
+6. **Policy versus mechanics:** classify the duplication explicitly. For shared domain policy, identify the established invariant that one owner would enforce. For repeated mechanics, require a measurable reduction large enough to justify extraction without inventing a new policy abstraction. Repeated syntax, field assignment, property access, iteration, or arithmetic alone is insufficient.
+7. **Lower projected production complexity:** estimate production additions and removals before filing. Count lines, modules, exports, types, adapters, wrappers, call-site glue, loops, branches, and new dependency edges; exclude tests from the production comparison. Reject net-neutral or net-additive indirection unless it consolidates an established canonical policy and has a quantified payoff that exceeds the added dependency cost.
+8. **No shape-only indirection:** reject wrapper/accessor/type-only helpers, public mutating "totals" abstractions, pass-through property accessors, and field-shape adapters that exist only to make unlike callers fit a generic helper. Do not replace direct code with an equal amount of conversion or mutation glue.
+9. **Caller-level coverage:** inspect existing unit, integration, and architecture coverage for the behavior. Require tests that exercise observable behavior through affected callers; helper-only tests do not prove that the refactor preserves integration semantics.
+10. **Concrete drift scenario and measurable payoff:** name one plausible future change and the exact inconsistent behavior that would occur if the duplication remains, then quantify the expected reduction or correctness/performance benefit. "Could drift" or "is harder to maintain" is not evidence.
+11. **Bounded implementation:** confirm the change remains one coherent task and does not require unrelated architecture changes.
 
-When any gate is uncertain, reject the candidate and prefer `noop`.
+Privately challenge the candidate against every gate and actively look for a reason to reject it. Do not include scratch reasoning in the issue, but include the resulting evidence. When any gate is uncertain, reject the candidate and prefer `noop`.
 
 ## Finding grouping rules
 
@@ -161,7 +164,7 @@ If multiple files duplicate the same logic, group them into one issue. If two fi
 
 Create an issue only when all of these are true:
 
-- The duplicated logic is present in two or more places.
+- The occurrence threshold and demonstrated-impact gates are satisfied.
 - The candidate passes every gate above.
 - The duplication has a concrete correctness, memory, performance, maintainability, or testability impact.
 - The fix can be described as one bounded implementation task.
@@ -173,11 +176,18 @@ Skip findings that are only repeated Tailwind classes, normal React markup, stat
 
 Use these prior findings as rejection fixtures before emitting any new issue:
 
-- **Issue #587, NDJSON record parsing:** reject. Its proposed full-content record helper could not serve the streaming `src/infra/metricsFileParser.ts` path with chunk remainders and line continuity, so it omitted the primary app implementation and could not create one source of truth.
-- **Issue #589, aggregate LOC totals:** reject. The proposed implementation added a public mutating totals type plus per-caller field-shape adapters. It changed 126 production lines while removing 114, without reducing meaningful branching or encoding a new domain policy.
-- **Issue #594, CLI-aware dates:** reject as proposed. The sorted date-union loop was reusable, but the extra CLI-day type and pass-through accessor duplicated an existing property access; the production change added 86 lines and removed 78 for little complexity reduction.
+- **Issue #587, NDJSON record parsing:** reject. It cited `metricsParser` but the implementation omitted the primary worker/app streaming path, and its full-content strict/lenient helpers wrapped intentionally different caller policies without supporting chunk remainders and line continuity. Merged PRs #455, #467, #506, and #533 also show that NDJSON splitting and record consumption were already consolidated incrementally.
+- **Issue #589, aggregate LOC totals:** reject. It centralized field-addition mechanics rather than policy, added a public mutating totals type plus snake-case field-shape adapters, changed 126 production lines while removing 114, and added no caller-level behavior tests.
+- **Issue #594, CLI-aware dates:** reject as proposed. It extracted a `Set` union/sort loop, but also added a redundant CLI-day type and a one-line `Map.get` wrapper. The production change added 86 lines and removed 78, while new tests exercised helper mechanics rather than observable behavior through the four callers.
 
 A future candidate may revisit the underlying behavior only if it describes a materially different implementation that passes every gate.
+
+## Positive calibration from the July 31 scan
+
+Preserve findings that demonstrate real simplification:
+
+- **Issue #591 / PR #595, user-details chart construction:** passes the intended gates because the pre-refactor source exposed roughly 200 lines of duplicated caller-owned chart setup and lacked caller-level behavior coverage, a concrete maintenance and testing burden. The implementation removed the large inline block, reused established chart date/dataset/options/color policies, reduced production code overall, and tested behavior through the production chart builders.
+- **Issue #588 / PR #592, activity metric columns:** is not an automatic pass. A column policy can justify a canonical metadata owner, but the candidate must quantify production growth, exports, format adapters, and dependency edges; it passes only if that established-policy payoff clearly exceeds the indirection cost.
 
 ## Issue template
 
@@ -187,12 +197,15 @@ For each issue, use the `create_issue` safe output with this body structure. Rep
 ## Problem
 [One concise paragraph describing the duplicated logic and why it matters.]
 
-## Why a shared abstraction is warranted
+## Gate evidence
+- **Production occurrences:** [Count and identify at least three call sites, or explain the substantial independently demonstrated impact for exactly two.]
+- **Demonstrated current impact:** [Existing bug, inconsistency, recent coordinated maintenance, measured cost, or concrete testing burden.]
 - **Classification:** [Shared domain policy or repeated mechanics.]
 - **Policy invariant:** [For shared policy, the domain rule that all callers must follow. Otherwise, "Not applicable - mechanical candidate."]
 - **Mechanical reduction:** [For repeated mechanics, the concrete logic/branching reduction that makes extraction worthwhile. Otherwise, "Not applicable - policy candidate."]
 - **Concrete drift scenario:** [A plausible future change and the exact inconsistent result without one owner.]
 - **Measurable payoff:** [Production loops/branches/functions/lines removed, test matrices consolidated, or quantified performance/memory benefit.]
+- **History and existing solutions:** [Open/closed issues, merged/closed PRs, helpers, and tests inspected; why reuse or a local fix is insufficient.]
 
 ## Complete call-site and coverage inventory
 | Production call site | Current behavior | Proposed change | Existing unit/integration/architecture coverage |
@@ -205,9 +218,9 @@ For each issue, use the `create_issue` safe output with this body structure. Rep
 [Explain how one implementation preserves each caller's runtime, streaming/chunking, memory, error, data-flow, and type constraints. Confirm that the work is one bounded task, and note any constraint that does not apply.]
 
 ## Projected production-code delta
-- **Remove:** [Concrete functions/loops/branches/adapters and estimated production lines.]
-- **Add:** [Concrete helper, types, adapters, wrappers, call-site glue, and estimated production lines.]
-- **Net complexity:** [Why production code and cognitive/branching complexity are lower. Tests are reported separately, not used to hide production growth.]
+- **Remove:** [Concrete production lines, modules, exports, types, functions, loops, branches, adapters, and dependency edges.]
+- **Add:** [Concrete production lines, modules, exports, types, helper code, adapters, wrappers, call-site glue, and dependency edges.]
+- **Net complexity:** [Why production code and cognitive/branching/dependency complexity are lower, or the quantified established-policy exception. Tests are reported separately, not used to hide production growth.]
 
 ## Suggested implementation
 1. [Specific refactor step]
@@ -215,13 +228,16 @@ For each issue, use the `create_issue` safe output with this body structure. Rep
 3. [Specific cleanup step]
 
 ## Rejection checks
+- [x] Demonstrated current impact is documented; the case does not rely on hypothetical drift.
+- [x] At least three production call sites exist, or exactly two have substantial independently demonstrated impact.
+- [x] Open/closed issues, merged/closed pull requests, existing helpers, and tests were inspected.
 - [x] Every production call site, including the canonical architecture path, is included.
 - [x] The implementation is feasible without weakening streaming, memory, runtime, error, data-flow, or type contracts.
 - [x] The duplication is classified as shared policy or repeated mechanics, with the corresponding invariant or measurable reduction documented.
-- [x] Production code and meaningful complexity decrease after counting helper code and call-site glue, or an exceptional quantified correctness/performance payoff justifies net growth.
+- [x] Production code and meaningful complexity decrease after counting modules, exports, adapters, and dependency edges, or a quantified established-policy exception justifies the cost.
 - [x] The proposal adds no wrapper/accessor/type-only indirection.
 - [x] The proposal adds no field-shape adapters or public mutating abstraction solely to fit unlike callers.
-- [x] Existing unit, integration, and architecture coverage was inspected and a concrete remaining gap or not-applicable rationale is documented.
+- [x] Existing unit, integration, and architecture coverage was inspected, and caller-level observable behavior tests are identified.
 - [x] A specific drift scenario and measurable payoff are documented above.
 - [x] The implementation remains one bounded task without unrelated architecture changes.
 
@@ -235,7 +251,7 @@ For each issue, use the `create_issue` safe output with this body structure. Rep
 - [ ] Deprecated LOC schema records remain skipped, and new LOC schema fields remain supported.
 - [ ] Model normalization and unknown-model detection continue to use `src/domain/modelConfig.ts`.
 - [ ] Chart changes follow `.github/instructions/charts.instructions.md` when chart components are involved.
-- [ ] Relevant tests are updated or added.
+- [ ] Caller-level tests preserve observable behavior; helper-only tests are not the sole coverage.
 
 ## Validation
 - [Targeted existing unit/integration/architecture tests that cover every affected call site, with not-applicable cases identified.]
