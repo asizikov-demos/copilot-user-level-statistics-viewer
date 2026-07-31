@@ -68,9 +68,9 @@ Scan `${{ github.repository }}` for duplicated logic and missed code reuse oppor
 
 ## Goal
 
-Create implementation-ready GitHub issues for code duplication findings. Each issue must describe one atomic root problem that an AI coding agent can fix independently.
+Create implementation-ready GitHub issues only for duplication whose removal produces a simpler, safer codebase. Each issue must describe one atomic root problem that an AI coding agent can fix independently.
 
-Prefer fewer high-quality issues over many low-value issues. If no actionable duplication is found, do not create an issue; finish with a no-op summary.
+Do not treat extraction as inherently valuable. Prefer fewer high-quality issues over speculative indirection, and prefer no issue when the benefit is uncertain. If no candidate passes every gate below, finish with a no-op summary.
 
 ## Repository instructions
 
@@ -122,6 +122,22 @@ Pay special attention to this app's architecture:
    - test fixtures, builders, and repeated setup for metrics records or aggregated metrics
 5. Search existing open issues with the `[duplication]` title prefix before creating a new issue. Do not create a duplicate if an open issue already covers the same root problem.
 
+## Candidate gates
+
+Before creating an issue, sketch the likely implementation and reject the candidate unless **every** gate passes:
+
+1. **Complete call-site coverage:** inventory every production call site that implements the behavior, including the canonical path named in the repository architecture. The proposed implementation must migrate all of them. A partial extraction that leaves a primary implementation duplicated cannot become the single source of truth.
+2. **Implementation feasibility:** verify that one helper can preserve every caller's runtime, data-flow, error, streaming, chunk-boundary, memory, and type requirements. Reject a common shape that works only by buffering streamed input, weakening an existing contract, or adding caller-specific workarounds.
+3. **Policy versus mechanics:** classify the duplication explicitly. For shared domain policy, identify the invariant that one owner would enforce. For repeated mechanics, require a measurable reduction large enough to justify extraction without inventing a new policy abstraction. Repeated syntax, field assignment, property access, iteration, or arithmetic alone is insufficient.
+4. **Lower projected production complexity:** estimate production additions and removals before filing. Count the helper, exported types, adapters, wrappers, call-site glue, loops, and branches; exclude tests from the production comparison. The result must remove meaningful logic or branching, not just move it. A net-additive refactor requires an exceptional, measurable correctness or performance payoff.
+5. **No shape-only indirection:** reject wrapper/accessor/type-only helpers, public mutating "totals" abstractions, pass-through property accessors, and field-shape adapters that exist only to make unlike callers fit a generic helper. Do not replace direct code with an equal amount of conversion or mutation glue.
+6. **Coverage-aware value:** inspect existing unit, integration, and architecture coverage for the behavior. State the specific gap the abstraction fixes; existing integration coverage lowers the value of a mechanical extraction unless a concrete untested drift risk remains.
+7. **Concrete drift scenario:** name one plausible future change and the exact inconsistent behavior that would occur if the duplication remains. "Could drift" or "is harder to maintain" is not evidence.
+8. **Measurable payoff:** name the expected reduction, such as production loops/branches/functions/lines removed, independent test matrices consolidated, or a quantified memory/performance improvement. The payoff must exceed the new abstraction cost.
+9. **Bounded implementation:** confirm the change remains one coherent task and does not require unrelated architecture changes.
+
+When any gate is uncertain, reject the candidate and prefer `noop`.
+
 ## Finding grouping rules
 
 A finding group is atomic when it has one root problem and one coherent implementation path.
@@ -146,31 +162,73 @@ If multiple files duplicate the same logic, group them into one issue. If two fi
 Create an issue only when all of these are true:
 
 - The duplicated logic is present in two or more places.
-- The duplication has a plausible correctness, memory, performance, maintainability, or testability impact.
+- The candidate passes every gate above.
+- The duplication has a concrete correctness, memory, performance, maintainability, or testability impact.
 - The fix can be described as one bounded implementation task.
-- You can name specific files, functions, components, or tests as evidence.
+- You can name all affected production call sites and the relevant existing tests as evidence.
 
 Skip findings that are only repeated Tailwind classes, normal React markup, static copy, or test assertions unless they hide duplicated behavior or create meaningful maintenance overhead.
 
+## Regression checks from the July 31 scan
+
+Use these prior findings as rejection fixtures before emitting any new issue:
+
+- **Issue #587, NDJSON record parsing:** reject. Its proposed full-content record helper could not serve the streaming `src/infra/metricsFileParser.ts` path with chunk remainders and line continuity, so it omitted the primary app implementation and could not create one source of truth.
+- **Issue #589, aggregate LOC totals:** reject. The proposed implementation added a public mutating totals type plus per-caller field-shape adapters. It changed 126 production lines while removing 114, without reducing meaningful branching or encoding a new domain policy.
+- **Issue #594, CLI-aware dates:** reject as proposed. The sorted date-union loop was reusable, but the extra CLI-day type and pass-through accessor duplicated an existing property access; the production change added 86 lines and removed 78 for little complexity reduction.
+
+A future candidate may revisit the underlying behavior only if it describes a materially different implementation that passes every gate.
+
 ## Issue template
 
-For each issue, use the `create_issue` safe output with this body structure:
+For each issue, use the `create_issue` safe output with this body structure. Replace every placeholder and include every rejection check as checked; if any check cannot truthfully be marked `[x]`, reject the candidate instead of creating the issue.
 
 ```markdown
 ## Problem
 [One concise paragraph describing the duplicated logic and why it matters.]
 
-## Evidence
-- `[file path]` - [function/component/line area and duplicated behavior]
-- `[file path]` - [function/component/line area and duplicated behavior]
+## Why a shared abstraction is warranted
+- **Classification:** [Shared domain policy or repeated mechanics.]
+- **Policy invariant:** [For shared policy, the domain rule that all callers must follow. Otherwise, "Not applicable - mechanical candidate."]
+- **Mechanical reduction:** [For repeated mechanics, the concrete logic/branching reduction that makes extraction worthwhile. Otherwise, "Not applicable - policy candidate."]
+- **Concrete drift scenario:** [A plausible future change and the exact inconsistent result without one owner.]
+- **Measurable payoff:** [Production loops/branches/functions/lines removed, test matrices consolidated, or quantified performance/memory benefit.]
+
+## Complete call-site and coverage inventory
+| Production call site | Current behavior | Proposed change | Existing unit/integration/architecture coverage |
+| --- | --- | --- | --- |
+| `[file path: function/component]` | [Duplicated policy/mechanics] | [How it uses the shared owner] | [Relevant coverage, explicit gap, or why a coverage type is not applicable] |
+
+[List every affected production call site. Explain how repository-wide search established that the inventory is complete.]
+
+## Implementation feasibility
+[Explain how one implementation preserves each caller's runtime, streaming/chunking, memory, error, data-flow, and type constraints. Confirm that the work is one bounded task, and note any constraint that does not apply.]
+
+## Projected production-code delta
+- **Remove:** [Concrete functions/loops/branches/adapters and estimated production lines.]
+- **Add:** [Concrete helper, types, adapters, wrappers, call-site glue, and estimated production lines.]
+- **Net complexity:** [Why production code and cognitive/branching complexity are lower. Tests are reported separately, not used to hide production growth.]
 
 ## Suggested implementation
 1. [Specific refactor step]
 2. [Specific wiring/update step]
 3. [Specific cleanup step]
 
+## Rejection checks
+- [x] Every production call site, including the canonical architecture path, is included.
+- [x] The implementation is feasible without weakening streaming, memory, runtime, error, data-flow, or type contracts.
+- [x] The duplication is classified as shared policy or repeated mechanics, with the corresponding invariant or measurable reduction documented.
+- [x] Production code and meaningful complexity decrease after counting helper code and call-site glue, or an exceptional quantified correctness/performance payoff justifies net growth.
+- [x] The proposal adds no wrapper/accessor/type-only indirection.
+- [x] The proposal adds no field-shape adapters or public mutating abstraction solely to fit unlike callers.
+- [x] Existing unit, integration, and architecture coverage was inspected and a concrete remaining gap or not-applicable rationale is documented.
+- [x] A specific drift scenario and measurable payoff are documented above.
+- [x] The implementation remains one bounded task without unrelated architecture changes.
+
 ## Acceptance criteria
 - [ ] The duplicated logic has a single source of truth.
+- [ ] All call sites listed above use that source of truth; no primary implementation remains duplicated.
+- [ ] The actual production-code delta is consistent with the estimate and does not introduce rejected indirection.
 - [ ] Existing behavior is preserved.
 - [ ] Parsing and aggregation still run through the Web Worker `parseAndAggregate` flow when applicable.
 - [ ] Raw metrics are not persisted on the main thread.
@@ -180,7 +238,8 @@ For each issue, use the `create_issue` safe output with this body structure:
 - [ ] Relevant tests are updated or added.
 
 ## Validation
-- [Commands or existing test suites the implementation agent should run.]
+- [Targeted existing unit/integration/architecture tests that cover every affected call site, with not-applicable cases identified.]
+- [Repository build, lint, and test commands.]
 
 ## AI implementation notes
 [Mention key constraints, edge cases, and files likely involved. Make this detailed enough for Copilot to implement without rediscovering the entire context.]
@@ -191,4 +250,5 @@ For each issue, use the `create_issue` safe output with this body structure:
 - Create up to 8 issues per run.
 - Assign created issues to Copilot through the configured safe output, using the callable tool name `create_issue`.
 - Prefer fewer high-quality issues over many low-value issues.
-- If no actionable duplication is found, call `noop` with a short no-op summary.
+- Do not create an issue with incomplete gate evidence or placeholder claims.
+- If no candidate passes every gate, or if the projected value is uncertain, call `noop` with a short no-op summary.
