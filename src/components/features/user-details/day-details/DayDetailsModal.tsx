@@ -44,6 +44,20 @@ const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppe
 
 const pillBase = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
+function makeSharedMetricColumns<T extends {
+  code_generation_activity_count: number;
+  code_acceptance_activity_count: number;
+  loc_added_sum: number;
+  loc_deleted_sum: number;
+}>(): TableColumn<T>[] {
+  return [
+    { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
+    { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
+    { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
+    { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+  ];
+}
+
 interface FeaturePill {
   label: string;
   className: string;
@@ -106,20 +120,14 @@ const clientColumns: TableColumn<ClientRow>[] = [
     },
   },
   { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
-  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
-  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
-  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+  ...makeSharedMetricColumns<ClientRow>(),
   { id: 'pluginVersion', header: 'Plugin Version', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.plugin_version },
 ];
 
 const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
   { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => r.model || 'Unknown' },
-  { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
-  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
-  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
+  ...makeSharedMetricColumns<LanguageModelRow>(),
 ];
 
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {

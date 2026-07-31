@@ -5,6 +5,7 @@ import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 import { getModelIcon } from '../../../icons/ModelIcons';
+import { withInteractionsColumns } from '../../../charts/utils/activityMetricColumns';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
@@ -24,15 +25,7 @@ const modelChartConfig = {
   groupKey: 'model' as const,
   countAccessor: getTotalUserInitiatedInteractionCount,
   groupIcon: getModelIcon,
-  columns: [
-    { header: 'Interactions', accessor: getTotalUserInitiatedInteractionCount },
-    { header: 'Generation', accessor: (item: ModelFeatureAggregate) => item.code_generation_activity_count },
-    { header: 'Acceptance', accessor: (item: ModelFeatureAggregate) => item.code_acceptance_activity_count },
-    { header: 'LOC Added', accessor: (item: ModelFeatureAggregate) => item.loc_added_sum },
-    { header: 'LOC Deleted', accessor: (item: ModelFeatureAggregate) => item.loc_deleted_sum },
-    { header: 'Suggested Add', accessor: (item: ModelFeatureAggregate) => item.loc_suggested_to_add_sum },
-    { header: 'Suggested Delete', accessor: (item: ModelFeatureAggregate) => item.loc_suggested_to_delete_sum },
-  ],
+  columns: withInteractionsColumns<ModelFeatureAggregate>(),
 };
 
 export default function UserActivityByModelAndFeatureChart({

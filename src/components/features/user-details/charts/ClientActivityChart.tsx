@@ -8,15 +8,35 @@ import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createBaseChartOptions } from '../../../charts/utils/chartOptions';
 import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
-import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
+import { createCliClientActivityRow, mapIdeClientActivityRows, type ClientActivityMetricsRow } from '../../../../domain/calculators/clientActivityRows';
 import { formatShortDate } from '../../../../utils/formatters';
 import { padReportRangeWithDefaults } from '../../../../utils/timeSeries';
 import ChartContainer from '../../../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import type { UserDayData } from '../../../../types/metrics';
+import { withInteractionsTableColumns } from '../../../charts/utils/activityMetricColumns';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 registerChartJS();
+
+const HEADER_LEFT = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+const CELL_LEFT = 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900';
+
+const clientTableColumns: TableColumn<ClientActivityMetricsRow>[] = [
+  {
+    id: 'ide',
+    header: 'IDE',
+    headerClassName: HEADER_LEFT,
+    className: CELL_LEFT,
+    renderCell: (r) => (
+      <div className="flex items-center gap-2">
+        {React.createElement(getIDEIcon(r.ide))}
+        <span>{formatIDEName(r.ide)}</span>
+      </div>
+    ),
+  },
+  ...withInteractionsTableColumns<ClientActivityMetricsRow>(),
+];
 
 interface IDEAggregateItem {
   ide: string;
@@ -182,41 +202,14 @@ export default function ClientActivityChart({
 
   const footer = (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IDE</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Add</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Delete</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {clientRows.map((client) => (
-              <tr key={client.ide}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  <div className="flex items-center gap-2">
-                    {React.createElement(getIDEIcon(client.ide))}
-                    <span>{formatIDEName(client.ide)}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.user_initiated_interaction_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_generation_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_acceptance_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_added_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_deleted_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_add_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_delete_sum.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <MetricsTable
+        data={clientRows}
+        columns={clientTableColumns}
+        tableContainerClassName="overflow-x-auto"
+        theadClassName="bg-gray-50"
+        tbodyClassName="bg-white divide-y divide-gray-200"
+        getRowKey={(r) => r.ide}
+      />
 
       {allVersions.length > 0 && (
         <div className="mt-8">

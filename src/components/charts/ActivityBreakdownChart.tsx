@@ -8,6 +8,7 @@ import { registerChartJS } from './utils/chartSetup';
 import { translateFeature } from '../../domain/featureTranslations';
 import ChartContainer from '../ui/ChartContainer';
 import DisclosureSection from '../ui/DisclosureSection';
+import type { ColumnConfig } from './utils/activityMetricColumns';
 
 registerChartJS();
 
@@ -19,11 +20,6 @@ interface BaseAggregate {
   loc_deleted_sum: number;
   loc_suggested_to_add_sum: number;
   loc_suggested_to_delete_sum: number;
-}
-
-interface ColumnConfig<T> {
-  header: string;
-  accessor: (item: T) => number;
 }
 
 interface ActivityBreakdownChartConfig<T extends BaseAggregate> {
