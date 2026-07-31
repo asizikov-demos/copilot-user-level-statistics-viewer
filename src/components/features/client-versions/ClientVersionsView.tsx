@@ -1,11 +1,15 @@
 "use client";
 
+import { useMemo } from 'react';
 import { ViewPanel } from '../../ui';
 import { usePluginVersions } from '../../../hooks/usePluginVersions';
 import { CLIENT_VERSIONS_SECTIONS } from '../../layout/contextSections';
 import type { ClientVersionsReadModel } from '../../../read-models/clients';
-import JetBrainsVersionsSection from './sections/JetBrainsVersionsSection';
-import VsCodeVersionsSection from './sections/VsCodeVersionsSection';
+import ClientVersionsDashboard from './ClientVersionsDashboard';
+import {
+  analyzeJetBrainsHealth,
+  analyzeVsCodeHealth,
+} from './clientVersionAnalysis';
 
 interface ClientVersionsViewProps {
   model: ClientVersionsReadModel;
@@ -22,38 +26,58 @@ export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
     currentPreviewMinor,
     updatedAt: vsUpdatedAt,
   } = usePluginVersions('vscode');
-  const [jetbrainsSection, vsCodeSection] = CLIENT_VERSIONS_SECTIONS;
+  const [healthSection, driftSection, methodologySection] = CLIENT_VERSIONS_SECTIONS;
+  const platforms = useMemo(
+    () => [
+      analyzeJetBrainsHealth({
+        versionAnalysis: pluginVersionData.jetbrains,
+        totalUsers: pluginVersionData.totalUniqueIntellijUsers,
+        releases: jetbrainsUpdates,
+        isLoading: jbLoading,
+        error: jbError,
+      }),
+      analyzeVsCodeHealth({
+        versionAnalysis: pluginVersionData.vscode,
+        totalUsers: pluginVersionData.totalUniqueVsCodeUsers,
+        stableReleases: vsCodeStableReleases,
+        isLoading: vsLoading,
+        error: vsError,
+        currentStableMinor,
+        currentPreviewMinor,
+        reportStartDay,
+      }),
+    ],
+    [
+      currentPreviewMinor,
+      currentStableMinor,
+      jbError,
+      jbLoading,
+      jetbrainsUpdates,
+      pluginVersionData,
+      reportStartDay,
+      vsCodeStableReleases,
+      vsError,
+      vsLoading,
+    ],
+  );
 
   return (
     <ViewPanel
       headerProps={{
         title: 'Client Versions',
-        description: 'Analyze plugin and extension versions across your organization to identify users with outdated clients that may be missing important features and bug fixes.',
+        description: 'Prioritize plugin and extension upgrades that can affect Copilot feature availability and telemetry quality.',
       }}
-      contentClassName="space-y-10"
     >
-      <div className="space-y-4">
-        <JetBrainsVersionsSection
-          sectionId={jetbrainsSection.id}
-          pluginVersionAnalysis={pluginVersionData.jetbrains}
-          totalUniqueIntellijUsers={pluginVersionData.totalUniqueIntellijUsers}
-          jetbrainsUpdates={jetbrainsUpdates}
-          isLoading={jbLoading}
-          error={jbError}
-        />
-        <VsCodeVersionsSection
-          sectionId={vsCodeSection.id}
-          versionAnalysis={pluginVersionData.vscode}
-          totalUniqueVsCodeUsers={pluginVersionData.totalUniqueVsCodeUsers}
-          stableReleases={vsCodeStableReleases}
-          isLoading={vsLoading}
-          error={vsError}
-          currentStableMinor={currentStableMinor}
-          currentPreviewMinor={currentPreviewMinor}
-          updatedAt={vsUpdatedAt}
-          reportStartDay={reportStartDay}
-        />
-      </div>
+      <ClientVersionsDashboard
+        platforms={platforms}
+        reportStartDay={reportStartDay}
+        vsCodeUpdatedAt={vsUpdatedAt}
+        sectionIds={{
+          health: healthSection.id,
+          drift: driftSection.id,
+          methodology: methodologySection.id,
+        }}
+      />
     </ViewPanel>
   );
 }

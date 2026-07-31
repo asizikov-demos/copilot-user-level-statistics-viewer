@@ -45,8 +45,9 @@ export const AI_ADOPTION_PHASE_SECTIONS: ContextSection[] = [
 ];
 
 export const CLIENT_VERSIONS_SECTIONS: ContextSection[] = [
-  { id: 'client-versions-jetbrains', label: 'JetBrains' },
-  { id: 'client-versions-vscode', label: 'Visual Studio Code' },
+  { id: 'client-version-health', label: 'Fleet Health' },
+  { id: 'client-version-drift', label: 'Version Drift' },
+  { id: 'client-version-methodology', label: 'Evaluation Method' },
 ];
 
 export const MODEL_DETAILS_SECTIONS: ContextSection[] = [
