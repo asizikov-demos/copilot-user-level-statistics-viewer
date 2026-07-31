@@ -39,7 +39,7 @@
     "eslint": "^10.8.0",
     "eslint-config-next": "^16.2.9",
     "playwright": "^1.61.0",
-    "react-test-renderer": "19.2.6",
+    "react-test-renderer": "19.2.8",
     "tailwindcss": "^4.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
