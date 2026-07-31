@@ -35,7 +35,6 @@ export const CLIENT_ANALYSIS_SECTIONS: ContextSection[] = [
 
 export const COPILOT_ADOPTION_SECTIONS: ContextSection[] = [
   { id: 'copilot-feature-adoption', label: 'Feature Adoption' },
-  { id: 'copilot-agent-mode-heatmap', label: 'Agent Mode Heatmap' },
   { id: 'copilot-adoption-trend', label: 'Adoption Trend' },
 ];
 

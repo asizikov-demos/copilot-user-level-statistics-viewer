@@ -274,7 +274,6 @@ describe('metrics aggregation orchestration characterization', () => {
     };
     const modelAggregation = {
       modelUsageData: [...defaults.models.modelUsageData],
-      agentModeHeatmapData: [...defaults.adoption.agentModeHeatmapData],
       modelBreakdownData: { ...defaults.models.modelBreakdownData },
     };
     const cliAggregation = {
@@ -313,9 +312,6 @@ describe('metrics aggregation orchestration characterization', () => {
     );
     expect(aggregated.adoption.featureAdoptionData).toBe(
       engagementAdoptionAggregation.featureAdoptionData
-    );
-    expect(aggregated.adoption.agentModeHeatmapData).toBe(
-      modelAggregation.agentModeHeatmapData
     );
     expect(aggregated.adoption.dailyAdoptionTrend).toBe(
       engagementAdoptionAggregation.dailyAdoptionTrend

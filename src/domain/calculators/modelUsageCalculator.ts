@@ -1,6 +1,5 @@
 import { classifyModelRequest } from '../modelConfig';
 import type { CopilotMetrics } from '../../types/metrics';
-import { getChatModeBucket } from '../featureCategories';
 import { compareByDateAsc } from './statsCalculators';
 import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 
@@ -10,28 +9,16 @@ export interface DailyModelUsageData {
   unknownModels: number;
 }
 
-export interface AgentModeHeatmapData {
-  date: string;
-  agentModeRequests: number;
-  uniqueUsers: number;
-  intensity: number;
-}
-
 export interface ModelUsageAccumulator {
   dailyModelUsage: Map<string, {
     modelInteractions: number;
     unknownModels: number;
-  }>;
-  dailyAgentHeatmap: Map<string, {
-    requests: number;
-    users: Set<number>;
   }>;
 }
 
 export function createModelUsageAccumulator(): ModelUsageAccumulator {
   return {
     dailyModelUsage: new Map(),
-    dailyAgentHeatmap: new Map(),
   };
 }
 
@@ -55,23 +42,6 @@ export function accumulateModelFeature(
   }
 }
 
-export function accumulateAgentHeatmapFromFeature(
-  accumulator: ModelUsageAccumulator,
-  date: string,
-  userId: number,
-  feature: string,
-  interactionCount: number
-): void {
-  if (getChatModeBucket(feature) === 'agent' && interactionCount > 0) {
-    if (!accumulator.dailyAgentHeatmap.has(date)) {
-      accumulator.dailyAgentHeatmap.set(date, { requests: 0, users: new Set() });
-    }
-    const dah = accumulator.dailyAgentHeatmap.get(date)!;
-    dah.requests += interactionCount;
-    dah.users.add(userId);
-  }
-}
-
 export function computeDailyModelUsageData(
   accumulator: ModelUsageAccumulator
 ): DailyModelUsageData[] {
@@ -80,22 +50,6 @@ export function computeDailyModelUsageData(
       date,
       modelInteractions: data.modelInteractions,
       unknownModels: data.unknownModels,
-    }))
-    .sort(compareByDateAsc);
-}
-
-export function computeAgentModeHeatmapData(
-  accumulator: ModelUsageAccumulator
-): AgentModeHeatmapData[] {
-  const allRequests = Array.from(accumulator.dailyAgentHeatmap.values()).map(d => d.requests);
-  const maxRequests = Math.max(...allRequests, 1);
-
-  return Array.from(accumulator.dailyAgentHeatmap.entries())
-    .map(([date, data]) => ({
-      date,
-      agentModeRequests: data.requests,
-      uniqueUsers: data.users.size,
-      intensity: Math.ceil((data.requests / maxRequests) * 5),
     }))
     .sort(compareByDateAsc);
 }

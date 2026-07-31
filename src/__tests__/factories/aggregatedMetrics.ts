@@ -11,7 +11,6 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   users: ['userSummaries'],
   adoption: [
     'featureAdoptionData',
-    'agentModeHeatmapData',
     'dailyAdoptionTrend',
     'dailyCloudAgentAdoptionData',
     'dailyCodeReviewAdoptionData',

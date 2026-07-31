@@ -2,12 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { CopilotAdoptionReadModel } from '../../../../read-models/adoption';
 import { AdoptionTrendSection } from '../sections/AdoptionTrendSection';
-import { AgentModeHeatmapSection } from '../sections/AgentModeHeatmapSection';
 import { FeatureAdoptionSection } from '../sections/FeatureAdoptionSection';
 
 const mocks = vi.hoisted(() => ({
   adoptionTrendChart: vi.fn(),
-  agentModeHeatmapChart: vi.fn(),
   featureAdoptionChart: vi.fn(),
 }));
 
@@ -15,13 +13,6 @@ vi.mock('../charts/AdoptionTrendChart', () => ({
   default: (props: Record<string, unknown>) => {
     mocks.adoptionTrendChart(props);
     return <span>adoption trend chart</span>;
-  },
-}));
-
-vi.mock('../charts/AgentModeHeatmapChart', () => ({
-  default: (props: Record<string, unknown>) => {
-    mocks.agentModeHeatmapChart(props);
-    return <span>agent heatmap chart</span>;
   },
 }));
 
@@ -57,15 +48,7 @@ describe('adoption sections', () => {
     expect(mocks.featureAdoptionChart).toHaveBeenCalledWith({ data });
   });
 
-  it('passes heatmap and trend data through narrow section props', () => {
-    const heatmapData: CopilotAdoptionReadModel['agentModeHeatmapData'] = [
-      {
-        date: '2026-07-01',
-        agentModeRequests: 3,
-        uniqueUsers: 2,
-        intensity: 3,
-      },
-    ];
+  it('passes trend data through narrow section props', () => {
     const trendData: CopilotAdoptionReadModel['dailyAdoptionTrend'] = [
       {
         date: '2026-07-01',
@@ -77,18 +60,14 @@ describe('adoption sections', () => {
     ];
 
     renderToStaticMarkup(
-      <>
-        <AgentModeHeatmapSection sectionId="agent-heatmap" data={heatmapData} />
-        <AdoptionTrendSection
-          sectionId="trend"
-          data={trendData}
-          reportStartDay="2026-07-01"
-          reportEndDay="2026-07-31"
-        />
-      </>
+      <AdoptionTrendSection
+        sectionId="trend"
+        data={trendData}
+        reportStartDay="2026-07-01"
+        reportEndDay="2026-07-31"
+      />
     );
 
-    expect(mocks.agentModeHeatmapChart).toHaveBeenCalledWith({ data: heatmapData });
     expect(mocks.adoptionTrendChart).toHaveBeenCalledWith({
       data: trendData,
       reportStartDay: '2026-07-01',

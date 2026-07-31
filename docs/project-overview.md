@@ -76,7 +76,7 @@ The successful worker payload is one grouped `AggregatedMetrics` object. Each ag
 AggregatedMetrics
 ├── overview  stats, engagementData, chatUsersData, chatRequestsData
 ├── users     userSummaries
-├── adoption  featureAdoptionData, agentModeHeatmapData, adoption series
+├── adoption  featureAdoptionData and adoption series
 ├── impact    agent, completion, edit, inline, ask, CLI, and joined impact
 ├── languages language stats, feature impact, generation and LOC series
 ├── clients   IDE stats/counts and plugin versions

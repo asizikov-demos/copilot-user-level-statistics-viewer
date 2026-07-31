@@ -5,7 +5,6 @@ import { ViewPanel } from '../../ui';
 import { COPILOT_ADOPTION_SECTIONS } from '../../layout/contextSections';
 import type { CopilotAdoptionReadModel } from '../../../read-models/adoption';
 import { AdoptionTrendSection } from './sections/AdoptionTrendSection';
-import { AgentModeHeatmapSection } from './sections/AgentModeHeatmapSection';
 import { CloudAgentAdoptionSection } from './sections/CloudAgentAdoptionSection';
 import { CodeReviewAdoptionSection } from './sections/CodeReviewAdoptionSection';
 import { FeatureAdoptionSection } from './sections/FeatureAdoptionSection';
@@ -32,7 +31,6 @@ const EMPTY_FEATURE_ADOPTION_DATA: CopilotAdoptionReadModel['featureAdoptionData
 export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps) {
   const {
     featureAdoptionData,
-    agentModeHeatmapData,
     stats,
     dailyAdoptionTrend,
     dailyCloudAgentAdoptionData,
@@ -41,18 +39,17 @@ export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps)
   const adoptionData = featureAdoptionData ?? EMPTY_FEATURE_ADOPTION_DATA;
   const hasCloudAgentAdoption = adoptionData.codingAgentUsers > 0;
   const hasCodeReviewAdoption = adoptionData.codeReviewUsers > 0;
-  const [featureSection, heatmapSection, trendSection] = COPILOT_ADOPTION_SECTIONS;
+  const [featureSection, trendSection] = COPILOT_ADOPTION_SECTIONS;
 
   return (
     <ViewPanel
       headerProps={{
         title: 'Copilot Adoption Analysis',
-        description: 'Understand Copilot feature adoption patterns and Agent Mode usage intensity across days.',
+        description: 'Understand Copilot feature adoption patterns and trends across days.',
       }}
       contentClassName="space-y-10"
     >
       <FeatureAdoptionSection sectionId={featureSection.id} data={adoptionData} />
-      <AgentModeHeatmapSection sectionId={heatmapSection.id} data={agentModeHeatmapData || []} />
       {hasCloudAgentAdoption && (
         <CloudAgentAdoptionSection
           data={dailyCloudAgentAdoptionData}

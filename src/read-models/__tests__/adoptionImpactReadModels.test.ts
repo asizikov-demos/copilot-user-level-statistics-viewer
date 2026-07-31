@@ -35,12 +35,6 @@ function makeFeatureMetrics(): AggregatedMetrics {
         totalUsers: 4,
         agentModeUsers: 2,
       },
-      agentModeHeatmapData: [{
-        date: '2026-01-15',
-        agentModeRequests: 8,
-        uniqueUsers: 2,
-        intensity: 4,
-      }],
       dailyAdoptionTrend: [{
         date: '2026-01-15',
         newUsers: 2,
@@ -99,21 +93,18 @@ describe('adoption and impact read models', () => {
 
     expect(model).toEqual({
       featureAdoptionData: metrics.adoption.featureAdoptionData,
-      agentModeHeatmapData: metrics.adoption.agentModeHeatmapData,
       stats: metrics.overview.stats,
       dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
       dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,
       dailyCodeReviewAdoptionData: metrics.adoption.dailyCodeReviewAdoptionData,
     });
     expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
-    expect(model.agentModeHeatmapData).toBe(metrics.adoption.agentModeHeatmapData);
     expect(model.stats).toBe(metrics.overview.stats);
     expect(model.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
     expect(model.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
     expect(model.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
     expect(Object.keys(model)).toEqual([
       'featureAdoptionData',
-      'agentModeHeatmapData',
       'stats',
       'dailyAdoptionTrend',
       'dailyCloudAgentAdoptionData',
@@ -175,7 +166,6 @@ describe('adoption and impact read models', () => {
     const phases = selectAiAdoptionPhaseReadModel(metrics);
     const impact = selectCopilotImpactReadModel(metrics);
 
-    expect(adoption.agentModeHeatmapData).toBe(metrics.adoption.agentModeHeatmapData);
     expect(adoption.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
     expect(adoption.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
     expect(adoption.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
@@ -190,7 +180,6 @@ describe('adoption and impact read models', () => {
       metrics.impact.joinedImpactData,
     ]);
     expect([
-      adoption.agentModeHeatmapData,
       adoption.dailyAdoptionTrend,
       adoption.dailyCloudAgentAdoptionData,
       adoption.dailyCodeReviewAdoptionData,

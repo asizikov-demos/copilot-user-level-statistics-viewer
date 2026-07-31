@@ -6,7 +6,6 @@ import {
 } from '../../calculators/statsCalculator';
 import {
   accumulateModelAggregation,
-  accumulateModelFeatureSignals,
   createModelAggregationAccumulator,
   finalizeModelAggregation,
 } from '../modelAggregation';
@@ -18,7 +17,6 @@ describe('model aggregation orchestration', () => {
 
     expect(finalizeModelAggregation(accumulator)).toEqual({
       modelUsageData: [],
-      agentModeHeatmapData: [],
       modelBreakdownData: {
         allModels: [],
         modelCategories: [],
@@ -37,7 +35,7 @@ describe('model aggregation orchestration', () => {
     });
   });
 
-  it('coordinates canonical interactions, engagement stats, model ordering, and heatmap dates', () => {
+  it('coordinates canonical interactions, engagement stats, and model ordering', () => {
     const statsAccumulator = createStatsAccumulator();
     const accumulator = createModelAggregationAccumulator();
     const laterMetric = makeMetric({
@@ -67,18 +65,6 @@ describe('model aggregation orchestration', () => {
           loc_suggested_to_delete_sum: 0,
         },
       ],
-      totals_by_feature: [
-        {
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 4,
-          code_generation_activity_count: 0,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-      ],
     });
     const earlierMetric = makeMetric({
       user_id: 2,
@@ -96,24 +82,10 @@ describe('model aggregation orchestration', () => {
           loc_suggested_to_delete_sum: 0,
         },
       ],
-      totals_by_feature: [
-        {
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 2,
-          code_generation_activity_count: 0,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-      ],
     });
 
     accumulateModelAggregation(accumulator, statsAccumulator, laterMetric);
-    accumulateModelFeatureSignals(accumulator, laterMetric);
     accumulateModelAggregation(accumulator, statsAccumulator, earlierMetric);
-    accumulateModelFeatureSignals(accumulator, earlierMetric);
 
     const result = finalizeModelAggregation(accumulator);
     expect(computeStats(statsAccumulator, 2).topModel).toEqual({
@@ -130,20 +102,6 @@ describe('model aggregation orchestration', () => {
         date: '2024-01-16',
         modelInteractions: 7,
         unknownModels: 3,
-      },
-    ]);
-    expect(result.agentModeHeatmapData).toEqual([
-      {
-        date: '2024-01-15',
-        agentModeRequests: 2,
-        uniqueUsers: 1,
-        intensity: 3,
-      },
-      {
-        date: '2024-01-16',
-        agentModeRequests: 4,
-        uniqueUsers: 1,
-        intensity: 5,
       },
     ]);
     expect(result.modelBreakdownData.dates).toEqual([
@@ -169,37 +127,4 @@ describe('model aggregation orchestration', () => {
     ]);
   });
 
-  it('keeps feature-signal accumulation explicit while retaining model heatmap ownership', () => {
-    const statsAccumulator = createStatsAccumulator();
-    const accumulator = createModelAggregationAccumulator();
-    const metric = makeMetric({
-      day: '2024-01-15',
-      user_id: 1,
-      totals_by_feature: [
-        {
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 3,
-          code_generation_activity_count: 0,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-      ],
-    });
-
-    accumulateModelAggregation(accumulator, statsAccumulator, metric);
-    expect(finalizeModelAggregation(accumulator).agentModeHeatmapData).toEqual([]);
-
-    accumulateModelFeatureSignals(accumulator, metric);
-    expect(finalizeModelAggregation(accumulator).agentModeHeatmapData).toEqual([
-      {
-        date: '2024-01-15',
-        agentModeRequests: 3,
-        uniqueUsers: 1,
-        intensity: 5,
-      },
-    ]);
-  });
 });

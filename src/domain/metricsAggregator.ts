@@ -41,7 +41,6 @@ import {
 } from './aggregation/languageAggregation';
 import {
   accumulateModelAggregation,
-  accumulateModelFeatureSignals,
   createModelAggregationAccumulator,
   finalizeModelAggregation,
   type ModelAggregationResult,
@@ -98,7 +97,6 @@ export function assembleAggregatedMetrics({
     users: userSummaryAggregation,
     adoption: {
       featureAdoptionData: engagementAdoptionAggregation.featureAdoptionData,
-      agentModeHeatmapData: modelAggregation.agentModeHeatmapData,
       dailyAdoptionTrend: engagementAdoptionAggregation.dailyAdoptionTrend,
       dailyCloudAgentAdoptionData:
         engagementAdoptionAggregation.dailyCloudAgentAdoptionData,
@@ -180,7 +178,6 @@ export function aggregateMetrics(
       statsAccumulator,
       metric
     );
-    accumulateModelFeatureSignals(modelAggregationAccumulator, metric);
   }
   const coreStatsAggregation = finalizeCoreStatsAggregation(
     coreStatsAggregationAccumulator

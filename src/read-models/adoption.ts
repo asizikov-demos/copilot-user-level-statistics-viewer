@@ -2,7 +2,6 @@ import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface CopilotAdoptionReadModel {
   featureAdoptionData: AggregatedMetrics['adoption']['featureAdoptionData'];
-  agentModeHeatmapData: AggregatedMetrics['adoption']['agentModeHeatmapData'];
   stats: AggregatedMetrics['overview']['stats'];
   dailyAdoptionTrend: AggregatedMetrics['adoption']['dailyAdoptionTrend'];
   dailyCloudAgentAdoptionData: AggregatedMetrics['adoption']['dailyCloudAgentAdoptionData'];
@@ -14,7 +13,6 @@ export function selectCopilotAdoptionReadModel(
 ): CopilotAdoptionReadModel {
   return {
     featureAdoptionData: metrics.adoption.featureAdoptionData,
-    agentModeHeatmapData: metrics.adoption.agentModeHeatmapData,
     stats: metrics.overview.stats,
     dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
     dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,

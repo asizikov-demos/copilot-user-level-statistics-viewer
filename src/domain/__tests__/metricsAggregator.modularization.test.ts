@@ -167,15 +167,6 @@ describe('metrics aggregation modularization boundary', () => {
         totalUsers: 1,
       },
     ]);
-    expect(aggregated.adoption.agentModeHeatmapData).toEqual([
-      {
-        date: '2024-01-16',
-        agentModeRequests: 4,
-        uniqueUsers: 1,
-        intensity: 5,
-      },
-    ]);
-
     expect(aggregated.impact.agentImpactData).toEqual([
       {
         date: '2024-01-15',
