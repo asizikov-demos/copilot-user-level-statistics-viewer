@@ -232,7 +232,6 @@ describe('standard route registry', () => {
     };
     copilotAdoptionModel = {
       featureAdoptionData: aggregatedMetrics.adoption.featureAdoptionData,
-      agentModeHeatmapData: aggregatedMetrics.adoption.agentModeHeatmapData,
       stats: aggregatedMetrics.overview.stats,
       dailyAdoptionTrend: aggregatedMetrics.adoption.dailyAdoptionTrend,
       dailyCloudAgentAdoptionData: aggregatedMetrics.adoption.dailyCloudAgentAdoptionData,

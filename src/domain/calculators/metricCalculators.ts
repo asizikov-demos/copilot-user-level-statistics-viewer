@@ -21,10 +21,7 @@ export type {
   FeatureAdoptionData,
 } from './index';
 
-export type {
-  DailyModelUsageData,
-  AgentModeHeatmapData,
-} from './modelUsageCalculator';
+export type { DailyModelUsageData } from './modelUsageCalculator';
 
 export type {
   AgentImpactData,

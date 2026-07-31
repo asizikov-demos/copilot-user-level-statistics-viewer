@@ -1,7 +1,4 @@
-import type {
-  AdoptionMetricsSlice,
-  ModelsMetricsSlice,
-} from '../../types/aggregatedMetrics';
+import type { ModelsMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 import {
@@ -11,9 +8,7 @@ import {
   type ModelBreakdownAccumulator,
 } from '../calculators/modelBreakdownCalculator';
 import {
-  accumulateAgentHeatmapFromFeature,
   accumulateModelFeature,
-  computeAgentModeHeatmapData,
   computeDailyModelUsageData,
   createModelUsageAccumulator,
   type ModelUsageAccumulator,
@@ -28,10 +23,7 @@ export interface ModelAggregationAccumulator {
   breakdown: ModelBreakdownAccumulator;
 }
 
-export type ModelAggregationResult = Pick<
-  AdoptionMetricsSlice,
-  'agentModeHeatmapData'
-> & ModelsMetricsSlice;
+export type ModelAggregationResult = ModelsMetricsSlice;
 
 export function createModelAggregationAccumulator(): ModelAggregationAccumulator {
   return {
@@ -69,27 +61,11 @@ export function accumulateModelAggregation(
   }
 }
 
-export function accumulateModelFeatureSignals(
-  accumulator: ModelAggregationAccumulator,
-  metric: CopilotMetrics
-): void {
-  for (const feature of metric.totals_by_feature) {
-    accumulateAgentHeatmapFromFeature(
-      accumulator.usage,
-      metric.day,
-      metric.user_id,
-      feature.feature,
-      feature.user_initiated_interaction_count
-    );
-  }
-}
-
 export function finalizeModelAggregation(
   accumulator: ModelAggregationAccumulator
 ): ModelAggregationResult {
   return {
     modelUsageData: computeDailyModelUsageData(accumulator.usage),
-    agentModeHeatmapData: computeAgentModeHeatmapData(accumulator.usage),
     modelBreakdownData: computeModelBreakdownData(accumulator.breakdown),
   };
 }

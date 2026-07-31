@@ -9,7 +9,6 @@ import type {
   UserSummary,
 } from './metrics';
 import type {
-  AgentModeHeatmapData,
   DailyModelUsageData,
   DailyEngagementData,
   DailyAdoptionTrend,
@@ -43,7 +42,6 @@ export interface UsersMetricsSlice {
 
 export interface AdoptionMetricsSlice {
   featureAdoptionData: FeatureAdoptionData;
-  agentModeHeatmapData: AgentModeHeatmapData[];
   dailyAdoptionTrend: DailyAdoptionTrend[];
   dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
   dailyCodeReviewAdoptionData: DailyCodeReviewAdoptionData[];
