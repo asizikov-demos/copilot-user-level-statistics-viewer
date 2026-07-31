@@ -47,6 +47,10 @@ describe('user summary aggregation lifecycle', () => {
         totals_by_ide: [
           ideTotal(' beta ', 1),
           ideTotal('alpha', 1),
+          {
+            ...ideTotal('completion-only', 0),
+            code_generation_activity_count: 1,
+          },
           ideTotal('ignored', 0),
         ],
         ai_adoption_phase: latestPhase,
@@ -90,6 +94,8 @@ describe('user summary aggregation lifecycle', () => {
       cloud_agent_days: 2,
       code_review_days: 2,
       top_client: 'alpha',
+      clients_used: ['alpha', 'beta', 'completion-only', 'copilot_cli'],
+      used_code_completion: false,
       used_cli: true,
       used_copilot_coding_agent: true,
       used_copilot_code_review_active: true,
