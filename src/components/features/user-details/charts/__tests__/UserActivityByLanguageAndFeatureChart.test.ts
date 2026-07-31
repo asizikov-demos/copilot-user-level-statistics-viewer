@@ -1,46 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { padDailyReportRangeData } from '../../../../charts/utils/dailyBarChart';
-import { createBarDataset } from '../../../../charts/utils/chartStyles';
-import { getSequentialColor } from '../../../../charts/utils/chartColors';
+import { buildLanguageBarChartData } from '../UserActivityByLanguageAndFeatureChart';
+import { getLanguageColor } from '../../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../../utils/formatters';
 import type { UserDayData } from '../../../../../types/metrics';
-
-type PaddedLanguageDay = {
-  day: string;
-  totals_by_language_feature: UserDayData['totals_by_language_feature'];
-};
-
-function buildLanguageBarChartData(
-  days: UserDayData[],
-  reportStartDay: string,
-  reportEndDay: string,
-) {
-  const allLanguages = Array.from(
-    new Set(days.flatMap(day => day.totals_by_language_feature.map(item => item.language)))
-  ).filter(lang => lang && lang !== '' && lang !== 'unknown').sort();
-
-  const paddedDays = padDailyReportRangeData<PaddedLanguageDay>(
-    days.map(d => ({ day: d.day, totals_by_language_feature: d.totals_by_language_feature })),
-    reportStartDay,
-    reportEndDay,
-    d => d.day,
-    date => ({ day: date, totals_by_language_feature: [] }),
-  );
-
-  const datasets = allLanguages.map((language, index) => {
-    const data = paddedDays.map(dayData =>
-      dayData.totals_by_language_feature
-        .filter(item => item.language === language)
-        .reduce((sum, item) => sum + item.code_generation_activity_count, 0)
-    );
-    return createBarDataset(getSequentialColor(index), language, data);
-  }).filter(dataset => dataset.data.some(value => value > 0));
-
-  return {
-    labels: paddedDays.map(d => formatShortDate(d.day)),
-    datasets,
-  };
-}
 
 function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
   return {
@@ -125,7 +87,7 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
     expect(result.datasets[0].label).toBe('typescript');
   });
 
-  it('uses shared sequential colors from chartColors', () => {
+  it('uses shared language colors from chartColors', () => {
     const days = [
       makeUserDayData({
         day: '2024-01-01',
@@ -139,8 +101,37 @@ describe('UserActivityByLanguageAndFeatureChart data construction', () => {
     const result = buildLanguageBarChartData(days, '2024-01-01', '2024-01-01');
 
     // Languages are sorted alphabetically: go (index 0), rust (index 1)
-    expect(result.datasets[0].backgroundColor).toBe(getSequentialColor(0));
-    expect(result.datasets[1].backgroundColor).toBe(getSequentialColor(1));
+    expect(result.datasets[0].backgroundColor).toBe(getLanguageColor('go', 0));
+    expect(result.datasets[1].backgroundColor).toBe(getLanguageColor('rust', 1));
+  });
+
+  it('keeps more than eight active language series distinguishable', () => {
+    const languages = [
+      'assembly',
+      'bash',
+      'c',
+      'cpp',
+      'csharp',
+      'go',
+      'java',
+      'javascript',
+      'python',
+      'typescript',
+    ];
+    const days = [
+      makeUserDayData({
+        day: '2024-01-01',
+        totals_by_language_feature: languages.map((language, index) =>
+          makeLanguageEntry(language, index + 1)
+        ),
+      }),
+    ];
+
+    const result = buildLanguageBarChartData(days, '2024-01-01', '2024-01-01');
+    const colors = result.datasets.map(dataset => dataset.backgroundColor);
+
+    expect(result.datasets).toHaveLength(languages.length);
+    expect(new Set(colors).size).toBe(languages.length);
   });
 
   it('covers the full report range with correct label count even when no days are provided', () => {

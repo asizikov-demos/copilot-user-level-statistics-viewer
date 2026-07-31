@@ -176,6 +176,59 @@ export function getSequentialColor(index: number): string {
 }
 
 /**
+ * Language brand colors used by charts with dynamic language series.
+ */
+export const languageColors: Readonly<Record<string, string>> = {
+  javascript: '#F7DF1E',
+  typescript: '#3178C6',
+  python: '#3776AB',
+  java: '#ED8B00',
+  csharp: '#239120',
+  cpp: '#00599C',
+  c: '#A8B9CC',
+  go: '#00ADD8',
+  rust: '#000000',
+  php: '#777BB4',
+  ruby: '#CC342D',
+  swift: '#FA7343',
+  kotlin: '#7F52FF',
+  scala: '#DC322F',
+  dart: '#0175C2',
+  html: '#E34F26',
+  css: '#1572B6',
+  scss: '#CF649A',
+  less: '#1D365D',
+  json: '#64748B',
+  xml: '#0060AC',
+  yaml: '#CB171E',
+  markdown: '#083FA1',
+  shell: '#89E051',
+  bash: '#4EAA25',
+  powershell: '#5391FE',
+  sql: '#E38C00',
+  r: '#276DC3',
+  matlab: '#E16737',
+  perl: '#39457E',
+  lua: '#2C2D72',
+  haskell: '#5E5086',
+  elixir: '#6E4A7E',
+  erlang: '#B83998',
+  clojure: '#5881D8',
+  fsharp: '#378BBA',
+  ocaml: '#EC6813',
+  elm: '#60B5CC',
+  solidity: '#363636',
+  assembly: '#6E4C13',
+};
+
+/**
+ * Get a stable brand color for known languages or a non-wrapping generated fallback.
+ */
+export function getLanguageColor(language: string, fallbackIndex: number): string {
+  return languageColors[language.toLowerCase()] ?? generateHslColor(fallbackIndex);
+}
+
+/**
  * Generate HSL color based on index (useful for dynamic datasets)
  * @param index - Index for color generation
  * @param saturation - Saturation percentage (default: 70)

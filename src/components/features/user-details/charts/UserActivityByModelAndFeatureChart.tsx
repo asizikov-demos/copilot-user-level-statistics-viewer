@@ -58,41 +58,48 @@ const modelChartConfig = {
   ],
 };
 
+export function buildModelBarChartData(
+  days: UserDayData[],
+  reportStartDay: string,
+  reportEndDay: string,
+) {
+  const allModels = Array.from(
+    new Set(days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
+  ).filter(model => model && model !== '' && model !== 'unknown').sort();
+
+  const paddedDays = padDailyReportRangeData<PaddedDay>(
+    days.map(d => ({ day: d.day, totals_by_model_feature: d.totals_by_model_feature })),
+    reportStartDay,
+    reportEndDay,
+    d => d.day,
+    date => ({ day: date, totals_by_model_feature: [] }),
+  );
+
+  const datasets = allModels.map((model, index) => {
+    const data = paddedDays.map(dayData =>
+      dayData.totals_by_model_feature
+        .filter(item => item.model === model)
+        .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
+    );
+    return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
+  }).filter(dataset => dataset.data.some(value => value > 0));
+
+  return {
+    labels: paddedDays.map(d => formatShortDate(d.day)),
+    datasets,
+  };
+}
+
 export default function UserActivityByModelAndFeatureChart({
   modelFeatureAggregates,
   days,
   reportStartDay,
   reportEndDay,
 }: UserActivityByModelAndFeatureChartProps) {
-  const { barChartData } = useMemo(() => {
-    const allModels = Array.from(
-      new Set(days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
-    ).filter(model => model && model !== '' && model !== 'unknown').sort();
-
-    const paddedDays = padDailyReportRangeData<PaddedDay>(
-      days.map(d => ({ day: d.day, totals_by_model_feature: d.totals_by_model_feature })),
-      reportStartDay,
-      reportEndDay,
-      d => d.day,
-      date => ({ day: date, totals_by_model_feature: [] }),
-    );
-
-    const datasets = allModels.map((model, index) => {
-      const data = paddedDays.map(dayData =>
-        dayData.totals_by_model_feature
-          .filter(item => item.model === model)
-          .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
-      );
-      return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
-    }).filter(dataset => dataset.data.some(value => value > 0));
-
-    return {
-      barChartData: {
-        labels: paddedDays.map(d => formatShortDate(d.day)),
-        datasets,
-      },
-    };
-  }, [days, reportStartDay, reportEndDay]);
+  const barChartData = useMemo(
+    () => buildModelBarChartData(days, reportStartDay, reportEndDay),
+    [days, reportStartDay, reportEndDay],
+  );
 
   return (
     <ActivityBreakdownChart

@@ -1,47 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { padDailyReportRangeData } from '../../../../charts/utils/dailyBarChart';
-import { createBarDataset } from '../../../../charts/utils/chartStyles';
+import { buildModelBarChartData } from '../UserActivityByModelAndFeatureChart';
 import { getSequentialColor } from '../../../../charts/utils/chartColors';
-import { formatShortDate, formatModelDisplayName } from '../../../../../utils/formatters';
+import { formatShortDate } from '../../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../../domain/assumedInteractions';
 import type { UserDayData } from '../../../../../types/metrics';
-
-type PaddedModelDay = {
-  day: string;
-  totals_by_model_feature: UserDayData['totals_by_model_feature'];
-};
-
-function buildModelBarChartData(
-  days: UserDayData[],
-  reportStartDay: string,
-  reportEndDay: string,
-) {
-  const allModels = Array.from(
-    new Set(days.flatMap(day => day.totals_by_model_feature.map(item => item.model)))
-  ).filter(model => model && model !== '' && model !== 'unknown').sort();
-
-  const paddedDays = padDailyReportRangeData<PaddedModelDay>(
-    days.map(d => ({ day: d.day, totals_by_model_feature: d.totals_by_model_feature })),
-    reportStartDay,
-    reportEndDay,
-    d => d.day,
-    date => ({ day: date, totals_by_model_feature: [] }),
-  );
-
-  const datasets = allModels.map((model, index) => {
-    const data = paddedDays.map(dayData =>
-      dayData.totals_by_model_feature
-        .filter(item => item.model === model)
-        .reduce((sum, item) => sum + getTotalUserInitiatedInteractionCount(item), 0)
-    );
-    return createBarDataset(getSequentialColor(index), formatModelDisplayName(model), data);
-  }).filter(dataset => dataset.data.some(value => value > 0));
-
-  return {
-    labels: paddedDays.map(d => formatShortDate(d.day)),
-    datasets,
-  };
-}
 
 function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
   return {
@@ -95,7 +57,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     expect(result.labels).toHaveLength(3);
     expect(result.labels[1]).toBe(formatShortDate('2024-01-02'));
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe(formatModelDisplayName('gpt-4o'));
+    expect(result.datasets[0].label).toBe('Gpt 4o');
     expect(result.datasets[0].data).toEqual([7, 0, 4]);
   });
 
@@ -113,7 +75,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
 
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-01');
 
-    expect(result.datasets.map(d => d.label)).toEqual([formatModelDisplayName('gpt-4o')]);
+    expect(result.datasets.map(d => d.label)).toEqual(['Gpt 4o']);
   });
 
   it('filters out datasets where every day has zero interactions', () => {
@@ -124,7 +86,20 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-02');
 
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe(formatModelDisplayName('gpt-4o'));
+    expect(result.datasets[0].label).toBe('Gpt 4o');
+  });
+
+  it('formats model labels for display', () => {
+    const days = [
+      makeUserDayData({
+        day: '2024-01-01',
+        totals_by_model_feature: [makeModelEntry('claude-3.7-sonnet', 5)],
+      }),
+    ];
+
+    const result = buildModelBarChartData(days, '2024-01-01', '2024-01-01');
+
+    expect(result.datasets[0].label).toBe('Claude 3.7 sonnet');
   });
 
   it('uses getTotalUserInitiatedInteractionCount for interaction totals', () => {
