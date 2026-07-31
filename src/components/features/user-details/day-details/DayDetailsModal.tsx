@@ -10,8 +10,9 @@ import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../../../types/events';
-import { isAgentFeature, isCliFeature, isCodeCompletionFeature } from '../../../../domain/featureCategories';
+import { isAgentFeature, isCliFeature, isCodeCompletionFeature, isCopilotAppFeature } from '../../../../domain/featureCategories';
 import { formatAiCreditCost } from '../../../../utils/formatters';
+import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 interface DayDetailsModalProps {
   isOpen: boolean;
@@ -49,6 +50,28 @@ interface FeaturePill {
   className: string;
 }
 
+function hasCopilotAppActivity(dayMetrics: UserDayData): boolean {
+  const appTotals = dayMetrics.totals_by_copilot_app;
+  return Boolean(dayMetrics.used_copilot_app)
+    || Boolean(appTotals && (
+      appTotals.session_count > 0
+      || appTotals.request_count > 0
+      || appTotals.prompt_count > 0
+      || appTotals.token_usage.prompt_tokens_sum > 0
+      || appTotals.token_usage.output_tokens_sum > 0
+    ))
+    || dayMetrics.totals_by_feature.some(
+      (f) => isCopilotAppFeature(f.feature) && (
+        f.user_initiated_interaction_count > 0
+        || f.code_generation_activity_count > 0
+        || f.code_acceptance_activity_count > 0
+      )
+    )
+    || dayMetrics.totals_by_ide.some(
+      (ide) => ide.ide === 'copilot_app' && getTotalUserInitiatedInteractionCount(ide) > 0
+    );
+}
+
 function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): FeaturePill[] {
   const features = dayMetrics.totals_by_feature ?? [];
   const usedCompletions = features.some(
@@ -77,6 +100,9 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
   }
   if (hasCliActivity) {
     pills.push({ label: 'CLI', className: `${pillBase} bg-teal-100 text-teal-800` });
+  }
+  if (hasCopilotAppActivity(dayMetrics)) {
+    pills.push({ label: 'Copilot App', className: `${pillBase} bg-gray-100 text-gray-800` });
   }
   if (usedCompletions) {
     pills.push({ label: 'Completions', className: `${pillBase} bg-blue-100 text-blue-800` });
@@ -112,6 +138,9 @@ const clientColumns: TableColumn<ClientRow>[] = [
   { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
   { id: 'pluginVersion', header: 'Plugin Version', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.plugin_version },
 ];
+
+const usageStatLabelClass = 'text-xs font-medium text-gray-500 uppercase tracking-wider';
+const usageStatValueClass = 'mt-1 text-2xl font-semibold text-gray-900';
 
 const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
@@ -158,7 +187,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const cliInteractionCount = cliDayTotals.interactionCount;
 
   const featurePills = hasData ? buildFeaturePills(dayMetrics!, hasCliActivity) : [];
-  const ideClientRows = hasData ? mapIdeClientActivityRows(dayMetrics!.totals_by_ide) : [];
+  const ideClientRows = hasData ? mapIdeClientActivityRows(
+    dayMetrics!.totals_by_ide.filter((ide) => ide.ide !== 'copilot_app')
+  ) : [];
   const ideVersionByClient = hasData
     ? new Map(dayMetrics!.totals_by_ide.map((ide) => [
       ide.ide,
@@ -192,6 +223,21 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
         : 'Unknown',
     }] : []),
   ] : [];
+  const copilotAppUsage = hasData && hasCopilotAppActivity(dayMetrics!)
+    ? dayMetrics!.totals_by_copilot_app
+    : undefined;
+
+  const formatCount = (value: number) => value.toLocaleString();
+  const formatAverageTokens = (value: number) => value.toLocaleString(undefined, {
+    maximumFractionDigits: 1,
+  });
+
+  const renderCopilotAppUsageStat = (label: string, value: string) => (
+    <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+      <div className={usageStatLabelClass}>{label}</div>
+      <div className={usageStatValueClass}>{value}</div>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -294,6 +340,26 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                   totalsByModelFeature={dayMetrics.totals_by_model_feature}
                 />
               </div>
+
+              {copilotAppUsage && (
+                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Copilot App Usage</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Session and token totals reported by totals_by_copilot_app for this day.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {renderCopilotAppUsageStat('Sessions', formatCount(copilotAppUsage.session_count))}
+                    {renderCopilotAppUsageStat('Requests', formatCount(copilotAppUsage.request_count))}
+                    {renderCopilotAppUsageStat('Prompts', formatCount(copilotAppUsage.prompt_count))}
+                    {renderCopilotAppUsageStat('Prompt tokens', formatCount(copilotAppUsage.token_usage.prompt_tokens_sum))}
+                    {renderCopilotAppUsageStat('Output tokens', formatCount(copilotAppUsage.token_usage.output_tokens_sum))}
+                    {renderCopilotAppUsageStat(
+                      'Avg tokens / request',
+                      formatAverageTokens(copilotAppUsage.token_usage.avg_tokens_per_request)
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">

@@ -246,6 +246,7 @@ export interface UserDayData {
   loc_suggested_to_add_sum: number;
   loc_suggested_to_delete_sum: number;
   ai_credits_used: number;
+  used_copilot_app?: boolean;
   used_copilot_coding_agent: boolean;
   used_copilot_code_review_active: boolean;
   used_copilot_code_review_passive: boolean;

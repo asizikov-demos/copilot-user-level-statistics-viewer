@@ -17,12 +17,16 @@ interface CLIOverlapChartProps {
   ideStats: IDEStatsData[];
 }
 
-export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
-  const sorted = sortBySelector(
-    ideStats.filter(ide => ide.uniqueUsers > 0),
+export function getCliOverlapIdeRows(ideStats: IDEStatsData[]): IDEStatsData[] {
+  return sortBySelector(
+    ideStats.filter(ide => ide.ide !== 'copilot_app' && ide.uniqueUsers > 0),
     ide => ide.cliOverlapUsers / ide.uniqueUsers,
     'desc',
   );
+}
+
+export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
+  const sorted = getCliOverlapIdeRows(ideStats);
 
   const labels = sorted.map(ide => formatIDEName(ide.ide));
   const cliOverlap = sorted.map(ide => ide.cliOverlapUsers);
