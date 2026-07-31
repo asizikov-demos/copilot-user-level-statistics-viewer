@@ -16,6 +16,7 @@ const baseFeatureAdoption: FeatureAdoptionData = {
   inlineModeUsers: 0,
   planModeUsers: 0,
   cliUsers: 0,
+  appUsers: 0,
   codingAgentUsers: 0,
   codeReviewUsers: 0,
   advancedUsers: 0,

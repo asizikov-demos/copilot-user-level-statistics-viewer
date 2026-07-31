@@ -78,6 +78,11 @@ const FEATURE_TAXONOMY: readonly FeatureTaxonomyEntry[] = [
     isCli: true,
     isJoinedImpact: true,
   },
+  {
+    feature: 'copilot_app',
+    label: 'Copilot App',
+    isJoinedImpact: true,
+  },
 ];
 
 const FEATURE_LOOKUP = new Map(FEATURE_TAXONOMY.map((entry) => [entry.feature, entry]));
@@ -99,6 +104,7 @@ export const FEATURE_ADOPTION_CHART_METADATA = [
   { key: 'agentModeUsers', label: 'IDE Agent Mode', description: 'Users who used Agent Mode in the IDE' },
   { key: 'planModeUsers', label: 'Plan Mode', description: 'Users who used Plan Mode' },
   { key: 'cliUsers', label: 'Copilot CLI', description: 'Users who used Copilot CLI' },
+  { key: 'appUsers', label: 'Copilot App', description: 'Users who used Copilot App' },
   { key: 'inlineModeUsers', label: 'Inline Chat', description: 'Users who used inline chat' },
   { key: 'codingAgentUsers', label: 'Copilot Cloud Agent', description: 'Users who used Copilot Cloud Agent' },
   { key: 'codeReviewUsers', label: 'Copilot Code Review', description: 'Users who used Copilot code review (active or passive)' },
@@ -139,6 +145,10 @@ export function isJoinedImpactFeature(feature: string): boolean {
 
 export function isCodeCompletionFeature(feature: string): boolean {
   return feature === 'code_completion';
+}
+
+export function isCopilotAppFeature(feature: string): boolean {
+  return feature === 'copilot_app';
 }
 
 export function getChatModeBucket(feature: string): ChatModeBucket | undefined {

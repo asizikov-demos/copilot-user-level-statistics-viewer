@@ -64,10 +64,12 @@ export function accumulateIDEStats(
   entry.locSuggestedToAdd += ideTotal.loc_suggested_to_add_sum;
   entry.locSuggestedToDelete += ideTotal.loc_suggested_to_delete_sum;
 
-  if (!accumulator.userIDEs.has(userId)) {
-    accumulator.userIDEs.set(userId, new Set());
+  if (ide !== 'copilot_app') {
+    if (!accumulator.userIDEs.has(userId)) {
+      accumulator.userIDEs.set(userId, new Set());
+    }
+    accumulator.userIDEs.get(userId)!.add(ide);
   }
-  accumulator.userIDEs.get(userId)!.add(ide);
 }
 
 export function markCliUser(accumulator: IDEStatsAccumulator, userId: number): void {

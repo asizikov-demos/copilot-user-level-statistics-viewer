@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accumulateCliAdoption,
+  accumulateCopilotAppAdoption,
   accumulateCodeReviewAdoption,
   accumulateCodingAgentAdoption,
   accumulateFeatureAdoption,
@@ -49,6 +50,19 @@ describe('featureAdoptionCalculator', () => {
     expect(result.completionUsers).toBe(2);
     expect(result.codeReviewUsers).toBe(1);
     expect(result.completionOnlyUsers).toBe(1);
+  });
+
+  it('does not count Copilot App users as completion-only', () => {
+    const accumulator = createFeatureAdoptionAccumulator();
+
+    accumulateFeatureAdoption(accumulator, 1, 'code_completion', 2, 0);
+    accumulateCopilotAppAdoption(accumulator, 1, true);
+
+    const result = computeFeatureAdoptionData(accumulator);
+
+    expect(result.completionUsers).toBe(1);
+    expect(result.appUsers).toBe(1);
+    expect(result.completionOnlyUsers).toBe(0);
   });
 
   it('derives chat mode bucket users from taxonomy instead of hard-coded feature names', () => {

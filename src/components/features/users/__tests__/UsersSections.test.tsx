@@ -30,6 +30,7 @@ function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
     used_agent: true,
     used_chat: true,
     used_cli: true,
+    used_copilot_app: true,
     used_copilot_coding_agent: true,
     used_copilot_code_review_active: true,
     used_copilot_code_review_passive: false,
@@ -96,11 +97,13 @@ describe('Users feature sections', () => {
     expect(populatedMarkup).toContain('Copilot CLI');
     expect(populatedMarkup).toContain('Feature used');
     expect(populatedMarkup).toContain('All features');
+    expect(populatedMarkup).toContain('<option value="app">App</option>');
     expect(populatedMarkup).toContain('USER');
     expect(populatedMarkup).toContain('DAYS ACTIVE');
     expect(populatedMarkup).not.toContain('GENERATIONS');
     expect(populatedMarkup).toContain('AI ADOPTION');
     expect(populatedMarkup).toContain('FEATURES USED');
+    expect(populatedMarkup).toContain('App');
     expect(populatedMarkup).toContain('Cloud Agent');
     expect(populatedMarkup).toContain('Code Review');
     expect(populatedMarkup).toContain('Auto Mode');
@@ -175,6 +178,41 @@ describe('Users feature sections', () => {
     expect(getResultCount()).toBe('Showing 3 of 3 users');
     expect(markup).toContain('hubot');
     expect(markup).toContain('monalisa');
+
+    await act(async () => {
+      renderer?.unmount();
+    });
+  });
+
+  it('filters users by Copilot App usage', async () => {
+    let renderer: ReactTestRenderer | undefined;
+
+    await act(async () => {
+      renderer = create(
+        <UsersTableSection
+          sectionId="users-table"
+          users={[
+            makeUser({ user_login: 'app-user', used_copilot_app: true }),
+            makeUser({
+              user_login: 'non-app-user',
+              user_id: 2,
+              used_copilot_app: false,
+            }),
+          ]}
+          onUserClick={vi.fn()}
+        />
+      );
+    });
+
+    await act(async () => {
+      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
+        target: { value: 'app' },
+      });
+    });
+
+    const markup = JSON.stringify(renderer?.toJSON());
+    expect(markup).toContain('app-user');
+    expect(markup).not.toContain('non-app-user');
 
     await act(async () => {
       renderer?.unmount();

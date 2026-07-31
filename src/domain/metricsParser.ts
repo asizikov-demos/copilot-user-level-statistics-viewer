@@ -25,6 +25,89 @@ function normalizeMetricLanguages(metric: CopilotMetrics): void {
   }
 }
 
+function hasCopilotAppClientActivity(metric: CopilotMetrics): boolean {
+  return metric.totals_by_ide.some((entry) =>
+    entry.ide === 'copilot_app'
+    && (
+      entry.user_initiated_interaction_count > 0
+      || entry.code_generation_activity_count > 0
+      || entry.code_acceptance_activity_count > 0
+      || entry.loc_added_sum > 0
+      || entry.loc_deleted_sum > 0
+      || entry.loc_suggested_to_add_sum > 0
+      || entry.loc_suggested_to_delete_sum > 0
+    )
+  );
+}
+
+function addCopilotAppClientTotal(metric: CopilotMetrics): void {
+  const appFeatures = metric.totals_by_feature.filter(
+    (entry) => entry.feature === 'copilot_app'
+  );
+  const existingAppClient = metric.totals_by_ide.find(
+    (entry) => entry.ide === 'copilot_app'
+  );
+  if (
+    !metric.used_copilot_app
+    && !metric.totals_by_copilot_app
+    && appFeatures.length === 0
+  ) {
+    return;
+  }
+
+  const appFeatureTotal = appFeatures.reduce(
+    (total, feature) => ({
+      user_initiated_interaction_count:
+        total.user_initiated_interaction_count
+        + feature.user_initiated_interaction_count,
+      code_generation_activity_count:
+        total.code_generation_activity_count
+        + feature.code_generation_activity_count,
+      code_acceptance_activity_count:
+        total.code_acceptance_activity_count
+        + feature.code_acceptance_activity_count,
+      loc_added_sum: total.loc_added_sum + feature.loc_added_sum,
+      loc_deleted_sum: total.loc_deleted_sum + feature.loc_deleted_sum,
+      loc_suggested_to_add_sum:
+        total.loc_suggested_to_add_sum + feature.loc_suggested_to_add_sum,
+      loc_suggested_to_delete_sum:
+        total.loc_suggested_to_delete_sum
+        + feature.loc_suggested_to_delete_sum,
+    }),
+    {
+      user_initiated_interaction_count: 0,
+      code_generation_activity_count: 0,
+      code_acceptance_activity_count: 0,
+      loc_added_sum: 0,
+      loc_deleted_sum: 0,
+      loc_suggested_to_add_sum: 0,
+      loc_suggested_to_delete_sum: 0,
+    }
+  );
+
+  if (existingAppClient) {
+    if (appFeatures.length > 0) {
+      Object.assign(existingAppClient, appFeatureTotal);
+    } else if (
+      existingAppClient.user_initiated_interaction_count <= 0
+      && metric.totals_by_copilot_app
+    ) {
+      existingAppClient.user_initiated_interaction_count =
+        metric.totals_by_copilot_app.prompt_count;
+    }
+    return;
+  }
+
+  metric.totals_by_ide.push({
+      ide: 'copilot_app',
+      ...appFeatureTotal,
+      user_initiated_interaction_count:
+        appFeatures.length > 0
+          ? appFeatureTotal.user_initiated_interaction_count
+          : metric.totals_by_copilot_app?.prompt_count ?? 0,
+    });
+}
+
 export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetrics | null {
   try {
     const parsedUnknown = JSON.parse(line) as unknown;
@@ -71,11 +154,18 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
       return null;
     }
     metric.used_cli = metric.used_cli ?? false;
+    metric.used_copilot_app = Boolean(
+      metric.used_copilot_app
+      || metric.totals_by_copilot_app
+      || metric.totals_by_feature.some((entry) => entry.feature === 'copilot_app')
+      || hasCopilotAppClientActivity(metric)
+    );
     metric.used_copilot_code_review_active = metric.used_copilot_code_review_active ?? false;
     metric.used_copilot_code_review_passive = metric.used_copilot_code_review_passive ?? false;
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
     metric.used_copilot_coding_agent = usedCopilotCloudAgent;
     metric.used_copilot_cloud_agent = usedCopilotCloudAgent;
+    addCopilotAppClientTotal(metric);
 
     // Normalize language names to canonical form
     normalizeMetricLanguages(metric);

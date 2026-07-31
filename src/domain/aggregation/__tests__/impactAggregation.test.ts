@@ -29,6 +29,7 @@ describe('impact aggregation orchestration', () => {
       editModeImpactData: [],
       inlineModeImpactData: [],
       askModeImpactData: [],
+      copilotAppImpactData: [],
       cliImpactData: [],
       joinedImpactData: [],
     });
@@ -45,6 +46,7 @@ describe('impact aggregation orchestration', () => {
         impactFeature('chat_panel_edit_mode', 7, 3),
         impactFeature('chat_inline', 6, 2),
         impactFeature('chat_panel_ask_mode', 5, 1),
+        impactFeature('copilot_app', 3, 1),
         impactFeature('copilot_cli', 4, 1),
       ],
     }));
@@ -61,6 +63,7 @@ describe('impact aggregation orchestration', () => {
     expect(result.editModeImpactData.map(day => day.date)).toEqual(expectedDates);
     expect(result.inlineModeImpactData.map(day => day.date)).toEqual(expectedDates);
     expect(result.askModeImpactData.map(day => day.date)).toEqual(expectedDates);
+    expect(result.copilotAppImpactData.map(day => day.date)).toEqual(expectedDates);
     expect(result.cliImpactData.map(day => day.date)).toEqual(expectedDates);
     expect(result.joinedImpactData.map(day => day.date)).toEqual(expectedDates);
 
@@ -75,11 +78,12 @@ describe('impact aggregation orchestration', () => {
     expect(result.editModeImpactData[1].netChange).toBe(4);
     expect(result.inlineModeImpactData[1].netChange).toBe(4);
     expect(result.askModeImpactData[1].netChange).toBe(4);
+    expect(result.copilotAppImpactData[1].netChange).toBe(2);
     expect(result.cliImpactData[1].netChange).toBe(3);
     expect(result.joinedImpactData[1]).toMatchObject({
-      locAdded: 40,
-      locDeleted: 10,
-      netChange: 30,
+      locAdded: 43,
+      locDeleted: 11,
+      netChange: 32,
       userCount: 1,
       totalUniqueUsers: 2,
     });

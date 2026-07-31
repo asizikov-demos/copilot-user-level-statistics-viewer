@@ -29,4 +29,10 @@ describe('shared IDE metadata registry', () => {
     expect(getIDEIcon('intellij')).toBe(getIDEIcon('jetbrains'));
     expect(getIdeColor('intellij', 0)).toBe(getIdeColor('jetbrains', 0));
   });
+
+  it('maps Copilot App as a named client with Copilot visuals', () => {
+    expect(formatIDEName('copilot_app')).toBe('Copilot App');
+    expect(getIDEIcon('copilot_app')).not.toBe(getIDEIcon('copilot_cli'));
+    expect(getIdeColor('copilot_app', 0)).toBe('#000000');
+  });
 });

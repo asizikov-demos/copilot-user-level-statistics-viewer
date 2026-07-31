@@ -59,6 +59,18 @@ describe('ideStatsCalculator', () => {
       expect(multiIDEUsersCount).toBe(1);
       expect(totalUniqueIDEUsers).toBe(1);
     });
+
+    it('keeps Copilot App client stats out of IDE-only user counts', () => {
+      const acc = createIDEStatsAccumulator();
+      accumulateIDEStats(acc, 1, makeIDETotal('copilot_app'));
+      accumulateIDEStats(acc, 2, makeIDETotal('vscode'));
+
+      const { ideStats, multiIDEUsersCount, totalUniqueIDEUsers } = computeIDEStatsData(acc);
+
+      expect(ideStats.map((stat) => stat.ide)).toEqual(['copilot_app', 'vscode']);
+      expect(multiIDEUsersCount).toBe(0);
+      expect(totalUniqueIDEUsers).toBe(1);
+    });
   });
 
   describe('CLI overlap via markCliUser', () => {

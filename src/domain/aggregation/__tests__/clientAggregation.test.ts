@@ -167,4 +167,26 @@ describe('client aggregation orchestration', () => {
       totalUniqueVsCodeUsers: 3,
     });
   });
+
+  it('allows Copilot App to be the top IDE client', () => {
+    const statsAccumulator = createStatsAccumulator();
+    const accumulator = createClientAggregationAccumulator();
+
+    accumulateClientAggregation(
+      accumulator,
+      statsAccumulator,
+      makeMetric({
+        user_id: 1,
+        totals_by_ide: [makeIdeTotal('copilot_app', 5)],
+      })
+    );
+
+    expect(finalizeClientAggregation(accumulator).ideStats).toEqual([
+      expect.objectContaining({ ide: 'copilot_app', totalEngagements: 5 }),
+    ]);
+    expect(computeStats(statsAccumulator, 1).topIde).toEqual({
+      name: 'copilot_app',
+      entries: 1,
+    });
+  });
 });

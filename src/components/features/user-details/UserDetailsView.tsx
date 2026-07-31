@@ -2,7 +2,10 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import type { UserDayData } from '../../../types/metrics';
-import type { UserDetailsViewModel } from '../../../read-models/userDetails';
+import {
+  selectCopilotCliAndAppUsageReadModel,
+  type UserDetailsViewModel,
+} from '../../../read-models/userDetails';
 import { formatIDEName } from '../../icons/IDEIcons';
 import { formatAiAdoptionPhase, formatAiCreditCost, generateDateRange } from '../../../utils/formatters';
 import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
@@ -35,10 +38,6 @@ interface UserDetailsViewProps {
   model: UserDetailsViewModel;
 }
 
-type UserDayWithCliTotals = UserDayData & {
-  totals_by_cli: NonNullable<UserDayData['totals_by_cli']>;
-};
-
 function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string): ModeImpactData[] {
   if (data.length === 0) return [];
   const totalUniqueUsers = data[0]?.totalUniqueUsers ?? 0;
@@ -52,21 +51,6 @@ function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string)
   }));
 }
 
-function buildDailyCliSeries<T>(
-  days: UserDayData[],
-  startDay: string,
-  endDay: string,
-  buildItem: (date: string, cli: NonNullable<UserDayData['totals_by_cli']> | undefined) => T,
-): T[] {
-  return mapReportRangeData(
-    days.filter((day): day is UserDayWithCliTotals => Boolean(day.totals_by_cli)),
-    startDay,
-    endDay,
-    day => day.day,
-    (date, day) => buildItem(date, day?.totals_by_cli),
-  );
-}
-
 export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const { userDetails, userSummary, userLogin, userId } = model;
   const { navigateTo } = useNavigation();
@@ -74,6 +58,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const filledAgentImpact = useMemo(() => fillDateRange(userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const filledCopilotAppImpact = useMemo(() => fillDateRange(userDetails.dailyCopilotAppImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCopilotAppImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const [modalState, setModalState] = useState<{
@@ -289,28 +274,10 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }
   };
 
-  const dailyCliTokenData = useMemo(
-    () => buildDailyCliSeries(userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay, (date, cli) => ({
-      date,
-      outputTokens: cli?.token_usage.output_tokens_sum ?? 0,
-      promptTokens: cli?.token_usage.prompt_tokens_sum ?? 0,
-      requestCount: cli?.request_count ?? 0,
-    })),
-    [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay],
+  const cliAndAppUsage = useMemo(
+    () => selectCopilotCliAndAppUsageReadModel(userDetails),
+    [userDetails],
   );
-
-  const dailyCliSessionData = useMemo(
-    () => buildDailyCliSeries(userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay, (date, cli) => ({
-      date,
-      sessionCount: cli?.session_count ?? 0,
-      requestCount: cli?.request_count ?? 0,
-      promptCount: cli?.prompt_count ?? 0,
-      uniqueUsers: cli ? 1 : 0,
-    })),
-    [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay],
-  );
-
-  const hasCliActivity = userDetails.days.some(d => d.totals_by_cli);
 
   const cloudAgentsUsageData = useMemo(() => {
     return mapReportRangeData(
@@ -397,7 +364,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         <ModeImpactChart
           data={filledCombinedImpact}
           title="Combined Copilot Impact"
-          description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
+          description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, Copilot App, and CLI activities."
           emptyStateMessage="No combined impact data available."
         />
       </div>
@@ -409,13 +376,16 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         agentImpact={filledAgentImpact}
         askModeImpact={filledAskModeImpact}
         completionImpact={filledCompletionImpact}
+        copilotAppImpact={filledCopilotAppImpact}
         cliImpact={filledCliImpact}
       />
 
-      {hasCliActivity && (
+      {cliAndAppUsage.hasActivity && (
         <UserDetailsCliUsageSection
-          tokenData={dailyCliTokenData}
-          sessionData={dailyCliSessionData}
+          cliTokenData={cliAndAppUsage.dailyCliTokenData}
+          appTokenData={cliAndAppUsage.dailyAppTokenData}
+          cliSessionData={cliAndAppUsage.dailyCliSessionData}
+          appSessionData={cliAndAppUsage.dailyAppSessionData}
         />
       )}
 

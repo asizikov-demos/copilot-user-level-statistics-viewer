@@ -7,8 +7,17 @@ import {
   selectExecutiveSummaryReadModel,
   selectOverviewReadModel,
 } from '../overview';
-import { selectUserDetailsRouteReadModel } from '../userDetails';
+import {
+  selectCopilotCliAndAppUsageReadModel,
+  selectUserDetailsRouteReadModel,
+} from '../userDetails';
 import { selectUsersReadModel } from '../users';
+import {
+  accumulateUserDetail,
+  computeSingleUserDetailedMetrics,
+  createUserDetailAccumulator,
+} from '../../domain/calculators/userDetailCalculator';
+import { makeMetric } from '../../__tests__/factories/metrics';
 
 describe('feature read models', () => {
   it('selects only overview fields and preserves series references', () => {
@@ -103,6 +112,7 @@ describe('feature read models', () => {
     expect(selectUserDetailsRouteReadModel(null, null)).toEqual({
       status: 'missing-selection',
     });
+
     expect(selectUserDetailsRouteReadModel(null, selectedUser)).toEqual({
       status: 'pending',
       selectedUser,
@@ -112,6 +122,55 @@ describe('feature read models', () => {
     ).toEqual({
       status: 'missing-summary',
       selectedUser,
+    });
+  });
+
+  it('projects aligned CLI and App usage series across the report range', () => {
+    const accumulator = createUserDetailAccumulator();
+    accumulator.reportStartDay = '2024-01-01';
+    accumulator.reportEndDay = '2024-01-02';
+    accumulateUserDetail(accumulator, makeMetric({
+      day: '2024-01-01',
+      totals_by_cli: {
+        session_count: 2,
+        request_count: 4,
+        prompt_count: 3,
+        token_usage: {
+          output_tokens_sum: 20,
+          prompt_tokens_sum: 30,
+          avg_tokens_per_request: 12.5,
+        },
+      },
+      totals_by_copilot_app: {
+        session_count: 1,
+        request_count: 5,
+        prompt_count: 2,
+        token_usage: {
+          output_tokens_sum: 40,
+          prompt_tokens_sum: 50,
+          avg_tokens_per_request: 18,
+        },
+      },
+    }));
+    const details = computeSingleUserDetailedMetrics(accumulator, 1);
+
+    expect(details).not.toBeNull();
+    const usage = selectCopilotCliAndAppUsageReadModel(details!);
+
+    expect(usage.hasActivity).toBe(true);
+    expect(usage.dailyCliSessionData).toEqual([
+      { date: '2024-01-01', sessionCount: 2, requestCount: 4, promptCount: 3, uniqueUsers: 1 },
+      { date: '2024-01-02', sessionCount: 0, requestCount: 0, promptCount: 0, uniqueUsers: 0 },
+    ]);
+    expect(usage.dailyAppSessionData).toEqual([
+      { date: '2024-01-01', sessionCount: 1, requestCount: 5, promptCount: 2, uniqueUsers: 1 },
+      { date: '2024-01-02', sessionCount: 0, requestCount: 0, promptCount: 0, uniqueUsers: 0 },
+    ]);
+    expect(usage.dailyAppTokenData[0]).toEqual({
+      date: '2024-01-01',
+      outputTokens: 40,
+      promptTokens: 50,
+      requestCount: 5,
     });
   });
 

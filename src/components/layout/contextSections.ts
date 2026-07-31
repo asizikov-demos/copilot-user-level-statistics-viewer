@@ -11,6 +11,7 @@ export interface ContextSection {
 export const COPILOT_IMPACT_SECTIONS: ContextSection[] = [
   { id: 'impact-combined', label: 'Combined' },
   { id: 'impact-agent', label: 'Agent Mode' },
+  { id: 'impact-copilot-app', label: 'Copilot App' },
   { id: 'impact-cli', label: 'CLI' },
   { id: 'impact-code-completion', label: 'Code Completion' },
   { id: 'impact-ask', label: 'Ask Mode' },

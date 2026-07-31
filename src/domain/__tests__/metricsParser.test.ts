@@ -131,6 +131,210 @@ describe('metricsParser', () => {
       expect(result?.ai_credits_used).toBe(0);
     });
 
+    it('should preserve Copilot App usage and expose it as a client', () => {
+      const appResult = parseMetricsLine(makeParserMetricLine({
+        used_copilot_app: true,
+        totals_by_copilot_app: {
+          session_count: 1,
+          request_count: 119,
+          prompt_count: 19,
+          token_usage: {
+            output_tokens_sum: 77310,
+            prompt_tokens_sum: 9200984,
+            avg_tokens_per_request: 77968.86,
+          },
+        },
+        totals_by_feature: [{
+          feature: 'copilot_app',
+          user_initiated_interaction_count: 19,
+          code_generation_activity_count: 15,
+          code_acceptance_activity_count: 14,
+          loc_added_sum: 126,
+          loc_deleted_sum: 57,
+          loc_suggested_to_add_sum: 130,
+          loc_suggested_to_delete_sum: 60,
+        }],
+      }));
+
+      expect(appResult?.used_copilot_app).toBe(true);
+      expect(appResult?.totals_by_copilot_app?.request_count).toBe(119);
+      expect(appResult?.totals_by_ide).toContainEqual({
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 19,
+        code_generation_activity_count: 15,
+        code_acceptance_activity_count: 14,
+        loc_added_sum: 126,
+        loc_deleted_sum: 57,
+        loc_suggested_to_add_sum: 130,
+        loc_suggested_to_delete_sum: 60,
+      });
+    });
+
+    it('should default used_copilot_app to false when missing', () => {
+      const lineWithoutApp = JSON.stringify(
+        omitMetricField(makeParserMetric(), 'used_copilot_app')
+      );
+
+      expect(parseMetricsLine(lineWithoutApp)?.used_copilot_app).toBe(false);
+    });
+
+    it('should infer App usage and interactions from App totals only', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        totals_by_copilot_app: {
+          session_count: 1,
+          request_count: 8,
+          prompt_count: 5,
+          token_usage: {
+            output_tokens_sum: 20,
+            prompt_tokens_sum: 30,
+            avg_tokens_per_request: 6.25,
+          },
+        },
+      }));
+
+      expect(result?.used_copilot_app).toBe(true);
+      expect(result?.totals_by_ide).toContainEqual(expect.objectContaining({
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 5,
+      }));
+    });
+
+    it('should infer App usage and interactions from App features only', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        totals_by_feature: [{
+          feature: 'copilot_app',
+          user_initiated_interaction_count: 7,
+        }],
+      }));
+
+      expect(result?.used_copilot_app).toBe(true);
+      expect(result?.totals_by_ide).toContainEqual(expect.objectContaining({
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 7,
+      }));
+    });
+
+    it('should prefer App feature interactions when App totals differ', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        totals_by_copilot_app: {
+          session_count: 1,
+          request_count: 8,
+          prompt_count: 5,
+          token_usage: {
+            output_tokens_sum: 20,
+            prompt_tokens_sum: 30,
+            avg_tokens_per_request: 6.25,
+          },
+        },
+        totals_by_feature: [{
+          feature: 'copilot_app',
+          user_initiated_interaction_count: 0,
+        }],
+      }));
+
+      expect(result?.totals_by_ide).toContainEqual(expect.objectContaining({
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 0,
+      }));
+    });
+
+    it('should not duplicate an explicit Copilot App IDE client', () => {
+      const appIde = {
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 7,
+        code_generation_activity_count: 6,
+        code_acceptance_activity_count: 5,
+        loc_added_sum: 4,
+        loc_deleted_sum: 3,
+        loc_suggested_to_add_sum: 2,
+        loc_suggested_to_delete_sum: 1,
+      };
+
+      const result = parseMetricsLine(makeParserMetricLine({
+        used_copilot_app: true,
+        totals_by_ide: [appIde],
+        totals_by_feature: [{
+          ...appIde,
+          feature: 'copilot_app',
+        }],
+      }));
+
+      expect(
+        result?.totals_by_ide.filter((entry) => entry.ide === 'copilot_app')
+      ).toEqual([appIde]);
+    });
+
+    it('should replace an explicit App client interaction count with the feature total', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        used_copilot_app: true,
+        totals_by_ide: [{
+          ide: 'copilot_app',
+          user_initiated_interaction_count: 0,
+        }],
+        totals_by_feature: [{
+          feature: 'copilot_app',
+          user_initiated_interaction_count: 2,
+        }],
+      }));
+
+      expect(
+        result?.totals_by_ide.filter((entry) => entry.ide === 'copilot_app')
+      ).toEqual([
+        expect.objectContaining({
+          ide: 'copilot_app',
+          user_initiated_interaction_count: 2,
+        }),
+      ]);
+    });
+
+    it('should infer App usage from an active explicit App client', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        used_copilot_app: false,
+        totals_by_ide: [{
+          ide: 'copilot_app',
+          user_initiated_interaction_count: 2,
+        }],
+      }));
+
+      expect(result?.used_copilot_app).toBe(true);
+    });
+
+    it('should infer App usage from suggested LOC in an explicit App client', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        used_copilot_app: false,
+        totals_by_ide: [{
+          ide: 'copilot_app',
+          loc_suggested_to_add_sum: 4,
+        }],
+      }));
+
+      expect(result?.used_copilot_app).toBe(true);
+    });
+
+    it('should apply the prompt fallback to an existing zero-interaction App client', () => {
+      const result = parseMetricsLine(makeParserMetricLine({
+        totals_by_copilot_app: {
+          session_count: 1,
+          request_count: 8,
+          prompt_count: 5,
+          token_usage: {
+            output_tokens_sum: 20,
+            prompt_tokens_sum: 30,
+            avg_tokens_per_request: 6.25,
+          },
+        },
+        totals_by_ide: [{
+          ide: 'copilot_app',
+          user_initiated_interaction_count: 0,
+        }],
+      }));
+
+      expect(result?.totals_by_ide).toContainEqual(expect.objectContaining({
+        ide: 'copilot_app',
+        user_initiated_interaction_count: 5,
+      }));
+    });
+
     it('should reject lines with invalid ai_credits_used', () => {
       const invalidCreditsLine = JSON.stringify({
         ...makeParserMetric(),
