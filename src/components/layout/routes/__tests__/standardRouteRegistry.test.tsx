@@ -13,6 +13,7 @@ import type {
 } from '../../../../read-models/overview';
 import type { LanguagesReadModel } from '../../../../read-models/languages';
 import type { UsersReadModel } from '../../../../read-models/users';
+import type { SurfaceProductivityReadModel } from '../../../../read-models/surfaceProductivity';
 import type { AggregatedMetrics } from '../../../../types/aggregatedMetrics';
 import { VIEW_MODES } from '../../../../types/navigation';
 import {
@@ -35,6 +36,7 @@ import {
   ModelDetailsRouteAdapter,
   OverviewRouteAdapter,
   UsersRouteAdapter,
+  SurfaceProductivityRouteAdapter,
   type StandardRouteContext,
 } from '../standardRouteAdapters';
 
@@ -61,6 +63,8 @@ const mocks = vi.hoisted(() => ({
     vi.fn<(metrics: AggregatedMetrics) => CopilotImpactReadModel>(),
   selectLanguagesReadModel:
     vi.fn<(metrics: AggregatedMetrics) => LanguagesReadModel>(),
+  selectSurfaceProductivityReadModel:
+    vi.fn<(metrics: AggregatedMetrics) => SurfaceProductivityReadModel>(),
   overviewView:
     vi.fn<
       (props: {
@@ -86,6 +90,8 @@ const mocks = vi.hoisted(() => ({
     vi.fn<(props: { model: CopilotImpactReadModel }) => void>(),
   languagesView:
     vi.fn<(props: { model: LanguagesReadModel }) => void>(),
+  surfaceProductivityView:
+    vi.fn<(props: { model: SurfaceProductivityReadModel }) => void>(),
   aboutView: vi.fn(),
 }));
 
@@ -126,6 +132,11 @@ vi.mock('../../../../read-models/impact', () => ({
   selectCopilotImpactReadModel: mocks.selectCopilotImpactReadModel,
 }));
 
+vi.mock('../../../../read-models/surfaceProductivity', () => ({
+  selectSurfaceProductivityReadModel:
+    mocks.selectSurfaceProductivityReadModel,
+}));
+
 vi.mock('../../../features/client-versions', () => ({
   ClientVersionsView: (props: { model: ClientVersionsReadModel }) => {
     mocks.clientVersionsView(props);
@@ -157,6 +168,15 @@ vi.mock('../../../features/impact', () => ({
 vi.mock('../../../features/languages', () => ({
   LanguagesView: (props: { model: LanguagesReadModel }) => {
     mocks.languagesView(props);
+    return null;
+  },
+}));
+
+vi.mock('../../../features/surface-productivity', () => ({
+  SurfaceProductivityView: (props: {
+    model: SurfaceProductivityReadModel;
+  }) => {
+    mocks.surfaceProductivityView(props);
     return null;
   },
 }));
@@ -205,6 +225,7 @@ describe('standard route registry', () => {
   let clientVersionsModel: ClientVersionsReadModel;
   let copilotImpactModel: CopilotImpactReadModel;
   let languagesModel: LanguagesReadModel;
+  let surfaceProductivityModel: SurfaceProductivityReadModel;
 
   beforeEach(() => {
     const aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
@@ -247,6 +268,7 @@ describe('standard route registry', () => {
       editModeImpactData: aggregatedMetrics.impact.editModeImpactData,
       inlineModeImpactData: aggregatedMetrics.impact.inlineModeImpactData,
       askModeImpactData: aggregatedMetrics.impact.askModeImpactData,
+      copilotAppImpactData: aggregatedMetrics.impact.copilotAppImpactData,
       cliImpactData: aggregatedMetrics.impact.cliImpactData,
       joinedImpactData: aggregatedMetrics.impact.joinedImpactData,
     };
@@ -255,6 +277,14 @@ describe('standard route registry', () => {
       languageFeatureImpactData: aggregatedMetrics.languages.languageFeatureImpactData,
       dailyLanguageGenerationsData: aggregatedMetrics.languages.dailyLanguageGenerationsData,
       dailyLanguageLocData: aggregatedMetrics.languages.dailyLanguageLocData,
+    };
+    surfaceProductivityModel = {
+      reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+      reportEndDay: aggregatedMetrics.overview.stats.reportEndDay,
+      totalActiveUsers: aggregatedMetrics.productivity.totalActiveUsers,
+      surfaceSummaries: aggregatedMetrics.productivity.surfaceSummaries,
+      dailyProductivity: aggregatedMetrics.productivity.dailyProductivity,
+      cohortSummaries: aggregatedMetrics.productivity.cohortSummaries,
     };
     context = {
       aggregatedMetrics,
@@ -271,6 +301,9 @@ describe('standard route registry', () => {
     mocks.selectClientVersionsReadModel.mockReturnValue(clientVersionsModel);
     mocks.selectCopilotImpactReadModel.mockReturnValue(copilotImpactModel);
     mocks.selectLanguagesReadModel.mockReturnValue(languagesModel);
+    mocks.selectSurfaceProductivityReadModel.mockReturnValue(
+      surfaceProductivityModel
+    );
   });
 
   it('covers every view mode except specialized user details', () => {
@@ -302,6 +335,7 @@ describe('standard route registry', () => {
       [VIEW_MODES.AI_ADOPTION_PHASES]: AiAdoptionPhasesRouteAdapter,
       [VIEW_MODES.MODEL_DETAILS]: ModelDetailsRouteAdapter,
       [VIEW_MODES.CLI_ADOPTION]: CliAdoptionRouteAdapter,
+      [VIEW_MODES.SURFACE_PRODUCTIVITY]: SurfaceProductivityRouteAdapter,
     });
   });
 
@@ -402,6 +436,7 @@ describe('standard route registry', () => {
     expect(mocks.copilotAdoptionView).toHaveBeenCalledWith({
       model: copilotAdoptionModel,
     });
+
     expect(mocks.selectAiAdoptionPhaseReadModel).toHaveBeenCalledWith(
       context.aggregatedMetrics
     );
@@ -417,6 +452,21 @@ describe('standard route registry', () => {
     expect(mocks.selectOverviewReadModel).not.toHaveBeenCalled();
     expect(mocks.selectUsersReadModel).not.toHaveBeenCalled();
     expect(mocks.selectAiCreditsReadModel).not.toHaveBeenCalled();
+  });
+
+  it('selects and renders the surface productivity adapter', () => {
+    const SurfaceProductivityAdapter = resolveStandardRouteAdapter(
+      VIEW_MODES.SURFACE_PRODUCTIVITY
+    );
+
+    renderToStaticMarkup(<SurfaceProductivityAdapter {...context} />);
+
+    expect(
+      mocks.selectSurfaceProductivityReadModel
+    ).toHaveBeenCalledWith(context.aggregatedMetrics);
+    expect(mocks.surfaceProductivityView).toHaveBeenCalledWith({
+      model: surfaceProductivityModel,
+    });
   });
 
   it('renders about without selecting aggregate-backed models', () => {

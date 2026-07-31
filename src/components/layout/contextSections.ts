@@ -27,6 +27,13 @@ export const CLI_ADOPTION_SECTIONS: ContextSection[] = [
   { id: 'cli-models-usage', label: 'CLI Models Daily Usage' },
 ];
 
+export const SURFACE_PRODUCTIVITY_SECTIONS: ContextSection[] = [
+  { id: 'surface-productivity-comparison', label: 'Surface Comparison' },
+  { id: 'surface-productivity-trend', label: 'Activity Trend' },
+  { id: 'surface-productivity-overlap', label: 'Overlap Context' },
+  { id: 'surface-productivity-method', label: 'Method' },
+];
+
 export const CLIENT_ANALYSIS_SECTIONS: ContextSection[] = [
   { id: 'client-distribution', label: 'Client Distribution' },
   { id: 'client-insights', label: 'Insights' },
@@ -75,4 +82,5 @@ export const CONTEXT_SECTIONS: Partial<Record<ViewMode, ContextSection[]>> = {
   [VIEW_MODES.CLIENT_VERSIONS]: CLIENT_VERSIONS_SECTIONS,
   [VIEW_MODES.USER_DETAILS]: USER_DETAILS_SECTIONS,
   [VIEW_MODES.MODEL_DETAILS]: MODEL_DETAILS_SECTIONS,
+  [VIEW_MODES.SURFACE_PRODUCTIVITY]: SURFACE_PRODUCTIVITY_SECTIONS,
 };

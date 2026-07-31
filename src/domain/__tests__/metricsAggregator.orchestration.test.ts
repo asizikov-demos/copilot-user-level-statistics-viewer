@@ -40,6 +40,7 @@ const aggregateSliceKeys = [
   'models',
   'cli',
   'ai',
+  'productivity',
 ] as const satisfies readonly (keyof AggregatedMetrics)[];
 
 const ideTotal = (ide: string, interactions: number) => ({

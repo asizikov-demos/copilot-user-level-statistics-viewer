@@ -15,6 +15,7 @@ Visualize GitHub Copilot usage metrics from your organization. Upload metrics ND
 - Drill down into individual user activity with feature adoption radar charts
 - Model usage analysis
 - CLI adoption trends, sessions, and token usage
+- IDE, CLI, and Copilot App productivity-proxy comparison
 - IDE and VS Code extension version analysis
 - Statistics by programming language and Copilot feature
 - Responsive layout, deployable as a static site to GitHub Pages

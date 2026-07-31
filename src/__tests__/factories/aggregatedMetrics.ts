@@ -40,6 +40,12 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   models: ['modelUsageData', 'modelBreakdownData'],
   cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],
   ai: ['aiAdoptionPhaseData', 'usageDistributionData', 'dailyAiCreditsData'],
+  productivity: [
+    'totalActiveUsers',
+    'surfaceSummaries',
+    'dailyProductivity',
+    'cohortSummaries',
+  ],
 } as const satisfies {
   [Slice in keyof AggregatedMetrics]: readonly (keyof AggregatedMetrics[Slice])[];
 };
@@ -63,6 +69,7 @@ export function makeAggregatedMetrics(
     models: { ...defaults.models, ...overrides.models },
     cli: { ...defaults.cli, ...overrides.cli },
     ai: { ...defaults.ai, ...overrides.ai },
+    productivity: { ...defaults.productivity, ...overrides.productivity },
   };
 }
 

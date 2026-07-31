@@ -50,6 +50,15 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'Surface',
+    view: VIEW_MODES.SURFACE_PRODUCTIVITY,
+    icon: (
+      <svg className="w-5 h-5" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 18h16.5M5.25 15V9.75m6.75 5.25V5.25m6.75 9.75v-3.75" />
+      </svg>
+    ),
+  },
+  {
     label: 'Copilot Impact',
     view: VIEW_MODES.COPILOT_IMPACT,
     icon: (
