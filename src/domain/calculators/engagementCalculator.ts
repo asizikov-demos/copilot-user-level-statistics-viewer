@@ -1,6 +1,6 @@
 import type { CliUsageForDownstreamCalculations } from './cliUsageCalculator';
-import { compareDatesAsc, compareByDateAsc } from './statsCalculators';
 import { type AdoptionTrendEntry, computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
+import { buildSortedCliAwareDates, getCliDayData } from './cliDateHelpers';
 
 export interface DailyEngagementData {
   date: string;
@@ -53,32 +53,25 @@ export function computeEngagementData(
   }
   const totalUsers = allUniqueUsers.size;
 
-  const allDates = new Set(accumulator.dailyEngagement.keys());
-  if (cliAccumulator) {
-    for (const date of cliAccumulator.dailySessions.keys()) {
-      allDates.add(date);
-    }
-  }
+  const sortedDates = buildSortedCliAwareDates(accumulator.dailyEngagement.keys(), cliAccumulator);
 
-  return Array.from(allDates)
-    .map(date => {
-      const activeUsersSet = new Set(accumulator.dailyEngagement.get(date) ?? []);
-      const cliData = cliAccumulator?.dailySessions.get(date);
-      if (cliData) {
-        for (const userId of cliData.users) {
-          activeUsersSet.add(userId);
-        }
+  return sortedDates.map(date => {
+    const activeUsersSet = new Set(accumulator.dailyEngagement.get(date) ?? []);
+    const cliData = getCliDayData(date, cliAccumulator);
+    if (cliData) {
+      for (const userId of cliData.users) {
+        activeUsersSet.add(userId);
       }
-      return {
-        date,
-        activeUsers: activeUsersSet.size,
-        totalUsers,
-        engagementPercentage: totalUsers > 0
-          ? Math.round((activeUsersSet.size / totalUsers) * 100 * 100) / 100
-          : 0,
-      };
-    })
-    .sort(compareByDateAsc);
+    }
+    return {
+      date,
+      activeUsers: activeUsersSet.size,
+      totalUsers,
+      engagementPercentage: totalUsers > 0
+        ? Math.round((activeUsersSet.size / totalUsers) * 100 * 100) / 100
+        : 0,
+    };
+  });
 }
 
 export type DailyAdoptionTrend = AdoptionTrendEntry;
@@ -87,19 +80,11 @@ export function computeAdoptionTrend(
   accumulator: EngagementAccumulator,
   cliAccumulator?: CliUsageForDownstreamCalculations
 ): DailyAdoptionTrend[] {
-  const allDates = new Set(accumulator.dailyEngagement.keys());
-  if (cliAccumulator) {
-    for (const date of cliAccumulator.dailySessions.keys()) {
-      allDates.add(date);
-    }
-  }
-
-  const sortedDates = Array.from(allDates)
-    .sort(compareDatesAsc);
+  const sortedDates = buildSortedCliAwareDates(accumulator.dailyEngagement.keys(), cliAccumulator);
 
   const dateUserSets = sortedDates.map(date => {
     const users = new Set(accumulator.dailyEngagement.get(date) ?? []);
-    const cliData = cliAccumulator?.dailySessions.get(date);
+    const cliData = getCliDayData(date, cliAccumulator);
     if (cliData) {
       for (const userId of cliData.users) {
         users.add(userId);

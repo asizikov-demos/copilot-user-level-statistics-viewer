@@ -1,6 +1,6 @@
 import type { CliUsageForDownstreamCalculations } from './cliUsageCalculator';
-import { compareByDateAsc } from './statsCalculators';
 import { getChatModeBucket } from '../featureCategories';
+import { buildSortedCliAwareDates, getCliDayData } from './cliDateHelpers';
 
 export interface DailyChatUsersData {
   date: string;
@@ -108,54 +108,40 @@ export function computeChatUsersData(
   accumulator: ChatAccumulator,
   cliAccumulator?: CliUsageForDownstreamCalculations
 ): DailyChatUsersData[] {
-  const allDates = new Set<string>(accumulator.dailyChatUsers.keys());
-  if (cliAccumulator) {
-    for (const date of cliAccumulator.dailySessions.keys()) {
-      allDates.add(date);
-    }
-  }
+  const sortedDates = buildSortedCliAwareDates(accumulator.dailyChatUsers.keys(), cliAccumulator);
 
-  return Array.from(allDates)
-    .map(date => {
-      const chatData = accumulator.dailyChatUsers.get(date);
-      const cliData = cliAccumulator?.dailySessions.get(date);
-      return {
-        date,
-        askModeUsers: chatData?.askModeUsers.size ?? 0,
-        agentModeUsers: chatData?.agentModeUsers.size ?? 0,
-        editModeUsers: chatData?.editModeUsers.size ?? 0,
-        inlineModeUsers: chatData?.inlineModeUsers.size ?? 0,
-        planModeUsers: chatData?.planModeUsers.size ?? 0,
-        cliUsers: cliData?.users.size ?? 0,
-      };
-    })
-    .sort(compareByDateAsc);
+  return sortedDates.map(date => {
+    const chatData = accumulator.dailyChatUsers.get(date);
+    const cliData = getCliDayData(date, cliAccumulator);
+    return {
+      date,
+      askModeUsers: chatData?.askModeUsers.size ?? 0,
+      agentModeUsers: chatData?.agentModeUsers.size ?? 0,
+      editModeUsers: chatData?.editModeUsers.size ?? 0,
+      inlineModeUsers: chatData?.inlineModeUsers.size ?? 0,
+      planModeUsers: chatData?.planModeUsers.size ?? 0,
+      cliUsers: cliData?.users.size ?? 0,
+    };
+  });
 }
 
 export function computeChatRequestsData(
   accumulator: ChatAccumulator,
   cliAccumulator?: CliUsageForDownstreamCalculations
 ): DailyChatRequestsData[] {
-  const allDates = new Set<string>(accumulator.dailyChatRequests.keys());
-  if (cliAccumulator) {
-    for (const date of cliAccumulator.dailySessions.keys()) {
-      allDates.add(date);
-    }
-  }
+  const sortedDates = buildSortedCliAwareDates(accumulator.dailyChatRequests.keys(), cliAccumulator);
 
-  return Array.from(allDates)
-    .map(date => {
-      const chatData = accumulator.dailyChatRequests.get(date);
-      const cliData = cliAccumulator?.dailySessions.get(date);
-      return {
-        date,
-        askModeRequests: chatData?.askModeRequests ?? 0,
-        agentModeRequests: chatData?.agentModeRequests ?? 0,
-        editModeRequests: chatData?.editModeRequests ?? 0,
-        inlineModeRequests: chatData?.inlineModeRequests ?? 0,
-        planModeRequests: chatData?.planModeRequests ?? 0,
-        cliSessions: cliData?.sessionCount ?? 0,
-      };
-    })
-    .sort(compareByDateAsc);
+  return sortedDates.map(date => {
+    const chatData = accumulator.dailyChatRequests.get(date);
+    const cliData = getCliDayData(date, cliAccumulator);
+    return {
+      date,
+      askModeRequests: chatData?.askModeRequests ?? 0,
+      agentModeRequests: chatData?.agentModeRequests ?? 0,
+      editModeRequests: chatData?.editModeRequests ?? 0,
+      inlineModeRequests: chatData?.inlineModeRequests ?? 0,
+      planModeRequests: chatData?.planModeRequests ?? 0,
+      cliSessions: cliData?.sessionCount ?? 0,
+    };
+  });
 }
