@@ -113,16 +113,19 @@ describe('model aggregation orchestration', () => {
         model: 'gpt-5',
         total: 6,
         dailyData: { '2024-01-15': 6 },
+        users: 1,
       },
       {
         model: 'gpt-4o',
         total: 4,
         dailyData: { '2024-01-16': 4 },
+        users: 1,
       },
       {
         model: 'unknown',
         total: 3,
         dailyData: { '2024-01-16': 3 },
+        users: 1,
       },
     ]);
   });
