@@ -32,7 +32,18 @@ describe('modelConfig', () => {
       expect(getModelCategory('Claude 4.6 Sonnet')).toBe('Versatile');
       expect(getModelCategory('Claude 4.5 Haiku')).toBe('Versatile');
       expect(getModelCategory('Gemini 3.0 Flash')).toBe('Lightweight');
+      expect(getModelCategory('Claude Opus 5')).toBe('Powerful');
+      expect(getModelCategory('Gemini 3.6 Flash')).toBe('Versatile');
+      expect(getModelCategory('Grok 4.5')).toBe('Versatile');
       expect(getModelCategory('legacy-model')).toBeUndefined();
+    });
+
+    it('should categorize every non-sentinel known model', () => {
+      expect(
+        KNOWN_MODELS
+          .filter(model => model.name !== 'auto' && model.name !== 'unknown')
+          .every(model => model.category !== undefined)
+      ).toBe(true);
     });
 
     it('should include the unknown sentinel', () => {

@@ -188,7 +188,9 @@ describe('modelBreakdownCalculator', () => {
         { model: 'unknown', total: 5, dailyData: { '2024-01-15': 5 } },
       ]);
       expect(data.modelCategories).toEqual([
-        { category: 'Uncategorized', total: 35, dailyData: { '2024-01-15': 35 } },
+        { category: 'Versatile', total: 20, dailyData: { '2024-01-15': 20 } },
+        { category: 'Powerful', total: 10, dailyData: { '2024-01-15': 10 } },
+        { category: 'Uncategorized', total: 5, dailyData: { '2024-01-15': 5 } },
       ]);
     });
 
