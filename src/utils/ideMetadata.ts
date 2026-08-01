@@ -20,7 +20,10 @@ export type IDEIconKey =
   | 'xcode'
   | 'zed'
   | 'copilot_app'
-  | 'copilot_cli';
+  | 'copilot_cli'
+  | 'aqua'
+  | 'marimo'
+  | 'obsidian';
 
 interface IDEMetadataDefinition {
   keys: readonly [string, ...string[]];
@@ -59,6 +62,9 @@ const IDE_METADATA_DEFINITIONS: readonly IDEMetadataDefinition[] = [
   { keys: ['zed', 'zed:zed-copilot'], label: 'Zed', iconKey: 'zed', color: '#F9CE49' },
   { keys: ['copilot_app'], label: 'Copilot App', iconKey: 'copilot_app', color: '#000000' },
   { keys: ['copilot_cli'], label: 'Copilot CLI', iconKey: 'copilot_cli', color: '#DB61A2' },
+  { keys: ['aqua'], label: 'Aqua', iconKey: 'aqua' },
+  { keys: ['marimo'], label: 'marimo', iconKey: 'marimo', color: '#1C7361' },
+  { keys: ['obsidian'], label: 'Obsidian', iconKey: 'obsidian', color: '#7C3AED' },
   { keys: ['sublime_text'], color: '#FF9800' },
 ];
 

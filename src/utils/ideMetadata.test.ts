@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { formatIDEName } from './ideNames';
 import { getIDEIcon } from '../components/icons/IDEIcons';
-import { getIdeColor } from '../components/charts/utils/chartColors';
+import { getIdeColor, hasIdeColor } from '../components/charts/utils/chartColors';
 
 describe('shared IDE metadata registry', () => {
   it('keeps visual studio aliases in sync across label, icon, and color helpers', () => {
@@ -34,5 +34,24 @@ describe('shared IDE metadata registry', () => {
     expect(formatIDEName('copilot_app')).toBe('Copilot App');
     expect(getIDEIcon('copilot_app')).not.toBe(getIDEIcon('copilot_cli'));
     expect(getIdeColor('copilot_app', 0)).toBe('#000000');
+  });
+
+  it('maps Aqua with display name and a distinct icon, falling back to sequential color like other JetBrains monogram IDEs', () => {
+    expect(formatIDEName('aqua')).toBe('Aqua');
+    expect(getIDEIcon('aqua')).not.toBe(getIDEIcon('vscode'));
+    expect(getIDEIcon('aqua')).not.toBe(getIDEIcon('rubymine'));
+    expect(hasIdeColor('aqua')).toBe(false);
+  });
+
+  it('maps marimo with display name, icon, and brand color', () => {
+    expect(formatIDEName('marimo')).toBe('marimo');
+    expect(getIDEIcon('marimo')).not.toBe(getIDEIcon('vscode'));
+    expect(getIdeColor('marimo', 0)).toBe('#1C7361');
+  });
+
+  it('maps Obsidian with display name, icon, and brand color', () => {
+    expect(formatIDEName('obsidian')).toBe('Obsidian');
+    expect(getIDEIcon('obsidian')).not.toBe(getIDEIcon('vscode'));
+    expect(getIdeColor('obsidian', 0)).toBe('#7C3AED');
   });
 });
