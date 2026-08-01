@@ -70,7 +70,7 @@ export default function ModelCategoryDistributionChart({
       ]}
       chartHeight="h-96"
       footer={
-        <p className="text-xs text-gray-600 mb-4">
+        <p className="text-xs text-gray-600">
           Categories follow GitHub&apos;s published Copilot model pricing catalog. Legacy and
           unmapped models appear as Uncategorized.
         </p>

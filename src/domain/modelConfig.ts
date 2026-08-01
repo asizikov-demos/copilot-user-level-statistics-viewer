@@ -7,6 +7,11 @@ export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
 
 export type ModelCategory = 'Lightweight' | 'Powerful' | 'Versatile';
 
+/**
+ * Display order for model categories, from least to most capable, with unmapped models last.
+ */
+export const MODEL_CATEGORY_ORDER = ['Lightweight', 'Versatile', 'Powerful', 'Uncategorized'] as const;
+
 export class Model {
   constructor(
     public readonly name: string,

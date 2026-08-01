@@ -12,28 +12,33 @@ function makeModelMetrics(): AggregatedMetrics {
           model: 'gpt-5',
           total: 11,
           dailyData: { '2026-01-15': 11 },
+          users: 1,
         }],
         modelCategories: [{
           category: 'Powerful',
           total: 11,
           dailyData: { '2026-01-15': 11 },
+          users: 1,
         }],
         autoModels: [
           {
             model: 'auto',
             total: 4.5,
             dailyData: { '2026-01-15': 4.5 },
+            users: 1,
           },
           {
             model: 'auto-secondary',
             total: -1.25,
             dailyData: { '2026-01-16': -1.25 },
+            users: 1,
           },
         ],
         cliModels: [{
           model: 'gpt-5',
           total: 99,
           dailyData: { '2026-01-15': 99 },
+          users: 1,
         }],
         autoModeAdoptionTrend: [{
           date: '2026-01-15',
@@ -102,6 +107,7 @@ function makeCliMetrics(): AggregatedMetrics {
           model: 'gpt-5',
           total: 6,
           dailyData: { '2026-01-15': 6 },
+          users: 1,
         }],
         dates: ['fallback-model-date'],
         cliTotal: 6,
@@ -124,6 +130,19 @@ describe('model details read model', () => {
       dates: metrics.models.modelBreakdownData.dates,
       modelTotal: 11,
       autoTotal: 3.25,
+      categoryTables: [{
+        category: 'Powerful',
+        users: 1,
+        interactions: 11,
+        sharePercentage: 100,
+        rows: [{
+          model: 'gpt-5',
+          displayName: 'Gpt 5',
+          interactions: 11,
+          sharePercentage: 100,
+          users: 1,
+        }],
+      }],
     });
     expect(model.allModels).toBe(metrics.models.modelBreakdownData.allModels);
     expect(model.allModels[0]).toBe(metrics.models.modelBreakdownData.allModels[0]);
@@ -157,6 +176,7 @@ describe('model details read model', () => {
       'dates',
       'modelTotal',
       'autoTotal',
+      'categoryTables',
     ]);
     expect(model).not.toHaveProperty('modelBreakdownData');
     expect(model).not.toHaveProperty('cliModels');
@@ -177,6 +197,7 @@ describe('model details read model', () => {
       dates: [],
       modelTotal: 0,
       autoTotal: 0,
+      categoryTables: [],
     });
     expect(model.allModels).toBe(metrics.models.modelBreakdownData.allModels);
     expect(model.modelCategories).toBe(metrics.models.modelBreakdownData.modelCategories);
@@ -207,6 +228,7 @@ describe('model details read model', () => {
       dates: metrics.models.modelBreakdownData.dates,
       modelTotal: 0,
       autoTotal: 0,
+      categoryTables: [],
     });
   });
 
