@@ -202,6 +202,7 @@ export interface ModelDailyUsageEntry {
   model: string;
   total: number;
   dailyData: Record<string, number>;
+  users: number;
 }
 
 export type ModelUsageCategory = 'Lightweight' | 'Powerful' | 'Versatile' | 'Uncategorized';
@@ -210,6 +211,15 @@ export interface ModelCategoryUsageEntry {
   category: ModelUsageCategory;
   total: number;
   dailyData: Record<string, number>;
+  users: number;
+}
+
+export interface ModelCategoryDetailRow {
+  model: string;
+  displayName: string;
+  interactions: number;
+  sharePercentage: number;
+  users: number;
 }
 
 export interface AutoModeAdoptionTrendEntry {

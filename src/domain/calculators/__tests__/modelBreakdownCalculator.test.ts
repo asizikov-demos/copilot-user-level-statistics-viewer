@@ -183,15 +183,28 @@ describe('modelBreakdownCalculator', () => {
       expect(data.modelTotal).toBe(35);
       expect(data.unknownTotal).toBe(5);
       expect(data.allModels).toEqual([
-        { model: 'gpt-4o', total: 20, dailyData: { '2024-01-15': 20 } },
-        { model: 'gpt-5', total: 10, dailyData: { '2024-01-15': 10 } },
-        { model: 'unknown', total: 5, dailyData: { '2024-01-15': 5 } },
+        { model: 'gpt-4o', total: 20, dailyData: { '2024-01-15': 20 }, users: 1 },
+        { model: 'gpt-5', total: 10, dailyData: { '2024-01-15': 10 }, users: 1 },
+        { model: 'unknown', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
       ]);
       expect(data.modelCategories).toEqual([
-        { category: 'Versatile', total: 20, dailyData: { '2024-01-15': 20 } },
-        { category: 'Powerful', total: 10, dailyData: { '2024-01-15': 10 } },
-        { category: 'Uncategorized', total: 5, dailyData: { '2024-01-15': 5 } },
+        { category: 'Versatile', total: 20, dailyData: { '2024-01-15': 20 }, users: 1 },
+        { category: 'Powerful', total: 10, dailyData: { '2024-01-15': 10 }, users: 1 },
+        { category: 'Uncategorized', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
       ]);
+    });
+
+    it('should count distinct users per model and category', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5', 'code_completion', 10));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('gpt-5', 'code_completion', 20));
+      accumulateModelBreakdown(acc, '2024-01-16', 3, makeModelFeature('gpt-4o', 'code_completion', 15));
+      const data = computeModelBreakdownData(acc);
+
+      expect(data.allModels.find(entry => entry.model === 'gpt-5')?.users).toBe(2);
+      expect(data.allModels.find(entry => entry.model === 'gpt-4o')?.users).toBe(1);
+      expect(data.modelCategories.find(entry => entry.category === 'Powerful')?.users).toBe(2);
+      expect(data.modelCategories.find(entry => entry.category === 'Versatile')?.users).toBe(1);
     });
 
     it('should aggregate daily interactions by published model category', () => {
@@ -201,9 +214,9 @@ describe('modelBreakdownCalculator', () => {
       accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('claude-opus-4.8', 'chat_panel', 5));
 
       expect(computeModelBreakdownData(acc).modelCategories).toEqual([
-        { category: 'Lightweight', total: 8, dailyData: { '2024-01-15': 8 } },
-        { category: 'Versatile', total: 12, dailyData: { '2024-01-15': 12 } },
-        { category: 'Powerful', total: 5, dailyData: { '2024-01-16': 5 } },
+        { category: 'Lightweight', total: 8, dailyData: { '2024-01-15': 8 }, users: 1 },
+        { category: 'Versatile', total: 12, dailyData: { '2024-01-15': 12 }, users: 1 },
+        { category: 'Powerful', total: 5, dailyData: { '2024-01-16': 5 }, users: 1 },
       ]);
     });
   });

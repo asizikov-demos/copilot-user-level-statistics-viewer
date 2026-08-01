@@ -4,13 +4,16 @@ import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
 
 interface DisclosureSectionProps {
-  label: string;
+  label: ReactNode;
   children: ReactNode;
   defaultExpanded?: boolean;
   containerClassName?: string;
   buttonClassName?: string;
   contentClassName?: string;
+  labelClassName?: string;
 }
+
+const DEFAULT_LABEL_CLASS = 'text-sm font-medium text-gray-700';
 
 const DEFAULT_CONTAINER_CLASS = 'border-t border-gray-200 pt-4';
 const DEFAULT_BUTTON_CLASS =
@@ -24,6 +27,7 @@ export default function DisclosureSection({
   containerClassName,
   buttonClassName,
   contentClassName,
+  labelClassName,
 }: DisclosureSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const contentId = useId();
@@ -37,12 +41,13 @@ export default function DisclosureSection({
         aria-expanded={isExpanded}
         aria-controls={contentId}
       >
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className={labelClassName ?? DEFAULT_LABEL_CLASS}>{label}</span>
         <svg
           className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>

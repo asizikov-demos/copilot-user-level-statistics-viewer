@@ -678,6 +678,7 @@ describe('metricsAggregator', () => {
           model: 'gpt-4o',
           total: 44,
           dailyData: { '2024-01-15': 44 },
+          users: 1,
         },
       ]);
       expect(userDetails?.dailyModelUsage).toEqual(aggregated.models.modelUsageData);
@@ -808,6 +809,7 @@ describe('metricsAggregator', () => {
           model: 'auto',
           total: 1,
           dailyData: { '2024-01-15': 1 },
+          users: 1,
         },
       ]);
       expect(aggregated.models.modelBreakdownData.autoModeAdoptionTrend).toEqual([
@@ -924,6 +926,7 @@ describe('metricsAggregator', () => {
             '2024-01-15': 15,
             '2024-01-16': 3,
           },
+          users: 2,
         },
         {
           model: 'claude-sonnet-4.6',
@@ -931,6 +934,7 @@ describe('metricsAggregator', () => {
           dailyData: {
             '2024-01-15': 5,
           },
+          users: 1,
         },
       ]);
     });

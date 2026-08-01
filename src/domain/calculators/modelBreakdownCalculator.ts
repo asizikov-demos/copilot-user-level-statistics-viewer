@@ -15,6 +15,7 @@ import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
 interface ModelAccEntry {
   total: number;
   dailyData: Map<string, number>;
+  userIds: Set<number>;
 }
 
 export interface ModelBreakdownAccumulator {
@@ -47,14 +48,18 @@ function accumulateModelEntry(
   modelsMap: Map<string, ModelAccEntry>,
   model: string,
   date: string,
-  count: number
+  count: number,
+  userId?: number
 ): void {
   if (!modelsMap.has(model)) {
-    modelsMap.set(model, { total: 0, dailyData: new Map() });
+    modelsMap.set(model, { total: 0, dailyData: new Map(), userIds: new Set() });
   }
   const entry = modelsMap.get(model)!;
   entry.total += count;
   entry.dailyData.set(date, (entry.dailyData.get(date) || 0) + count);
+  if (userId !== undefined) {
+    entry.userIds.add(userId);
+  }
 }
 
 export function accumulateModelBreakdown(
@@ -76,7 +81,7 @@ export function accumulateModelBreakdown(
   if (isCliFeature(modelFeature.feature) && interactionCount > 0) {
     accumulator.allDates.add(date);
     accumulator.cliTotal += interactionCount;
-    accumulateModelEntry(accumulator.cliModels, normalizedModel || 'unknown', date, interactionCount);
+    accumulateModelEntry(accumulator.cliModels, normalizedModel || 'unknown', date, interactionCount, userId);
   }
 
   if (isActiveAutoModeFeature(modelFeature)) {
@@ -89,7 +94,7 @@ export function accumulateModelBreakdown(
     const autoUsageCount = modelFeature.user_initiated_interaction_count > 0
       ? modelFeature.user_initiated_interaction_count
       : activityCount;
-    accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount);
+    accumulateModelEntry(accumulator.autoModels, normalizedModel, date, autoUsageCount, userId);
     return;
   }
 
@@ -99,12 +104,13 @@ export function accumulateModelBreakdown(
 
   accumulator.allDates.add(date);
   accumulator.modelTotal += interactionCount;
-  accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount);
+  accumulateModelEntry(accumulator.allModels, normalizedModel || 'unknown', date, interactionCount, userId);
   accumulateModelEntry(
     accumulator.modelCategories,
     getModelCategory(normalizedModel) ?? 'Uncategorized',
     date,
-    interactionCount
+    interactionCount,
+    userId
   );
 
   if (isUnknown) {
@@ -125,6 +131,7 @@ function buildModelEntries(
         model,
         total: entry.total,
         dailyData,
+        users: entry.userIds.size,
       };
     })
     .sort((a, b) => b.total - a.total);
@@ -148,6 +155,7 @@ function buildModelCategoryEntries(
       category,
       total: entry.total,
       dailyData: Object.fromEntries(entry.dailyData),
+      users: entry.userIds.size,
     }];
   });
 }
