@@ -1,6 +1,62 @@
 {
   "versions": [
     {
+      "version": "1.14.2-261-linux-arm64",
+      "releaseDate": "2026-07-28T13:49:46.000Z"
+    },
+    {
+      "version": "1.14.2-261-linux-x64",
+      "releaseDate": "2026-07-28T13:49:18.000Z"
+    },
+    {
+      "version": "1.14.2-261-macos-arm64",
+      "releaseDate": "2026-07-28T13:48:50.000Z"
+    },
+    {
+      "version": "1.14.2-261-macos-x64",
+      "releaseDate": "2026-07-28T13:48:23.000Z"
+    },
+    {
+      "version": "1.14.2-261-windows-arm64",
+      "releaseDate": "2026-07-28T13:47:58.000Z"
+    },
+    {
+      "version": "1.14.2-261-windows-x64",
+      "releaseDate": "2026-07-28T13:47:31.000Z"
+    },
+    {
+      "version": "1.14.2-251",
+      "releaseDate": "2026-07-28T13:46:58.000Z"
+    },
+    {
+      "version": "1.14.1-261-linux-arm64",
+      "releaseDate": "2026-07-24T10:02:39.000Z"
+    },
+    {
+      "version": "1.14.1-261-linux-x64",
+      "releaseDate": "2026-07-24T10:02:13.000Z"
+    },
+    {
+      "version": "1.14.1-261-macos-arm64",
+      "releaseDate": "2026-07-24T10:01:44.000Z"
+    },
+    {
+      "version": "1.14.1-261-macos-x64",
+      "releaseDate": "2026-07-24T10:01:19.000Z"
+    },
+    {
+      "version": "1.14.1-261-windows-arm64",
+      "releaseDate": "2026-07-24T10:00:51.000Z"
+    },
+    {
+      "version": "1.14.1-261-windows-x64",
+      "releaseDate": "2026-07-24T10:00:25.000Z"
+    },
+    {
+      "version": "1.14.1-251",
+      "releaseDate": "2026-07-24T09:59:51.000Z"
+    },
+    {
       "version": "1.13.1-251",
       "releaseDate": "2026-07-15T03:30:09.000Z"
     },
@@ -23,62 +79,6 @@
     {
       "version": "1.10.1-251",
       "releaseDate": "2026-06-08T03:11:36.000Z"
-    },
-    {
-      "version": "1.10.0-251",
-      "releaseDate": "2026-05-29T06:12:52.000Z"
-    },
-    {
-      "version": "1.9.1-251",
-      "releaseDate": "2026-05-15T02:17:52.000Z"
-    },
-    {
-      "version": "1.9.0-251",
-      "releaseDate": "2026-05-07T05:32:50.000Z"
-    },
-    {
-      "version": "1.8.2-243",
-      "releaseDate": "2026-04-24T03:07:54.000Z"
-    },
-    {
-      "version": "1.8.2-242",
-      "releaseDate": "2026-04-24T03:07:28.000Z"
-    },
-    {
-      "version": "1.8.0-243",
-      "releaseDate": "2026-04-16T02:01:14.000Z"
-    },
-    {
-      "version": "1.8.0-242",
-      "releaseDate": "2026-04-16T01:59:28.000Z"
-    },
-    {
-      "version": "1.7.1-242",
-      "releaseDate": "2026-03-30T08:00:30.000Z"
-    },
-    {
-      "version": "1.7.1-243",
-      "releaseDate": "2026-03-30T08:00:10.000Z"
-    },
-    {
-      "version": "1.6.1-242",
-      "releaseDate": "2026-03-10T12:22:19.000Z"
-    },
-    {
-      "version": "1.6.1-243",
-      "releaseDate": "2026-03-10T12:15:36.000Z"
-    },
-    {
-      "version": "1.5.66-242",
-      "releaseDate": "2026-02-25T11:53:22.000Z"
-    },
-    {
-      "version": "1.5.66-243",
-      "releaseDate": "2026-02-25T11:52:59.000Z"
-    },
-    {
-      "version": "1.5.65-242",
-      "releaseDate": "2026-02-12T08:38:28.000Z"
     }
   ]
 }
