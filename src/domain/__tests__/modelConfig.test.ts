@@ -35,6 +35,7 @@ describe('modelConfig', () => {
       expect(getModelCategory('Claude Opus 5')).toBe('Powerful');
       expect(getModelCategory('Gemini 3.6 Flash')).toBe('Versatile');
       expect(getModelCategory('Grok 4.5')).toBe('Versatile');
+      expect(getModelCategory('Kimi K3')).toBe('Powerful');
       expect(getModelCategory('legacy-model')).toBeUndefined();
     });
 
@@ -54,6 +55,7 @@ describe('modelConfig', () => {
       expect(isKnownModelName('GPT-5')).toBe(true);
       expect(isKnownModelName('Claude Opus 4.6 (fast mode)')).toBe(true);
       expect(isKnownModelName('Gemini 3.5 Flash')).toBe(true);
+      expect(isKnownModelName('Kimi K3')).toBe(true);
     });
 
     it('should not treat arbitrary non-empty model names as known models', () => {
