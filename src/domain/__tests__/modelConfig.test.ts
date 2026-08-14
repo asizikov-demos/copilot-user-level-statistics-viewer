@@ -34,6 +34,7 @@ describe('modelConfig', () => {
       expect(getModelCategory('Gemini 3.0 Flash')).toBe('Lightweight');
       expect(getModelCategory('Claude Opus 5')).toBe('Powerful');
       expect(getModelCategory('Gemini 3.6 Flash')).toBe('Versatile');
+      expect(getModelCategory('Gemini 3.7 Flash')).toBe('Versatile');
       expect(getModelCategory('Grok 4.5')).toBe('Versatile');
       expect(getModelCategory('Kimi K3')).toBe('Powerful');
       expect(getModelCategory('MAI-Code-1.1-Flash')).toBe('Lightweight');
