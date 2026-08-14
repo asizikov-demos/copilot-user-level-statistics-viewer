@@ -87,6 +87,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gemini-3-flash', 'Lightweight'),
   new Model('gemini-3.5-flash', 'Lightweight'),
   new Model('gemini-3.6-flash', 'Versatile'),
+  new Model('gemini-3.7-flash', 'Versatile'),
   new Model('mai-code-1-flash', 'Lightweight'),
   new Model('mai-code-1.1-flash', 'Lightweight'),
   new Model('kimi-k2.7-code', 'Versatile'),
