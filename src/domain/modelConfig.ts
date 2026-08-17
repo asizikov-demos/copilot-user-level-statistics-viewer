@@ -52,6 +52,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-5.6-terra', 'Versatile'),
   new Model('grok-code-fast-1', 'Lightweight'),
   new Model('grok-4.5', 'Versatile'),
+  new Model('grok-4.6', 'Versatile'),
   new Model('o3', 'Powerful'),
   new Model('o3-mini', 'Lightweight'),
   new Model('o4-mini', 'Lightweight'),
