@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { TooltipItem } from 'chart.js';
 import {
   createAdoptionTrendChartConfig,
   createAdoptionTrendSummaryStats,
@@ -94,13 +95,15 @@ describe('createAdoptionTrendChartConfig', () => {
       title: { display: true, text: 'Cumulative Users' },
       grid: { drawOnChartArea: false },
     });
-    expect(options.scales.y2).toMatchObject({
+    expect((options.scales as Record<string, unknown>).y2).toMatchObject({
       display: false,
       min: 0,
       max: 100,
     });
 
-    const tooltipLines = options.plugins.tooltip.callbacks.afterBody([{ dataIndex: 1 }]);
+    const tooltipLines = options.plugins.tooltip.callbacks.afterBody!([
+      { dataIndex: 1 } as TooltipItem<'line' | 'bar'>,
+    ]);
     expect(tooltipLines).toEqual([
       '',
       'Total Active: 0',

@@ -253,6 +253,7 @@ describe('metrics aggregation orchestration characterization', () => {
       editModeImpactData: [...defaults.impact.editModeImpactData],
       inlineModeImpactData: [...defaults.impact.inlineModeImpactData],
       askModeImpactData: [...defaults.impact.askModeImpactData],
+      copilotAppImpactData: [...defaults.impact.copilotAppImpactData],
       cliImpactData: [...defaults.impact.cliImpactData],
       joinedImpactData: [...defaults.impact.joinedImpactData],
     };
@@ -288,6 +289,9 @@ describe('metrics aggregation orchestration characterization', () => {
       usageDistributionData: [...defaults.ai.usageDistributionData],
       dailyAiCreditsData: [...defaults.ai.dailyAiCreditsData],
     };
+    const surfaceProductivityAggregation = {
+      ...defaults.productivity,
+    };
     const aggregated = assembleAggregatedMetrics({
       coreStatsAggregation,
       userSummaryAggregation,
@@ -298,6 +302,7 @@ describe('metrics aggregation orchestration characterization', () => {
       modelAggregation,
       cliAggregation,
       aiAggregation,
+      surfaceProductivityAggregation,
     });
     expect(aggregated.overview.stats).toBe(coreStatsAggregation.stats);
     expect(aggregated.overview.engagementData).toBe(
@@ -339,12 +344,16 @@ describe('metrics aggregation orchestration characterization', () => {
     expect(aggregated.impact.askModeImpactData).toBe(
       impactAggregation.askModeImpactData
     );
+    expect(aggregated.impact.copilotAppImpactData).toBe(
+      impactAggregation.copilotAppImpactData
+    );
     expect(aggregated.impact.cliImpactData).toBe(
       impactAggregation.cliImpactData
     );
     expect(aggregated.impact.joinedImpactData).toBe(
       impactAggregation.joinedImpactData
     );
+    expect(aggregated.productivity).toBe(surfaceProductivityAggregation);
     expect(aggregated.languages.languageStats).toBe(
       languageAggregation.languageStats
     );
