@@ -18,6 +18,16 @@ const baseParserMetricOverrides: Partial<CopilotMetrics> = {
   used_chat: true,
 };
 
+const zeroInteractionMetrics = {
+  user_initiated_interaction_count: 0,
+  code_generation_activity_count: 0,
+  code_acceptance_activity_count: 0,
+  loc_added_sum: 0,
+  loc_deleted_sum: 0,
+  loc_suggested_to_add_sum: 0,
+  loc_suggested_to_delete_sum: 0,
+};
+
 function makeParserMetric(overrides: Partial<CopilotMetrics> = {}): CopilotMetrics {
   return makeMetric({ ...baseParserMetricOverrides, ...overrides });
 }
@@ -202,6 +212,7 @@ describe('metricsParser', () => {
     it('should infer App usage and interactions from App features only', () => {
       const result = parseMetricsLine(makeParserMetricLine({
         totals_by_feature: [{
+          ...zeroInteractionMetrics,
           feature: 'copilot_app',
           user_initiated_interaction_count: 7,
         }],
@@ -227,6 +238,7 @@ describe('metricsParser', () => {
           },
         },
         totals_by_feature: [{
+          ...zeroInteractionMetrics,
           feature: 'copilot_app',
           user_initiated_interaction_count: 0,
         }],
@@ -268,10 +280,12 @@ describe('metricsParser', () => {
       const result = parseMetricsLine(makeParserMetricLine({
         used_copilot_app: true,
         totals_by_ide: [{
+          ...zeroInteractionMetrics,
           ide: 'copilot_app',
           user_initiated_interaction_count: 0,
         }],
         totals_by_feature: [{
+          ...zeroInteractionMetrics,
           feature: 'copilot_app',
           user_initiated_interaction_count: 2,
         }],
@@ -291,6 +305,7 @@ describe('metricsParser', () => {
       const result = parseMetricsLine(makeParserMetricLine({
         used_copilot_app: false,
         totals_by_ide: [{
+          ...zeroInteractionMetrics,
           ide: 'copilot_app',
           user_initiated_interaction_count: 2,
         }],
@@ -303,6 +318,7 @@ describe('metricsParser', () => {
       const result = parseMetricsLine(makeParserMetricLine({
         used_copilot_app: false,
         totals_by_ide: [{
+          ...zeroInteractionMetrics,
           ide: 'copilot_app',
           loc_suggested_to_add_sum: 4,
         }],
@@ -324,6 +340,7 @@ describe('metricsParser', () => {
           },
         },
         totals_by_ide: [{
+          ...zeroInteractionMetrics,
           ide: 'copilot_app',
           user_initiated_interaction_count: 0,
         }],
@@ -453,10 +470,18 @@ describe('metricsParser', () => {
       const pool = new StringPool();
       const firstLine = makeParserMetricLine({
         totals_by_ide: [
-          { ide: 'vscode', user_initiated_interaction_count: 5 },
+          {
+            ...zeroInteractionMetrics,
+            ide: 'vscode',
+            user_initiated_interaction_count: 5,
+          },
         ],
         totals_by_feature: [
-          { feature: 'code_completion', user_initiated_interaction_count: 3 },
+          {
+            ...zeroInteractionMetrics,
+            feature: 'code_completion',
+            user_initiated_interaction_count: 3,
+          },
         ],
         totals_by_language_feature: [
           {
@@ -491,10 +516,18 @@ describe('metricsParser', () => {
       const secondLine = makeParserMetricLine({
         user_id: 456,
         totals_by_ide: [
-          { ide: 'vscode', user_initiated_interaction_count: 5 },
+          {
+            ...zeroInteractionMetrics,
+            ide: 'vscode',
+            user_initiated_interaction_count: 5,
+          },
         ],
         totals_by_feature: [
-          { feature: 'code_completion', user_initiated_interaction_count: 3 },
+          {
+            ...zeroInteractionMetrics,
+            feature: 'code_completion',
+            user_initiated_interaction_count: 3,
+          },
         ],
         totals_by_language_feature: [
           {

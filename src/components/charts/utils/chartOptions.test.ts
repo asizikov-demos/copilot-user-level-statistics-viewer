@@ -34,14 +34,14 @@ describe('createDualAxisChartOptions', () => {
       beginAtZero: true,
       ticks: { stepSize: 1_000 },
     });
-    expect(options.scales.y.ticks.callback).toBe(formatTick);
+    expect(options.scales.y.ticks!.callback).toBe(formatTick);
     expect(options.scales.y1).toMatchObject({
       title: { display: true, text: 'Average' },
       beginAtZero: true,
       grid: { drawOnChartArea: false },
     });
-    expect(options.scales.y1.ticks.callback).toBe(formatTick);
-    expect(options.scales.y2).toMatchObject({
+    expect(options.scales.y1.ticks!.callback).toBe(formatTick);
+    expect((options.scales as Record<string, unknown>).y2).toMatchObject({
       display: false,
       position: 'right',
       beginAtZero: true,
