@@ -2,6 +2,8 @@
 
 import type { ChartDataset } from 'chart.js';
 
+type LineDataset = Omit<ChartDataset<'line', (number | null)[]>, 'tooltip'>;
+
 /**
  * Centralized dataset styling presets for Chart.js charts.
  * Reduces duplication across chart components.
@@ -46,8 +48,8 @@ export function createLineDataset(
   color: string,
   label: string,
   data: (number | null)[],
-  options: Partial<ChartDataset<'line', (number | null)[]>> = {}
-) {
+  options: Partial<LineDataset> = {}
+): LineDataset {
   const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.1)');
   
   return {
@@ -72,8 +74,8 @@ export function createFilledLineDataset(
   color: string,
   label: string,
   data: (number | null)[],
-  options: Partial<ChartDataset<'line', (number | null)[]>> = {}
-) {
+  options: Partial<LineDataset> = {}
+): LineDataset {
   return createLineDataset(color, label, data, { fill: true, ...options });
 }
 
