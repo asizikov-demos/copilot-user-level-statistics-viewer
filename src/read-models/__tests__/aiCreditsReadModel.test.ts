@@ -46,6 +46,8 @@ function makeAiCreditsMetrics(): AggregatedMetrics {
         avgDaysActive: 1.5,
         totalLocAdded: 10,
         totalLocDeleted: 2,
+        avgLocAdded: 10,
+        avgLocDeleted: 2,
         topModels: [{ name: 'gpt-5', total: 4, uniqueUsers: 1 }],
         topClients: [{ name: 'vscode', total: 3, uniqueUsers: 1 }],
       }],
