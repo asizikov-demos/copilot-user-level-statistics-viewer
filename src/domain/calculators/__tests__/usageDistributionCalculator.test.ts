@@ -74,6 +74,8 @@ describe('usageDistributionCalculator', () => {
     expect(populated.avgDaysActive).toBe(2);
     expect(populated.totalLocAdded).toBe(100);
     expect(populated.totalLocDeleted).toBe(20);
+    expect(populated.avgLocAdded).toBe(100);
+    expect(populated.avgLocDeleted).toBe(20);
     expect(populated.topModels[0]).toMatchObject({ total: 8, uniqueUsers: 1 });
     expect(populated.topClients[0]).toMatchObject({ name: 'vscode', total: 5, uniqueUsers: 1 });
   });

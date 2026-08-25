@@ -178,6 +178,19 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       ),
     },
     {
+      id: 'avgLocImpact',
+      header: 'Avg LOC Impact',
+      headerClassName: headerRightClass,
+      className: `${valueCellClass} align-top`,
+      renderCell: (bucket) => (
+        <span className="whitespace-nowrap tabular-nums">
+          <span className="text-green-600">+{formatAverage(bucket.avgLocAdded)}</span>
+          <span className="text-gray-400">/</span>
+          <span className="text-red-600">-{formatAverage(bucket.avgLocDeleted)}</span>
+        </span>
+      ),
+    },
+    {
       id: 'topModels',
       header: 'Top Models - interactions',
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',

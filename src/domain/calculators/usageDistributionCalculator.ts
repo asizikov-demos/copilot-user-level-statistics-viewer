@@ -18,6 +18,8 @@ export interface UsageDistributionBucket {
   avgDaysActive: number;
   totalLocAdded: number;
   totalLocDeleted: number;
+  avgLocAdded: number;
+  avgLocDeleted: number;
   topModels: AiAdoptionPhaseTopEntry[];
   topClients: AiAdoptionPhaseTopEntry[];
 }
@@ -70,6 +72,8 @@ function aggregateBucket(
     avgDaysActive: userCount > 0 ? totalDaysActive / userCount : 0,
     totalLocAdded,
     totalLocDeleted,
+    avgLocAdded: userCount > 0 ? totalLocAdded / userCount : 0,
+    avgLocDeleted: userCount > 0 ? totalLocDeleted / userCount : 0,
     topModels: computeTopEntries(models),
     topClients: computeTopEntries(clients),
   };
