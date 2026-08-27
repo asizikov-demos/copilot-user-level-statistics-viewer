@@ -42,16 +42,16 @@ describe('modelConfig', () => {
       expect(getModelCategory('legacy-model')).toBeUndefined();
     });
 
-    it('should categorize every non-sentinel known model', () => {
+    it('should categorize every known model', () => {
       expect(
         KNOWN_MODELS
-          .filter(model => model.name !== 'auto' && model.name !== 'unknown')
           .every(model => model.category !== undefined)
       ).toBe(true);
     });
 
-    it('should include the unknown sentinel', () => {
-      expect(KNOWN_MODELS.some(model => model.name === 'unknown')).toBe(true);
+    it('should keep sentinel values out of the known model catalog', () => {
+      expect(isKnownModelName('auto')).toBe(false);
+      expect(isKnownModelName('unknown')).toBe(false);
     });
 
     it('should recognize known models after normalization', () => {
