@@ -15,7 +15,7 @@ export const MODEL_CATEGORY_ORDER = ['Lightweight', 'Versatile', 'Powerful', 'Un
 export class Model {
   constructor(
     public readonly name: string,
-    public readonly category?: ModelCategory
+    public readonly category: ModelCategory
   ) {}
 }
 
@@ -93,8 +93,6 @@ export const KNOWN_MODELS: Model[] = [
   new Model('mai-code-1.1-flash', 'Lightweight'),
   new Model('kimi-k2.7-code', 'Versatile'),
   new Model('kimi-k3', 'Powerful'),
-  new Model('auto'),
-  new Model('unknown'),
 ];
 
 const UNKNOWN_MODEL_NAME = 'unknown';
