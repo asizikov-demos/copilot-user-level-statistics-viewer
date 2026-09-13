@@ -28,13 +28,16 @@ describe('modelConfig', () => {
 
       expect(model).toEqual({ name: 'gpt-5.6-sol', category: 'Powerful' });
       expect(getModelCategory('GPT-5.6 Luna')).toBe('Lightweight');
+      expect(getModelCategory('GPT-6 Astra')).toBe('Powerful');
       expect(getModelCategory('Claude Sonnet 5')).toBe('Versatile');
       expect(getModelCategory('Claude 4.6 Sonnet')).toBe('Versatile');
       expect(getModelCategory('Claude 4.5 Haiku')).toBe('Versatile');
       expect(getModelCategory('Gemini 3.0 Flash')).toBe('Lightweight');
       expect(getModelCategory('Claude Opus 5')).toBe('Powerful');
+      expect(getModelCategory('Claude Fable 5.1')).toBe('Powerful');
       expect(getModelCategory('Gemini 3.6 Flash')).toBe('Versatile');
       expect(getModelCategory('Gemini 3.7 Flash')).toBe('Versatile');
+      expect(getModelCategory('Gemini 3.8 Flash')).toBe('Versatile');
       expect(getModelCategory('Grok 4.5')).toBe('Versatile');
       expect(getModelCategory('Grok 4.6')).toBe('Versatile');
       expect(getModelCategory('Kimi K3')).toBe('Powerful');
