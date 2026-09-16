@@ -233,6 +233,7 @@ describe('metrics aggregation orchestration characterization', () => {
       userSummaries: [...defaults.users.userSummaries],
     };
     const engagementAdoptionAggregation = {
+      vscodeAgentUsage: defaults.adoption.vscodeAgentUsage,
       engagementData: [...defaults.overview.engagementData],
       chatUsersData: [...defaults.overview.chatUsersData],
       chatRequestsData: [...defaults.overview.chatRequestsData],

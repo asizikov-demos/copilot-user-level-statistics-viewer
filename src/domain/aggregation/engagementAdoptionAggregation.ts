@@ -4,6 +4,12 @@ import type {
 } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
+  accumulateVSCodeAgentUsage,
+  computeVSCodeAgentUsage,
+  createVSCodeAgentUsageAccumulator,
+  type VSCodeAgentUsageAccumulator,
+} from '../calculators/vscodeAgentUsageCalculator';
+import {
   accumulateCloudAgentAdoption,
   accumulateCodeReviewAdoptionSignal,
   computeDailyCloudAgentAdoptionData,
@@ -38,6 +44,7 @@ import {
 } from '../calculators/featureAdoptionCalculator';
 
 export interface EngagementAdoptionAggregationAccumulator {
+  vscodeAgentUsage: VSCodeAgentUsageAccumulator;
   engagement: EngagementAccumulator;
   chat: ChatAccumulator;
   featureAdoption: FeatureAdoptionAccumulator;
@@ -51,6 +58,7 @@ export type EngagementAdoptionAggregationResult = Pick<
   | 'chatRequestsData'
 > & Pick<
   AdoptionMetricsSlice,
+  | 'vscodeAgentUsage'
   | 'featureAdoptionData'
   | 'dailyAdoptionTrend'
   | 'dailyCloudAgentAdoptionData'
@@ -60,6 +68,7 @@ export type EngagementAdoptionAggregationResult = Pick<
 export function createEngagementAdoptionAggregationAccumulator(
 ): EngagementAdoptionAggregationAccumulator {
   return {
+    vscodeAgentUsage: createVSCodeAgentUsageAccumulator(),
     engagement: createEngagementAccumulator(),
     chat: createChatAccumulator(),
     featureAdoption: createFeatureAdoptionAccumulator(),
@@ -73,6 +82,7 @@ export function accumulateEngagementAdoptionAggregation(
   usedCopilotCloudAgent: boolean
 ): void {
   const date = metric.day;
+  accumulateVSCodeAgentUsage(accumulator.vscodeAgentUsage, metric);
   const userId = metric.user_id;
   const usedActiveCodeReview = metric.used_copilot_code_review_active ?? false;
   const usedPassiveCodeReview = metric.used_copilot_code_review_passive ?? false;
@@ -131,6 +141,7 @@ export function finalizeEngagementAdoptionAggregation(
   cliUsage: CliUsageForDownstreamCalculations
 ): EngagementAdoptionAggregationResult {
   return {
+    vscodeAgentUsage: computeVSCodeAgentUsage(accumulator.vscodeAgentUsage),
     engagementData: computeEngagementData(accumulator.engagement, cliUsage),
     chatUsersData: computeChatUsersData(accumulator.chat, cliUsage),
     chatRequestsData: computeChatRequestsData(accumulator.chat, cliUsage),

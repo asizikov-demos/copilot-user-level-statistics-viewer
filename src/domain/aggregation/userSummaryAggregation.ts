@@ -142,6 +142,10 @@ export function accumulateUserSummaryAggregation(
     userSummary.used_code_completion
     || metric.code_generation_activity_count > 0;
   userSummary.used_agent = userSummary.used_agent || metric.used_agent;
+  if (metric.used_vscode_agent != null) {
+    userSummary.used_vscode_agent =
+      (userSummary.used_vscode_agent ?? false) || metric.used_vscode_agent;
+  }
   userSummary.used_chat = userSummary.used_chat || metric.used_chat;
   userSummary.used_cli = userSummary.used_cli || metric.used_cli;
   userSummary.used_copilot_app =

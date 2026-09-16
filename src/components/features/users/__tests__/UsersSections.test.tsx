@@ -219,6 +219,34 @@ describe('Users feature sections', () => {
     });
   });
 
+  it('filters explicit VS Code Agents users without including editor-only or unreported usage', async () => {
+    let renderer: ReactTestRenderer | undefined;
+    await act(async () => {
+      renderer = create(
+        <UsersTableSection
+          sectionId="users-table"
+          users={[
+            makeUser({ user_login: 'agents-window-user', used_agent: false, used_vscode_agent: true }),
+            makeUser({ user_id: 2, user_login: 'editor-only-user', used_vscode_agent: false }),
+            makeUser({ user_id: 3, user_login: 'unreported-user', used_vscode_agent: null }),
+          ]}
+          onUserClick={vi.fn()}
+        />,
+      );
+    });
+    await act(async () => {
+      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
+        target: { value: 'vscode_agent' },
+      });
+    });
+    const markup = JSON.stringify(renderer?.toJSON());
+    expect(markup).toContain('agents-window-user');
+    expect(markup).not.toContain('editor-only-user');
+    expect(markup).not.toContain('unreported-user');
+    expect(renderer?.root.findAllByType('span').some(node => node.children.join('') === 'VS Code Agents')).toBe(true);
+    await act(async () => { renderer?.unmount(); });
+  });
+
   it('forwards row selection with the selected user login and id', async () => {
     const onUserClick = vi.fn();
     let renderer: ReactTestRenderer | undefined;

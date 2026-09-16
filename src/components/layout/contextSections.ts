@@ -44,6 +44,7 @@ export const CLIENT_ANALYSIS_SECTIONS: ContextSection[] = [
 export const COPILOT_ADOPTION_SECTIONS: ContextSection[] = [
   { id: 'copilot-feature-adoption', label: 'Feature Adoption' },
   { id: 'copilot-adoption-trend', label: 'Adoption Trend' },
+  { id: 'copilot-vscode-agents', label: 'VS Code Agents' },
 ];
 
 export const AI_ADOPTION_PHASE_SECTIONS: ContextSection[] = [

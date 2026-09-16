@@ -1,3 +1,5 @@
+import type { VSCodeAgentTotals } from './vscodeAgent';
+
 export interface AIAdoptionPhase {
   phase_number: number;
   phase: string;
@@ -90,6 +92,8 @@ export interface CopilotMetrics {
     loc_suggested_to_delete_sum: number;
   }>;
   used_agent: boolean;
+  used_vscode_agent?: boolean | null;
+  totals_by_vscode_agent?: VSCodeAgentTotals | null;
   used_chat: boolean;
   used_cli: boolean;
   used_copilot_app?: boolean;
@@ -140,6 +144,7 @@ export interface UserSummary {
   clients_used: string[];
   used_code_completion: boolean;
   used_agent: boolean;
+  used_vscode_agent?: boolean | null;
   used_chat: boolean;
   used_cli: boolean;
   used_copilot_app: boolean;
@@ -248,6 +253,8 @@ export interface ModelBreakdownData {
 
 export interface UserDayData {
   day: string;
+  used_vscode_agent?: boolean | null;
+  totals_by_vscode_agent?: VSCodeAgentTotals | null;
   user_initiated_interaction_count: number;
   code_generation_activity_count: number;
   code_acceptance_activity_count: number;

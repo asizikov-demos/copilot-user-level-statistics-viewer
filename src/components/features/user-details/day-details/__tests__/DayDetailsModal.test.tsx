@@ -40,6 +40,20 @@ function makeDayMetrics(overrides: Partial<UserDayData> = {}): UserDayData {
 }
 
 describe('DayDetailsModal', () => {
+  it.each([
+    { used_vscode_agent: true, totals_by_vscode_agent: { session_count: 2, total_user_messages: 7 }, expected: ['Yes', '>2<', '>7<'] },
+    { used_vscode_agent: false, totals_by_vscode_agent: { session_count: 0, total_user_messages: 0 }, expected: ['No', '>0<'] },
+    { used_vscode_agent: null, totals_by_vscode_agent: null, expected: ['Not reported'] },
+  ])('shows separate VS Code Agents day metrics: %j', ({ expected, ...fields }) => {
+    const markup = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics(fields)} />,
+    );
+    expect(markup).toContain('Dedicated Agents-window activity');
+    expect(markup).toContain('Used VS Code Agents');
+    for (const value of expected) expect(markup).toContain(value);
+    expect(markup).not.toContain('IDE Agent');
+  });
+
   it('identifies Copilot App activity and renders app session and token totals separately from IDE clients', () => {
     const markup = renderToStaticMarkup(
       <DayDetailsModal

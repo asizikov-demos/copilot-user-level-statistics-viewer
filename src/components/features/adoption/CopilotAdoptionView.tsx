@@ -8,6 +8,7 @@ import { AdoptionTrendSection } from './sections/AdoptionTrendSection';
 import { CloudAgentAdoptionSection } from './sections/CloudAgentAdoptionSection';
 import { CodeReviewAdoptionSection } from './sections/CodeReviewAdoptionSection';
 import { FeatureAdoptionSection } from './sections/FeatureAdoptionSection';
+import VSCodeAgentUsageChart from '../../charts/VSCodeAgentUsageChart';
 
 interface CopilotAdoptionViewProps {
   model: CopilotAdoptionReadModel;
@@ -36,11 +37,12 @@ export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps)
     dailyAdoptionTrend,
     dailyCloudAgentAdoptionData,
     dailyCodeReviewAdoptionData,
+    vscodeAgentUsage,
   } = model;
   const adoptionData = featureAdoptionData ?? EMPTY_FEATURE_ADOPTION_DATA;
   const hasCloudAgentAdoption = adoptionData.codingAgentUsers > 0;
   const hasCodeReviewAdoption = adoptionData.codeReviewUsers > 0;
-  const [featureSection, trendSection] = COPILOT_ADOPTION_SECTIONS;
+  const [featureSection, trendSection, vscodeAgentsSection] = COPILOT_ADOPTION_SECTIONS;
 
   return (
     <ViewPanel
@@ -71,6 +73,13 @@ export default function CopilotAdoptionView({ model }: CopilotAdoptionViewProps)
         reportStartDay={stats.reportStartDay}
         reportEndDay={stats.reportEndDay}
       />
+      <div id={vscodeAgentsSection.id} className="scroll-mt-28">
+        <VSCodeAgentUsageChart
+          data={vscodeAgentUsage}
+          reportStartDay={stats.reportStartDay}
+          reportEndDay={stats.reportEndDay}
+        />
+      </div>
     </ViewPanel>
   );
 }

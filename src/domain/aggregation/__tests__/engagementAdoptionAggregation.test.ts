@@ -42,6 +42,18 @@ describe('engagement and adoption aggregation orchestration', () => {
       dailyAdoptionTrend: [],
       dailyCloudAgentAdoptionData: [],
       dailyCodeReviewAdoptionData: [],
+      vscodeAgentUsage: {
+        summary: {
+          activeUsers: null,
+          sessionCount: null,
+          userMessages: null,
+          recordCount: 0,
+          usageReportedRecords: 0,
+          sessionsReportedRecords: 0,
+          messagesReportedRecords: 0,
+        },
+        daily: [],
+      },
     });
   });
 

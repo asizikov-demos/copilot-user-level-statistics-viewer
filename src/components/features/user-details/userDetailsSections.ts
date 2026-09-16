@@ -10,4 +10,5 @@ export const USER_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'user-details-feature-activity', label: 'Activity by Feature' },
   { id: 'user-details-language-activity', label: 'Language Activity' },
   { id: 'user-details-model-activity', label: 'Model Activity' },
+  { id: 'user-details-vscode-agents', label: 'VS Code Agents' },
 ];

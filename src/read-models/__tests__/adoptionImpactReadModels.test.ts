@@ -93,6 +93,7 @@ describe('adoption and impact read models', () => {
     const model = selectCopilotAdoptionReadModel(metrics);
 
     expect(model).toEqual({
+      vscodeAgentUsage: metrics.adoption.vscodeAgentUsage,
       featureAdoptionData: metrics.adoption.featureAdoptionData,
       stats: metrics.overview.stats,
       dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
@@ -100,11 +101,13 @@ describe('adoption and impact read models', () => {
       dailyCodeReviewAdoptionData: metrics.adoption.dailyCodeReviewAdoptionData,
     });
     expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
+    expect(model.vscodeAgentUsage).toBe(metrics.adoption.vscodeAgentUsage);
     expect(model.stats).toBe(metrics.overview.stats);
     expect(model.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
     expect(model.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
     expect(model.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
     expect(Object.keys(model)).toEqual([
+      'vscodeAgentUsage',
       'featureAdoptionData',
       'stats',
       'dailyAdoptionTrend',

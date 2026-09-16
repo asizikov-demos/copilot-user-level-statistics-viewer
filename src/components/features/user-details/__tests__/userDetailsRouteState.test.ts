@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import type { UserSummary } from '../../../../types/metrics';
 import { VIEW_MODES } from '../../../../types/navigation';
+import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
@@ -35,6 +36,7 @@ const userSummary: UserSummary = {
   used_copilot_code_review_passive: false,
 };
 const details: UserDetailedMetrics = {
+  vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
   totalModelRequests: 0,
   total_ai_credits_used: 0,
   featureAggregates: [],

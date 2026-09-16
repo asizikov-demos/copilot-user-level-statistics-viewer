@@ -12,6 +12,7 @@ import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/t
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
 import AiCreditsChart from '../../charts/AiCreditsChart';
+import VSCodeAgentUsageChart from '../../charts/VSCodeAgentUsageChart';
 import ModeImpactChart from '../../charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
@@ -319,6 +320,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     featureActivitySection,
     languageActivitySection,
     modelActivitySection,
+    vscodeAgentsSection,
   ] = USER_DETAILS_SECTIONS;
 
   return (
@@ -437,6 +439,14 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         <UserActivityByModelAndFeatureChart
           modelFeatureAggregates={modelFeatureAggregates}
           days={userDetails.days}
+          reportStartDay={userDetails.reportStartDay}
+          reportEndDay={userDetails.reportEndDay}
+        />
+      </div>
+
+      <div id={vscodeAgentsSection.id} className="scroll-mt-28">
+        <VSCodeAgentUsageChart
+          data={userDetails.vscodeAgentUsage}
           reportStartDay={userDetails.reportStartDay}
           reportEndDay={userDetails.reportEndDay}
         />

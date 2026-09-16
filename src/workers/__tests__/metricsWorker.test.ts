@@ -103,6 +103,8 @@ describe('metricsWorker protocol', () => {
       user_login: 'octocat_acme',
       user_initiated_interaction_count: 12,
       ai_credits_used: 3.5,
+      used_vscode_agent: true,
+      totals_by_vscode_agent: { session_count: 2, total_user_messages: 7 },
       totals_by_model_feature: [
         {
           model: 'gpt-4o',
@@ -153,6 +155,9 @@ describe('metricsWorker protocol', () => {
     }
     expect(parseResult!.result).not.toHaveProperty('metrics');
     expect(parseResult!.result.overview.stats.totalRecords).toBe(1);
+    expect(parseResult!.result.adoption.vscodeAgentUsage.summary).toMatchObject({
+      activeUsers: 1, sessionCount: 2, userMessages: 7, recordCount: 1,
+    });
 
     responses.length = 0;
 
@@ -164,6 +169,12 @@ describe('metricsWorker protocol', () => {
     expect(detailResult.id).toBe('details-1');
     expect(detailResult.result?.totalModelRequests).toBe(9);
     expect(detailResult.result?.total_ai_credits_used).toBe(3.5);
+    expect(detailResult.result?.vscodeAgentUsage.summary).toMatchObject({
+      activeUsers: 1, sessionCount: 2, userMessages: 7,
+    });
+    expect(detailResult.result?.days[0].totals_by_vscode_agent).toEqual({
+      session_count: 2, total_user_messages: 7,
+    });
     expect(detailResult.result?.days.map(day => day.user_initiated_interaction_count)).toEqual([12]);
   });
 });

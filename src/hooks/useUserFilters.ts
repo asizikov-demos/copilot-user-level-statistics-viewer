@@ -7,6 +7,7 @@ export const USER_FEATURE_FILTERS = [
   { value: 'chat', label: 'Chat' },
   { value: 'completions', label: 'Completions' },
   { value: 'agent', label: 'Agent' },
+  { value: 'vscode_agent', label: 'VS Code Agents' },
   { value: 'cli', label: 'CLI' },
   { value: 'app', label: 'App' },
   { value: 'cloud_agent', label: 'Cloud Agent' },
@@ -49,6 +50,8 @@ function matchesFeature(user: UserSummary, feature: string): boolean {
       return user.used_code_completion;
     case 'agent':
       return user.used_agent;
+    case 'vscode_agent':
+      return user.used_vscode_agent === true;
     case 'cli':
       return user.used_cli;
     case 'app':

@@ -104,6 +104,7 @@ export function assembleAggregatedMetrics({
     },
     users: userSummaryAggregation,
     adoption: {
+      vscodeAgentUsage: engagementAdoptionAggregation.vscodeAgentUsage,
       featureAdoptionData: engagementAdoptionAggregation.featureAdoptionData,
       dailyAdoptionTrend: engagementAdoptionAggregation.dailyAdoptionTrend,
       dailyCloudAgentAdoptionData:
