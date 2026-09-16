@@ -1,6 +1,11 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import {
+  accumulateVSCodeAgentUsage,
+  computeVSCodeAgentUsage,
+  createVSCodeAgentUsageAccumulator,
+} from './vscodeAgentUsageCalculator';
+import {
   createImpactAccumulator,
   ensureImpactDates,
   accumulateFeatureImpactRecord,
@@ -259,6 +264,10 @@ export function accumulateUserDetail(
 
   state.days.push({
     day: metric.day,
+    used_vscode_agent: metric.used_vscode_agent,
+    totals_by_vscode_agent: metric.totals_by_vscode_agent == null
+      ? metric.totals_by_vscode_agent
+      : { ...metric.totals_by_vscode_agent },
     user_initiated_interaction_count: metric.user_initiated_interaction_count,
     code_generation_activity_count: metric.code_generation_activity_count,
     code_acceptance_activity_count: metric.code_acceptance_activity_count,
@@ -339,8 +348,10 @@ export function computeSingleUserDetailedMetrics(
 
   const impactAccumulator = createImpactAccumulator();
   const modelUsageAccumulator = createModelUsageAccumulator();
+  const vscodeAgentUsageAccumulator = createVSCodeAgentUsageAccumulator();
 
   for (const day of state.days) {
+    accumulateVSCodeAgentUsage(vscodeAgentUsageAccumulator, { ...day, user_id: userId });
     ensureImpactDates(impactAccumulator, day.day);
     accumulateFeatureImpactRecord(impactAccumulator, day.day, userId, day);
 
@@ -356,6 +367,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
+    vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),
     total_ai_credits_used: state.totalAiCreditsUsed,
     featureAggregates: Array.from(state.featureMap.values()),
     ideAggregates: Array.from(state.ideMap.values()),

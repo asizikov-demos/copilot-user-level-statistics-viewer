@@ -92,6 +92,9 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
         : null;
 
   const pills: FeaturePill[] = [];
+  if (dayMetrics.used_vscode_agent) {
+    pills.push({ label: 'VS Code Agents', className: `${pillBase} bg-blue-100 text-blue-800` });
+  }
   if (dayMetrics.used_copilot_coding_agent) {
     pills.push({ label: 'Cloud Agent', className: `${pillBase} bg-purple-100 text-purple-800` });
   }
@@ -360,6 +363,34 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                   </div>
                 </div>
               )}
+
+              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-1">VS Code Agents</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Dedicated Agents-window activity, separate from editor Agent Mode.
+                  Missing values are not reported, not zero.
+                </p>
+                <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
+                    <dd className={usageStatValueClass}>
+                      {dayMetrics.used_vscode_agent == null ? 'Not reported' : dayMetrics.used_vscode_agent ? 'Yes' : 'No'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className={usageStatLabelClass}>Sessions</dt>
+                    <dd className={usageStatValueClass}>
+                      {dayMetrics.totals_by_vscode_agent?.session_count?.toLocaleString() ?? 'Not reported'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className={usageStatLabelClass}>User messages</dt>
+                    <dd className={usageStatValueClass}>
+                      {dayMetrics.totals_by_vscode_agent?.total_user_messages?.toLocaleString() ?? 'Not reported'}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               <div className="bg-white rounded-md border border-[#d1d9e0] p-6">

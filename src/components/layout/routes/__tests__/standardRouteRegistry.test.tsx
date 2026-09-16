@@ -252,6 +252,7 @@ describe('standard route registry', () => {
       aiAdoptionPhaseData: aggregatedMetrics.ai.aiAdoptionPhaseData,
     };
     copilotAdoptionModel = {
+      vscodeAgentUsage: aggregatedMetrics.adoption.vscodeAgentUsage,
       featureAdoptionData: aggregatedMetrics.adoption.featureAdoptionData,
       stats: aggregatedMetrics.overview.stats,
       dailyAdoptionTrend: aggregatedMetrics.adoption.dailyAdoptionTrend,

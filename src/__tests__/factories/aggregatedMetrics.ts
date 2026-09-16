@@ -10,6 +10,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   overview: ['stats', 'engagementData', 'chatUsersData', 'chatRequestsData'],
   users: ['userSummaries'],
   adoption: [
+    'vscodeAgentUsage',
     'featureAdoptionData',
     'dailyAdoptionTrend',
     'dailyCloudAgentAdoptionData',

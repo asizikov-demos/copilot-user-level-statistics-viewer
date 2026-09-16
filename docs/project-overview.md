@@ -22,6 +22,7 @@ Key facts about the input format:
 - Each record represents one user's activity for one day
 - Records contain nested breakdowns: `totals_by_ide`, `totals_by_feature`, `totals_by_language_feature`, `totals_by_language_model`, `totals_by_model_feature`
 - Only the **new LOC schema** (`loc_added_sum`, `loc_deleted_sum`, `loc_suggested_*`) is supported — records with the deprecated `generated_loc_sum` / `accepted_loc_sum` fields are skipped
+- Optional VS Code Agents fields (`used_vscode_agent` and `totals_by_vscode_agent.session_count` / `total_user_messages`) retain absent/null values. They describe the dedicated Agents window, not editor-window Agent Mode.
 
 Static plugin version metadata (`public/data/vscode.json`, `public/data/jetbrains.json`) is used for contextual plugin version displays, not as primary input.
 
@@ -85,6 +86,20 @@ AggregatedMetrics
 ├── ai        adoption phases, usage distribution, and credits
 └── productivity surface reach, active user-days, attributed LOC, and overlap cohorts
 ```
+
+`adoption.vscodeAgentUsage` owns VS Code Agents daily and period summaries. Active users
+are deduplicated by user ID using explicit `used_vscode_agent` flags; sessions and user
+messages are summed independently from reported totals. All three measures retain
+`null` when unreported and carry field-level reporting coverage against uploaded
+user-day records. Mixed-coverage totals include only reported values, not inferred
+zeros. These metrics are not added to generic interaction, client, LOC, or Agent Mode
+rollups. Aggregate enterprise/organization report files are not a new supported input.
+
+The Copilot Adoption view and on-demand user details show a dedicated VS Code Agents
+chart and expandable daily table. Missing chart days remain gaps, explicit zeros remain
+zeros, and partial coverage is labeled. Day details preserve the original optional
+flag and totals; the Users feature filter selects users explicitly reported as having
+used VS Code Agents. Parsing and all new aggregation remain inside the worker.
 
 Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview`, `impact`, and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
 

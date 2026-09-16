@@ -29,6 +29,7 @@ import type {
   DailyAiCreditsData,
 } from '../domain/calculators';
 import type { SurfaceProductivityMetrics } from './surfaceProductivity';
+import type { VSCodeAgentUsage } from './vscodeAgent';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -42,6 +43,7 @@ export interface UsersMetricsSlice {
 }
 
 export interface AdoptionMetricsSlice {
+  vscodeAgentUsage: VSCodeAgentUsage;
   featureAdoptionData: FeatureAdoptionData;
   dailyAdoptionTrend: DailyAdoptionTrend[];
   dailyCloudAgentAdoptionData: DailyCloudAgentAdoptionData[];
@@ -104,6 +106,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  vscodeAgentUsage: VSCodeAgentUsage;
   totalModelRequests: number;
   total_ai_credits_used: number;
   featureAggregates: Array<{

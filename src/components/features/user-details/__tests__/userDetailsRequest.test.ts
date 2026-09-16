@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import { runUserDetailsRequest } from '../userDetailsRequest';
+import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
 
 const details: UserDetailedMetrics = {
+  vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
   totalModelRequests: 0,
   total_ai_credits_used: 0,
   featureAggregates: [],

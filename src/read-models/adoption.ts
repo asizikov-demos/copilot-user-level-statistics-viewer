@@ -1,6 +1,7 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface CopilotAdoptionReadModel {
+  vscodeAgentUsage: AggregatedMetrics['adoption']['vscodeAgentUsage'];
   featureAdoptionData: AggregatedMetrics['adoption']['featureAdoptionData'];
   stats: AggregatedMetrics['overview']['stats'];
   dailyAdoptionTrend: AggregatedMetrics['adoption']['dailyAdoptionTrend'];
@@ -12,6 +13,7 @@ export function selectCopilotAdoptionReadModel(
   metrics: AggregatedMetrics
 ): CopilotAdoptionReadModel {
   return {
+    vscodeAgentUsage: metrics.adoption.vscodeAgentUsage,
     featureAdoptionData: metrics.adoption.featureAdoptionData,
     stats: metrics.overview.stats,
     dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
