@@ -13,6 +13,27 @@ vi.mock('react-chartjs-2', () => ({
 }));
 
 describe('VSCodeAgentUsageChart', () => {
+  it('omits unavailable measures and all-missing days in profiles while preserving zero sessions', () => {
+    const data = aggregateMetrics([
+      makeMetric({ totals_by_vscode_agent: { session_count: 0 } }),
+      makeMetric({ day: '2024-01-17' }),
+    ]).aggregated.adoption.vscodeAgentUsage;
+    const markup = renderToStaticMarkup(
+      <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-15" reportEndDay="2024-01-17" hideUnreportedMeasures />,
+    );
+    expect(line).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        datasets: [expect.objectContaining({ label: 'Sessions', data: [0, null, null] })],
+      }),
+    }));
+    expect(markup).toContain('Sessions');
+    expect(markup).toContain('>0<');
+    expect(markup).not.toContain('Distinct active users');
+    expect(markup).not.toContain('User messages');
+    expect(markup).not.toContain('Not reported');
+    expect(markup).not.toContain('2024-01-17');
+  });
+
   it('renders unavailable metrics as an explicit empty state', () => {
     const data = aggregateMetrics([makeMetric()]).aggregated.adoption.vscodeAgentUsage;
     const markup = renderToStaticMarkup(

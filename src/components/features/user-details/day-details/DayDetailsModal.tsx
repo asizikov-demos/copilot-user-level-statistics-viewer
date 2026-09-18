@@ -8,6 +8,7 @@ import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
+import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../../../types/events';
 import { isAgentFeature, isCliFeature, isCodeCompletionFeature, isCopilotAppFeature } from '../../../../domain/featureCategories';
@@ -185,9 +186,17 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
   const hasData = !!dayMetrics;
   const cliDayTotals = computeCliDayTotals(dayMetrics);
-  const cliClientRow = createCliClientActivityRow(cliDayTotals);
-  const hasCliActivity = cliClientRow !== null;
+  const cliClientRow = createCliClientActivityRow(cliDayTotals,
+    dayMetrics?.totals_by_cli != null
+    || dayMetrics?.totals_by_feature.some(feature => isCliFeature(feature.feature))
+  );
+  const hasCliActivity = cliDayTotals.interactionCount > 0;
   const cliInteractionCount = cliDayTotals.interactionCount;
+  const hasClientInteractions = cliInteractionCount > 0
+    || dayMetrics?.totals_by_ide.some(ide => getTotalUserInitiatedInteractionCount(ide) > 0);
+  const hasVSCodeAgentData = dayMetrics?.used_vscode_agent != null
+    || dayMetrics?.totals_by_vscode_agent?.session_count != null
+    || dayMetrics?.totals_by_vscode_agent?.total_user_messages != null;
 
   const featurePills = hasData ? buildFeaturePills(dayMetrics!, hasCliActivity) : [];
   const ideClientRows = hasData ? mapIdeClientActivityRows(
@@ -322,27 +331,38 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               )}
 
               {/* Clients & Impact cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-                <DayClientDistributionChart
-                  dayMetrics={dayMetrics}
-                  cliInteractionCount={cliInteractionCount}
-                />
+              <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions ? ' md:grid-cols-2' : ''}`}>
+                {hasClientInteractions && (
+                  <DayClientDistributionChart
+                    dayMetrics={dayMetrics}
+                    cliInteractionCount={cliInteractionCount}
+                  />
+                )}
                 <DayImpactCard
                   locAdded={dayMetrics.loc_added_sum}
                   locDeleted={dayMetrics.loc_deleted_sum}
                 />
               </div>
 
+              <UserDetailsCustomizationsSection
+                key={`${userLogin}-${date}`}
+                sectionId="day-details-cli-customizations"
+                summaries={dayMetrics.cliCustomizations ?? []}
+                mode="day"
+              />
+
               {/* Features Section */}
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-1">Activity by Feature</h4>
-                <p className="text-sm text-gray-600 mb-4">Expand a feature to see the languages and models used.</p>
-                <DayFeatureBreakdown
-                  totalsByFeature={dayMetrics.totals_by_feature}
-                  totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
-                  totalsByModelFeature={dayMetrics.totals_by_model_feature}
-                />
-              </div>
+              {dayMetrics.totals_by_feature.length > 0 && (
+                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Activity by Feature</h4>
+                  <p className="text-sm text-gray-600 mb-4">Expand a feature to see the languages and models used.</p>
+                  <DayFeatureBreakdown
+                    totalsByFeature={dayMetrics.totals_by_feature}
+                    totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
+                    totalsByModelFeature={dayMetrics.totals_by_model_feature}
+                  />
+                </div>
+              )}
 
               {copilotAppUsage && (
                 <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
@@ -364,65 +384,70 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                 </div>
               )}
 
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-1">VS Code Agents</h4>
-                <p className="text-sm text-gray-600 mb-4">
-                  Dedicated Agents-window activity, separate from editor Agent Mode.
-                  Missing values are not reported, not zero.
-                </p>
-                <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
-                    <dd className={usageStatValueClass}>
-                      {dayMetrics.used_vscode_agent == null ? 'Not reported' : dayMetrics.used_vscode_agent ? 'Yes' : 'No'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className={usageStatLabelClass}>Sessions</dt>
-                    <dd className={usageStatValueClass}>
-                      {dayMetrics.totals_by_vscode_agent?.session_count?.toLocaleString() ?? 'Not reported'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className={usageStatLabelClass}>User messages</dt>
-                    <dd className={usageStatValueClass}>
-                      {dayMetrics.totals_by_vscode_agent?.total_user_messages?.toLocaleString() ?? 'Not reported'}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+              {hasVSCodeAgentData && (
+                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">VS Code Agents</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Dedicated Agents-window activity, separate from editor Agent Mode.
+                  </p>
+                  <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {dayMetrics.used_vscode_agent != null && (
+                      <div>
+                        <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
+                        <dd className={usageStatValueClass}>{dayMetrics.used_vscode_agent ? 'Yes' : 'No'}</dd>
+                      </div>
+                    )}
+                    {dayMetrics.totals_by_vscode_agent?.session_count != null && (
+                      <div>
+                        <dt className={usageStatLabelClass}>Sessions</dt>
+                        <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.session_count.toLocaleString()}</dd>
+                      </div>
+                    )}
+                    {dayMetrics.totals_by_vscode_agent?.total_user_messages != null && (
+                      <div>
+                        <dt className={usageStatLabelClass}>User messages</dt>
+                        <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.total_user_messages.toLocaleString()}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
-                <MetricsTable
-                  data={clientRows}
-                  columns={clientColumns}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  tableContainerClassName="overflow-x-auto"
-                  theadClassName="bg-gray-50"
-                  tbodyClassName="bg-white divide-y divide-gray-200"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  getRowKey={(_, idx) => idx}
-                  initialCount={5}
-                />
-              </div>
+              {clientRows.length > 0 && (
+                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
+                  <MetricsTable
+                    data={clientRows}
+                    columns={clientColumns}
+                    tableClassName="w-full divide-y divide-gray-200"
+                    tableContainerClassName="overflow-x-auto"
+                    theadClassName="bg-gray-50"
+                    tbodyClassName="bg-white divide-y divide-gray-200"
+                    rowClassName={() => 'hover:bg-gray-50'}
+                    getRowKey={(_, idx) => idx}
+                    initialCount={5}
+                  />
+                </div>
+              )}
 
               {/* Language + Model Section */}
-              <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
-                <MetricsTable
-                  data={dayMetrics.totals_by_language_model}
-                  columns={languageModelColumns}
-                  tableClassName="w-full divide-y divide-gray-200"
-                  tableContainerClassName="overflow-x-auto"
-                  theadClassName="bg-gray-50"
-                  tbodyClassName="bg-white divide-y divide-gray-200"
-                  rowClassName={() => 'hover:bg-gray-50'}
-                  getRowKey={(_, idx) => idx}
-                  initialCount={10}
-                />
-              </div>
+              {dayMetrics.totals_by_language_model.length > 0 && (
+                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
+                  <MetricsTable
+                    data={dayMetrics.totals_by_language_model}
+                    columns={languageModelColumns}
+                    tableClassName="w-full divide-y divide-gray-200"
+                    tableContainerClassName="overflow-x-auto"
+                    theadClassName="bg-gray-50"
+                    tbodyClassName="bg-white divide-y divide-gray-200"
+                    rowClassName={() => 'hover:bg-gray-50'}
+                    getRowKey={(_, idx) => idx}
+                    initialCount={10}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -51,9 +51,12 @@ export function mapIdeClientActivityRows(ideRows: IdeClientActivityLike[]): Clie
   }));
 }
 
-export function createCliClientActivityRow(cliTotals: CliClientActivityLike): ClientActivityMetricsRow | null {
+export function createCliClientActivityRow(
+  cliTotals: CliClientActivityLike,
+  includeReportedZero = false,
+): ClientActivityMetricsRow | null {
   const hasCliActivity = cliTotals.promptCount > 0 || cliTotals.interactions > 0;
-  if (!hasCliActivity) {
+  if (!hasCliActivity && !includeReportedZero) {
     return null;
   }
 

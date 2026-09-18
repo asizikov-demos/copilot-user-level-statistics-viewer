@@ -101,6 +101,46 @@ zeros, and partial coverage is labeled. Day details preserve the original option
 flag and totals; the Users feature filter selects users explicitly reported as having
 used VS Code Agents. Parsing and all new aggregation remain inside the worker.
 
+User profiles show a Customizations table with Skills, Custom agents, MCP servers,
+and Slash commands, independent of `used_cli` and CLI session totals. Each total
+sums the corresponding `distinct_*_use_count` across reported user-day records.
+An item used on multiple days is counted on each day, so these are not period-wide
+unique counts. The user-detail accumulator
+keeps compact per-category summaries and observed-item counts in the worker; only
+the selected user's finalized summaries are returned on demand. Each retained
+user-day also includes worker-normalized customization summaries. The calendar's
+day-details view uses the same expandable Customizations table with that day's
+exact distinct counts, not period totals. Expanded item details contain only
+that day's event counts; days invoked is zero or one, and the average equals
+the day's count when positive. Changing the selected day resets the disclosures.
+This works even when CLI session data is missing. Both
+`interaction_count` and the older `user_initiated_interaction_count` entry field are
+supported, with the modern value (including zero) taking precedence.
+Rows with reported items expand into a table of names, observed event
+totals, days invoked, and average events per invoked day. Invoked days are distinct
+dates with a positive reported count for that item; zero-count and missing days
+are excluded from the denominator. These statistics are computed in the worker,
+with only numeric summaries sent to the profile. A zero-only item's average is
+undefined and shown as a dash. MCP details use connection-attempt labels, and
+hidden-name buckets remain grouped. Item lists show five entries initially and
+can expand to show all reported entries. Rows without item details do not offer
+an empty disclosure.
+Activity-list and distinct-count coverage are tracked independently. Missing/null
+fields are unavailable, while empty arrays and explicit zeros are reported zeros.
+Observed item totals are limited to the API's per-record top-five lists; hidden
+`other`/`custom` names are not reconstructed. Profile totals use the distinct-count
+fields, not the truncated item lists or their interaction counts. Daily MCP event
+counts describe connection attempts, not tool calls. Plugins and global
+customization dashboards are not included in this profile feature.
+The profile and day-details tables omit categories without reported distinct counts;
+the section is hidden when none of those counts are reported.
+Explicit zero counts remain visible, without empty item lists. Copy stays concise,
+and profile totals include only reported daily counts. Empty
+feature/client/language/model breakdowns and wholly unavailable VS Code Agents
+sections are also omitted from these user views.
+The contextual navigation lists only sections currently rendered, so omitted
+breakdowns do not leave links to empty or missing sections.
+
 Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview`, `impact`, and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
 
 Established boundaries cover:

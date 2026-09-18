@@ -1,6 +1,6 @@
 'use client';
 
-import { Key, ReactNode } from 'react';
+import { Fragment, Key, ReactNode } from 'react';
 import type { SortDirection } from '../../types/sort';
 import type { ToggleCallback } from '../../types/events';
 import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
@@ -41,6 +41,7 @@ export interface MetricsTableProps<T> {
   tbodyClassName?: string;
   onRowClick?: (item: T, index: number) => void;
   getRowKey?: (item: T, index: number) => Key;
+  renderExpandedRow?: (item: T, index: number) => ReactNode;
   /** When set, enables progressive disclosure: only this many rows are shown initially. */
   initialCount?: number;
   defaultExpanded?: boolean;
@@ -71,6 +72,7 @@ export function MetricsTable<T>({
   tbodyClassName,
   onRowClick,
   getRowKey,
+  renderExpandedRow,
   initialCount,
   defaultExpanded = false,
   buttonCollapsedLabel,
@@ -154,38 +156,47 @@ export function MetricsTable<T>({
           {visibleItems.map((item, index) => {
             const rowClass = rowClassName?.(item, index) ?? '';
             const rowKey = getRowKey?.(item, index) ?? index;
+            const expandedRow = renderExpandedRow?.(item, index);
 
             return (
-              <tr
-                key={rowKey}
-                className={rowClass}
-                onClick={onRowClick ? () => onRowClick(item, index) : undefined}
-              >
-                {columns.map((column) => {
-                  const cellClassName = column.className ?? cellBaseClass;
+              <Fragment key={rowKey}>
+                <tr
+                  className={rowClass}
+                  onClick={onRowClick ? () => onRowClick(item, index) : undefined}
+                >
+                  {columns.map((column) => {
+                    const cellClassName = column.className ?? cellBaseClass;
 
-                  if (column.renderCell) {
+                    if (column.renderCell) {
+                      return (
+                        <td key={column.id} className={cellClassName}>
+                          {column.renderCell(item, index)}
+                        </td>
+                      );
+                    }
+
+                    if (column.accessor) {
+                      const value = item[column.accessor];
+                      return (
+                        <td key={column.id} className={cellClassName}>
+                          {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                        </td>
+                      );
+                    }
+
                     return (
-                      <td key={column.id} className={cellClassName}>
-                        {column.renderCell(item, index)}
-                      </td>
+                      <td key={column.id} className={cellClassName} />
                     );
-                  }
-
-                  if (column.accessor) {
-                    const value = item[column.accessor];
-                    return (
-                      <td key={column.id} className={cellClassName}>
-                        {typeof value === 'number' ? value.toLocaleString() : String(value)}
-                      </td>
-                    );
-                  }
-
-                  return (
-                    <td key={column.id} className={cellClassName} />
-                  );
-                })}
-              </tr>
+                  })}
+                </tr>
+                {expandedRow != null && (
+                  <tr>
+                    <td colSpan={columns.length} className="px-4 py-4 sm:px-6">
+                      {expandedRow}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             );
           })}
         </tbody>

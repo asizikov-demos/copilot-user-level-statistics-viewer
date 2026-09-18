@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
+import type { ChartOptions, TooltipItem } from 'chart.js';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
@@ -15,6 +15,7 @@ import ChartContainer from '../../../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import type { UserDayData } from '../../../../types/metrics';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
+import { isCliFeature } from '../../../../domain/featureCategories';
 
 registerChartJS();
 
@@ -151,15 +152,17 @@ export default function ClientActivityChart({
       const value = context.parsed.y || 0;
       return `${label}: ${value.toLocaleString()} interactions`;
     },
-  }), []);
+  }) as ChartOptions<'bar'>, []);
 
   const ideClientRows = useMemo(
     () => mapIdeClientActivityRows(ideAggregates),
     [ideAggregates],
   );
   const cliClientRow = useMemo(
-    () => createCliClientActivityRow(cliTotals),
-    [cliTotals],
+    () => createCliClientActivityRow(cliTotals, days.some(day =>
+      day.totals_by_cli != null || day.totals_by_feature.some(feature => isCliFeature(feature.feature))
+    )),
+    [cliTotals, days],
   );
   const clientRows = useMemo(
     () => (cliClientRow ? [...ideClientRows, cliClientRow] : ideClientRows),
@@ -182,6 +185,7 @@ export default function ClientActivityChart({
 
   const footer = (
     <>
+      {clientRows.length > 0 && (
       <div className="overflow-x-auto">
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -217,6 +221,7 @@ export default function ClientActivityChart({
           </tbody>
         </table>
       </div>
+      )}
 
       {allVersions.length > 0 && (
         <div className="mt-8">
@@ -236,7 +241,13 @@ export default function ClientActivityChart({
   );
 
   return (
-    <ChartContainer title={title} footer={!isEmpty ? footer : undefined} isEmpty={isEmpty} emptyState="No client activity data available.">
+    <ChartContainer
+      title={title}
+      footer={!isEmpty ? footer : undefined}
+      isEmpty={isEmpty}
+      emptyState="No client activity data available."
+      chartHeight={barChartData.datasets.length > 0 ? 'h-auto' : 'hidden'}
+    >
       {barChartData.datasets && barChartData.datasets.length > 0 && (
         <div className="mb-6">
           <div className="bg-gray-50 rounded-lg p-4">
