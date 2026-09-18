@@ -1,6 +1,13 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import {
+  accumulateCliCustomizations,
+  computeCliCustomizations,
+  computeDailyCliCustomizations,
+  createCliCustomizationAccumulator,
+  type CliCustomizationAccumulator,
+} from './cliCustomizationCalculator';
+import {
   accumulateVSCodeAgentUsage,
   computeVSCodeAgentUsage,
   createVSCodeAgentUsageAccumulator,
@@ -88,6 +95,7 @@ interface CliVersionEntry {
 }
 
 interface UserAccState {
+  cliCustomizations: CliCustomizationAccumulator;
   totalModelRequests: number;
   totalAiCreditsUsed: number;
   featureMap: Map<string, FeatureAgg>;
@@ -117,6 +125,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   let state = accumulator.users.get(userId);
   if (!state) {
     state = {
+      cliCustomizations: createCliCustomizationAccumulator(),
       totalModelRequests: 0,
       totalAiCreditsUsed: 0,
       featureMap: new Map(),
@@ -197,6 +206,7 @@ export function accumulateUserDetail(
 ): void {
   const userId = metric.user_id;
   const state = getOrCreateUserState(accumulator, userId);
+  accumulateCliCustomizations(state.cliCustomizations, metric);
   const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
   const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
   const assumptionEligibleIdeEntries = metric.totals_by_ide
@@ -264,6 +274,7 @@ export function accumulateUserDetail(
 
   state.days.push({
     day: metric.day,
+    cliCustomizations: computeDailyCliCustomizations(metric),
     used_vscode_agent: metric.used_vscode_agent,
     totals_by_vscode_agent: metric.totals_by_vscode_agent == null
       ? metric.totals_by_vscode_agent
@@ -367,6 +378,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
+    cliCustomizations: computeCliCustomizations(state.cliCustomizations),
     vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),
     total_ai_credits_used: state.totalAiCreditsUsed,
     featureAggregates: Array.from(state.featureMap.values()),
