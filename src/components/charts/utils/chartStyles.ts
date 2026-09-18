@@ -86,10 +86,10 @@ export function createFilledLineDataset(
  * @param data - Array of data points
  * @param options - Additional options to override defaults
  */
-export function createBarDataset(
+export function createBarDataset<T extends number | null>(
   color: string,
   label: string,
-  data: number[],
+  data: T[],
   options: Record<string, unknown> = {}
 ) {
   return {

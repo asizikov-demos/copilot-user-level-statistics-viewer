@@ -202,6 +202,7 @@ describe('user customizations', () => {
         token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
       },
       totals_by_vscode_agent: { session_count: 0 },
+      used_vscode_agent: true,
     });
     const { aggregated, userDetailAccumulator } = aggregateMetrics([metric]);
     const userDetails = computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id)!;
@@ -219,6 +220,7 @@ describe('user customizations', () => {
     expect(markup).toContain('id="user-details-vscode-agents"');
     expect(markup).toContain('<span>Copilot CLI</span>');
     expect(markup).toContain('Sessions');
+    expect(markup).not.toMatch(/active users/i);
     expect(markup).not.toContain('Not reported');
     expect(markup).not.toContain('No client activity data available');
     expect(markup).not.toContain('Daily Client Interactions');
@@ -230,6 +232,7 @@ describe('user customizations', () => {
       totals_by_cli: undefined,
       totals_by_skill: [{ skill: 'other', interaction_count: 7 }],
       distinct_skill_use_count: 2,
+      used_vscode_agent: true,
     });
     const { aggregated, userDetailAccumulator } = aggregateMetrics([metric]);
     const userDetails = computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id)!;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Line } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
 import type { DailyVSCodeAgentUsage, VSCodeAgentUsage } from '../../types/vscodeAgent';
 import { formatShortDate } from '../../utils/formatters';
@@ -9,7 +9,7 @@ import ChartContainer from '../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
 import { chartColors } from './utils/chartColors';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
-import { createLineDataset } from './utils/chartStyles';
+import { createBarDataset, createLineDataset } from './utils/chartStyles';
 import { registerChartJS } from './utils/chartSetup';
 
 registerChartJS();
@@ -18,7 +18,7 @@ interface VSCodeAgentUsageChartProps {
   data: VSCodeAgentUsage;
   reportStartDay: string;
   reportEndDay: string;
-  hideUnreportedMeasures?: boolean;
+  scope?: 'aggregate' | 'user';
 }
 
 function formatCount(value: number | null): string {
@@ -53,33 +53,25 @@ export default function VSCodeAgentUsageChart({
   data,
   reportStartDay,
   reportEndDay,
-  hideUnreportedMeasures = false,
+  scope = 'aggregate',
 }: VSCodeAgentUsageChartProps) {
   const { summary } = data;
-  const visibleMeasures = hideUnreportedMeasures
-    ? measures.filter(measure => summary[measure.key] !== null)
+  const isUser = scope === 'user';
+  const visibleMeasures = isUser
+    ? measures.filter(measure => measure.key !== 'activeUsers' && summary[measure.key] !== null)
     : measures;
   if (visibleMeasures.length === 0) return null;
 
-  const visibleColumns = columns.filter(column =>
-    column.id === 'date' || visibleMeasures.some(measure => measure.key === column.id)
-  );
-  const reportedDays = hideUnreportedMeasures
-    ? data.daily.filter(day => visibleMeasures.some(measure => day[measure.key] !== null))
-    : data.daily;
   const displayData = mapReportRangeData(
     data.daily, reportStartDay, reportEndDay, day => day.date,
     (date, day) => ({ date, day }),
   );
-  const chartData = {
-    labels: displayData.map(entry => formatShortDate(entry.date)),
-    datasets: visibleMeasures.map(measure => createLineDataset(
-      measure.color,
-      measure.label,
-      displayData.map(entry => entry.day?.[measure.key] ?? null),
-      { spanGaps: false },
-    )),
-  };
+  const labels = displayData.map(entry => formatShortDate(entry.date));
+  const series = visibleMeasures.map(measure => ({
+    ...measure,
+    values: displayData.map(entry => entry.day?.[measure.key] ?? null),
+  }));
+  const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.${isUser ? '' : ' Exact reported values are in the table below.'}`;
   const options = createBaseChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Reported count',
@@ -92,7 +84,7 @@ export default function VSCodeAgentUsageChart({
         ? `${measure.label}: ${formatCount(day[measure.key])} (${coverage(day[measure.coverageKey], day.recordCount)})`
         : 'Not reported';
     },
-  }) as ChartOptions<'line'>;
+  });
 
   return (
     <ChartContainer
@@ -110,24 +102,41 @@ export default function VSCodeAgentUsageChart({
           <p className="text-sm text-gray-600">
             Reported values only. Gaps indicate missing data; zero means no recorded usage.
           </p>
-          <MetricsTable
-            data={reportedDays}
-            columns={visibleColumns}
-            getRowKey={day => day.date}
-            initialCount={7}
-            tableContainerClassName="overflow-x-auto"
-            buttonCollapsedLabel={total => `Show all ${total} days`}
-            buttonExpandedLabel="Show fewer days"
-          />
+          {!isUser && (
+            <MetricsTable
+              data={data.daily}
+              columns={columns}
+              getRowKey={day => day.date}
+              initialCount={7}
+              tableContainerClassName="overflow-x-auto"
+              buttonCollapsedLabel={total => `Show all ${total} days`}
+              buttonExpandedLabel="Show fewer days"
+            />
+          )}
         </div>
       )}
     >
-      <Line
-        data={chartData}
-        options={options}
-        role="img"
-        aria-label={`Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}. Exact reported values are in the table below.`}
-      />
+      {isUser ? (
+        <Bar
+          data={{
+            labels,
+            datasets: series.map(measure => createBarDataset(measure.color, measure.label, measure.values)),
+          }}
+          options={options as ChartOptions<'bar'>}
+          role="img"
+          aria-label={ariaLabel}
+        />
+      ) : (
+        <Line
+          data={{
+            labels,
+            datasets: series.map(measure => createLineDataset(measure.color, measure.label, measure.values, { spanGaps: false })),
+          }}
+          options={options as ChartOptions<'line'>}
+          role="img"
+          aria-label={ariaLabel}
+        />
+      )}
     </ChartContainer>
   );
 }
