@@ -463,15 +463,14 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         </div>
       )}
 
-      {(userDetails.vscodeAgentUsage.summary.usageReportedRecords > 0
-        || userDetails.vscodeAgentUsage.summary.sessionsReportedRecords > 0
+      {(userDetails.vscodeAgentUsage.summary.sessionsReportedRecords > 0
         || userDetails.vscodeAgentUsage.summary.messagesReportedRecords > 0) && (
         <div id={vscodeAgentsSection.id} className="scroll-mt-28">
           <VSCodeAgentUsageChart
             data={userDetails.vscodeAgentUsage}
             reportStartDay={userDetails.reportStartDay}
             reportEndDay={userDetails.reportEndDay}
-            hideUnreportedMeasures
+            scope="user"
           />
         </div>
       )}

@@ -95,8 +95,11 @@ user-day records. Mixed-coverage totals include only reported values, not inferr
 zeros. These metrics are not added to generic interaction, client, LOC, or Agent Mode
 rollups. Aggregate enterprise/organization report files are not a new supported input.
 
-The Copilot Adoption view and on-demand user details show a dedicated VS Code Agents
-chart and expandable daily table. Missing chart days remain gaps, explicit zeros remain
+The Copilot Adoption view shows a dedicated VS Code Agents chart and expandable daily
+table. On-demand user details show sessions and user messages as grouped bars without
+a daily table, omitting active-user counts from the chart and summary. The user
+section is hidden when neither count is reported. The aggregate Adoption chart retains
+its active-user counts and line series. Missing chart days remain gaps, explicit zeros remain
 zeros, and partial coverage is labeled. Day details preserve the original optional
 flag and totals; the Users feature filter selects users explicitly reported as having
 used VS Code Agents. Parsing and all new aggregation remain inside the worker.

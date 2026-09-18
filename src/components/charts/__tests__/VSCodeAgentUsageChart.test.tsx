@@ -4,8 +4,12 @@ import { makeMetric } from '../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../domain/metricsAggregator';
 import VSCodeAgentUsageChart from '../VSCodeAgentUsageChart';
 
-const { line } = vi.hoisted(() => ({ line: vi.fn() }));
+const { line, bar } = vi.hoisted(() => ({ line: vi.fn(), bar: vi.fn() }));
 vi.mock('react-chartjs-2', () => ({
+  Bar: (props: Record<string, unknown>) => {
+    bar(props);
+    return <div>Usage bar chart</div>;
+  },
   Line: (props: Record<string, unknown>) => {
     line(props);
     return <div>Usage chart</div>;
@@ -13,15 +17,15 @@ vi.mock('react-chartjs-2', () => ({
 }));
 
 describe('VSCodeAgentUsageChart', () => {
-  it('omits unavailable measures and all-missing days in profiles while preserving zero sessions', () => {
+  it('omits unavailable measures in profiles while preserving zero sessions and missing-day gaps', () => {
     const data = aggregateMetrics([
       makeMetric({ totals_by_vscode_agent: { session_count: 0 } }),
       makeMetric({ day: '2024-01-17' }),
     ]).aggregated.adoption.vscodeAgentUsage;
     const markup = renderToStaticMarkup(
-      <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-15" reportEndDay="2024-01-17" hideUnreportedMeasures />,
+      <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-15" reportEndDay="2024-01-17" scope="user" />,
     );
-    expect(line).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         datasets: [expect.objectContaining({ label: 'Sessions', data: [0, null, null] })],
       }),
@@ -31,7 +35,45 @@ describe('VSCodeAgentUsageChart', () => {
     expect(markup).not.toContain('Distinct active users');
     expect(markup).not.toContain('User messages');
     expect(markup).not.toContain('Not reported');
-    expect(markup).not.toContain('2024-01-17');
+    expect(markup).not.toContain('<table');
+  });
+
+  it('shows grouped session and message bars without active-user counts anywhere in profiles', () => {
+    const data = aggregateMetrics([
+      makeMetric({ used_vscode_agent: true, totals_by_vscode_agent: { session_count: 2, total_user_messages: 7 } }),
+      makeMetric({ day: '2024-01-17', used_vscode_agent: false, totals_by_vscode_agent: { session_count: 0, total_user_messages: 0 } }),
+    ]).aggregated.adoption.vscodeAgentUsage;
+    const markup = renderToStaticMarkup(
+      <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-15" reportEndDay="2024-01-17" scope="user" />,
+    );
+    expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        datasets: [
+          expect.objectContaining({ label: 'Sessions', data: [2, null, 0] }),
+          expect.objectContaining({ label: 'User messages', data: [7, null, 0] }),
+        ],
+      }),
+      options: expect.objectContaining({
+        scales: expect.objectContaining({
+          x: expect.objectContaining({ stacked: false }),
+          y: expect.objectContaining({ stacked: false }),
+        }),
+      }),
+      'aria-label': 'Daily VS Code Agents: sessions, user messages.',
+    }));
+    expect(markup).toContain('Usage bar chart');
+    expect(markup).toContain('Sessions');
+    expect(markup).toContain('User messages');
+    expect(markup).not.toMatch(/active users/i);
+    expect(markup).not.toContain('<table');
+    expect(markup).not.toContain('Show all');
+  });
+
+  it.each([undefined, true, false])('hides profiles with only the usage flag reported (%s)', used_vscode_agent => {
+    const data = aggregateMetrics([makeMetric({ used_vscode_agent })]).aggregated.adoption.vscodeAgentUsage;
+    expect(renderToStaticMarkup(
+      <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-15" reportEndDay="2024-01-17" scope="user" />,
+    )).toBe('');
   });
 
   it('renders unavailable metrics as an explicit empty state', () => {
@@ -67,6 +109,7 @@ describe('VSCodeAgentUsageChart', () => {
     expect(markup).toContain('0 (partial)');
     expect(markup).toContain('Not reported');
     expect(markup).toContain('Distinct active users');
+    expect(markup).toContain('<table');
     expect(markup).toContain('separate from editor Agent Mode');
   });
 
