@@ -30,6 +30,7 @@ import type {
 } from '../domain/calculators';
 import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 import type { VSCodeAgentUsage } from './vscodeAgent';
+import type { CliCustomizationSummary } from './cliCustomizations';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -106,6 +107,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  cliCustomizations: CliCustomizationSummary[];
   vscodeAgentUsage: VSCodeAgentUsage;
   totalModelRequests: number;
   total_ai_credits_used: number;

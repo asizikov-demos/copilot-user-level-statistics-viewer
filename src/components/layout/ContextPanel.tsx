@@ -8,9 +8,29 @@ import { CONTEXT_SECTIONS } from './contextSections';
 const ContextPanel: React.FC = () => {
   const { currentView } = useNavigation();
   const sections = CONTEXT_SECTIONS[currentView] ?? [];
-  const activeId = useActiveSection(sections.map((section) => section.id));
+  const sectionKey = sections.map(section => section.id).join('|');
+  const [renderedIds, setRenderedIds] = React.useState<string[]>([]);
 
-  if (sections.length === 0) {
+  React.useEffect(() => {
+    const ids = sectionKey ? sectionKey.split('|') : [];
+    const updateSections = () => {
+      const next = ids.filter(id => document.getElementById(id) !== null);
+      setRenderedIds(previous =>
+        previous.length === next.length && previous.every((id, index) => id === next[index])
+          ? previous
+          : next
+      );
+    };
+    updateSections();
+    const observer = new MutationObserver(updateSections);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [sectionKey]);
+
+  const visibleSections = sections.filter(section => renderedIds.includes(section.id));
+  const activeId = useActiveSection(visibleSections.map(section => section.id));
+
+  if (visibleSections.length === 0) {
     return null;
   }
 
@@ -36,7 +56,7 @@ const ContextPanel: React.FC = () => {
           On this page
         </p>
         <ul className="p-2 pt-1 space-y-0.5">
-          {sections.map(({ id, label }) => {
+          {visibleSections.map(({ id, label }) => {
             const isActive = activeId === id;
             return (
               <li key={id}>

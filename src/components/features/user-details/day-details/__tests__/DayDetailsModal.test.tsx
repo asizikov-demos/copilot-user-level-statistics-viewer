@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import DayDetailsModal from '../DayDetailsModal';
+import { computeDailyCliCustomizations } from '../../../../../domain/calculators/cliCustomizationCalculator';
 
 vi.mock('../DayImpactCard', () => ({
   default: () => <div>Impact card</div>,
@@ -40,10 +41,101 @@ function makeDayMetrics(overrides: Partial<UserDayData> = {}): UserDayData {
 }
 
 describe('DayDetailsModal', () => {
+  it('shows daily skill, agent, MCP and command totals without CLI session data', () => {
+    const cliCustomizations = computeDailyCliCustomizations({
+      day: '2024-01-15',
+      totals_by_skill: [{ skill: 'other', user_initiated_interaction_count: 19 }],
+      distinct_skill_use_count: 65,
+      totals_by_custom_agent: [{ custom_agent: 'daily-reviewer', interaction_count: 7 }],
+      distinct_custom_agent_use_count: 1,
+      totals_by_mcp: [{ mcp: 'daily-server', interaction_count: 12 }],
+      distinct_mcp_use_count: 1,
+      totals_by_slash_cmd: [{ slash_cmd: 'custom', interaction_count: 3 }],
+      distinct_slash_cmd_use_count: 2,
+    });
+    const markup = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics({ cliCustomizations })} />,
+    );
+    expect(markup).toContain('id="day-details-cli-customizations"');
+    expect(markup).toContain('>Customizations</h2>');
+    expect(markup).toContain('<table');
+    for (const title of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
+      expect(markup).toContain(title);
+    }
+    for (const count of [65, 1, 2]) {
+      expect(markup).toContain(`>${count}</td>`);
+    }
+    expect(markup.match(/aria-expanded="false"/g)).toHaveLength(4);
+    expect(markup).not.toContain('daily-reviewer');
+    expect(markup).not.toContain('daily-server');
+    expect(markup).not.toContain('CLI Customizations');
+    expect(markup).toContain('Distinct items used on this day.');
+    expect(markup).not.toContain('user_initiated_interaction_count');
+    expect(markup).not.toContain('Average distinct items');
+    expect(markup).not.toContain('Activity lists reported:');
+    expect(markup).not.toContain('Partial coverage');
+  });
+
+  it('shows only the selected day, preserving zero versus missing data', () => {
+    const firstDay = makeDayMetrics({
+      cliCustomizations: computeDailyCliCustomizations({
+        day: '2024-01-15',
+        totals_by_custom_agent: [{ custom_agent: 'first-day-agent', interaction_count: 9 }],
+        distinct_custom_agent_use_count: 1,
+      }),
+    });
+    const secondDay = makeDayMetrics({
+      day: '2024-01-16',
+      cliCustomizations: computeDailyCliCustomizations({
+        day: '2024-01-16',
+        totals_by_custom_agent: [],
+        distinct_custom_agent_use_count: 0,
+        distinct_skill_use_count: 2,
+        totals_by_mcp: [],
+      }),
+    });
+    const renderDay = (dayMetrics: UserDayData) => renderToStaticMarkup(
+      <DayDetailsModal
+        isOpen onClose={vi.fn()} date={dayMetrics.day} dayMetrics={dayMetrics}
+        onNavigateDay={vi.fn()} canNavigateNextDay canNavigatePrevDay
+      />,
+    );
+    expect(renderDay(firstDay)).toContain('Custom agents');
+    expect(renderDay(firstDay)).toContain('>1</td>');
+    const markup = renderDay(secondDay);
+    expect(markup).not.toContain('first-day-agent');
+    expect(markup).toContain('>0</td>');
+    expect(markup).toContain('>2</td>');
+    expect(markup).not.toContain('Not reported');
+    expect(markup).not.toContain('Reported items');
+    expect(markup).not.toContain('Slash commands');
+    expect(markup).not.toContain('MCP servers');
+    expect(markup).not.toContain('aria-expanded');
+    expect(markup).toContain('Previous day');
+    expect(markup).toContain('Next day');
+  });
+
+  it('keeps the no-record state and handles older day-detail payloads', () => {
+    const noRecord = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" />,
+    );
+    expect(noRecord).toContain('No activity recorded');
+    expect(noRecord).not.toContain('id="day-details-cli-customizations"');
+    const oldPayload = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics()} />,
+    );
+    expect(oldPayload).not.toContain('id="day-details-cli-customizations"');
+    expect(oldPayload).not.toContain('VS Code Agents');
+    expect(oldPayload).not.toContain('Activity by Feature');
+    expect(oldPayload).not.toContain('Activity by Client');
+    expect(oldPayload).not.toContain('Activity by Language');
+    expect(oldPayload).not.toContain('Client distribution');
+    expect(oldPayload).toContain('Impact card');
+  });
+
   it.each([
     { used_vscode_agent: true, totals_by_vscode_agent: { session_count: 2, total_user_messages: 7 }, expected: ['Yes', '>2<', '>7<'] },
     { used_vscode_agent: false, totals_by_vscode_agent: { session_count: 0, total_user_messages: 0 }, expected: ['No', '>0<'] },
-    { used_vscode_agent: null, totals_by_vscode_agent: null, expected: ['Not reported'] },
   ])('shows separate VS Code Agents day metrics: %j', ({ expected, ...fields }) => {
     const markup = renderToStaticMarkup(
       <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics(fields)} />,
@@ -52,6 +144,54 @@ describe('DayDetailsModal', () => {
     expect(markup).toContain('Used VS Code Agents');
     for (const value of expected) expect(markup).toContain(value);
     expect(markup).not.toContain('IDE Agent');
+  });
+
+  it('omits missing VS Code Agents fields but preserves reported zeros', () => {
+    const markup = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics({
+        totals_by_vscode_agent: { session_count: 0, total_user_messages: null },
+      })} />,
+    );
+    expect(markup).toContain('VS Code Agents');
+    expect(markup).toContain('Sessions');
+    expect(markup).toContain('>0<');
+    expect(markup).not.toContain('Used VS Code Agents');
+    expect(markup).not.toContain('User messages');
+    expect(markup).not.toContain('Not reported');
+  });
+
+  it('keeps feature and language tables when rows report zero values', () => {
+    const totals = {
+      code_generation_activity_count: 0, code_acceptance_activity_count: 0,
+      loc_added_sum: 0, loc_deleted_sum: 0, loc_suggested_to_add_sum: 0, loc_suggested_to_delete_sum: 0,
+    };
+    const markup = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics({
+        totals_by_feature: [{ ...totals, feature: 'code_completion', user_initiated_interaction_count: 0 }],
+        totals_by_language_model: [{ ...totals, language: 'typescript', model: 'test-model' }],
+        totals_by_ide: [{ ...totals, ide: 'vscode', user_initiated_interaction_count: 0 }],
+      })} />,
+    );
+    expect(markup).toContain('Activity by Feature');
+    expect(markup).toContain('Activity by Language &amp; Model');
+    expect(markup).toContain('Activity by Client');
+    expect(markup).toContain('typescript');
+    expect(markup).not.toContain('Client distribution');
+  });
+
+  it('keeps reported-zero CLI rows without an empty client chart or usage pill', () => {
+    const markup = renderToStaticMarkup(
+      <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-15" dayMetrics={makeDayMetrics({
+        totals_by_cli: {
+          session_count: 0, request_count: 0, prompt_count: 0,
+          token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+        },
+      })} />,
+    );
+    expect(markup).toContain('Activity by Client');
+    expect(markup).toContain('<span>Copilot CLI</span>');
+    expect(markup).not.toContain('Client distribution');
+    expect(markup).not.toContain('Features used:');
   });
 
   it('identifies Copilot App activity and renders app session and token totals separately from IDE clients', () => {

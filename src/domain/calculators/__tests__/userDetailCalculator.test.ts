@@ -7,6 +7,40 @@ import {
 import { makeMetric as createMetric } from '../../../__tests__/factories/metrics';
 
 describe('userDetailCalculator', () => {
+  it('retains customization summaries independently of CLI flags, sessions, and other users', () => {
+    const accumulator = createUserDetailAccumulator();
+    accumulateUserDetail(accumulator, createMetric({
+      user_id: 1,
+      used_cli: false,
+      totals_by_cli: undefined,
+      totals_by_skill: [{ skill: 'other', user_initiated_interaction_count: 5 }],
+      distinct_skill_use_count: 3,
+    }));
+    accumulateUserDetail(accumulator, createMetric({
+      user_id: 2,
+      totals_by_skill: [{ skill: 'other', interaction_count: 100 }],
+      distinct_skill_use_count: 4,
+    }));
+
+    const details = computeSingleUserDetailedMetrics(accumulator, 1)!;
+    expect(details.cliCustomizations[0]).toMatchObject({
+      observedInteractions: 5,
+      averageDistinctItems: 3,
+      legacyEntryCount: 1,
+    });
+    expect(details.days[0].totals_by_cli).toBeUndefined();
+    expect(details.days[0]).not.toHaveProperty('totals_by_skill');
+    expect(details.days[0].cliCustomizations?.[0]).toEqual({
+      category: 'skill',
+      observedInteractions: 5,
+      distinctItems: 3,
+      legacyEntryCount: 1,
+      items: [{ name: 'other', interactionCount: 5, daysInvoked: 1, averagePerDay: 5 }],
+    });
+    expect(details.totalModelRequests).toBe(0);
+    expect(computeSingleUserDetailedMetrics(accumulator, 2)!.cliCustomizations[0].observedInteractions).toBe(100);
+  });
+
   describe('createUserDetailAccumulator', () => {
     it('should return an empty accumulator', () => {
       const acc = createUserDetailAccumulator();

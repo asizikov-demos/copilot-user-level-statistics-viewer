@@ -19,6 +19,7 @@ import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLangua
 import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndFeatureChart';
 import DayDetailsModal from './day-details/DayDetailsModal';
 import UserDetailsCliUsageSection from './sections/UserDetailsCliUsageSection';
+import UserDetailsCustomizationsSection from './sections/UserDetailsCustomizationsSection';
 import UserDetailsFeatureActivitySection from './sections/UserDetailsFeatureActivitySection';
 import UserDetailsHeader from './sections/UserDetailsHeader';
 import UserDetailsImpactBreakdownSection from './sections/UserDetailsImpactBreakdownSection';
@@ -30,6 +31,7 @@ import type { ModeImpactData } from '../../../domain/calculators/metricCalculato
 import type { DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
 import { registerChartJS } from '../../charts/utils/chartSetup';
 import { isActiveAutoModeFeature } from '../../../domain/autoMode';
+import { isCliFeature } from '../../../domain/featureCategories';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
 import { USER_DETAILS_SECTIONS } from './userDetailsSections';
 
@@ -313,6 +315,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const [
     overviewSection,
     aiCreditsSection,
+    customizationsSection,
     combinedImpactSection,
     impactBreakdownSection,
     summarySection,
@@ -362,6 +365,12 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         />
       </div>
 
+      <UserDetailsCustomizationsSection
+        key={userId}
+        sectionId={customizationsSection.id}
+        summaries={userDetails.cliCustomizations}
+      />
+
       <div id={combinedImpactSection.id} className="scroll-mt-28">
         <ModeImpactChart
           data={filledCombinedImpact}
@@ -410,47 +419,62 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         <CloudAgentsUsageChart data={cloudAgentsUsageData} />
       )}
 
-      <div id={clientActivitySection.id} className="scroll-mt-28">
-        <ClientActivityChart
-          ideAggregates={ideAggregates}
-          days={userDetails.days}
-          reportStartDay={userDetails.reportStartDay}
-          reportEndDay={userDetails.reportEndDay}
-          pluginVersions={userDetails.pluginVersions}
-          cliVersions={userDetails.cliVersions}
-        />
-      </div>
+      {(ideAggregates.length > 0
+        || userDetails.days.some(day => day.totals_by_cli != null)
+        || featureAggregates.some(feature => isCliFeature(feature.feature))) && (
+        <div id={clientActivitySection.id} className="scroll-mt-28">
+          <ClientActivityChart
+            ideAggregates={ideAggregates}
+            days={userDetails.days}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+            pluginVersions={userDetails.pluginVersions}
+            cliVersions={userDetails.cliVersions}
+          />
+        </div>
+      )}
 
-      <UserDetailsFeatureActivitySection
-        sectionId={featureActivitySection.id}
-        featureAggregates={featureAggregates}
-      />
-
-      <div id={languageActivitySection.id} className="scroll-mt-28">
-        <UserActivityByLanguageAndFeatureChart
-          languageFeatureAggregates={languageFeatureAggregates}
-          days={userDetails.days}
-          reportStartDay={userDetails.reportStartDay}
-          reportEndDay={userDetails.reportEndDay}
+      {featureAggregates.length > 0 && (
+        <UserDetailsFeatureActivitySection
+          sectionId={featureActivitySection.id}
+          featureAggregates={featureAggregates}
         />
-      </div>
+      )}
 
-      <div id={modelActivitySection.id} className="scroll-mt-28">
-        <UserActivityByModelAndFeatureChart
-          modelFeatureAggregates={modelFeatureAggregates}
-          days={userDetails.days}
-          reportStartDay={userDetails.reportStartDay}
-          reportEndDay={userDetails.reportEndDay}
-        />
-      </div>
+      {languageFeatureAggregates.length > 0 && (
+        <div id={languageActivitySection.id} className="scroll-mt-28">
+          <UserActivityByLanguageAndFeatureChart
+            languageFeatureAggregates={languageFeatureAggregates}
+            days={userDetails.days}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+          />
+        </div>
+      )}
 
-      <div id={vscodeAgentsSection.id} className="scroll-mt-28">
-        <VSCodeAgentUsageChart
-          data={userDetails.vscodeAgentUsage}
-          reportStartDay={userDetails.reportStartDay}
-          reportEndDay={userDetails.reportEndDay}
-        />
-      </div>
+      {modelFeatureAggregates.length > 0 && (
+        <div id={modelActivitySection.id} className="scroll-mt-28">
+          <UserActivityByModelAndFeatureChart
+            modelFeatureAggregates={modelFeatureAggregates}
+            days={userDetails.days}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+          />
+        </div>
+      )}
+
+      {(userDetails.vscodeAgentUsage.summary.usageReportedRecords > 0
+        || userDetails.vscodeAgentUsage.summary.sessionsReportedRecords > 0
+        || userDetails.vscodeAgentUsage.summary.messagesReportedRecords > 0) && (
+        <div id={vscodeAgentsSection.id} className="scroll-mt-28">
+          <VSCodeAgentUsageChart
+            data={userDetails.vscodeAgentUsage}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+            hideUnreportedMeasures
+          />
+        </div>
+      )}
 
       <DayDetailsModal
         isOpen={modalState.isOpen}

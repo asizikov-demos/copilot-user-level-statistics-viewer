@@ -82,6 +82,63 @@ describe('metricsWorker protocol', () => {
     host.onmessage = originalOnMessage;
   });
 
+  it('parses both customization count shapes and returns summaries only for the requested profile', async () => {
+    const records = [
+      makeMetric({
+        used_cli: false,
+        totals_by_skill: [{ skill: 'other', user_initiated_interaction_count: 4 }],
+        distinct_skill_use_count: 3,
+      }),
+      makeMetric({
+        day: '2024-01-02',
+        used_cli: false,
+        totals_by_skill: [{ skill: 'other', interaction_count: 6 }],
+        distinct_skill_use_count: 1,
+        totals_by_mcp: [{ mcp: 'other', interaction_count: 2 }],
+      }),
+    ];
+    const { responses, send } = await loadWorker();
+    await send({
+      type: 'parseAndAggregate',
+      id: 'customizations',
+      files: [createChunkedFile(records.map(record => `${JSON.stringify(record)}\n`), 'synthetic.ndjson')],
+    });
+    const parsed = responses.find(response => response.type === 'parseAndAggregateResult');
+    expect(parsed?.result.overview.stats.cliUsers).toBe(0);
+    expect(parsed?.result.cli).not.toHaveProperty('customizations');
+
+    await send({ type: 'computeUserDetails', id: 'profile', userId: records[0].user_id });
+    const details = responses.find(response => response.type === 'userDetailsResult');
+    expect(details?.result?.cliCustomizations[0]).toMatchObject({
+      observedInteractions: 10,
+      averageDistinctItems: 2,
+      summedDailyDistinctItems: 4,
+      items: [{ name: 'other', interactionCount: 10, daysInvoked: 2, averagePerDay: 5 }],
+      activeRecords: 2,
+      entriesReportedRecords: 2,
+      distinctReportedRecords: 2,
+    });
+    expect(details?.result?.cliCustomizations[2]).toMatchObject({
+      observedInteractions: 2,
+      entriesReportedRecords: 1,
+      distinctReportedRecords: 0,
+      averageDistinctItems: null,
+      summedDailyDistinctItems: null,
+    });
+    expect(details?.result?.days.map(day => day.cliCustomizations?.[0])).toEqual([
+      {
+        category: 'skill', observedInteractions: 4, distinctItems: 3,
+        legacyEntryCount: 1, items: [{ name: 'other', interactionCount: 4, daysInvoked: 1, averagePerDay: 4 }],
+      },
+      {
+        category: 'skill', observedInteractions: 6, distinctItems: 1,
+        legacyEntryCount: 0, items: [{ name: 'other', interactionCount: 6, daysInvoked: 1, averagePerDay: 6 }],
+      },
+    ]);
+    expect(details?.result?.days[0].cliCustomizations?.[2].observedInteractions).toBeNull();
+    expect(details?.result?.days[1].cliCustomizations?.[2].observedInteractions).toBe(2);
+  });
+
   it('rejects user-detail requests until parse-and-aggregate has retained an accumulator', async () => {
     const { responses, send } = await loadWorker();
 

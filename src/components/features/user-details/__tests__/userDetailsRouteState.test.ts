@@ -36,6 +36,7 @@ const userSummary: UserSummary = {
   used_copilot_code_review_passive: false,
 };
 const details: UserDetailedMetrics = {
+  cliCustomizations: [],
   vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
   totalModelRequests: 0,
   total_ai_credits_used: 0,

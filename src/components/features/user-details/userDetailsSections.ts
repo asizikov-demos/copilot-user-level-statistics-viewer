@@ -3,6 +3,7 @@ import type { ContextSection } from '../../layout/contextSections';
 export const USER_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'user-details-overview', label: 'Activity Overview' },
   { id: 'user-details-ai-credits', label: 'AI Credits' },
+  { id: 'user-details-cli-customizations', label: 'Customizations' },
   { id: 'user-details-combined-impact', label: 'Combined Impact' },
   { id: 'user-details-impact-breakdown', label: 'Impact Breakdown' },
   { id: 'user-details-summary', label: 'Usage Summary' },

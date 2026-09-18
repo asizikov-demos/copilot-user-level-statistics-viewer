@@ -1,4 +1,5 @@
 import type { VSCodeAgentTotals } from './vscodeAgent';
+import type { CliCustomizationDaySummary, CliCustomizationFields } from './cliCustomizations';
 
 export interface AIAdoptionPhase {
   phase_number: number;
@@ -17,7 +18,7 @@ export interface CopilotClientUsageTotals {
   };
 }
 
-export interface CopilotMetrics {
+export interface CopilotMetrics extends CliCustomizationFields {
   report_start_day: string;
   report_end_day: string;
   day: string;
@@ -253,6 +254,7 @@ export interface ModelBreakdownData {
 
 export interface UserDayData {
   day: string;
+  cliCustomizations?: CliCustomizationDaySummary[];
   used_vscode_agent?: boolean | null;
   totals_by_vscode_agent?: VSCodeAgentTotals | null;
   user_initiated_interaction_count: number;

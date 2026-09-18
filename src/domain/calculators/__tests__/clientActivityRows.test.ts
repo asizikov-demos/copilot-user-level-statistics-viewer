@@ -38,6 +38,20 @@ describe('clientActivityRows', () => {
   });
 
   describe('createCliClientActivityRow', () => {
+    it('retains explicit zero rows only when CLI data was reported', () => {
+      const totals = {
+        promptCount: 0, interactions: 0, generations: 0, acceptances: 0,
+        locAdded: 0, locDeleted: 0, locSuggestedToAdd: 0, locSuggestedToDelete: 0,
+      };
+      expect(createCliClientActivityRow(totals)).toBeNull();
+      expect(createCliClientActivityRow(totals, true)).toEqual({
+        ide: 'copilot_cli', user_initiated_interaction_count: 0,
+        code_generation_activity_count: 0, code_acceptance_activity_count: 0,
+        loc_added_sum: 0, loc_deleted_sum: 0,
+        loc_suggested_to_add_sum: 0, loc_suggested_to_delete_sum: 0,
+      });
+    });
+
     it('uses prompt count fallback when CLI feature interactions are zero', () => {
       const row = createCliClientActivityRow({
         promptCount: 11,
