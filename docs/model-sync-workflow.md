@@ -57,7 +57,20 @@ permissions needed to publish the constrained PR. Protected-file checks remain
 enabled. The `factory:model-sync` label must already exist.
 
 The agent can fetch official docs through `web-fetch` and the declared network
-allowlist. Node 22 and `npm ci` prepare the checkout for the existing validation
+allowlist. For Copilot this enables the native `web_fetch` tool, not shell `curl`.
+GitHub queries use the provided GitHub tools or their `github` CLI wrapper;
+baseline reads use `git show`. These reads run separately so a shell denial is
+not misreported as multiple upstream outages. Shell `curl`, `wget`, and `mkdir`
+are not authorized. A denied call should be retried through the declared read
+capability if it has not yet been tried, without expanding permissions.
+Incomplete evidence remains blocked, and its summary identifies the actual
+failed operation separately from unattempted reads.
+
+An Actions run can finish green while the agent records `missing_data`. Inspect
+the agent output and safe-output results: only a complete evidence-backed
+comparison establishes no drift, and only confirmed publication establishes a PR.
+
+Node 22 and `npm ci` prepare the checkout for the existing validation
 commands. An available built-in subagent performs read-only review using the
 repository's code-review criteria, without its editor-specific model/tool settings.
 
