@@ -109,15 +109,35 @@ subsequent PR review, CI follow-up, and merging belong to the maintainer.
 
 ## Compare before editing
 
+Use the declared capabilities explicitly: GitHub reads through the provided
+GitHub tools (or their `github` CLI wrapper), official documentation through the
+native `web_fetch` tool enabled by `web-fetch`, and local baseline reads through
+`git show`. Do not use shell `curl`, `wget`, or `mkdir`; they are not authorized
+by this workflow's shell allowlist. Do not combine independent GitHub, local-file,
+and documentation reads into one shell command. Read the baseline directly rather
+than creating a temporary directory just to save a copy.
+
+If a call is denied, distinguish tool authorization from an HTTP/API/network
+failure. A denied compound command does not prove that any upstream service is
+unavailable. Retry the necessary read separately using its declared capability
+when that capability was not yet tried; do not broaden permissions or bypass a
+denial. If the required evidence still cannot be obtained completely, report
+`missing_data` with the specific failed operation, tool, and observed error,
+distinguishing failed reads from reads not attempted. Stop without editing or
+publishing; never classify blocked verification as no drift.
+
 1. Record `git rev-parse HEAD` as the pinned main baseline and preserve the original
-   catalog for the final comparison. Read the normalization helper at this same
+   catalog through `git show <baseline>:src/domain/modelConfig.ts` for the final
+   comparison. Read the normalization helper at this same
    commit; do not substitute remembered normalization rules.
 2. Check open PRs against `main` for the `[model-sync]` prefix and for overlapping
    changes to the model catalog, including PRs created by the old local automation.
    If work overlaps, report the existing PR link with `noop` and stop; never alter
    someone else's branch or create competing work. If this check is unavailable,
    report blocked with `missing_data` and stop.
-3. Fetch the complete relevant vendor/model tables from the source. Record the
+3. Use native `web_fetch` to retrieve the complete relevant vendor/model tables
+   from the source, following pagination or continuation if the tool truncates
+   its output. Record the
    source URL, final URL after redirects, UTC fetch time, and raw rows supporting
    every proposed change. Ignore pricing, release-status, tier, and promotion
    fields; vendor is evidence only and is not a config field.
