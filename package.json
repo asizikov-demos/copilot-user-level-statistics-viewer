@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "chart.js": "^4.5.1",
-    "next": "^16.3.3",
+    "next": "^16.3.5",
     "react": "^19.2.6",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.6"
@@ -34,7 +34,7 @@
     "@types/react-test-renderer": "19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.64.0",
-    "@vitest/ui": "^4.1.10",
+    "@vitest/ui": "^4.1.11",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.1",
     "eslint-config-next": "^16.2.9",
@@ -43,13 +43,13 @@
     "tailwindcss": "^4.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
   "overrides": {
     "flatted": "^3.4.2",
-    "postcss": "8.5.10"
+    "postcss": "8.5.28"
   }
 }
