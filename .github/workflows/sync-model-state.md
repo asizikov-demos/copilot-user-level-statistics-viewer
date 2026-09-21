@@ -26,7 +26,9 @@ concurrency:
 strict: true
 engine:
   id: copilot
-  model: gpt-6-astra
+  model: gpt-5.6-terra
+  env:
+    COPILOT_PROVIDER_WIRE_API: responses
 
 network:
   allowed: [defaults, github, node, docs.github.com]

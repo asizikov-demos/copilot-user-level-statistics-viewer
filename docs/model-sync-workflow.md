@@ -46,6 +46,11 @@ repository. Like the existing repository workflows, this workflow uses
 `copilot-requests: write` for organization-billed inference. It does not need a
 Copilot cloud-agent assignment credential because it implements changes directly.
 
+The engine uses `gpt-5.6-terra` with `COPILOT_PROVIDER_WIRE_API: responses`.
+The Copilot runtime defaults to Chat Completions in its proxied BYOK mode; the
+explicit wire API selects Responses for GPT-5-series models without changing
+the GitHub authentication or firewall configuration.
+
 Allow GitHub Actions to create pull requests in repository settings. The agent
 has read-only GitHub permissions; a separate safe-output job receives the
 permissions needed to publish the constrained PR. Protected-file checks remain
