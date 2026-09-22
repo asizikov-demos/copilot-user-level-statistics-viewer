@@ -4,10 +4,11 @@ import React, { useState, useMemo, useCallback } from 'react';
 import type { UserDayData } from '../../../types/metrics';
 import {
   selectCopilotCliAndAppUsageReadModel,
+  selectUserDetailsHeaderReadModel,
   type UserDetailsViewModel,
 } from '../../../read-models/userDetails';
 import { formatIDEName } from '../../icons/IDEIcons';
-import { formatAiAdoptionPhase, formatAiCreditCost, generateDateRange } from '../../../utils/formatters';
+import { generateDateRange } from '../../../utils/formatters';
 import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
@@ -151,8 +152,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
   const daysActive = userSummary.days_active;
-  const aiCreditsUsed = userDetails.total_ai_credits_used;
-  const aiAdoptionPhaseLabel = formatAiAdoptionPhase(userSummary.ai_adoption_phase);
+  const headerSummary = useMemo(() => selectUserDetailsHeaderReadModel(model), [model]);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
   const usedCli = userSummary.used_cli;
@@ -332,8 +332,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         <UserDetailsHeader
           userLogin={userLogin}
           userId={userId}
-          aiAdoptionPhaseLabel={aiAdoptionPhaseLabel}
-          aiCreditCost={formatAiCreditCost(aiCreditsUsed)}
+          aiAdoptionPhase={userSummary.ai_adoption_phase}
+          summary={headerSummary}
           onBackToUsers={() => navigateTo(VIEW_MODES.USERS)}
           onCopyUserLogin={handleCopyUserLogin}
         />

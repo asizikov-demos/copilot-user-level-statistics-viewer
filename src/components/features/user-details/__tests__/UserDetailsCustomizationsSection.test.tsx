@@ -211,6 +211,7 @@ describe('user customizations', () => {
         <UserDetailsView model={{
           userDetails,
           userSummary: aggregated.users.userSummaries[0],
+          interactionRank: { rank: 1, totalUsers: 1 },
           userLogin: metric.user_login,
           userId: metric.user_id,
         }} />
@@ -241,6 +242,7 @@ describe('user customizations', () => {
         <UserDetailsView model={{
           userDetails,
           userSummary: aggregated.users.userSummaries[0],
+          interactionRank: { rank: 1, totalUsers: 1 },
           userLogin: metric.user_login,
           userId: metric.user_id,
         }} />
