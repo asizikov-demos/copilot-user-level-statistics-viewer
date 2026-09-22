@@ -104,6 +104,7 @@ export const FEATURE_ADOPTION_CHART_METADATA = [
   { key: 'agentModeUsers', label: 'IDE Agent Mode', description: 'Users who used Agent Mode in the IDE' },
   { key: 'planModeUsers', label: 'Plan Mode', description: 'Users who used Plan Mode' },
   { key: 'cliUsers', label: 'Copilot CLI', description: 'Users who used Copilot CLI' },
+  { key: 'vscodeAgentUsers', label: 'VS Code Agents', description: 'Users who used VS Code Agents' },
   { key: 'appUsers', label: 'Copilot App', description: 'Users who used Copilot App' },
   { key: 'inlineModeUsers', label: 'Inline Chat', description: 'Users who used inline chat' },
   { key: 'codingAgentUsers', label: 'Copilot Cloud Agent', description: 'Users who used Copilot Cloud Agent' },

@@ -117,6 +117,16 @@ describe('adoption and impact read models', () => {
     expect(model).not.toHaveProperty('userSummaries');
   });
 
+  it('derives legacy VS Code Agents funnel data from the existing usage summary', () => {
+    const metrics = makeFeatureMetrics();
+    metrics.adoption.vscodeAgentUsage.summary.activeUsers = 7;
+    Reflect.deleteProperty(metrics.adoption.featureAdoptionData, 'vscodeAgentUsers');
+
+    const model = selectCopilotAdoptionReadModel(metrics);
+
+    expect(model.featureAdoptionData.vscodeAgentUsers).toBe(7);
+  });
+
   it('selects the exact AI adoption phase shape without copying it', () => {
     const metrics = makeFeatureMetrics();
 

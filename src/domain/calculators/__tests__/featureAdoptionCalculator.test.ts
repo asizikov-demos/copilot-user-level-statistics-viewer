@@ -5,6 +5,7 @@ import {
   accumulateCodeReviewAdoption,
   accumulateCodingAgentAdoption,
   accumulateFeatureAdoption,
+  accumulateVSCodeAgentAdoption,
   computeFeatureAdoptionData,
   createFeatureAdoptionAccumulator,
 } from '../featureAdoptionCalculator';
@@ -62,6 +63,20 @@ describe('featureAdoptionCalculator', () => {
 
     expect(result.completionUsers).toBe(1);
     expect(result.appUsers).toBe(1);
+    expect(result.completionOnlyUsers).toBe(0);
+  });
+
+  it('counts VS Code Agents users as advanced and not completion-only', () => {
+    const accumulator = createFeatureAdoptionAccumulator();
+
+    accumulateFeatureAdoption(accumulator, 1, 'code_completion', 2, 0);
+    accumulateVSCodeAgentAdoption(accumulator, 1, true);
+
+    const result = computeFeatureAdoptionData(accumulator);
+
+    expect(result.totalUsers).toBe(1);
+    expect(result.vscodeAgentUsers).toBe(1);
+    expect(result.advancedUsers).toBe(1);
     expect(result.completionOnlyUsers).toBe(0);
   });
 

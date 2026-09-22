@@ -35,6 +35,7 @@ describe('engagement and adoption aggregation orchestration', () => {
         planModeUsers: 0,
         cliUsers: 0,
         appUsers: 0,
+        vscodeAgentUsers: 0,
         codingAgentUsers: 0,
         codeReviewUsers: 0,
         advancedUsers: 0,
@@ -64,6 +65,7 @@ describe('engagement and adoption aggregation orchestration', () => {
       day: '2024-01-16',
       user_id: 1,
       used_cli: true,
+      used_vscode_agent: true,
       used_copilot_code_review_active: true,
       used_copilot_code_review_passive: true,
       totals_by_cli: {
@@ -137,6 +139,7 @@ describe('engagement and adoption aggregation orchestration', () => {
       cliUsers: 1,
       codingAgentUsers: 1,
       codeReviewUsers: 1,
+      vscodeAgentUsers: 1,
       advancedUsers: 1,
     });
     expect(result.dailyCloudAgentAdoptionData).toEqual([
