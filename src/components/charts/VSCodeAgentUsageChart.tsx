@@ -2,11 +2,10 @@
 
 import { Bar, Line } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
-import type { DailyVSCodeAgentUsage, VSCodeAgentUsage } from '../../types/vscodeAgent';
+import type { VSCodeAgentUsage } from '../../types/vscodeAgent';
 import { formatShortDate } from '../../utils/formatters';
 import { mapReportRangeData } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
-import MetricsTable, { type TableColumn } from '../ui/MetricsTable';
 import { chartColors } from './utils/chartColors';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset, createLineDataset } from './utils/chartStyles';
@@ -35,20 +34,6 @@ const measures = [
   { key: 'userMessages', label: 'User messages', coverageKey: 'messagesReportedRecords', color: chartColors.purple.solid },
 ] as const;
 
-const columns: TableColumn<DailyVSCodeAgentUsage>[] = [
-  { id: 'date', header: 'Date', accessor: 'date' },
-  ...measures.map(measure => ({
-    id: measure.key,
-    header: measure.label,
-    renderCell: (day: DailyVSCodeAgentUsage) => (
-      <span title={coverage(day[measure.coverageKey], day.recordCount)}>
-        {formatCount(day[measure.key])}
-        {day[measure.key] !== null && day[measure.coverageKey] < day.recordCount && ' (partial)'}
-      </span>
-    ),
-  })),
-];
-
 export default function VSCodeAgentUsageChart({
   data,
   reportStartDay,
@@ -71,7 +56,7 @@ export default function VSCodeAgentUsageChart({
     ...measure,
     values: displayData.map(entry => entry.day?.[measure.key] ?? null),
   }));
-  const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.${isUser ? '' : ' Exact reported values are in the table below.'}`;
+  const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.`;
   const options = createBaseChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Reported count',
@@ -95,26 +80,7 @@ export default function VSCodeAgentUsageChart({
       summaryStats={visibleMeasures.map(measure => ({
         label: measure.key === 'activeUsers' ? 'Distinct active users' : measure.label,
         value: formatCount(summary[measure.key]),
-        sublabel: coverage(summary[measure.coverageKey], summary.recordCount),
       }))}
-      footer={(
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Reported values only. Gaps indicate missing data; zero means no recorded usage.
-          </p>
-          {!isUser && (
-            <MetricsTable
-              data={data.daily}
-              columns={columns}
-              getRowKey={day => day.date}
-              initialCount={7}
-              tableContainerClassName="overflow-x-auto"
-              buttonCollapsedLabel={total => `Show all ${total} days`}
-              buttonExpandedLabel="Show fewer days"
-            />
-          )}
-        </div>
-      )}
     >
       {isUser ? (
         <Bar

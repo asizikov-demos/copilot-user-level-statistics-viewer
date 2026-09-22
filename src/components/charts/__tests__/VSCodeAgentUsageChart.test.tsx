@@ -85,7 +85,7 @@ describe('VSCodeAgentUsageChart', () => {
     expect(markup).not.toContain('Usage chart');
   });
 
-  it('preserves full-range gaps and explicit zero, exposes coverage, and labels partial daily values', () => {
+  it('preserves full-range gaps and explicit zero without rendering metric coverage', () => {
     const data = aggregateMetrics([
       makeMetric({ used_vscode_agent: false, totals_by_vscode_agent: { session_count: 0, total_user_messages: 0 } }),
       makeMetric({ user_id: 2 }),
@@ -104,16 +104,15 @@ describe('VSCodeAgentUsageChart', () => {
         ],
       }),
     }));
-    expect(markup).toContain('2 of 3 records reporting');
-    expect(markup).toContain('1 of 3 records reporting');
-    expect(markup).toContain('0 (partial)');
-    expect(markup).toContain('Not reported');
+    expect(markup).not.toContain('2 of 3 records reporting');
+    expect(markup).not.toContain('1 of 3 records reporting');
     expect(markup).toContain('Distinct active users');
-    expect(markup).toContain('<table');
     expect(markup).toContain('separate from editor Agent Mode');
+    expect(markup).not.toContain('Gaps indicate missing data');
+    expect(markup).not.toContain('<table');
   });
 
-  it('shows only seven days initially and provides progressive disclosure', () => {
+  it('does not render a table or progressive-disclosure control', () => {
     const data = aggregateMetrics(Array.from({ length: 9 }, (_, index) => makeMetric({
       day: `2024-01-${String(index + 10)}`,
       used_vscode_agent: true,
@@ -121,9 +120,7 @@ describe('VSCodeAgentUsageChart', () => {
     const markup = renderToStaticMarkup(
       <VSCodeAgentUsageChart data={data} reportStartDay="2024-01-10" reportEndDay="2024-01-18" />,
     );
-    expect(markup).toContain('Show all 9 days');
-    expect(markup).toContain('aria-expanded="false"');
-    expect(markup).toContain('2024-01-16');
-    expect(markup).not.toContain('2024-01-17');
+    expect(markup).not.toContain('<table');
+    expect(markup).not.toContain('Show all');
   });
 });
