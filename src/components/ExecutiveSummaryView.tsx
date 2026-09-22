@@ -190,6 +190,7 @@ export default function ExecutiveSummaryView({
             planModeUsers: 0,
             cliUsers: 0,
             appUsers: 0,
+            vscodeAgentUsers: 0,
             codingAgentUsers: 0,
             codeReviewUsers: 0,
             advancedUsers: 0,

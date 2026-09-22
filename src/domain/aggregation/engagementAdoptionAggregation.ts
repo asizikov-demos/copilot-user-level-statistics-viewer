@@ -38,6 +38,7 @@ import {
   accumulateCodeReviewAdoption,
   accumulateCodingAgentAdoption,
   accumulateFeatureAdoption,
+  accumulateVSCodeAgentAdoption,
   computeFeatureAdoptionData,
   createFeatureAdoptionAccumulator,
   type FeatureAdoptionAccumulator,
@@ -93,6 +94,11 @@ export function accumulateEngagementAdoptionAggregation(
     accumulator.featureAdoption,
     userId,
     metric.used_copilot_app ?? false
+  );
+  accumulateVSCodeAgentAdoption(
+    accumulator.featureAdoption,
+    userId,
+    metric.used_vscode_agent === true
   );
   accumulateCodingAgentAdoption(
     accumulator.featureAdoption,

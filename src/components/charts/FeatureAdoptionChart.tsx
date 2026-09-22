@@ -35,6 +35,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
     agentModeUsers: chartColors.red.solid,
     planModeUsers: chartColors.indigo.solid,
     cliUsers: chartColors.pink.solid,
+    vscodeAgentUsers: chartColors.blue.solid,
     appUsers: chartColors.black.solid,
     inlineModeUsers: chartColors.violet.solid,
     codingAgentUsers: chartColors.teal.solid,
@@ -53,6 +54,8 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
   const chatRate = totalUsers > 0 ? (data.chatUsers / totalUsers) * 100 : 0;
   const agentRate = totalUsers > 0 ? (data.agentModeUsers / totalUsers) * 100 : 0;
   const cliRate = totalUsers > 0 ? (data.cliUsers / totalUsers) * 100 : 0;
+  const vscodeAgentUsers = data?.vscodeAgentUsers ?? 0;
+  const vscodeAgentRate = totalUsers > 0 ? (vscodeAgentUsers / totalUsers) * 100 : 0;
   const appRate = totalUsers > 0 ? (data.appUsers / totalUsers) * 100 : 0;
   const codingAgentRate = totalUsers > 0 ? ((data.codingAgentUsers || 0) / totalUsers) * 100 : 0;
   const codeReviewRate = totalUsers > 0 ? ((data.codeReviewUsers || 0) / totalUsers) * 100 : 0;
@@ -113,14 +116,15 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         <ChartToggleButtons options={VIEW_TYPE_OPTIONS} value={viewType} onChange={setViewType} />
       }
       summaryStats={[
-        { value: `${Math.round(completionRate)}%`, label: 'Completion Adoption', sublabel: `${data?.completionUsers || 0} users`, colorClass: 'text-green-600' },
-        { value: `${Math.round(chatRate)}%`, label: 'Chat Adoption', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
-        { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode Adoption', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
-        { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI Adoption', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
-        { value: `${Math.round(appRate)}%`, label: 'Copilot App Adoption', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-gray-900' },
-        { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent Adoption', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
-        { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review Adoption', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-cyan-600' },
-        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + CLI + Cloud Agent)`, colorClass: 'text-purple-600' },
+        { value: `${Math.round(completionRate)}%`, label: 'Completion', sublabel: `${data?.completionUsers || 0} users`, colorClass: 'text-green-600' },
+        { value: `${Math.round(chatRate)}%`, label: 'Chat', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
+        { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
+        { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
+        { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-blue-600' },
+        { value: `${Math.round(appRate)}%`, label: 'Copilot App', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-gray-900' },
+        { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
+        { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-cyan-600' },
+        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents + CLI + Cloud Agent)`, colorClass: 'text-purple-600' },
       ]}
       chartHeight="h-96"
       footer={
@@ -135,7 +139,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
             </InsightsCard>
             <InsightsCard title="Advanced Features" variant="blue">
               <p>
-                IDE Agent Mode, Copilot CLI, and Copilot Cloud Agent are advanced features that drive significant productivity gains and are typically used by power users.
+                IDE Agent Mode, VS Code Agents, Copilot CLI, and Copilot Cloud Agent are advanced features that drive significant productivity gains and are typically used by power users.
                 {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
               </p>
             </InsightsCard>

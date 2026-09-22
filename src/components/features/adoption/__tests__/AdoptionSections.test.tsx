@@ -36,6 +36,7 @@ describe('adoption sections', () => {
       planModeUsers: 1,
       cliUsers: 1,
       appUsers: 1,
+      vscodeAgentUsers: 1,
       codingAgentUsers: 1,
       codeReviewUsers: 1,
       advancedUsers: 2,

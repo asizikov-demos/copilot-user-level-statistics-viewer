@@ -59,6 +59,7 @@ export {
   createFeatureAdoptionAccumulator,
   accumulateFeatureAdoption,
   accumulateCliAdoption,
+  accumulateVSCodeAgentAdoption,
   accumulateCodingAgentAdoption,
   accumulateCodeReviewAdoption,
   computeFeatureAdoptionData,

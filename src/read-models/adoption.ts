@@ -12,9 +12,18 @@ export interface CopilotAdoptionReadModel {
 export function selectCopilotAdoptionReadModel(
   metrics: AggregatedMetrics
 ): CopilotAdoptionReadModel {
+  const featureAdoptionData = metrics.adoption.featureAdoptionData;
+  const vscodeAgentUsers = featureAdoptionData.vscodeAgentUsers;
+  const normalizedFeatureAdoptionData = vscodeAgentUsers === undefined
+    ? {
+        ...featureAdoptionData,
+        vscodeAgentUsers: metrics.adoption.vscodeAgentUsage.summary.activeUsers ?? 0,
+      }
+    : featureAdoptionData;
+
   return {
     vscodeAgentUsage: metrics.adoption.vscodeAgentUsage,
-    featureAdoptionData: metrics.adoption.featureAdoptionData,
+    featureAdoptionData: normalizedFeatureAdoptionData,
     stats: metrics.overview.stats,
     dailyAdoptionTrend: metrics.adoption.dailyAdoptionTrend,
     dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,

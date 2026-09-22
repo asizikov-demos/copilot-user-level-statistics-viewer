@@ -53,6 +53,7 @@ describe('featureCategories taxonomy', () => {
       'agentModeUsers',
       'planModeUsers',
       'cliUsers',
+      'vscodeAgentUsers',
       'appUsers',
       'inlineModeUsers',
       'codingAgentUsers',
