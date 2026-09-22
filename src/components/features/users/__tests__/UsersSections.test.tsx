@@ -112,6 +112,25 @@ describe('Users feature sections', () => {
     expect(emptyMarkup).toContain('No user data available');
   });
 
+  it('orders users by days active descending and omits the interactions column', () => {
+    const markup = renderToStaticMarkup(
+      <UsersTableSection
+        sectionId="users-table"
+        users={[
+          makeUser({ user_login: 'busy-chatter', user_id: 1, days_active: 3, total_user_initiated_interactions: 900 }),
+          makeUser({ user_login: 'daily-regular', user_id: 2, days_active: 20, total_user_initiated_interactions: 50 }),
+          makeUser({ user_login: 'weekly-visitor', user_id: 3, days_active: 8, total_user_initiated_interactions: 400 }),
+        ]}
+        onUserClick={vi.fn()}
+      />
+    );
+
+    const order = ['daily-regular', 'weekly-visitor', 'busy-chatter'].map(login => markup.indexOf(login));
+    expect(order.every(index => index >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    expect(markup).not.toContain('INTERACTIONS');
+  });
+
   it('combines client and feature filters and clears them', async () => {
     let renderer: ReactTestRenderer | undefined;
 

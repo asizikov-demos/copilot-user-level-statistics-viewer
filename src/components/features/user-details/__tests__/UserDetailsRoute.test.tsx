@@ -242,6 +242,7 @@ describe('UserDetailsRoute', () => {
     expect(mocks.userDetailsView).toHaveBeenCalledWith({
       userDetails: details,
       userSummary: mocks.aggregatedMetrics?.users.userSummaries[0],
+      interactionRank: expect.objectContaining({ rank: expect.any(Number) }),
       userLogin: 'testuser',
       userId: 1,
     });

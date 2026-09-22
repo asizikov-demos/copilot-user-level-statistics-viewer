@@ -1,22 +1,63 @@
 'use client';
 
+import type { ReactNode } from 'react';
+import type { UserDetailsHeaderReadModel } from '../../../../read-models/userDetails';
+import type { AIAdoptionPhase } from '../../../../types/metrics';
+import {
+  formatAiAdoptionPhaseName,
+  formatAiCreditCost,
+  formatCompactNumber,
+  formatNumber,
+} from '../../../../utils/formatters';
+import { formatIDEName } from '../../../../utils/ideNames';
+
 interface UserDetailsHeaderProps {
   userLogin: string;
   userId: number;
-  aiAdoptionPhaseLabel: string;
-  aiCreditCost: string;
+  aiAdoptionPhase?: AIAdoptionPhase;
+  summary: UserDetailsHeaderReadModel;
   onBackToUsers: () => void;
   onCopyUserLogin: () => void;
+}
+
+function formatLastActive(daysSinceLastActive: number | null): string {
+  if (daysSinceLastActive === null) return 'No activity in report window';
+  if (daysSinceLastActive === 0) return 'Active on last report day';
+  return `Last active ${daysSinceLastActive} day${daysSinceLastActive === 1 ? '' : 's'} before report end`;
+}
+
+function formatSignedCompact(value: number): string {
+  return `${value >= 0 ? '+' : '−'}${formatCompactNumber(Math.abs(value))}`;
+}
+
+function HeaderStat({ label, value, sub, title }: { label: string; value: ReactNode; sub: ReactNode; title?: string }) {
+  return (
+    <div className="min-w-0" title={title}>
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{label}</dt>
+      <dd className="mt-0.5 text-xl font-semibold tabular-nums text-[#1f2328]">{value}</dd>
+      <dd className="mt-0.5 truncate text-xs text-gray-500">{sub}</dd>
+    </div>
+  );
+}
+
+function PhaseLabel({ phase }: { phase?: AIAdoptionPhase }) {
+  if (!phase) return <span>No AI adoption phase</span>;
+  return (
+    <span title={`AI adoption phase ${phase.phase_number}`}>
+      P{phase.phase_number} · {formatAiAdoptionPhaseName(phase)}
+    </span>
+  );
 }
 
 export default function UserDetailsHeader({
   userLogin,
   userId,
-  aiAdoptionPhaseLabel,
-  aiCreditCost,
+  aiAdoptionPhase,
+  summary,
   onBackToUsers,
   onCopyUserLogin,
 }: UserDetailsHeaderProps) {
+  const { rank, totalUsers } = summary.interactionRank;
   return (
     <div>
       <nav aria-label="Breadcrumb">
@@ -61,10 +102,44 @@ export default function UserDetailsHeader({
       <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
         <span>User ID: {userId}</span>
         <span aria-hidden="true" className="text-gray-300">•</span>
-        <span>AI adoption phase: {aiAdoptionPhaseLabel}</span>
+        <PhaseLabel phase={aiAdoptionPhase} />
         <span aria-hidden="true" className="text-gray-300">•</span>
-        <span>AI cost: {aiCreditCost}</span>
+        <span>{formatLastActive(summary.daysSinceLastActive)}</span>
       </p>
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg border border-gray-200 bg-white px-5 py-4 sm:grid-cols-3 lg:grid-cols-5">
+        <HeaderStat
+          label="Active days"
+          value={<>{summary.daysActive}<span className="text-sm font-normal text-gray-400">/{summary.reportDays}</span></>}
+          sub={`${summary.activeDaysPercent}% of report window`}
+        />
+        <HeaderStat
+          label="Interactions"
+          value={formatCompactNumber(summary.interactions)}
+          sub={totalUsers > 0 ? `Top ${summary.topPercent}% · #${rank} of ${formatNumber(totalUsers)}` : '—'}
+          title={`${formatNumber(summary.interactions)} user-initiated interactions`}
+        />
+        <HeaderStat
+          label="Lines changed"
+          value={(
+            <>
+              <span className="text-emerald-600">+{formatCompactNumber(summary.locAdded)}</span>{' '}
+              <span className="text-red-600">−{formatCompactNumber(summary.locDeleted)}</span>
+            </>
+          )}
+          sub={`Net ${formatSignedCompact(summary.netLoc)}`}
+          title={`${formatNumber(summary.locAdded)} added, ${formatNumber(summary.locDeleted)} deleted`}
+        />
+        <HeaderStat
+          label="AI cost"
+          value={formatAiCreditCost(summary.aiCreditsUsed)}
+          sub={`${formatCompactNumber(summary.aiCreditsUsed)} credits`}
+        />
+        <HeaderStat
+          label="Primary client"
+          value={<span className="text-base">{summary.primaryClient ? formatIDEName(summary.primaryClient) : '—'}</span>}
+          sub={`${summary.surfacesUsed} surface${summary.surfacesUsed === 1 ? '' : 's'} used`}
+        />
+      </dl>
     </div>
   );
 }
