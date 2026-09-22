@@ -18,7 +18,7 @@ interface UsersTableSectionProps {
   onUserClick: (userLogin: string, userId: number) => void;
 }
 
-type SortField = 'user_login' | 'total_user_initiated_interactions' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
+type SortField = 'user_login' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 
 const USERS_PER_PAGE = 500;
 
@@ -51,7 +51,7 @@ export default function UsersTableSection({
   } = useUserFilters(users);
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,
-    'total_user_initiated_interactions',
+    'days_active',
     'desc'
   );
   const [currentPage, setCurrentPage] = useState(1);
@@ -117,14 +117,6 @@ export default function UsersTableSection({
       header: 'DAYS ACTIVE',
       sortable: true,
       accessor: 'days_active',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
-    },
-    {
-      id: 'total_user_initiated_interactions',
-      header: 'INTERACTIONS',
-      sortable: true,
-      accessor: 'total_user_initiated_interactions',
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
     },
