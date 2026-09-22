@@ -1,8 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import {
+  getModelVendor,
+  MODEL_VENDOR_ORDER,
+  type ModelVendorGroup,
+} from '../../domain/modelConfig';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
@@ -25,9 +30,33 @@ interface ModelsUsageChartProps {
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
+  const [selectedVendor, setSelectedVendor] = useState<ModelVendorGroup | ''>('');
+
+  const vendorOptions = useMemo(() => {
+    const vendors = new Set<ModelVendorGroup>(
+      modelEntries.map(entry => getModelVendor(entry.model) ?? 'Unattributed')
+    );
+    return MODEL_VENDOR_ORDER.filter(vendor => vendors.has(vendor));
+  }, [modelEntries]);
+
+  useEffect(() => {
+    if (selectedVendor && !vendorOptions.includes(selectedVendor)) {
+      setSelectedVendor('');
+    }
+  }, [selectedVendor, vendorOptions]);
+
+  const activeVendor = selectedVendor && vendorOptions.includes(selectedVendor)
+    ? selectedVendor
+    : '';
+  const filteredEntries = useMemo(
+    () => activeVendor
+      ? modelEntries.filter(entry => (getModelVendor(entry.model) ?? 'Unattributed') === activeVendor)
+      : modelEntries,
+    [activeVendor, modelEntries]
+  );
 
   const { labels, datasets } = useMemo(() => {
-    const sortedModels = sortBySelector(modelEntries, e => e.total, 'desc');
+    const sortedModels = sortBySelector(filteredEntries, e => e.total, 'desc');
     const modelOrder = sortedModels.map(e => e.model);
 
     const UNKNOWN_COLOR = 'hsl(0, 70%, 50%)';
@@ -66,7 +95,11 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       labels: dates.map(d => formatShortDate(d)),
       datasets
     };
-  }, [modelEntries, dates, isAuto, isCli]);
+  }, [filteredEntries, dates, isAuto, isCli]);
+
+  const displayedTotalInteractions = activeVendor
+    ? filteredEntries.reduce((sum, entry) => sum + entry.total, 0)
+    : totalInteractions;
 
   const chartTitle = isCli
     ? 'CLI Models Daily Usage'
@@ -110,9 +143,27 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       description={chartDescription}
       isEmpty={dates.length === 0 || datasets.length === 0}
       emptyState={emptyState}
+      headerActions={!isAuto && !isCli ? (
+        <div className="min-w-44">
+          <label htmlFor="models-usage-vendor-filter" className="block text-xs font-medium text-gray-700 mb-1">
+            Model vendor
+          </label>
+          <select
+            id="models-usage-vendor-filter"
+            value={activeVendor}
+            onChange={event => setSelectedVendor(event.target.value as ModelVendorGroup | '')}
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">All Vendors</option>
+            {vendorOptions.map(vendor => (
+              <option key={vendor} value={vendor}>{vendor}</option>
+            ))}
+          </select>
+        </div>
+      ) : undefined}
       summaryStats={[
         { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: primaryColorClass },
-        { value: totalInteractions, label: 'Total Interactions', colorClass: totalColorClass },
+        { value: displayedTotalInteractions, label: 'Total Interactions', colorClass: totalColorClass },
       ]}
       chartHeight="h-96"
       footer={
