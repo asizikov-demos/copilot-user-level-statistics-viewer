@@ -4,10 +4,17 @@ import type {
   ModelCategoryUsageEntry,
   ModelDailyUsageEntry,
   ModelUsageCategory,
+  ModelVendorUsageEntry,
 } from '../../types/metrics';
+import type { ModelVendorGroup } from '../modelConfig';
 import { isCliFeature } from '../featureCategories';
 import { isActiveAutoModeFeature } from '../autoMode';
-import { classifyModelRequest, getModelCategory } from '../modelConfig';
+import {
+  classifyModelRequest,
+  getModelCategory,
+  getModelVendor,
+  MODEL_VENDOR_ORDER,
+} from '../modelConfig';
 import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
 import { compareDatesAsc } from './statsCalculators';
 import { computeAdoptionTrendFromUserSets } from './adoptionTrendHelpers';
@@ -21,6 +28,7 @@ interface ModelAccEntry {
 export interface ModelBreakdownAccumulator {
   allModels: Map<string, ModelAccEntry>;
   modelCategories: Map<ModelUsageCategory, ModelAccEntry>;
+  modelVendors: Map<ModelVendorGroup, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
   cliModels: Map<string, ModelAccEntry>;
   autoModeUsersByDate: Map<string, Set<number>>;
@@ -34,6 +42,7 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
   return {
     allModels: new Map(),
     modelCategories: new Map(),
+    modelVendors: new Map(),
     autoModels: new Map(),
     cliModels: new Map(),
     autoModeUsersByDate: new Map(),
@@ -112,6 +121,13 @@ export function accumulateModelBreakdown(
     interactionCount,
     userId
   );
+  accumulateModelEntry(
+    accumulator.modelVendors,
+    getModelVendor(normalizedModel) ?? 'Unattributed',
+    date,
+    interactionCount,
+    userId
+  );
 
   if (isUnknown) {
     accumulator.unknownTotal += interactionCount;
@@ -160,6 +176,22 @@ function buildModelCategoryEntries(
   });
 }
 
+function buildModelVendorEntries(
+  vendorsMap: Map<ModelVendorGroup, ModelAccEntry>
+): ModelVendorUsageEntry[] {
+  return MODEL_VENDOR_ORDER.flatMap(vendor => {
+    const entry = vendorsMap.get(vendor);
+    if (!entry) return [];
+
+    return [{
+      vendor,
+      total: entry.total,
+      dailyData: Object.fromEntries(entry.dailyData),
+      users: entry.userIds.size,
+    }];
+  });
+}
+
 function computeAutoModeAdoptionTrend(
   dates: string[],
   usersByDate: Map<string, Set<number>>
@@ -181,6 +213,7 @@ export function computeModelBreakdownData(
   return {
     allModels: buildModelEntries(accumulator.allModels),
     modelCategories: buildModelCategoryEntries(accumulator.modelCategories),
+    modelVendors: buildModelVendorEntries(accumulator.modelVendors),
     autoModels: buildModelEntries(accumulator.autoModels),
     cliModels: buildModelEntries(accumulator.cliModels),
     autoModeAdoptionTrend: computeAutoModeAdoptionTrend(dates, accumulator.autoModeUsersByDate),

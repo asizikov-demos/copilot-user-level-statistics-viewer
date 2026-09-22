@@ -62,6 +62,8 @@ export const MODEL_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'model-usage-all', label: 'All Models' },
   { id: 'model-type-distribution', label: 'Model Types' },
   { id: 'models-by-category', label: 'Models by Category' },
+  { id: 'model-vendor-distribution', label: 'Model Vendors' },
+  { id: 'models-by-vendor', label: 'Models by Vendor' },
   { id: 'model-usage-auto', label: 'Auto Models' },
   { id: 'model-auto-adoption', label: 'Auto Adoption' },
 ];

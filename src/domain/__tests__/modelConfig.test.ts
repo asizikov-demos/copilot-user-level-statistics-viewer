@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   classifyModelRequest,
   getModelCategory,
+  getModelVendor,
   isActiveAutoModeFeature,
   isKnownModelName,
   isUnknownModelName,
@@ -26,7 +27,7 @@ describe('modelConfig', () => {
     it('should attach published categories to current models', () => {
       const model = KNOWN_MODELS.find(entry => entry.name === 'gpt-5.6-sol');
 
-      expect(model).toEqual({ name: 'gpt-5.6-sol', category: 'Powerful' });
+      expect(model).toEqual({ name: 'gpt-5.6-sol', category: 'Powerful', vendor: 'OpenAI' });
       expect(getModelCategory('GPT-5.6 Luna')).toBe('Lightweight');
       expect(getModelCategory('Claude Sonnet 5')).toBe('Versatile');
       expect(getModelCategory('Claude 4.6 Sonnet')).toBe('Versatile');
@@ -46,9 +47,45 @@ describe('modelConfig', () => {
       expect(getModelCategory('legacy-model')).toBeUndefined();
     });
 
+    it('should attach documented vendor labels to model families', () => {
+      expect(getModelVendor('GPT-5.6 Sol')).toBe('OpenAI');
+      expect(getModelVendor('Claude Opus 5')).toBe('Anthropic');
+      expect(getModelVendor('Gemini 3.8 Flash')).toBe('Google');
+      expect(getModelVendor('Gemini 3.1 Pro Preview')).toBe('Google');
+      expect(getModelVendor('MAI-Code-1.1-Flash')).toBe('Microsoft');
+      expect(getModelVendor('Kimi K3')).toBe('Moonshot AI');
+      expect(getModelVendor('Grok 4.7')).toBe('xAI');
+      expect(getModelVendor('Raptor mini')).toBe('GitHub');
+      expect(getModelVendor('Goldeneye')).toBe('GitHub');
+      expect(getModelVendor('legacy-model')).toBeUndefined();
+    });
+
     it('should categorize every known model', () => {
       for (const model of KNOWN_MODELS) {
         expect(['Lightweight', 'Powerful', 'Versatile']).toContain(getModelCategory(model.name));
+      }
+    });
+
+    it('should assign the expected vendor to every known model family', () => {
+      const expectedVendorByPrefix = {
+        claude: 'Anthropic',
+        gemini: 'Google',
+        gpt: 'OpenAI',
+        grok: 'xAI',
+        kimi: 'Moonshot AI',
+        mai: 'Microsoft',
+        o3: 'OpenAI',
+        o4: 'OpenAI',
+      } as const;
+      const githubModels = new Set(['goldeneye', 'raptor-mini']);
+
+      for (const model of KNOWN_MODELS) {
+        const prefix = Object.keys(expectedVendorByPrefix).find(candidate => model.name.startsWith(candidate));
+        const expectedVendor = githubModels.has(model.name)
+          ? 'GitHub'
+          : expectedVendorByPrefix[prefix as keyof typeof expectedVendorByPrefix];
+
+        expect(getModelVendor(model.name)).toBe(expectedVendor);
       }
     });
 

@@ -220,6 +220,13 @@ export interface ModelCategoryUsageEntry {
   users: number;
 }
 
+export interface ModelVendorUsageEntry {
+  vendor: import('../domain/modelConfig').ModelVendorGroup;
+  total: number;
+  dailyData: Record<string, number>;
+  users: number;
+}
+
 export interface ModelCategoryDetailRow {
   model: string;
   displayName: string;
@@ -239,6 +246,7 @@ export interface AutoModeAdoptionTrendEntry {
 export interface ModelBreakdownData {
   allModels: ModelDailyUsageEntry[];
   modelCategories: ModelCategoryUsageEntry[];
+  modelVendors: ModelVendorUsageEntry[];
   autoModels?: ModelDailyUsageEntry[];
   cliModels?: ModelDailyUsageEntry[];
   autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];

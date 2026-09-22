@@ -21,6 +21,7 @@ describe('modelBreakdownCalculator', () => {
       expect(acc.unknownTotal).toBe(0);
       expect(acc.modelTotal).toBe(0);
       expect(acc.modelCategories.size).toBe(0);
+      expect(acc.modelVendors.size).toBe(0);
       expect(acc.allModels.size).toBe(0);
     });
   });
@@ -192,6 +193,10 @@ describe('modelBreakdownCalculator', () => {
         { category: 'Powerful', total: 10, dailyData: { '2024-01-15': 10 }, users: 1 },
         { category: 'Uncategorized', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
       ]);
+      expect(data.modelVendors).toEqual([
+        { vendor: 'OpenAI', total: 30, dailyData: { '2024-01-15': 30 }, users: 1 },
+        { vendor: 'Unattributed', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
+      ]);
     });
 
     it('should count distinct users per model and category', () => {
@@ -205,6 +210,7 @@ describe('modelBreakdownCalculator', () => {
       expect(data.allModels.find(entry => entry.model === 'gpt-4o')?.users).toBe(1);
       expect(data.modelCategories.find(entry => entry.category === 'Powerful')?.users).toBe(2);
       expect(data.modelCategories.find(entry => entry.category === 'Versatile')?.users).toBe(1);
+      expect(data.modelVendors.find(entry => entry.vendor === 'OpenAI')?.users).toBe(3);
     });
 
     it('should aggregate daily interactions by published model category', () => {
@@ -217,6 +223,19 @@ describe('modelBreakdownCalculator', () => {
         { category: 'Lightweight', total: 8, dailyData: { '2024-01-15': 8 }, users: 1 },
         { category: 'Versatile', total: 12, dailyData: { '2024-01-15': 12 }, users: 1 },
         { category: 'Powerful', total: 5, dailyData: { '2024-01-16': 5 }, users: 1 },
+      ]);
+    });
+
+    it('should aggregate daily interactions by configured model vendor', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gpt-5-mini', 'chat_panel', 8));
+      accumulateModelBreakdown(acc, '2024-01-15', 2, makeModelFeature('claude-sonnet-4.6', 'chat_panel', 12));
+      accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('raptor-mini', 'chat_panel', 5));
+
+      expect(computeModelBreakdownData(acc).modelVendors).toEqual([
+        { vendor: 'OpenAI', total: 8, dailyData: { '2024-01-15': 8 }, users: 1 },
+        { vendor: 'Anthropic', total: 12, dailyData: { '2024-01-15': 12 }, users: 1 },
+        { vendor: 'GitHub', total: 5, dailyData: { '2024-01-16': 5 }, users: 1 },
       ]);
     });
   });
