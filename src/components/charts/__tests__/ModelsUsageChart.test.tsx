@@ -1,4 +1,9 @@
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import {
+  act,
+  create,
+  type ReactTestInstance,
+  type ReactTestRenderer,
+} from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ModelsUsageChart from '../ModelsUsageChart';
 
@@ -70,6 +75,13 @@ describe('ModelsUsageChart', () => {
       }),
     }));
     expect(renderer!.root.findByType('select').props.value).toBe('Unattributed');
+    const totalInteractionsLabel = renderer!.root.find(
+      node => node.type === 'div'
+        && node.children.length === 1
+        && node.children[0] === 'Total Interactions'
+    );
+    const totalInteractionsValue = totalInteractionsLabel.parent?.children[0] as ReactTestInstance;
+    expect(totalInteractionsValue.children).toEqual(['2']);
   });
 
   it('does not add the vendor filter to specialized chart variants', async () => {
