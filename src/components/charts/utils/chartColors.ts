@@ -113,6 +113,17 @@ export const modelCategoryColors = {
   Uncategorized: chartColors.gray,
 } as const;
 
+export const modelVendorColors = {
+  OpenAI: chartColors.black,
+  Anthropic: chartColors.orange,
+  Google: chartColors.blue,
+  GitHub: chartColors.violet,
+  Microsoft: chartColors.green,
+  xAI: chartColors.gray,
+  'Moonshot AI': chartColors.cyan,
+  Unattributed: chartColors.amber,
+} as const;
+
 /**
  * IDE/client brand colors for consistent representation across distribution and activity charts.
  * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').

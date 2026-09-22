@@ -20,6 +20,7 @@ describe('model aggregation orchestration', () => {
       modelBreakdownData: {
         allModels: [],
         modelCategories: [],
+        modelVendors: [],
         autoModels: [],
         cliModels: [],
         autoModeAdoptionTrend: [],
@@ -123,6 +124,20 @@ describe('model aggregation orchestration', () => {
       },
       {
         model: 'unknown',
+        total: 3,
+        dailyData: { '2024-01-16': 3 },
+        users: 1,
+      },
+    ]);
+    expect(result.modelBreakdownData.modelVendors).toEqual([
+      {
+        vendor: 'OpenAI',
+        total: 10,
+        dailyData: { '2024-01-15': 6, '2024-01-16': 4 },
+        users: 2,
+      },
+      {
+        vendor: 'Unattributed',
         total: 3,
         dailyData: { '2024-01-16': 3 },
         users: 1,

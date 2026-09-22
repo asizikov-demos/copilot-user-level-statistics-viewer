@@ -20,6 +20,12 @@ function makeModelMetrics(): AggregatedMetrics {
           dailyData: { '2026-01-15': 11 },
           users: 1,
         }],
+        modelVendors: [{
+          vendor: 'OpenAI',
+          total: 11,
+          dailyData: { '2026-01-15': 11 },
+          users: 1,
+        }],
         autoModels: [
           {
             model: 'auto',
@@ -125,6 +131,7 @@ describe('model details read model', () => {
     expect(model).toEqual({
       allModels: metrics.models.modelBreakdownData.allModels,
       modelCategories: metrics.models.modelBreakdownData.modelCategories,
+      modelVendors: metrics.models.modelBreakdownData.modelVendors,
       autoModels: metrics.models.modelBreakdownData.autoModels,
       autoModeAdoptionTrend: metrics.models.modelBreakdownData.autoModeAdoptionTrend,
       dates: metrics.models.modelBreakdownData.dates,
@@ -132,6 +139,19 @@ describe('model details read model', () => {
       autoTotal: 3.25,
       categoryTables: [{
         category: 'Powerful',
+        users: 1,
+        interactions: 11,
+        sharePercentage: 100,
+        rows: [{
+          model: 'gpt-5',
+          displayName: 'Gpt 5',
+          interactions: 11,
+          sharePercentage: 100,
+          users: 1,
+        }],
+      }],
+      vendorTables: [{
+        vendor: 'OpenAI',
         users: 1,
         interactions: 11,
         sharePercentage: 100,
@@ -156,6 +176,11 @@ describe('model details read model', () => {
     expect(model.modelCategories[0].dailyData).toBe(
       metrics.models.modelBreakdownData.modelCategories[0].dailyData
     );
+    expect(model.modelVendors).toBe(metrics.models.modelBreakdownData.modelVendors);
+    expect(model.modelVendors[0]).toBe(metrics.models.modelBreakdownData.modelVendors[0]);
+    expect(model.modelVendors[0].dailyData).toBe(
+      metrics.models.modelBreakdownData.modelVendors[0].dailyData
+    );
     expect(model.autoModels).toBe(metrics.models.modelBreakdownData.autoModels);
     expect(model.autoModels[0]).toBe(metrics.models.modelBreakdownData.autoModels?.[0]);
     expect(model.autoModels[0].dailyData).toBe(
@@ -171,12 +196,14 @@ describe('model details read model', () => {
     expect(Object.keys(model)).toEqual([
       'allModels',
       'modelCategories',
+      'modelVendors',
       'autoModels',
       'autoModeAdoptionTrend',
       'dates',
       'modelTotal',
       'autoTotal',
       'categoryTables',
+      'vendorTables',
     ]);
     expect(model).not.toHaveProperty('modelBreakdownData');
     expect(model).not.toHaveProperty('cliModels');
@@ -192,15 +219,18 @@ describe('model details read model', () => {
     expect(model).toEqual({
       allModels: [],
       modelCategories: [],
+      modelVendors: [],
       autoModels: [],
       autoModeAdoptionTrend: [],
       dates: [],
       modelTotal: 0,
       autoTotal: 0,
       categoryTables: [],
+      vendorTables: [],
     });
     expect(model.allModels).toBe(metrics.models.modelBreakdownData.allModels);
     expect(model.modelCategories).toBe(metrics.models.modelBreakdownData.modelCategories);
+    expect(model.modelVendors).toBe(metrics.models.modelBreakdownData.modelVendors);
     expect(model.autoModels).toBe(metrics.models.modelBreakdownData.autoModels);
     expect(model.autoModeAdoptionTrend).toBe(
       metrics.models.modelBreakdownData.autoModeAdoptionTrend
@@ -223,12 +253,14 @@ describe('model details read model', () => {
     expect(selectModelDetailsReadModel(metrics)).toEqual({
       allModels: metrics.models.modelBreakdownData.allModels,
       modelCategories: metrics.models.modelBreakdownData.modelCategories,
+      modelVendors: metrics.models.modelBreakdownData.modelVendors,
       autoModels: [],
       autoModeAdoptionTrend: [],
       dates: metrics.models.modelBreakdownData.dates,
       modelTotal: 0,
       autoTotal: 0,
       categoryTables: [],
+      vendorTables: [],
     });
   });
 

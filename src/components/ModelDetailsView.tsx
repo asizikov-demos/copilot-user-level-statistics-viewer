@@ -3,8 +3,10 @@
 import React from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import ModelCategoryDistributionChart from './charts/ModelCategoryDistributionChart';
+import ModelVendorDistributionChart from './charts/ModelVendorDistributionChart';
 import AutoModeAdoptionTrendChart from './charts/AutoModeAdoptionTrendChart';
 import ModelCategoryBreakdown from './ModelCategoryBreakdown';
+import ModelVendorBreakdown from './ModelVendorBreakdown';
 import type { ModelDetailsReadModel } from '../read-models/models';
 import { ViewPanel } from './ui';
 import { MODEL_DETAILS_SECTIONS } from './layout/contextSections';
@@ -17,17 +19,21 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
   const {
     allModels,
     modelCategories,
+    modelVendors,
     autoModels,
     autoModeAdoptionTrend,
     dates,
     modelTotal,
     autoTotal,
     categoryTables,
+    vendorTables,
   } = model;
   const [
     allModelsSection,
     modelTypesSection,
     modelsByCategorySection,
+    modelVendorsSection,
+    modelsByVendorSection,
     autoModelsSection,
     autoAdoptionSection,
   ] = MODEL_DETAILS_SECTIONS;
@@ -53,6 +59,16 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
         </div>
         <div id={modelsByCategorySection.id} className="scroll-mt-28">
           <ModelCategoryBreakdown categoryTables={categoryTables} />
+        </div>
+        <div id={modelVendorsSection.id} className="scroll-mt-28">
+          <ModelVendorDistributionChart
+            entries={modelVendors}
+            dates={dates}
+            totalInteractions={modelTotal}
+          />
+        </div>
+        <div id={modelsByVendorSection.id} className="scroll-mt-28">
+          <ModelVendorBreakdown vendorTables={vendorTables} />
         </div>
         <div id={autoModelsSection.id} className="scroll-mt-28">
           <ModelsUsageChart modelEntries={autoModels} dates={dates} totalInteractions={autoTotal} variant="auto" />
