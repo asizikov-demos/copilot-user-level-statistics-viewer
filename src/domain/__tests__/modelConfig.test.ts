@@ -40,16 +40,26 @@ describe('modelConfig', () => {
       expect(getModelCategory('Gemini 3.8 Flash')).toBe('Versatile');
       expect(getModelCategory('Grok 4.5')).toBe('Versatile');
       expect(getModelCategory('Grok 4.6')).toBe('Versatile');
+      expect(getModelCategory('Grok 4.7')).toBe('Versatile');
       expect(getModelCategory('Kimi K3')).toBe('Powerful');
       expect(getModelCategory('MAI-Code-1.1-Flash')).toBe('Lightweight');
       expect(getModelCategory('legacy-model')).toBeUndefined();
     });
 
     it('should categorize every known model', () => {
-      expect(
-        KNOWN_MODELS
-          .every(model => model.category !== undefined)
-      ).toBe(true);
+      for (const model of KNOWN_MODELS) {
+        expect(['Lightweight', 'Powerful', 'Versatile']).toContain(getModelCategory(model.name));
+      }
+    });
+
+    it.each(['grok-4.7', 'Grok 4.7', '  GROK_4.7  '])('should recognize and categorize %s', modelName => {
+      expect(classifyModelRequest(modelName)).toEqual({
+        normalizedModel: 'grok-4.7',
+        isUnknown: false,
+        isKnownModel: true,
+      });
+      expect(isKnownModelName(modelName)).toBe(true);
+      expect(getModelCategory(modelName)).toBe('Versatile');
     });
 
     it('should keep sentinel values out of the known model catalog', () => {
