@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   accumulateCliCustomizations,
   computeCliCustomizations,
@@ -25,6 +25,49 @@ function buildSection(...records: CliCustomizationFields[]) {
 }
 
 describe('user customizations', () => {
+  it('keeps profile section keys unique and resets their state when switching users', async () => {
+    const records = [1, 2].map(user_id => makeMetric({
+      user_id,
+      user_login: `user-${user_id}`,
+      distinct_skill_use_count: 1,
+      totals_by_skill: [{ skill: 'review', interaction_count: 2 }],
+      totals_by_vscode_agent: { session_count: 1, total_user_messages: 2 },
+    }));
+    const { aggregated, userDetailAccumulator } = aggregateMetrics(records);
+    const profile = (userId: number) => (
+      <NavigationProvider>
+        <UserDetailsView model={{
+          userDetails: computeSingleUserDetailedMetrics(userDetailAccumulator, userId)!,
+          userSummary: aggregated.users.userSummaries.find(user => user.user_id === userId)!,
+          interactionRank: { rank: 1, totalUsers: 2 },
+          userLogin: `user-${userId}`,
+          userId,
+        }} />
+      </NavigationProvider>
+    );
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let renderer: ReactTestRenderer | undefined;
+    try {
+      await act(async () => { renderer = create(profile(1)); });
+      expect(errors.mock.calls.filter(args => args.join(' ').includes('same key'))).toEqual([]);
+      const customizations = renderer!.root.findByType(UserDetailsCustomizationsSection);
+      await act(async () => {
+        customizations.findByType('button').props.onClick();
+        renderer!.root.findByType('select').props.onChange({ target: { value: 'userInputs' } });
+      });
+      expect(customizations.findByType('button').props['aria-expanded']).toBe(true);
+      expect(renderer!.root.findByType('select').props.value).toBe('userInputs');
+
+      await act(async () => { renderer!.update(profile(2)); });
+      expect(renderer!.root.findByType(UserDetailsCustomizationsSection).findByType('button').props['aria-expanded']).toBe(false);
+      expect(renderer!.root.findByType('select').props.value).toBe('sessions');
+      expect(errors.mock.calls.filter(args => args.join(' ').includes('same key'))).toEqual([]);
+    } finally {
+      await act(async () => { renderer?.unmount(); });
+      errors.mockRestore();
+    }
+  });
+
   it('hides the section when all customization data is missing', () => {
     expect(renderToStaticMarkup(buildSection({}))).toBe('');
     expect(renderToStaticMarkup(buildSection({ totals_by_skill: null, distinct_skill_use_count: null }))).toBe('');
@@ -218,7 +261,10 @@ describe('user customizations', () => {
       </NavigationProvider>,
     );
     expect(markup).toContain('id="user-details-client-activity"');
-    expect(markup).toContain('id="user-details-vscode-agents"');
+    expect(markup).toContain('id="user-details-agent-activity"');
+    expect(markup).not.toContain('id="user-details-vscode-agents"');
+    expect(markup).toContain('Daily agent sessions');
+    expect(markup).not.toContain('Daily CLI Sessions');
     expect(markup).toContain('<span>Copilot CLI</span>');
     expect(markup).toContain('Sessions');
     expect(markup).not.toMatch(/active users/i);
@@ -252,8 +298,33 @@ describe('user customizations', () => {
     expect(markup).toContain('>Customizations</h2>');
     expect(markup).toContain('>2</td>');
     expect(markup).not.toContain('CLI Customizations');
-    for (const id of ['user-details-client-activity', 'user-details-feature-activity', 'user-details-language-activity', 'user-details-model-activity', 'user-details-vscode-agents']) {
+    for (const id of ['user-details-client-activity', 'user-details-feature-activity', 'user-details-language-activity', 'user-details-model-activity', 'user-details-vscode-agents', 'user-details-agent-activity']) {
       expect(markup).not.toContain(`id="${id}"`);
     }
+  });
+
+  it.each([
+    { session_count: 2, total_user_messages: 7 },
+    { total_user_messages: 0 },
+  ])('shows agent activity for VS Code Agents-only profiles: %j', totals_by_vscode_agent => {
+    const metric = makeMetric({ used_vscode_agent: true, totals_by_vscode_agent });
+    const { aggregated, userDetailAccumulator } = aggregateMetrics([metric]);
+    const markup = renderToStaticMarkup(
+      <NavigationProvider>
+        <UserDetailsView model={{
+          userDetails: computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id)!,
+          userSummary: aggregated.users.userSummaries[0],
+          interactionRank: { rank: 1, totalUsers: 1 },
+          userLogin: metric.user_login,
+          userId: metric.user_id,
+        }} />
+      </NavigationProvider>,
+    );
+    expect(markup).toContain('id="user-details-agent-activity"');
+    expect(markup).toContain('Daily agent sessions');
+    expect(markup).toContain('Prompts &amp; messages');
+    expect(markup).not.toContain('id="user-details-vscode-agents"');
+    expect(markup).not.toContain('Token Usage');
+    expect(markup).not.toContain('Daily CLI Sessions');
   });
 });

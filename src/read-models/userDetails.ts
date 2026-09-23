@@ -1,10 +1,7 @@
 import type { AggregatedMetrics, UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { UserSummary } from '../types/metrics';
 import type { SelectedUser } from '../types/navigation';
-import type {
-  DailyCliSessionData,
-  DailyCliTokenData,
-} from '../domain/calculators/metricCalculators';
+import type { DailyCliTokenData } from '../domain/calculators/metricCalculators';
 import { mapReportRangeData } from '../utils/timeSeries';
 import { generateDateRange } from '../utils/formatters';
 
@@ -57,9 +54,8 @@ export interface UserDetailsHeaderReadModel {
 export interface CopilotCliAndAppUsageReadModel {
   dailyCliTokenData: DailyCliTokenData[];
   dailyAppTokenData: DailyCliTokenData[];
-  dailyCliSessionData: DailyCliSessionData[];
-  dailyAppSessionData: DailyCliSessionData[];
   hasActivity: boolean;
+  hasAppActivity: boolean;
 }
 
 function selectDailyClientUsage<T>(
@@ -99,18 +95,6 @@ export function selectCopilotCliAndAppUsageReadModel(
     promptTokens: totals?.token_usage.prompt_tokens_sum ?? 0,
     requestCount: totals?.request_count ?? 0,
   });
-  const toSessionData = (
-    date: string,
-    totals: NonNullable<UserDetailedMetrics['days'][number]['totals_by_copilot_app']>
-      | NonNullable<UserDetailedMetrics['days'][number]['totals_by_cli']>
-      | undefined
-  ): DailyCliSessionData => ({
-    date,
-    sessionCount: totals?.session_count ?? 0,
-    requestCount: totals?.request_count ?? 0,
-    promptCount: totals?.prompt_count ?? 0,
-    uniqueUsers: totals ? 1 : 0,
-  });
   const getCliTotals = (day: UserDetailedMetrics['days'][number]) => day.totals_by_cli;
   const getAppTotals = (day: UserDetailedMetrics['days'][number]) => day.totals_by_copilot_app;
   const hasActivity = userDetails.days.some(
@@ -120,9 +104,8 @@ export function selectCopilotCliAndAppUsageReadModel(
     return {
       dailyCliTokenData: [],
       dailyAppTokenData: [],
-      dailyCliSessionData: [],
-      dailyAppSessionData: [],
       hasActivity: false,
+      hasAppActivity: false,
     };
   }
 
@@ -132,9 +115,8 @@ export function selectCopilotCliAndAppUsageReadModel(
   return {
     dailyCliTokenData,
     dailyAppTokenData,
-    dailyCliSessionData: selectDailyClientUsage(userDetails, getCliTotals, toSessionData),
-    dailyAppSessionData: selectDailyClientUsage(userDetails, getAppTotals, toSessionData),
     hasActivity: true,
+    hasAppActivity: userDetails.days.some(day => getAppTotals(day) != null),
   };
 }
 

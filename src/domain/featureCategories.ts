@@ -83,6 +83,10 @@ const FEATURE_TAXONOMY: readonly FeatureTaxonomyEntry[] = [
     label: 'Copilot App',
     isJoinedImpact: true,
   },
+  {
+    feature: 'vscode_agent',
+    label: 'VS Code Agents',
+  },
 ];
 
 const FEATURE_LOOKUP = new Map(FEATURE_TAXONOMY.map((entry) => [entry.feature, entry]));

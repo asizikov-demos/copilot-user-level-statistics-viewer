@@ -31,6 +31,7 @@ import type {
 import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 import type { VSCodeAgentUsage } from './vscodeAgent';
 import type { CliCustomizationSummary } from './cliCustomizations';
+import type { AgentActivity } from './agentActivity';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -107,6 +108,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  agentActivity: AgentActivity;
   cliCustomizations: CliCustomizationSummary[];
   vscodeAgentUsage: VSCodeAgentUsage;
   totalModelRequests: number;

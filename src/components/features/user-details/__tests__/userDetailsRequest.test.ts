@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import { runUserDetailsRequest } from '../userDetailsRequest';
 import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
+import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
 
 const details: UserDetailedMetrics = {
+  agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
   totalModelRequests: 0,

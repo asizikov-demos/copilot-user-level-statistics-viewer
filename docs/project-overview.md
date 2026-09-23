@@ -96,11 +96,19 @@ zeros. These metrics are not added to generic interaction, client, LOC, or Agent
 rollups. Aggregate enterprise/organization report files are not a new supported input.
 
 The Copilot Adoption view shows a dedicated VS Code Agents chart and expandable daily
-table. On-demand user details show sessions and user messages as grouped bars without
-a daily table, omitting active-user counts from the chart and summary. The user
-section is hidden when neither count is reported. The aggregate Adoption chart retains
-its active-user counts and line series. Missing chart days remain gaps, explicit zeros remain
-zeros, and partial coverage is labeled. Day details preserve the original optional
+table. User profiles instead combine CLI, Copilot App, and VS Code Agents in an
+Agent-native activity section. Its Daily agent sessions chart uses grouped bars
+and offers a Prompts & messages selector (CLI/App prompts versus VS Code Agents
+user messages). Tooltips include requests for CLI/App only; their token chart
+remains separate. Worker-computed `agentActivity` daily counts and per-surface
+summaries use dedicated totals, never feature interaction counts or editor Agent
+Mode activity. Only reported counts are summed; missing values remain null and
+explicit zeros stay visible across the full report date range. Sessions are not
+deduplicated across surfaces, and prompts/messages may have different counting
+definitions. Surfaces without reported sessions or user inputs are omitted.
+VS Code Agents-only users see the combined section without an empty token chart.
+The standalone profile VS Code Agents chart is removed; the aggregate Adoption
+chart retains its active-user counts and line series. Day details preserve the original optional
 flag and totals; the Users feature filter selects users explicitly reported as having
 used VS Code Agents. Parsing and all new aggregation remain inside the worker.
 

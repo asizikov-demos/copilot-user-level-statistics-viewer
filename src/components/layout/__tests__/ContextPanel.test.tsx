@@ -53,12 +53,12 @@ describe('ContextPanel rendered sections', () => {
     ]);
 
     ids.delete('user-details-cli-customizations');
-    ids.add('user-details-vscode-agents');
+    ids.add('user-details-agent-activity');
     await act(async () => { notifyMutation(); });
     expect(renderer!.root.findAllByType('button').map(button => button.children.join(''))).toEqual([
-      'Activity Overview', 'VS Code Agents',
+      'Activity Overview', 'Agent-native activity',
     ]);
-    expect(mocks.activeSection).toHaveBeenLastCalledWith(['user-details-overview', 'user-details-vscode-agents']);
+    expect(mocks.activeSection).toHaveBeenLastCalledWith(['user-details-overview', 'user-details-agent-activity']);
   });
 
   it('waits for sections to mount and hides the panel if all sections disappear', async () => {

@@ -13,13 +13,12 @@ import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/t
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
 import AiCreditsChart from '../../charts/AiCreditsChart';
-import VSCodeAgentUsageChart from '../../charts/VSCodeAgentUsageChart';
 import ModeImpactChart from '../../charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
 import UserActivityByModelAndFeatureChart from './charts/UserActivityByModelAndFeatureChart';
 import DayDetailsModal from './day-details/DayDetailsModal';
-import UserDetailsCliUsageSection from './sections/UserDetailsCliUsageSection';
+import UserDetailsAgentUsageSection from './sections/UserDetailsAgentUsageSection';
 import UserDetailsCustomizationsSection from './sections/UserDetailsCustomizationsSection';
 import UserDetailsFeatureActivitySection from './sections/UserDetailsFeatureActivitySection';
 import UserDetailsHeader from './sections/UserDetailsHeader';
@@ -318,12 +317,12 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     customizationsSection,
     combinedImpactSection,
     impactBreakdownSection,
+    agentActivitySection,
     summarySection,
     clientActivitySection,
     featureActivitySection,
     languageActivitySection,
     modelActivitySection,
-    vscodeAgentsSection,
   ] = USER_DETAILS_SECTIONS;
 
   return (
@@ -366,7 +365,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       </div>
 
       <UserDetailsCustomizationsSection
-        key={userId}
+        key={`${customizationsSection.id}-${userId}`}
         sectionId={customizationsSection.id}
         summaries={userDetails.cliCustomizations}
       />
@@ -391,14 +390,14 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         cliImpact={filledCliImpact}
       />
 
-      {cliAndAppUsage.hasActivity && (
-        <UserDetailsCliUsageSection
-          cliTokenData={cliAndAppUsage.dailyCliTokenData}
-          appTokenData={cliAndAppUsage.dailyAppTokenData}
-          cliSessionData={cliAndAppUsage.dailyCliSessionData}
-          appSessionData={cliAndAppUsage.dailyAppSessionData}
-        />
-      )}
+      <UserDetailsAgentUsageSection
+        key={`${agentActivitySection.id}-${userId}`}
+        sectionId={agentActivitySection.id}
+        activity={userDetails.agentActivity}
+        tokenUsage={cliAndAppUsage}
+        reportStartDay={userDetails.reportStartDay}
+        reportEndDay={userDetails.reportEndDay}
+      />
 
       <div id={summarySection.id} className="scroll-mt-28">
         <UserSummaryChart
@@ -459,18 +458,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
             days={userDetails.days}
             reportStartDay={userDetails.reportStartDay}
             reportEndDay={userDetails.reportEndDay}
-          />
-        </div>
-      )}
-
-      {(userDetails.vscodeAgentUsage.summary.sessionsReportedRecords > 0
-        || userDetails.vscodeAgentUsage.summary.messagesReportedRecords > 0) && (
-        <div id={vscodeAgentsSection.id} className="scroll-mt-28">
-          <VSCodeAgentUsageChart
-            data={userDetails.vscodeAgentUsage}
-            reportStartDay={userDetails.reportStartDay}
-            reportEndDay={userDetails.reportEndDay}
-            scope="user"
           />
         </div>
       )}

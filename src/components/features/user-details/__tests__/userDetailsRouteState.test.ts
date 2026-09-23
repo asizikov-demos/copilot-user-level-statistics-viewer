@@ -3,6 +3,7 @@ import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import type { UserSummary } from '../../../../types/metrics';
 import { VIEW_MODES } from '../../../../types/navigation';
 import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
+import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
@@ -36,6 +37,7 @@ const userSummary: UserSummary = {
   used_copilot_code_review_passive: false,
 };
 const details: UserDetailedMetrics = {
+  agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
   totalModelRequests: 0,
