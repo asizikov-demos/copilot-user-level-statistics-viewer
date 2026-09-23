@@ -83,7 +83,10 @@ export default function ExecutiveSummaryView({
               </div>
               <div>
                 <span className="font-medium text-gray-900 print:text-black">Enterprise:</span>{' '}
-                <span>{enterpriseName ?? enterpriseId ?? 'N/A'}</span>
+                <span>
+                  {enterpriseName ?? enterpriseId ?? 'N/A'}
+                  {enterpriseName != null && enterpriseId != null ? ` (ID: ${enterpriseId})` : ''}
+                </span>
               </div>
             </div>
             <div className="text-xs text-gray-500 print:text-black">
