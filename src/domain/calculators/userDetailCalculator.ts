@@ -1,5 +1,6 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import { computeAgentActivity } from './agentActivityCalculator';
 import {
   accumulateCliCustomizations,
   computeCliCustomizations,
@@ -378,6 +379,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
+    agentActivity: computeAgentActivity(state.days),
     cliCustomizations: computeCliCustomizations(state.cliCustomizations),
     vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),
     total_ai_credits_used: state.totalAiCreditsUsed,

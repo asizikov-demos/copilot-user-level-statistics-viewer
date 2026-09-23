@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../../domain/metricsAggregator';
+import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
 import type {
   AggregatedMetrics,
   UserDetailedMetrics,
@@ -73,6 +74,7 @@ vi.mock('../UserDetailsView', () => ({
 }));
 
 const details: UserDetailedMetrics = {
+  agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: aggregateMetrics([]).aggregated.adoption.vscodeAgentUsage,
   totalModelRequests: 0,

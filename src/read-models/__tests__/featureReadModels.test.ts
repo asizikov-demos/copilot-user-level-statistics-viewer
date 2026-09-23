@@ -211,7 +211,7 @@ describe('feature read models', () => {
     expect(header.topPercent).toBe(100);
   });
 
-  it('projects aligned CLI and App usage series across the report range', () => {
+  it('projects aligned CLI and App token series across the report range', () => {
     const accumulator = createUserDetailAccumulator();
     accumulator.reportStartDay = '2024-01-01';
     accumulator.reportEndDay = '2024-01-02';
@@ -244,13 +244,10 @@ describe('feature read models', () => {
     const usage = selectCopilotCliAndAppUsageReadModel(details!);
 
     expect(usage.hasActivity).toBe(true);
-    expect(usage.dailyCliSessionData).toEqual([
-      { date: '2024-01-01', sessionCount: 2, requestCount: 4, promptCount: 3, uniqueUsers: 1 },
-      { date: '2024-01-02', sessionCount: 0, requestCount: 0, promptCount: 0, uniqueUsers: 0 },
-    ]);
-    expect(usage.dailyAppSessionData).toEqual([
-      { date: '2024-01-01', sessionCount: 1, requestCount: 5, promptCount: 2, uniqueUsers: 1 },
-      { date: '2024-01-02', sessionCount: 0, requestCount: 0, promptCount: 0, uniqueUsers: 0 },
+    expect(usage.hasAppActivity).toBe(true);
+    expect(usage.dailyCliTokenData).toEqual([
+      { date: '2024-01-01', outputTokens: 20, promptTokens: 30, requestCount: 4 },
+      { date: '2024-01-02', outputTokens: 0, promptTokens: 0, requestCount: 0 },
     ]);
     expect(usage.dailyAppTokenData[0]).toEqual({
       date: '2024-01-01',
