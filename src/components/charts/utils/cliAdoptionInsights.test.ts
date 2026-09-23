@@ -13,6 +13,7 @@ function makeStats(overrides: Partial<MetricsStats> = {}): MetricsStats {
     completionOnlyUsers: 20,
     reportStartDay: '2024-01-01',
     reportEndDay: '2024-01-15',
+    enterpriseId: null,
     totalRecords: 150,
     topLanguage: { name: 'TypeScript', engagements: 80 },
     topIde: { name: 'VSCode', entries: 60 },

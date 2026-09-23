@@ -21,6 +21,7 @@ export interface StatsAccumulator {
   modelEngagements: Map<string, number>;
   reportStartDay: string;
   reportEndDay: string;
+  enterpriseId: string | null;
 }
 
 export function createStatsAccumulator(): StatsAccumulator {
@@ -31,6 +32,7 @@ export function createStatsAccumulator(): StatsAccumulator {
     modelEngagements: new Map(),
     reportStartDay: '',
     reportEndDay: '',
+    enterpriseId: null,
   };
 }
 
@@ -57,6 +59,15 @@ export function accumulateUserUsage(
     used_copilot_app: existing.used_copilot_app || usedCopilotApp,
     used_copilot_coding_agent: existing.used_copilot_coding_agent || usedCopilotCodingAgent,
   });
+}
+
+export function accumulateEnterpriseId(
+  accumulator: StatsAccumulator,
+  enterpriseId: string | undefined
+): void {
+  if (accumulator.enterpriseId !== null) return;
+  const trimmed = enterpriseId?.trim();
+  if (trimmed) accumulator.enterpriseId = trimmed;
 }
 
 export function accumulateIdeUser(
@@ -142,6 +153,7 @@ export function computeStats(
     completionOnlyUsers: completionOnlyUsersCount,
     reportStartDay: accumulator.reportStartDay,
     reportEndDay: accumulator.reportEndDay,
+    enterpriseId: accumulator.enterpriseId,
     totalRecords,
     topLanguage,
     topIde,
@@ -163,6 +175,7 @@ export function calculateStatsFromMetrics(
       completionOnlyUsers: 0,
       reportStartDay: '',
       reportEndDay: '',
+      enterpriseId: null,
       totalRecords: 0,
       topLanguage: { name: 'N/A', engagements: 0 },
       topIde: { name: 'N/A', entries: 0 },
@@ -177,6 +190,7 @@ export function calculateStatsFromMetrics(
   accumulator.reportEndDay = metrics[0].report_end_day;
 
   for (const metric of metrics) {
+    accumulateEnterpriseId(accumulator, metric.enterprise_id);
     accumulateUserUsage(
       accumulator,
       metric.user_id,

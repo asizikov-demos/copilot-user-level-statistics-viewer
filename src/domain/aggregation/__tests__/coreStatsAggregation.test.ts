@@ -22,6 +22,7 @@ describe('core stats aggregation lifecycle', () => {
     expect(result.stats.reportEndDay).toBe('');
     expect(result.stats.totalRecords).toBe(0);
     expect(result.stats.uniqueUsers).toBe(0);
+    expect(result.stats.enterpriseId).toBeNull();
   });
 
   it('owns first-record metadata, usage signals, and shared dimension stats', () => {
@@ -29,12 +30,14 @@ describe('core stats aggregation lifecycle', () => {
     const sharedStats = getStatsAccumulatorForDimensions(accumulator);
     const first = makeMetric({
       user_id: 1,
+      enterprise_id: ' ',
       report_start_day: '2024-02-01',
       report_end_day: '2024-02-29',
       used_chat: true,
     });
     const second = makeMetric({
       user_id: 2,
+      enterprise_id: ' 48213 ',
       report_start_day: '2024-03-01',
       report_end_day: '2024-03-31',
       used_copilot_coding_agent: false,
@@ -51,6 +54,7 @@ describe('core stats aggregation lifecycle', () => {
     expect(result.stats).toMatchObject({
       reportStartDay: '2024-02-01',
       reportEndDay: '2024-02-29',
+      enterpriseId: '48213',
       totalRecords: 2,
       uniqueUsers: 2,
       chatUsers: 1,
