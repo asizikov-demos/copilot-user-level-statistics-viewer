@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it } from 'vitest';
 import { buildOverviewHeaderModel } from '../../../../read-models/overviewHeader';
 import OverviewHeader from '../OverviewHeader';
@@ -23,6 +24,28 @@ const model = buildOverviewHeaderModel({
 });
 
 describe('OverviewHeader', () => {
+  it('keeps the accessible daily activity list outside the atomic image role', async () => {
+    let renderer: ReactTestRenderer | undefined;
+    try {
+      await act(async () => {
+        renderer = create(<OverviewHeader model={model} enterpriseName="acme" />);
+      });
+
+      const image = renderer!.root.findByProps({ role: 'img' });
+      const list = renderer!.root.findByProps({ 'aria-label': 'Daily activity' });
+
+      expect(image.props['aria-label']).toContain('Peak of 700');
+      expect(list.type).toBe('ul');
+      expect(list.props.className).toBe('sr-only');
+      expect(list.findAllByType('li')).toHaveLength(model.days.length);
+      for (let ancestor = list.parent; ancestor; ancestor = ancestor.parent) {
+        expect(ancestor.props.role).not.toBe('img');
+      }
+    } finally {
+      await act(async () => { renderer?.unmount(); });
+    }
+  });
+
   it('shows the enterprise identity, window, users, and billing months', () => {
     const html = renderToStaticMarkup(<OverviewHeader model={model} enterpriseName="acme" />);
 
