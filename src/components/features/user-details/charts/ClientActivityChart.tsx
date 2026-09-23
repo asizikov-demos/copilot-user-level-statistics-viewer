@@ -165,7 +165,9 @@ export default function ClientActivityChart({
     [cliTotals, days],
   );
   const clientRows = useMemo(
-    () => (cliClientRow ? [...ideClientRows, cliClientRow] : ideClientRows),
+    () => [...ideClientRows, ...(cliClientRow ? [cliClientRow] : [])].sort(
+      (a, b) => b.user_initiated_interaction_count - a.user_initiated_interaction_count,
+    ),
     [ideClientRows, cliClientRow],
   );
   const hasCliVersions = cliVersions && cliVersions.length > 0;
@@ -190,7 +192,7 @@ export default function ClientActivityChart({
         <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IDE</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
