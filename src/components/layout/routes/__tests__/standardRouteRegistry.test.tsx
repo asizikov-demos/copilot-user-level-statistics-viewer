@@ -11,6 +11,7 @@ import type {
   ExecutiveSummaryReadModel,
   OverviewReadModel,
 } from '../../../../read-models/overview';
+import { buildOverviewHeaderModel } from '../../../../read-models/overviewHeader';
 import type { LanguagesReadModel } from '../../../../read-models/languages';
 import type { UsersReadModel } from '../../../../read-models/users';
 import type { SurfaceProductivityReadModel } from '../../../../read-models/surfaceProductivity';
@@ -237,6 +238,15 @@ describe('standard route registry', () => {
       engagementData: aggregatedMetrics.overview.engagementData,
       chatUsersData: aggregatedMetrics.overview.chatUsersData,
       chatRequestsData: aggregatedMetrics.overview.chatRequestsData,
+      header: buildOverviewHeaderModel({
+        uniqueUsers: aggregatedMetrics.overview.stats.uniqueUsers,
+        enterpriseId: aggregatedMetrics.overview.stats.enterpriseId,
+        reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
+        reportEndDay: aggregatedMetrics.overview.stats.reportEndDay,
+        engagementData: aggregatedMetrics.overview.engagementData,
+        dailyAiCreditsData: aggregatedMetrics.ai.dailyAiCreditsData,
+        dailyLocData: aggregatedMetrics.impact.joinedImpactData,
+      }),
     };
     usersModel = { users: aggregatedMetrics.users.userSummaries };
     aiCreditsModel = {

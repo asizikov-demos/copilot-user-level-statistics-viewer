@@ -31,6 +31,7 @@ describe('feature read models', () => {
       engagementData: metrics.overview.engagementData,
       chatUsersData: metrics.overview.chatUsersData,
       chatRequestsData: metrics.overview.chatRequestsData,
+      header: expect.any(Object),
     });
     expect(model.engagementData).toBe(metrics.overview.engagementData);
     expect(model.chatUsersData).toBe(metrics.overview.chatUsersData);
@@ -41,6 +42,7 @@ describe('feature read models', () => {
       'engagementData',
       'chatUsersData',
       'chatRequestsData',
+      'header',
     ]);
   });
 
@@ -51,6 +53,7 @@ describe('feature read models', () => {
     expect(model).toEqual({
       reportStartDay: metrics.overview.stats.reportStartDay,
       reportEndDay: metrics.overview.stats.reportEndDay,
+      enterpriseId: metrics.overview.stats.enterpriseId,
       joinedImpactData: metrics.impact.joinedImpactData,
       agentImpactData: metrics.impact.agentImpactData,
       codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
@@ -63,6 +66,7 @@ describe('feature read models', () => {
     expect(Object.keys(model)).toEqual([
       'reportStartDay',
       'reportEndDay',
+      'enterpriseId',
       'joinedImpactData',
       'agentImpactData',
       'codeCompletionImpactData',
