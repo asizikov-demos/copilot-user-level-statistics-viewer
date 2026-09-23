@@ -121,6 +121,7 @@ export interface MetricsStats {
   completionOnlyUsers: number;
   reportStartDay: string;
   reportEndDay: string;
+  enterpriseId: string | null;
   totalRecords: number;
   topLanguage: { name: string; engagements: number };
   topIde: { name: string; entries: number };

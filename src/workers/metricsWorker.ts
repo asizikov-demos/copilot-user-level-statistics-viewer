@@ -1,6 +1,7 @@
 import { parseMultipleMetricsStreams } from '../infra/metricsFileParser';
 import { aggregateMetrics } from '../domain/metricsAggregator';
 import { computeSingleUserDetailedMetrics } from '../domain/calculators';
+import { deriveEnterpriseName } from '../domain/enterpriseName';
 import type { CopilotMetrics } from '../types/metrics';
 import type { UserDetailAccumulator } from '../domain/calculators';
 import type { WorkerRequest, WorkerResponse } from './types';
@@ -18,16 +19,8 @@ function postResponse(response: WorkerResponse): void {
   ctx.postMessage(response);
 }
 
-function extractEnterpriseName(metrics: CopilotMetrics[]): string | null {
-  if (metrics.length === 0) return null;
-  const first = metrics[0];
-  const loginSuffix = first.user_login?.includes('_')
-    ? first.user_login.split('_').pop()?.trim()
-    : undefined;
-  const enterpriseId = first.enterprise_id.trim();
-  return loginSuffix && loginSuffix.length > 0
-    ? loginSuffix
-    : (enterpriseId.length > 0 ? enterpriseId : null);
+function* userLogins(metrics: CopilotMetrics[]): Generator<string | undefined> {
+  for (const metric of metrics) yield metric.user_login;
 }
 
 ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
@@ -53,7 +46,7 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           type: 'parseAndAggregateResult',
           id: msg.id,
           result: aggregated,
-          enterpriseName: extractEnterpriseName(parseResult.metrics),
+          enterpriseName: deriveEnterpriseName(userLogins(parseResult.metrics)),
           recordCount: parseResult.metrics.length,
           errors: parseResult.errors,
         });

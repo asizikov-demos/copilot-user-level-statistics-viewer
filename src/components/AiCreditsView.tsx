@@ -5,6 +5,8 @@ import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import TopEntriesList from './ui/TopEntriesList';
+import AiCreditsStatementCard from './AiCreditsStatementCard';
+import { buildAiCreditsStatement } from '../read-models/aiCreditsStatement';
 import type { AiCreditsReadModel } from '../read-models/aiCredits';
 import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber, formatPercentage } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
@@ -37,6 +39,10 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     onUserClick,
   } = model;
   const hasAiCreditsData = dailyAiCreditsData.some(entry => entry.aiCreditsUsed > 0);
+  const statement = useMemo(
+    () => buildAiCreditsStatement(userSummaries, dailyAiCreditsData),
+    [userSummaries, dailyAiCreditsData]
+  );
 
   const topUsers = useMemo<TopAiCreditsUser[]>(() => {
     return userSummaries
@@ -226,6 +232,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
         title: 'AI Credits',
         description: 'AI credit consumption across the reporting period.',
       }}
+      afterHeader={<AiCreditsStatementCard statement={statement} />}
       contentClassName="space-y-8"
     >
       {hasAiCreditsData ? (

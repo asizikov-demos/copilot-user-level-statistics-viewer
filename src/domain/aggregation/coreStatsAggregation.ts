@@ -1,6 +1,7 @@
 import type { OverviewMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
+  accumulateEnterpriseId,
   accumulateUserUsage,
   computeStats,
   createStatsAccumulator,
@@ -39,6 +40,7 @@ export function accumulateCoreStatsAggregation(
   }
 
   accumulator.filteredMetricsCount++;
+  accumulateEnterpriseId(accumulator.stats, metric.enterprise_id);
   accumulateUserUsage(
     accumulator.stats,
     metric.user_id,

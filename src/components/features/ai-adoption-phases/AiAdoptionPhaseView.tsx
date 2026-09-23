@@ -6,6 +6,7 @@ import { AI_ADOPTION_PHASE_SECTIONS } from '../../layout/contextSections';
 import type { AiAdoptionPhaseReadModel } from '../../../read-models/aiAdoptionPhases';
 import { PhaseAssignmentSection } from './sections/PhaseAssignmentSection';
 import { PhaseComparisonSection } from './sections/PhaseComparisonSection';
+import { PhaseDepthHeader } from './sections/PhaseDepthHeader';
 
 interface AiAdoptionPhaseViewProps {
   model: AiAdoptionPhaseReadModel;
@@ -19,8 +20,8 @@ export default function AiAdoptionPhaseView({ model }: AiAdoptionPhaseViewProps)
     <ViewPanel
       headerProps={{
         title: 'AI Adoption Phases',
-        description: 'Compare Copilot adoption cohorts by user count, per-user averages, and their most-used models, clients, and languages.',
       }}
+      afterHeader={<PhaseDepthHeader aiAdoptionPhaseData={aiAdoptionPhaseData} />}
       contentClassName="space-y-8"
     >
       <PhaseComparisonSection
