@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { translateFeature } from '../featureTranslations';
 import {
   FEATURE_ADOPTION_CHART_METADATA,
   FEATURE_TRANSLATIONS,
@@ -11,6 +12,15 @@ import {
 } from '../featureCategories';
 
 describe('featureCategories taxonomy', () => {
+  it('labels VS Code Agents without folding it into editor Agent Mode or other rollups', () => {
+    expect(translateFeature('vscode_agent')).toBe('VS Code Agents');
+    expect(isAgentFeature('vscode_agent')).toBe(false);
+    expect(isChatFeature('vscode_agent')).toBe(false);
+    expect(isCliFeature('vscode_agent')).toBe(false);
+    expect(isJoinedImpactFeature('vscode_agent')).toBe(false);
+    expect(getChatModeBucket('vscode_agent')).toBeUndefined();
+  });
+
   it('keeps feature labels in sync with taxonomy entries', () => {
     const taxonomy = getFeatureTaxonomy();
     expect(Object.keys(FEATURE_TRANSLATIONS)).toHaveLength(taxonomy.length);
