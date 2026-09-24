@@ -13,7 +13,7 @@ import { StandardRouteOutlet } from './routes';
 const ViewRouter: React.FC = () => {
   const { 
     hasData, enterpriseName, aggregatedMetrics,
-    isLoading, error
+    isLoading, error, warning
   } = useMetrics();
   const { currentView, selectUser } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
@@ -71,6 +71,7 @@ const ViewRouter: React.FC = () => {
           view={currentView}
           aggregatedMetrics={aggregatedMetrics}
           enterpriseName={enterpriseName}
+          dataWarning={warning}
           onUserSelect={handleUserClick}
         />
       )}

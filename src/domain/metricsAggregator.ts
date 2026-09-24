@@ -1,6 +1,7 @@
 import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
+import { computeExecutiveSummary } from './calculators/executiveSummaryCalculator';
 import {
   accumulateCoreStatsAggregation,
   createCoreStatsAggregationAccumulator,
@@ -101,6 +102,10 @@ export function assembleAggregatedMetrics({
       engagementData: engagementAdoptionAggregation.engagementData,
       chatUsersData: engagementAdoptionAggregation.chatUsersData,
       chatRequestsData: engagementAdoptionAggregation.chatRequestsData,
+      executiveSummary: computeExecutiveSummary(
+        userSummaryAggregation.userSummaries,
+        engagementAdoptionAggregation.engagementData
+      ),
     },
     users: userSummaryAggregation,
     adoption: {

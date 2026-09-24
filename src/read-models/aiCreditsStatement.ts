@@ -1,15 +1,16 @@
 import type { DailyAiCreditsData } from '../domain/calculators';
 import type { UserSummary } from '../types/metrics';
+import {
+  computeCreditConcentration,
+  type AiCreditsConcentration,
+} from '../domain/calculators/aiCreditsCalculator';
+
+export type { AiCreditsConcentration } from '../domain/calculators/aiCreditsCalculator';
 
 export interface AiCreditsMonthTotal {
   key: string;
   shortLabel: string;
   aiCreditsUsed: number;
-}
-
-export interface AiCreditsConcentration {
-  userCount: number;
-  creditsShare: number;
 }
 
 export interface AiCreditsStatement {
@@ -23,8 +24,6 @@ export interface AiCreditsStatement {
   creditsPerActiveUser: number;
   topDecile: AiCreditsConcentration | null;
 }
-
-const TOP_SHARE = 0.1;
 
 function ratio(value: number, total: number): number {
   return total > 0 ? value / total : 0;
@@ -52,16 +51,10 @@ export function buildAiCreditsStatement(
   const totalAiCreditsUsed = userSummaries.reduce((sum, user) => sum + user.total_ai_credits_used, 0);
   const usersInPhase = userSummaries.filter(user => (user.ai_adoption_phase?.phase_number ?? 0) >= 1).length;
 
-  let topDecile: AiCreditsConcentration | null = null;
-  if (activeUsers > 0 && totalAiCreditsUsed > 0) {
-    const userCount = Math.max(1, Math.ceil(activeUsers * TOP_SHARE));
-    const topCredits = userSummaries
-      .map(user => user.total_ai_credits_used)
-      .sort((a, b) => b - a)
-      .slice(0, userCount)
-      .reduce((sum, credits) => sum + credits, 0);
-    topDecile = { userCount, creditsShare: ratio(topCredits, totalAiCreditsUsed) * 100 };
-  }
+  const topDecile = computeCreditConcentration(
+    userSummaries.map(user => user.total_ai_credits_used),
+    totalAiCreditsUsed
+  );
 
   return {
     activeUsers,

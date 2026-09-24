@@ -8,6 +8,7 @@ interface StandardRouteOutletProps {
   view: StandardViewMode;
   aggregatedMetrics: AggregatedMetrics;
   enterpriseName: string | null;
+  dataWarning?: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;
 }
 
@@ -15,6 +16,7 @@ export default function StandardRouteOutlet({
   view,
   aggregatedMetrics,
   enterpriseName,
+  dataWarning,
   onUserSelect,
 }: StandardRouteOutletProps) {
   const RouteAdapter = resolveStandardRouteAdapter(view);
@@ -23,6 +25,7 @@ export default function StandardRouteOutlet({
     <RouteAdapter
       aggregatedMetrics={aggregatedMetrics}
       enterpriseName={enterpriseName}
+      dataWarning={dataWarning}
       onUserSelect={onUserSelect}
     />
   );

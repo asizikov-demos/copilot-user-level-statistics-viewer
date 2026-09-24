@@ -35,6 +35,7 @@ import { SurfaceProductivityView } from '../../features/surface-productivity';
 export interface StandardRouteContext {
   aggregatedMetrics: AggregatedMetrics;
   enterpriseName: string | null;
+  dataWarning?: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;
 }
 
@@ -66,11 +67,13 @@ export function AiCreditsRouteAdapter({
 export function ExecutiveSummaryRouteAdapter({
   aggregatedMetrics,
   enterpriseName,
+  dataWarning,
 }: StandardRouteContext) {
   return (
     <ExecutiveSummaryView
       model={selectExecutiveSummaryReadModel(aggregatedMetrics)}
       enterpriseName={enterpriseName}
+      dataWarning={dataWarning}
     />
   );
 }

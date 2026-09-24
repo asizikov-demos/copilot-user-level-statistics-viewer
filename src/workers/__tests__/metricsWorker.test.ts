@@ -82,6 +82,31 @@ describe('metricsWorker protocol', () => {
     host.onmessage = originalOnMessage;
   });
 
+  it('returns the leadership brief already aggregated across uploaded files', async () => {
+    const { responses, send } = await loadWorker();
+    await send({
+      type: 'parseAndAggregate',
+      id: 'leadership-brief',
+      files: [
+        createChunkedFile([JSON.stringify(makeMetric({ day: '2026-09-03', ai_credits_used: 0.5 }))], 'later.ndjson'),
+        createChunkedFile([JSON.stringify(makeMetric({ day: '2026-09-01', ai_credits_used: 0.25 }))], 'earlier.ndjson'),
+      ],
+    });
+    const response = responses.find(message => message.type === 'parseAndAggregateResult');
+    expect(response?.result.overview.executiveSummary).toMatchObject({
+      observedStartDay: '2026-09-01',
+      observedEndDay: '2026-09-03',
+      observedUsers: 1,
+      activeUserDays: 2,
+      calendarDays: 3,
+      reportedDays: 2,
+      medianDaysPerUser: 2,
+      totalAiCreditsUsed: 0.75,
+      creditsPerUserDay: 0.375,
+    });
+    expect(response?.result).not.toHaveProperty('rawMetrics');
+  });
+
   it('parses both customization count shapes and returns summaries only for the requested profile', async () => {
     const records = [
       makeMetric({

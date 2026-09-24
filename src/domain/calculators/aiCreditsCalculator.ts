@@ -7,6 +7,24 @@ export interface DailyAiCreditsData {
   users: number;
 }
 
+export interface AiCreditsConcentration {
+  userCount: number;
+  creditsShare: number;
+}
+
+export function computeCreditConcentration(
+  userCredits: number[],
+  totalCredits: number
+): AiCreditsConcentration | null {
+  if (userCredits.length === 0 || totalCredits <= 0) return null;
+  const userCount = Math.max(1, Math.ceil(userCredits.length * 0.1));
+  const topCredits = [...userCredits]
+    .sort((a, b) => b - a)
+    .slice(0, userCount)
+    .reduce((total, credits) => total + credits, 0);
+  return { userCount, creditsShare: (topCredits / totalCredits) * 100 };
+}
+
 export interface AiCreditsAccumulator {
   dailyCredits: Map<string, {
     aiCreditsUsed: number;

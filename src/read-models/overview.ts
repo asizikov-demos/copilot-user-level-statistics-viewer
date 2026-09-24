@@ -11,12 +11,8 @@ export interface OverviewReadModel {
 }
 
 export interface ExecutiveSummaryReadModel {
-  reportStartDay: string;
-  reportEndDay: string;
   enterpriseId: string | null;
-  joinedImpactData: AggregatedMetrics['impact']['joinedImpactData'];
-  agentImpactData: AggregatedMetrics['impact']['agentImpactData'];
-  codeCompletionImpactData: AggregatedMetrics['impact']['codeCompletionImpactData'];
+  summary: AggregatedMetrics['overview']['executiveSummary'];
   featureAdoptionData: AggregatedMetrics['adoption']['featureAdoptionData'];
 }
 
@@ -44,12 +40,8 @@ export function selectExecutiveSummaryReadModel(
   metrics: AggregatedMetrics
 ): ExecutiveSummaryReadModel {
   return {
-    reportStartDay: metrics.overview.stats.reportStartDay,
-    reportEndDay: metrics.overview.stats.reportEndDay,
     enterpriseId: metrics.overview.stats.enterpriseId,
-    joinedImpactData: metrics.impact.joinedImpactData,
-    agentImpactData: metrics.impact.agentImpactData,
-    codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
+    summary: metrics.overview.executiveSummary,
     featureAdoptionData: metrics.adoption.featureAdoptionData,
   };
 }

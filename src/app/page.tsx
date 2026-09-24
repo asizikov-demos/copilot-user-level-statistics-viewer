@@ -12,8 +12,8 @@ export default function Home() {
       {hasData && <SideNav />}
       {hasData && <ContextPanel />}
       {hasData && <DataInfoBar />}
-      <div className={`pt-16 print:pt-0 print:ml-0 ${hasData ? 'lg:ml-64 xl:mr-64' : ''}`}>
-        <div className={`px-4 sm:px-6 lg:px-8 pb-6 print:px-0 print:mx-0 ${hasData ? 'py-6 lg:pt-12' : 'py-6'}`}>
+      <div className={`pt-16 print:pt-0 print:ml-0 print:mr-0 ${hasData ? 'lg:ml-64 xl:mr-64' : ''}`}>
+        <div className={`px-4 sm:px-6 lg:px-8 pb-6 print:px-0 print:py-0 print:mx-0 ${hasData ? 'py-6 lg:pt-12' : 'py-6'}`}>
           <AppHeader />
           <ViewRouter />
           <footer className="mt-12 pb-4 text-center text-xs text-gray-400 print:hidden">
