@@ -32,12 +32,14 @@ import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 import type { VSCodeAgentUsage } from './vscodeAgent';
 import type { CliCustomizationSummary } from './cliCustomizations';
 import type { AgentActivity } from './agentActivity';
+import type { ExecutiveSummaryMetrics } from '../domain/calculators/executiveSummaryCalculator';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
   engagementData: DailyEngagementData[];
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
+  executiveSummary: ExecutiveSummaryMetrics;
 }
 
 export interface UsersMetricsSlice {

@@ -12,6 +12,7 @@ interface MetricsState {
   isLoading: boolean;
   error: string | null;
   warning: string | null;
+  isWarningDismissed: boolean;
 }
 
 interface MetricsActions {
@@ -23,6 +24,7 @@ interface MetricsActions {
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setWarning: (warning: string | null) => void;
+  dismissWarning: () => void;
   resetMetrics: () => void;
 }
 
@@ -39,6 +41,7 @@ const initialMetricsState: MetricsState = {
   isLoading: false,
   error: null,
   warning: null,
+  isWarningDismissed: false,
 };
 
 export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -73,7 +76,11 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   const setWarning = useCallback((warning: string | null) => {
-    setState((prev) => ({ ...prev, warning }));
+    setState((prev) => ({ ...prev, warning, isWarningDismissed: false }));
+  }, []);
+
+  const dismissWarning = useCallback(() => {
+    setState((prev) => ({ ...prev, isWarningDismissed: true }));
   }, []);
 
   const resetMetrics = useCallback(() => {
@@ -91,9 +98,10 @@ export const MetricsContextProvider: React.FC<{ children: React.ReactNode }> = (
       setIsLoading,
       setError,
       setWarning,
+      dismissWarning,
       resetMetrics,
     }),
-    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setFilename, setRecordCount, setIsLoading, setError, setWarning, resetMetrics]
+    [state, setAggregatedMetrics, setHasData, setEnterpriseName, setFilename, setRecordCount, setIsLoading, setError, setWarning, dismissWarning, resetMetrics]
   );
 
   return (

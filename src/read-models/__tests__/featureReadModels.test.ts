@@ -51,25 +51,15 @@ describe('feature read models', () => {
     const model = selectExecutiveSummaryReadModel(metrics);
 
     expect(model).toEqual({
-      reportStartDay: metrics.overview.stats.reportStartDay,
-      reportEndDay: metrics.overview.stats.reportEndDay,
       enterpriseId: metrics.overview.stats.enterpriseId,
-      joinedImpactData: metrics.impact.joinedImpactData,
-      agentImpactData: metrics.impact.agentImpactData,
-      codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
+      summary: metrics.overview.executiveSummary,
       featureAdoptionData: metrics.adoption.featureAdoptionData,
     });
-    expect(model.joinedImpactData).toBe(metrics.impact.joinedImpactData);
-    expect(model.agentImpactData).toBe(metrics.impact.agentImpactData);
-    expect(model.codeCompletionImpactData).toBe(metrics.impact.codeCompletionImpactData);
+    expect(model.summary).toBe(metrics.overview.executiveSummary);
     expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
     expect(Object.keys(model)).toEqual([
-      'reportStartDay',
-      'reportEndDay',
       'enterpriseId',
-      'joinedImpactData',
-      'agentImpactData',
-      'codeCompletionImpactData',
+      'summary',
       'featureAdoptionData',
     ]);
   });

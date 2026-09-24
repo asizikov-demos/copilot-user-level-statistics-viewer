@@ -1,206 +1,205 @@
-"use client";
+'use client';
 
-import React from 'react';
-import { ViewPanel } from './ui';
-import ModeImpactChart from './charts/ModeImpactChart';
-import FeatureAdoptionChart from './charts/FeatureAdoptionChart';
+import { useState } from 'react';
 import type { ExecutiveSummaryReadModel } from '../read-models/overview';
+import { formatDate, formatNumber, formatSignedNumber } from '../utils/formatters';
+import ParticipationChart from './features/executive-summary/ParticipationChart';
+import styles from './features/executive-summary/ExecutiveSummary.module.css';
 
 interface ExecutiveSummaryViewProps {
   model: ExecutiveSummaryReadModel;
   enterpriseName: string | null;
+  dataWarning?: string | null;
 }
 
-function formatLongDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+const FEATURES = [
+  { key: 'completionUsers', label: 'Code completion' },
+  { key: 'agentModeUsers', label: 'IDE Agent Mode' },
+  { key: 'cliUsers', label: 'Copilot CLI' },
+  { key: 'codingAgentUsers', label: 'Cloud Agent' },
+  { key: 'codeReviewUsers', label: 'Code Review' },
+] as const;
+
+function displayDate(date: string): string {
+  return formatDate(date, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
-function formatSignedNumber(value: number): string {
-  if (value === 0) return '0';
-  return `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
+function displayRatio(value: number | null): string {
+  return value === null ? 'N/A' : formatNumber(value, 1);
 }
 
-function formatPercent(value: number): string {
-  if (!Number.isFinite(value)) return '0%';
-  const rounded = Math.round(value * 10) / 10;
-  return `${rounded.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+function displayCredits(value: number): string {
+  return value !== 0 && Math.abs(value) < 0.01
+    ? value.toLocaleString('en-US', { maximumSignificantDigits: 3 })
+    : formatNumber(value, 2);
 }
 
-function sumNetChange(data: Array<{ netChange: number }>): number {
-  return data.reduce((acc, entry) => acc + (entry.netChange || 0), 0);
-}
-
-export default function ExecutiveSummaryView({
-  model,
-  enterpriseName,
-}: ExecutiveSummaryViewProps) {
+export default function ExecutiveSummaryView({ model, enterpriseName, dataWarning }: ExecutiveSummaryViewProps) {
+  const [paper, setPaper] = useState<'a4' | 'letter'>('a4');
+  const { summary, featureAdoptionData, enterpriseId } = model;
   const {
-    reportStartDay,
-    reportEndDay,
-    enterpriseId,
-    joinedImpactData,
-    agentImpactData,
-    codeCompletionImpactData,
-    featureAdoptionData,
-  } = model;
-  const reportRange = `${formatLongDate(reportStartDay)} – ${formatLongDate(reportEndDay)}`;
+    observedUsers, calendarDays, reportedDays, averageDaysPerUser, medianDaysPerUser,
+    totalAiCreditsUsed, creditsPerUserDay, topDecile, hasNegativeUserCredits,
+  } = summary;
+  const completionOnlyUsers = featureAdoptionData.completionOnlyUsers;
   const generatedOn = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    month: 'short', day: 'numeric', year: 'numeric',
   });
-
-  const combinedNetChange = sumNetChange(joinedImpactData || []);
-  const agentNetChange = sumNetChange(agentImpactData || []);
-  const manualNetChange = sumNetChange(codeCompletionImpactData || []);
-  const agentShare = combinedNetChange !== 0 ? (agentNetChange / combinedNetChange) * 100 : 0;
-  const manualShare = combinedNetChange !== 0 ? (manualNetChange / combinedNetChange) * 100 : 0;
-
-  const totalUsers = featureAdoptionData?.totalUsers ?? 0;
-  const chatUsers = featureAdoptionData?.chatUsers ?? 0;
-  const agentModeUsers = featureAdoptionData?.agentModeUsers ?? 0;
-  const completionOnlyUsers = featureAdoptionData?.completionOnlyUsers ?? 0;
-  const cliUsers = featureAdoptionData?.cliUsers ?? 0;
-  const chatShare = totalUsers > 0 ? (chatUsers / totalUsers) * 100 : 0;
-  const agentModeShare = totalUsers > 0 ? (agentModeUsers / totalUsers) * 100 : 0;
-  const cliShare = totalUsers > 0 ? (cliUsers / totalUsers) * 100 : 0;
-  const completionOnlyShare = totalUsers > 0 ? (completionOnlyUsers / totalUsers) * 100 : 0;
+  const enterprise = enterpriseName ?? enterpriseId ?? 'N/A';
+  const share = (users: number) => observedUsers > 0 ? (users / observedUsers) * 100 : 0;
 
   return (
-    <ViewPanel
-      headerProps={{
-        title: 'Executive Summary',
-        description: (
-          <div className="mt-2 space-y-1 text-sm text-gray-700 print:text-black">
-            <div className="flex flex-wrap gap-x-6 gap-y-1">
-              <div>
-                <span className="font-medium text-gray-900 print:text-black">Report date range:</span>{' '}
-                <span>{reportRange}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-900 print:text-black">Enterprise:</span>{' '}
-                <span>
-                  {enterpriseName ?? enterpriseId ?? 'N/A'}
-                  {enterpriseName != null && enterpriseId != null ? ` (ID: ${enterpriseId})` : ''}
-                </span>
-              </div>
-            </div>
-            <div className="text-xs text-gray-500 print:text-black">
-              Generated on {generatedOn}
-            </div>
-          </div>
-        ),
-      }}
-      contentClassName="space-y-8"
-      containerClassName="print:p-0"
-    >
-      <ModeImpactChart
-        data={joinedImpactData || []}
-        title="Combined Copilot Impact"
-        description="Aggregate impact across Code Completion, Ask Mode, Agent Mode, Edit Mode, and Inline Mode activities."
-        emptyStateMessage="No combined impact data available."
-      />
-
-      <div className="border border-gray-200 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-900 print:border-black print:bg-white print:text-black print:text-xs">
-        <dl className="space-y-2 leading-snug">
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Net LOC change:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{formatSignedNumber(combinedNetChange)}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                Net lines added − deleted (all Copilot modes).
-              </span>
-            </dd>
-          </div>
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Agent Mode:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{formatPercent(agentShare)}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                Share of net LOC from Agent Mode.
-              </span>
-            </dd>
-          </div>
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Manual (Suggestions):</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{formatPercent(manualShare)}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                Share of net LOC from accepted completions.
-              </span>
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      <div className="border border-gray-200 rounded-md bg-gray-50 px-4 py-3 text-sm text-gray-900 print:border-black print:bg-white print:text-black print:text-xs">
-        <div className="text-xs font-semibold uppercase tracking-wide text-gray-600 print:text-black">
-          Feature adoption summary
+    <div className={styles.brief}>
+      <div className={styles.toolbar}>
+        <div>
+          <h1>Executive Summary</h1>
+          <p>A printable leadership brief from your uploaded metrics.</p>
         </div>
-        <dl className="mt-2 space-y-2 leading-snug">
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Chat Users:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{chatUsers.toLocaleString()}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                ({formatPercent(chatShare)} of total) — any chat feature.
-              </span>
-            </dd>
-          </div>
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Agent Mode Users:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{agentModeUsers.toLocaleString()}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                ({formatPercent(agentModeShare)} of total) — Agent Mode at least once.
-              </span>
-            </dd>
-          </div>
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">CLI Users:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{cliUsers.toLocaleString()}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                ({formatPercent(cliShare)} of total) — CLI at least once.
-              </span>
-            </dd>
-          </div>
-          <div className="grid grid-cols-[max-content_1fr] items-baseline gap-x-1">
-            <dt className="font-medium whitespace-nowrap">Completion only users:</dt>
-            <dd className="min-w-0">
-              <span className="tabular-nums font-semibold">{completionOnlyUsers.toLocaleString()}</span>
-              <span className="ml-1 text-xs text-gray-600 print:text-[10px] print:text-black">
-                ({formatPercent(completionOnlyShare)} of total) — completions only.
-              </span>
-            </dd>
-          </div>
-        </dl>
+        <div className={styles.controls}>
+          <label htmlFor="summary-paper">Paper</label>
+          <select
+            id="summary-paper"
+            value={paper}
+            onChange={event => setPaper(event.target.value === 'letter' ? 'letter' : 'a4')}
+          >
+            <option value="a4">A4</option>
+            <option value="letter">Letter</option>
+          </select>
+          <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
+        </div>
       </div>
 
-      <FeatureAdoptionChart
-        data={
-          featureAdoptionData || {
-            totalUsers: 0,
-            completionUsers: 0,
-            completionOnlyUsers: 0,
-            chatUsers: 0,
-            agentModeUsers: 0,
-            askModeUsers: 0,
-            inlineModeUsers: 0,
-            planModeUsers: 0,
-            cliUsers: 0,
-            appUsers: 0,
-            vscodeAgentUsers: 0,
-            codingAgentUsers: 0,
-            codeReviewUsers: 0,
-            advancedUsers: 0,
-          }
-        }
-      />
-    </ViewPanel>
+      <article className={`${styles.report} ${paper === 'letter' ? styles.letter : ''}`} aria-label="Leadership Brief">
+        <div className={styles.identity}>
+          <div>
+            <span className={styles.organization}>Enterprise: {enterprise}</span>
+            {enterpriseName !== null && enterpriseId !== null && (
+              <span className={styles.enterpriseId}>ID: {enterpriseId}</span>
+            )}
+          </div>
+          <div className={styles.reportMeta}>
+            {summary.observedStartDay
+              ? <>{displayDate(summary.observedStartDay)} &ndash; {displayDate(summary.observedEndDay)}<br />Observed activity window</>
+              : 'No observed activity window'}
+          </div>
+        </div>
+
+        <header className={styles.heading}>
+          <h2>GitHub Copilot, in perspective.</h2>
+          <p>Participation, patterns of use, and resource consumption.</p>
+        </header>
+
+        {observedUsers === 0 ? (
+          <p className={styles.empty}>No activity records are available for this summary.</p>
+        ) : (
+          <>
+            <p className={styles.lead}>
+              <strong>{formatNumber(observedUsers)} {observedUsers === 1 ? 'person appears' : 'people appear'}</strong> in this window.
+              {' '}The median user has activity records on <strong>{displayRatio(medianDaysPerUser)} of {formatNumber(calendarDays)} days.</strong>
+            </p>
+
+            <dl className={styles.metrics}>
+              <div>
+                <dt>Observed users</dt>
+                <dd>{formatNumber(observedUsers)}<p>Distinct users in the uploaded data</p></dd>
+              </div>
+              <div>
+                <dt>Days active / user</dt>
+                <dd>{displayRatio(averageDaysPerUser)}<p>Mean days with activity records</p></dd>
+              </div>
+              <div>
+                <dt>AI credits</dt>
+                <dd>{displayCredits(totalAiCreditsUsed)}<p>{creditsPerUserDay === null ? 'N/A' : displayCredits(creditsPerUserDay)} per recorded user-day</p></dd>
+              </div>
+            </dl>
+
+            <section className={styles.section} aria-labelledby="brief-participation">
+              <h3 id="brief-participation">Participation across the window</h3>
+              <p className={styles.caption}>
+                Daily observed users
+                {summary.weekdayAverage !== null && <> &middot; Mean on reported weekdays: {formatNumber(summary.weekdayAverage, 1)}</>}
+              </p>
+              <ParticipationChart summary={summary} />
+            </section>
+
+            <div className={styles.columns}>
+              <section className={styles.section} aria-labelledby="brief-features">
+                <h3 id="brief-features">How people use Copilot</h3>
+                <p className={styles.caption}>Selected features &middot; overlapping populations</p>
+                <ul className={styles.features}>
+                  {FEATURES.map(({ key, label }) => {
+                    const count = featureAdoptionData[key];
+                    return (
+                      <li key={key}>
+                        <span>{label}</span>
+                        <span className={styles.track} aria-hidden="true">
+                          <span style={{ width: `${share(count)}%` }} />
+                        </span>
+                        <span className={styles.featureValue}>{formatNumber(count)} <small>({formatNumber(share(count), 1)}%)</small></span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className={styles.note}>Percentages use all {formatNumber(observedUsers)} observed users, not licensed seats.</p>
+              </section>
+
+              <section className={`${styles.section} ${styles.concentration}`} aria-labelledby="brief-concentration">
+                <h3 id="brief-concentration">What deserves a closer look</h3>
+                {topDecile !== null ? (
+                  <>
+                    <p className={styles.concentrationValue}>{formatNumber(topDecile.creditsShare, 1)}%</p>
+                    <p>of AI credits came from the highest-consuming 10% of users.</p>
+                    <p className={styles.note}>{formatNumber(topDecile.userCount)} of {formatNumber(observedUsers)} users, rounded up to a whole user. Concentration is not evidence of waste.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className={styles.unavailable}>Concentration unavailable</p>
+                    <p className={styles.note}>
+                      {hasNegativeUserCredits
+                        ? 'Negative per-user credit totals make a parts-of-a-whole share misleading. Signed credit totals are preserved above.'
+                        : 'A positive credit total is needed to calculate a consumption share.'}
+                    </p>
+                  </>
+                )}
+                <p className={styles.note}>{formatNumber(completionOnlyUsers)} users used completion only. This describes a usage pattern, not an adoption failure.</p>
+              </section>
+            </div>
+
+            <section className={styles.code} aria-labelledby="brief-code">
+              <h3 id="brief-code">Recorded code changes</h3>
+              <dl>
+                <div><dt>Added</dt><dd>{formatSignedNumber(summary.locAdded)}</dd></div>
+                <div><dt>Deleted</dt><dd>{formatNumber(summary.locDeleted)}</dd></div>
+                <div><dt>Net change</dt><dd>{formatSignedNumber(summary.locAdded - summary.locDeleted)}</dd></div>
+              </dl>
+              <p className={styles.caption}>Uploaded user-day LOC totals, not shipped code or measured productivity. Deletions are subtracted to calculate net change.</p>
+            </section>
+
+            <section className={styles.discussion} aria-labelledby="brief-discussion">
+              <h3 id="brief-discussion">Suggested discussion</h3>
+              <p>
+                {completionOnlyUsers > 0
+                  ? 'Explore the tasks and constraints of completion-only users before prescribing more usage. '
+                  : 'Explore which workflows people return to before setting adoption targets. '}
+                {topDecile !== null
+                  ? 'Pair this with interviews about high-consumption workflows to understand differences in tasks and context.'
+                  : 'Use qualitative feedback alongside the recorded activity; credit data alone cannot establish value.'}
+              </p>
+            </section>
+          </>
+        )}
+
+        <footer className={styles.footer}>
+          {dataWarning && <p className={styles.dataWarning}><strong>Upload limitation:</strong> {dataWarning}</p>}
+          <p>
+            Scope: {formatNumber(observedUsers)} observed users &middot; {formatNumber(reportedDays)} dates with records
+            {calendarDays > 0 && <> across {formatNumber(calendarDays)} calendar days</>}.
+            {reportedDays < calendarDays && ' Gaps have no uploaded records; they are not confirmed inactivity.'}
+          </p>
+          <p>Not a license-utilization measure. Activity does not establish productivity, quality, or business outcomes. AI credits are not currency; unreported credit values are imported as zero.</p>
+          <div><span>GitHub Copilot &middot; Leadership Brief</span><span>Generated {generatedOn}</span></div>
+        </footer>
+      </article>
+    </div>
   );
 }

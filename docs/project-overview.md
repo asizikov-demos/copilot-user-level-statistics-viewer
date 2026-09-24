@@ -75,7 +75,7 @@ The successful worker payload is one grouped `AggregatedMetrics` object. Each ag
 
 ```text
 AggregatedMetrics
-├── overview  stats, engagementData, chatUsersData, chatRequestsData
+├── overview  stats, engagementData, chatUsersData, chatRequestsData, executiveSummary
 ├── users     userSummaries
 ├── adoption  featureAdoptionData and adoption series
 ├── impact    agent, completion, edit, inline, ask, CLI, and joined impact
@@ -152,7 +152,26 @@ sections are also omitted from these user views.
 The contextual navigation lists only sections currently rendered, so omitted
 breakdowns do not leave links to empty or missing sections.
 
-Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview`, `impact`, and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
+Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview` and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
+
+The Executive Summary is a printable Leadership Brief. Its compact `overview.executiveSummary`
+payload is computed in the worker from finalized user summaries and daily engagement:
+observed users, mean/median recorded active days, daily participation, AI credits per
+recorded user-day, top-decile credit concentration, and signed root-level LOC totals.
+The activity window uses the earliest/latest observed dates across the upload, not the
+first file's report metadata. Gaps are left unreported, not filled with inferred inactivity;
+weekday means use only dates with records. Feature reach uses the observed-user denominator
+and explicitly allows overlapping populations. Unreported credit values retain the parser's
+existing zero normalization. Negative user credit totals suppress the concentration share
+without changing signed totals; zero/nonpositive totals have no concentration share.
+The view uses a static, print-stable SVG and named A4/Letter
+portrait print layouts. Print / Save PDF and browser printing use the same report;
+controls and application chrome are excluded. Report content has no expandable sections. The brief
+retains any upload warning as a limitation in its footer rather than printing a
+separate dismissible application banner. Dismissing the banner does not clear the report
+limitation; resetting metrics or starting a new upload clears the previous warning and
+its dismissal state. The brief
+describes activity, not license utilization, shipped code, financial ROI, or causal productivity.
 
 Established boundaries cover:
 - overview and executive summary
