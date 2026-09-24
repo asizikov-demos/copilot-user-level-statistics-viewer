@@ -168,7 +168,9 @@ The view uses a static, print-stable SVG and named A4/Letter
 portrait print layouts. Print / Save PDF and browser printing use the same report;
 controls and application chrome are excluded. Report content has no expandable sections. The brief
 retains any upload warning as a limitation in its footer rather than printing a
-separate dismissible application banner. The brief
+separate dismissible application banner. Dismissing the banner does not clear the report
+limitation; resetting metrics or starting a new upload clears the previous warning and
+its dismissal state. The brief
 describes activity, not license utilization, shipped code, financial ROI, or causal productivity.
 
 Established boundaries cover:

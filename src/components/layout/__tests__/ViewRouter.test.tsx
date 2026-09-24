@@ -11,6 +11,7 @@ interface StandardRouteOutletProps {
   view: StandardViewMode;
   aggregatedMetrics: AggregatedMetrics;
   enterpriseName: string | null;
+  dataWarning?: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;
 }
 
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   aggregatedMetrics: null as AggregatedMetrics | null,
   isLoading: false,
   error: null as string | null,
+  warning: null as string | null,
   navigateTo: vi.fn(),
   selectUser: vi.fn(),
   resetAppState: vi.fn(),
@@ -41,6 +43,7 @@ vi.mock('../../MetricsContext', () => ({
     aggregatedMetrics: mocks.aggregatedMetrics,
     isLoading: mocks.isLoading,
     error: mocks.error,
+    warning: mocks.warning,
   }),
 }));
 
@@ -97,6 +100,7 @@ describe('ViewRouter', () => {
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
     mocks.isLoading = false;
     mocks.error = null;
+    mocks.warning = null;
   });
 
   it('keeps metrics-wide fatal errors ahead of route delegation', () => {
@@ -163,5 +167,16 @@ describe('ViewRouter', () => {
       login: 'octocat',
       id: 42,
     });
+  });
+
+  it('passes the upload limitation to the executive summary route', () => {
+    mocks.currentView = VIEW_MODES.EXECUTIVE_SUMMARY;
+    mocks.warning = 'One file failed to load.';
+
+    renderToStaticMarkup(<ViewRouter />);
+
+    expect(mocks.standardRouteOutlet).toHaveBeenCalledWith(
+      expect.objectContaining({ dataWarning: mocks.warning })
+    );
   });
 });
