@@ -8,6 +8,7 @@ import { ViewPanel } from './ui';
 import { useSortableTable } from '../hooks/useSortableTable';
 import IDEDistributionChart from './charts/IDEDistributionChart';
 import CLIOverlapChart from './charts/CLIOverlapChart';
+import DailyIDEUsersChart from './charts/DailyIDEUsersChart';
 import IDEInsights from './IDEInsights';
 import { CLIENT_ANALYSIS_SECTIONS } from './layout/contextSections';
 import { appendCliClientStatsRow } from '../domain/calculators/clientActivityRows';
@@ -28,6 +29,9 @@ export default function ClientsView({ model }: IDEViewProps) {
     cliSessions,
     cliLocAdded,
     cliLocDeleted,
+    dailyIdeUsersData,
+    reportStartDay,
+    reportEndDay,
   } = model;
 
   const allClients: IDEStats[] = React.useMemo(() => {
@@ -159,7 +163,7 @@ export default function ClientsView({ model }: IDEViewProps) {
 
   const usersColumns = createColumns({ field: 'uniqueUsers', label: 'UNIQUE USERS' });
   const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'ENGAGEMENTS' });
-  const [distributionSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
+  const [distributionSection, dailyIdeUsersSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
 
   return (
     <ViewPanel
@@ -173,6 +177,14 @@ export default function ClientsView({ model }: IDEViewProps) {
         <div id={distributionSection.id} className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-28">
           <IDEDistributionChart ideStats={ideStats} cliUsers={cliUsers} />
           <CLIOverlapChart ideStats={ideStats} />
+        </div>
+
+        <div id={dailyIdeUsersSection.id} className="scroll-mt-28">
+          <DailyIDEUsersChart
+            data={dailyIdeUsersData}
+            reportStartDay={reportStartDay}
+            reportEndDay={reportEndDay}
+          />
         </div>
 
         <div id={insightsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">

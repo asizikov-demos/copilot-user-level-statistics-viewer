@@ -8,6 +8,9 @@ export interface ClientsReadModel {
   cliSessions: number;
   cliLocAdded: number;
   cliLocDeleted: number;
+  dailyIdeUsersData: AggregatedMetrics['clients']['dailyIdeUsersData'];
+  reportStartDay: string;
+  reportEndDay: string;
 }
 
 export interface ClientVersionsReadModel {
@@ -35,6 +38,9 @@ export function selectClientsReadModel(
       (sum, day) => sum + day.locDeleted,
       0
     ),
+    dailyIdeUsersData: metrics.clients.dailyIdeUsersData,
+    reportStartDay: metrics.overview.stats.reportStartDay,
+    reportEndDay: metrics.overview.stats.reportEndDay,
   };
 }
 

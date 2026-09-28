@@ -102,6 +102,9 @@ describe('client read models', () => {
       cliSessions: 11,
       cliLocAdded: 30,
       cliLocDeleted: 7,
+      dailyIdeUsersData: metrics.clients.dailyIdeUsersData,
+      reportStartDay: '2026-01-15',
+      reportEndDay: '',
     });
     expect(model.ideStats).toBe(metrics.clients.ideStats);
     expect(model.ideStats[0]).toBe(metrics.clients.ideStats[0]);
@@ -113,6 +116,9 @@ describe('client read models', () => {
       'cliSessions',
       'cliLocAdded',
       'cliLocDeleted',
+      'dailyIdeUsersData',
+      'reportStartDay',
+      'reportEndDay',
     ]);
     expect(model).not.toHaveProperty('stats');
     expect(model).not.toHaveProperty('dailyCliSessionData');
@@ -178,6 +184,9 @@ describe('client read models', () => {
       cliSessions: 3.25,
       cliLocAdded: 5,
       cliLocDeleted: 1,
+      dailyIdeUsersData: metrics.clients.dailyIdeUsersData,
+      reportStartDay: '',
+      reportEndDay: '',
     });
   });
 
@@ -219,6 +228,9 @@ describe('client read models', () => {
       cliSessions: 0,
       cliLocAdded: 0,
       cliLocDeleted: 0,
+      dailyIdeUsersData: [],
+      reportStartDay: '',
+      reportEndDay: '',
     });
     expect(clients.ideStats).toBe(metrics.clients.ideStats);
     expect(clientVersions).toEqual({
