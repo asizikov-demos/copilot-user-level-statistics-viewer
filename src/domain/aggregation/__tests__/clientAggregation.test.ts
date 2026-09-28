@@ -50,6 +50,7 @@ describe('client aggregation orchestration', () => {
         totalUniqueIntellijUsers: 0,
         totalUniqueVsCodeUsers: 0,
       },
+      dailyIdeUsersData: [],
     });
     expect(computeStats(statsAccumulator, 0).topIde).toEqual({
       name: 'N/A',

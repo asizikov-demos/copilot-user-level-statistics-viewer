@@ -37,6 +37,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
     'multiIDEUsersCount',
     'totalUniqueIDEUsers',
     'pluginVersionData',
+    'dailyIdeUsersData',
   ],
   models: ['modelUsageData', 'modelBreakdownData'],
   cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],

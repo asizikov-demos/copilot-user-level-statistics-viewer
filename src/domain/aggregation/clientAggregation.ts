@@ -8,6 +8,12 @@ import {
   type IDEStatsAccumulator,
 } from '../calculators/ideStatsCalculator';
 import {
+  accumulateDailyIdeUsers,
+  computeDailyIdeUsersData,
+  createDailyIdeUsersAccumulator,
+  type DailyIdeUsersAccumulator,
+} from '../calculators/dailyIdeUsersCalculator';
+import {
   accumulatePluginVersion,
   computePluginVersionData,
   createPluginVersionAccumulator,
@@ -21,6 +27,7 @@ import {
 export interface ClientAggregationAccumulator {
   ideStats: IDEStatsAccumulator;
   pluginVersions: PluginVersionAccumulator;
+  dailyIdeUsers: DailyIdeUsersAccumulator;
 }
 
 export type ClientAggregationResult = ClientsMetricsSlice;
@@ -29,6 +36,7 @@ export function createClientAggregationAccumulator(): ClientAggregationAccumulat
   return {
     ideStats: createIDEStatsAccumulator(),
     pluginVersions: createPluginVersionAccumulator(),
+    dailyIdeUsers: createDailyIdeUsersAccumulator(),
   };
 }
 
@@ -50,6 +58,8 @@ export function accumulateClientAggregation(
   if (metric.used_cli) {
     markCliUser(accumulator.ideStats, metric.user_id);
   }
+
+  accumulateDailyIdeUsers(accumulator.dailyIdeUsers, metric);
 }
 
 export function finalizeClientAggregation(
@@ -58,5 +68,6 @@ export function finalizeClientAggregation(
   return {
     ...computeIDEStatsData(accumulator.ideStats),
     pluginVersionData: computePluginVersionData(accumulator.pluginVersions),
+    dailyIdeUsersData: computeDailyIdeUsersData(accumulator.dailyIdeUsers),
   };
 }

@@ -102,6 +102,17 @@ export {
 } from './ideStatsCalculator';
 
 export {
+  type DailyIdeUsersAccumulator,
+  type DailyIdeUsersData,
+  type DailyIdeUsersEntry,
+  type DailyIdeUsersDay,
+  CLI_CLIENT_KEY,
+  createDailyIdeUsersAccumulator,
+  accumulateDailyIdeUsers,
+  computeDailyIdeUsersData,
+} from './dailyIdeUsersCalculator';
+
+export {
   type PluginVersionAccumulator,
   createPluginVersionAccumulator,
   accumulatePluginVersion,

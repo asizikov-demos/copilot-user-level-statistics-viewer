@@ -27,6 +27,7 @@ import type {
   AiAdoptionPhaseData,
   UsageDistributionBucket,
   DailyAiCreditsData,
+  DailyIdeUsersData,
 } from '../domain/calculators';
 import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 import type { VSCodeAgentUsage } from './vscodeAgent';
@@ -77,6 +78,7 @@ export interface ClientsMetricsSlice {
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
   pluginVersionData: PluginVersionAnalysisData;
+  dailyIdeUsersData: DailyIdeUsersData;
 }
 
 export interface ModelsMetricsSlice {

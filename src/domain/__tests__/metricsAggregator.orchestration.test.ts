@@ -275,6 +275,7 @@ describe('metrics aggregation orchestration characterization', () => {
       multiIDEUsersCount: 12,
       totalUniqueIDEUsers: 13,
       pluginVersionData: { ...defaults.clients.pluginVersionData },
+      dailyIdeUsersData: [...defaults.clients.dailyIdeUsersData],
     };
     const modelAggregation = {
       modelUsageData: [...defaults.models.modelUsageData],
