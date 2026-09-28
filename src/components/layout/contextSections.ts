@@ -36,6 +36,7 @@ export const SURFACE_PRODUCTIVITY_SECTIONS: ContextSection[] = [
 
 export const CLIENT_ANALYSIS_SECTIONS: ContextSection[] = [
   { id: 'client-distribution', label: 'Client Distribution' },
+  { id: 'client-daily-ide-users', label: 'Daily IDE Users' },
   { id: 'client-insights', label: 'Insights' },
   { id: 'clients-by-users', label: 'Clients by Users' },
   { id: 'clients-by-engagements', label: 'Clients by Engagements' },
