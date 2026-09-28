@@ -72,6 +72,9 @@ export default function DailyIDEUsersChart({
       createBarDataset(color, `${ideLabel} Users`, displayData.map(day => day.uniqueUsers)),
     ],
   };
+  const chartAriaLabel = `Daily IDE Users for ${ideLabel}: ${displayData
+    .map(day => `${formatShortDate(day.date)}, ${day.uniqueUsers} ${day.uniqueUsers === 1 ? 'user' : 'users'}`)
+    .join('; ')}.`;
 
   const options = createBaseChartOptions({
     xAxisLabel: 'Date',
@@ -135,7 +138,12 @@ export default function DailyIDEUsersChart({
           <span className="text-sm font-medium text-gray-900">{ideLabel}</span>
         </div>
         <div className="min-h-0 flex-1">
-          <Bar data={chartData} options={options} />
+          <Bar
+            data={chartData}
+            options={options}
+            role="img"
+            aria-label={chartAriaLabel}
+          />
         </div>
       </div>
     </ChartContainer>

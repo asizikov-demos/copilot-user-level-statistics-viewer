@@ -65,6 +65,8 @@ describe('DailyIDEUsersChart', () => {
       data: expect.objectContaining({
         datasets: [expect.objectContaining({ label: 'VS Code Users', data: [2, 0, 3] })],
       }),
+      role: 'img',
+      'aria-label': 'Daily IDE Users for VS Code: Jan 15, 2 users; Jan 16, 0 users; Jan 17, 3 users.',
     }));
   });
 
@@ -80,6 +82,8 @@ describe('DailyIDEUsersChart', () => {
       data: expect.objectContaining({
         datasets: [expect.objectContaining({ label: 'Copilot CLI Users', data: [0, 2, 0] })],
       }),
+      role: 'img',
+      'aria-label': 'Daily IDE Users for Copilot CLI: Jan 15, 0 users; Jan 16, 2 users; Jan 17, 0 users.',
     }));
     expect(
       renderer!.root.findAll(node => node.type === 'span' && node.children[0] === 'Copilot CLI')
