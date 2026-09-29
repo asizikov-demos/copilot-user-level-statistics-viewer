@@ -27,7 +27,9 @@ describe('modelConfig', () => {
     it.each([
       ['gpt-6-luna', 'GPT-6 Luna', '  GPT_6_LUNA  ', 'Lightweight', 'OpenAI'],
       ['gpt-6-sol', 'GPT-6 Sol', '  GPT_6_SOL  ', 'Powerful', 'OpenAI'],
+      ['gpt-6.1-sol', 'GPT-6.1 Sol', '  GPT_6.1_SOL  ', 'Powerful', 'OpenAI'],
       ['claude-opus-5.5', 'Claude Opus 5.5', '  CLAUDE_OPUS_5.5  ', 'Powerful', 'Anthropic'],
+      ['claude-sonnet-5.5', 'Claude Sonnet 5.5', '  CLAUDE_SONNET_5.5  ', 'Versatile', 'Anthropic'],
     ])('should recognize %s with its published category and vendor', (canonical, displayName, alias, category, vendor) => {
       for (const modelName of [canonical, displayName, alias]) {
         expect(classifyModelRequest(modelName)).toEqual({
