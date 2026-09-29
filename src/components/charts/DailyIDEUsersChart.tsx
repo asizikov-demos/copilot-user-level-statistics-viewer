@@ -84,7 +84,7 @@ export default function DailyIDEUsersChart({
     yTicksCallback: yAxisFormatters.integer,
     xMaxRotation: 45,
     xAutoSkip: true,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const value = context.parsed.y || 0;
       return `${ideLabel}: ${value} ${value === 1 ? 'user' : 'users'}`;
     },

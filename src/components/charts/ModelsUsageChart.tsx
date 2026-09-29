@@ -130,7 +130,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const value = context.parsed.y || 0;
       return `${context.dataset.label}: ${value} interactions`;
     },

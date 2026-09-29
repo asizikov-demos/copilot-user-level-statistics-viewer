@@ -80,7 +80,7 @@ export default function AiCreditsChart({
       yAxisLabel: 'AI Credits Used',
       showLegend: false,
       yTicksCallback: yAxisFormatters.localeNumber,
-      tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+      tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
         const dayData = displayData[context.dataIndex];
         const labels = [
           `AI credits: ${formatNumber(dayData.aiCreditsUsed, 2)}`,

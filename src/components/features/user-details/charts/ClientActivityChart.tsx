@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions, TooltipItem } from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
@@ -147,12 +147,12 @@ export default function ClientActivityChart({
   const barChartOptions = useMemo(() => createBaseChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const label = context.dataset.label || '';
       const value = context.parsed.y || 0;
       return `${label}: ${value.toLocaleString()} interactions`;
     },
-  }) as ChartOptions<'bar'>, []);
+  }), []);
 
   const ideClientRows = useMemo(
     () => mapIdeClientActivityRows(ideAggregates),

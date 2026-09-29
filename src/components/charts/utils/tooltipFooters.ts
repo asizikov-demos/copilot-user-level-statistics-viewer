@@ -1,6 +1,6 @@
 import type { TooltipItem } from 'chart.js';
 
-type StackedTooltipItem = TooltipItem<'line' | 'bar'>;
+type StackedTooltipItem = TooltipItem<'bar'>;
 
 type NumberFormatter = (value: number) => string;
 

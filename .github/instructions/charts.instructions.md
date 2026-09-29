@@ -27,12 +27,18 @@ Choose chart type based on data semantics:
 
 Use the factory functions from `./utils/chartOptions`:
 
-- `createBaseChartOptions(config)` — standard single-axis charts
+- `createBaseChartOptions(config)` — standard single-axis bar charts
+- `createBaseChartOptions<'line'>(config)` — standard single-axis line charts
 - `createStackedBarChartOptions(config)` — stacked bars
 - `createHorizontalBarChartOptions(config)` — horizontal bars
 - `createDualAxisChartOptions(config)` — left/right dual axes
 
 Use `yAxisFormatters` (`.percentage`, `.integer`, `.localeNumber`) for axis tick formatting.
+
+Tooltip callbacks must use the chart's specific type (`TooltipItem<'bar'>` or
+`TooltipItem<'line'>`). Reserve `TooltipItem<'line' | 'bar'>` for mixed charts
+using `createDualAxisChartOptions`. Do not cast factory results to `ChartOptions`
+to bypass type mismatches.
 
 ## Dataset Creation
 

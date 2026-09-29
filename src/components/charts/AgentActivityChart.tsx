@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
 import type { AgentActivity, AgentSurface } from '../../types/agentActivity';
 import { formatShortDate } from '../../utils/formatters';
 import { mapReportRangeData } from '../../utils/timeSeries';
@@ -59,7 +58,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
         ...(surface.key === 'vscodeAgents' ? [] : [`Requests: ${formatCount(counts?.requests)}`]),
       ];
     },
-  }) as ChartOptions<'bar'>;
+  });
 
   return (
     <ChartContainer
