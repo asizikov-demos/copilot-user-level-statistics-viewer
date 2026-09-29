@@ -5,7 +5,7 @@ import type { TooltipItem } from 'chart.js';
 /**
  * Configuration for creating base chart options
  */
-export interface BaseChartConfig {
+export interface BaseChartConfig<TType extends 'line' | 'bar' = 'bar'> {
   xAxisLabel?: string;
   yAxisLabel?: string;
   showLegend?: boolean;
@@ -15,10 +15,10 @@ export interface BaseChartConfig {
   beginAtZero?: boolean;
   yMax?: number;
   yTicksCallback?: (value: unknown) => string | number;
-  tooltipLabelCallback?: (context: TooltipItem<'line' | 'bar'>) => string | string[];
-  tooltipAfterBodyCallback?: (tooltipItems: TooltipItem<'line' | 'bar'>[]) => string[];
-  tooltipTitleCallback?: (context: TooltipItem<'line' | 'bar'>[]) => string;
-  tooltipFooterCallback?: (items: TooltipItem<'line' | 'bar'>[]) => string;
+  tooltipLabelCallback?: (context: TooltipItem<TType>) => string | string[];
+  tooltipAfterBodyCallback?: (tooltipItems: TooltipItem<TType>[]) => string[];
+  tooltipTitleCallback?: (context: TooltipItem<TType>[]) => string;
+  tooltipFooterCallback?: (items: TooltipItem<TType>[]) => string;
   stacked?: boolean;
   indexAxis?: 'x' | 'y';
   yStepSize?: number;
@@ -29,7 +29,7 @@ export interface BaseChartConfig {
 /**
  * Configuration for dual-axis charts
  */
-export interface DualAxisChartConfig extends BaseChartConfig {
+export interface DualAxisChartConfig extends BaseChartConfig<'line' | 'bar'> {
   y1AxisLabel?: string;
   y1Max?: number;
   y1BeginAtZero?: boolean;
@@ -58,7 +58,9 @@ const DEFAULT_GRID_COLOR = 'rgba(0, 0, 0, 0.1)';
  * Creates base chart options with common configuration.
  * Reduces duplication across chart components.
  */
-export function createBaseChartOptions(config: BaseChartConfig = {}) {
+export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
+  config: BaseChartConfig<TType> = {}
+) {
   const {
     xAxisLabel,
     yAxisLabel,

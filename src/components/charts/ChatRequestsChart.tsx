@@ -29,18 +29,18 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
     mode => mode.requestDatasetLabel
   );
 
-  const options = createBaseChartOptions({
+  const options = createBaseChartOptions<'line'>({
     xAxisLabel: 'Date',
     yAxisLabel: 'Number of Requests',
     yStepSize: 1,
     yTicksCallback: yAxisFormatters.integer,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'line'>) => {
       const value = context.parsed.y;
       const datasetLabel = context.dataset.label;
       const unit = datasetLabel === 'CLI Sessions' ? 'sessions' : 'requests';
       return `${datasetLabel}: ${value} ${unit}`;
     },
-    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'line' | 'bar'>[]) => {
+    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'line'>[]) => {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];

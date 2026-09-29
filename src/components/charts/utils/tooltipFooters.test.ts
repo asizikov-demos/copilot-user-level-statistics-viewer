@@ -2,7 +2,7 @@ import type { TooltipItem } from 'chart.js';
 import { describe, expect, it } from 'vitest';
 import { createStackedTotalFooter, createStackedTotalWithShareFooter } from './tooltipFooters';
 
-type StackedTooltipItem = TooltipItem<'line' | 'bar'>;
+type StackedTooltipItem = TooltipItem<'bar'>;
 
 function tooltipItem(label: string, y: number): StackedTooltipItem {
   return {

@@ -61,7 +61,7 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: isGenerations ? 'Generations' : 'Lines of Code',
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const value = context.parsed.y || 0;
       const unit = isGenerations ? 'generations' : 'LOC';
       return `${context.dataset.label}: ${value.toLocaleString()} ${unit}`;

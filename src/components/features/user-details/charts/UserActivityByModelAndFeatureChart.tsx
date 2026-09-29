@@ -30,7 +30,7 @@ type PaddedDay = {
 const modelBarChartOptions = createStackedBarChartOptions({
   xAxisLabel: 'Date',
   yAxisLabel: 'Interactions',
-  tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+  tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
     const label = context.dataset.label ?? '';
     const value = context.parsed.y ?? 0;
     return `${label}: ${value.toLocaleString()} interactions`;

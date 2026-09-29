@@ -1,6 +1,5 @@
 'use client';
 
-import type { ChartOptions } from 'chart.js';
 import { formatShortDate } from '../../../utils/formatters';
 import { padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import { createBaseChartOptions } from './chartOptions';
@@ -58,6 +57,6 @@ export function createDailyBarChartConfig<T>({
         )
       ),
     },
-    options: createBaseChartOptions(options) as ChartOptions<'bar'>,
+    options: createBaseChartOptions(options),
   };
 }

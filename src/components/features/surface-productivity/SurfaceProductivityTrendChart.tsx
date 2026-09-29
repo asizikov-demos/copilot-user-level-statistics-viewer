@@ -77,12 +77,12 @@ export default function SurfaceProductivityTrendChart({
     ),
   };
   const isActiveUsers = metric === 'activeUsers';
-  const options = createBaseChartOptions({
+  const options = createBaseChartOptions<'line'>({
     xAxisLabel: 'Date',
     yAxisLabel: isActiveUsers ? 'Active users' : 'Net lines changed',
     beginAtZero: isActiveUsers,
     yTicksCallback: yAxisFormatters.localeNumber,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'line'>) => {
       const value = context.parsed.y ?? 0;
       if (isActiveUsers) {
         return `${context.dataset.label}: ${value.toLocaleString()} active users`;

@@ -28,12 +28,12 @@ export default function EngagementChart({ data }: EngagementChartProps) {
     ],
   };
 
-  const options = createBaseChartOptions({
+  const options = createBaseChartOptions<'line'>({
     xAxisLabel: 'Date',
     yAxisLabel: 'Engagement Percentage (%)',
     yMax: 100,
     yTicksCallback: yAxisFormatters.percentage,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'line'>) => {
       const dataIndex = context.dataIndex;
       const dayData = data[dataIndex];
       return [

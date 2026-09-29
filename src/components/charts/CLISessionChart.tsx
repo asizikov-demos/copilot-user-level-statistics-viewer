@@ -1,7 +1,6 @@
 'use client';
 
 import { Bar } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
@@ -49,7 +48,7 @@ export default function CLISessionChart({ data, appData }: CLISessionChartProps)
     yAxisLabel: 'Count',
     xMaxRotation: 45,
     xAutoSkip: true,
-  }) as ChartOptions<'bar'>;
+  });
 
   return (
     <ChartContainer

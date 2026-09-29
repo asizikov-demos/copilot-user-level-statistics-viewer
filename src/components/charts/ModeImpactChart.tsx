@@ -70,7 +70,7 @@ export default function ModeImpactChart({
     xAxisLabel: 'Date',
     yAxisLabel: 'Lines of Code',
     yTicksCallback: yAxisFormatters.localeNumber,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const dataset = context.dataset.label;
       const value = context.parsed.y;
 
@@ -84,7 +84,7 @@ export default function ModeImpactChart({
       }
       return '';
     },
-    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'line' | 'bar'>[]) => {
+    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'bar'>[]) => {
       if (tooltipItems.length === 0) return [];
       const index = tooltipItems[0].dataIndex;
       const entry = data[index];

@@ -1,7 +1,6 @@
 'use client';
 
 import { Bar, Line } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
 import type { VSCodeAgentUsage } from '../../types/vscodeAgent';
 import { formatShortDate } from '../../utils/formatters';
 import { mapReportRangeData } from '../../utils/timeSeries';
@@ -57,7 +56,7 @@ export default function VSCodeAgentUsageChart({
     values: displayData.map(entry => entry.day?.[measure.key] ?? null),
   }));
   const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.`;
-  const options = createBaseChartOptions({
+  const createOptions = <TType extends 'bar' | 'line',>() => createBaseChartOptions<TType>({
     xAxisLabel: 'Date',
     yAxisLabel: 'Reported count',
     yTicksCallback: yAxisFormatters.integer,
@@ -88,7 +87,7 @@ export default function VSCodeAgentUsageChart({
             labels,
             datasets: series.map(measure => createBarDataset(measure.color, measure.label, measure.values)),
           }}
-          options={options as ChartOptions<'bar'>}
+          options={createOptions<'bar'>()}
           role="img"
           aria-label={ariaLabel}
         />
@@ -98,7 +97,7 @@ export default function VSCodeAgentUsageChart({
             labels,
             datasets: series.map(measure => createLineDataset(measure.color, measure.label, measure.values, { spanGaps: false })),
           }}
-          options={options as ChartOptions<'line'>}
+          options={createOptions<'line'>()}
           role="img"
           aria-label={ariaLabel}
         />

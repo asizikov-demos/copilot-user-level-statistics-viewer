@@ -45,7 +45,7 @@ export default function ModelCategoryDistributionChart({
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) =>
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) =>
       `${context.dataset.label}: ${(context.parsed.y ?? 0).toLocaleString()} interactions`,
     tooltipFooterCallback: createStackedTotalFooter(),
   });

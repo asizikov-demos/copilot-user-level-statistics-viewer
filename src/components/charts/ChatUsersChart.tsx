@@ -28,17 +28,17 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
     mode => mode.userDatasetLabel
   );
 
-  const options = createBaseChartOptions({
+  const options = createBaseChartOptions<'line'>({
     xAxisLabel: 'Date',
     yAxisLabel: 'Number of Users',
     yStepSize: 1,
     yTicksCallback: yAxisFormatters.integer,
-    tooltipLabelCallback: (context: TooltipItem<'line' | 'bar'>) => {
+    tooltipLabelCallback: (context: TooltipItem<'line'>) => {
       const value = context.parsed.y;
       const datasetLabel = context.dataset.label;
       return `${datasetLabel}: ${value} users`;
     },
-    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'line' | 'bar'>[]) => {
+    tooltipAfterBodyCallback: (tooltipItems: TooltipItem<'line'>[]) => {
       if (tooltipItems.length > 0) {
         const dataIndex = tooltipItems[0].dataIndex;
         const dayData = data[dataIndex];
