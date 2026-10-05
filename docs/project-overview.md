@@ -185,6 +185,18 @@ Established boundaries cover:
 - AI credits
 - surface productivity
 
+The Languages dashboard's Complete Languages Breakdown defaults to its existing Totals
+view and offers a Normalized view for the uploaded period. It retains observed language
+user counts and generation totals alongside generations per observed user and the share
+of language-attributed generations. The worker computes both ratios from finalized
+language accumulators; share uses the sum across **all** reported language rows, including
+unknown-language buckets and rows hidden by the top-ten disclosure. A zero denominator
+is undefined and displayed as a dash. Observed language users are distinct user IDs with
+a reported language-feature entry, including zero-activity entries, not an active-user
+cohort or all developers coding that language. Users can occur in multiple languages.
+Sortable columns operate on unrounded values; each view retains its own sort selection.
+These are uploaded-period activity measures, not weekly rates or productivity rankings.
+
 Phase 4 feature read-model boundaries, Phase 6 feature-oriented component organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
 
 ### 3.5. Enforced Dependency Direction

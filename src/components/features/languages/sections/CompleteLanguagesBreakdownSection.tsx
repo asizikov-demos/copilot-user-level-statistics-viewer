@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
-import { sortBySelector } from '../../../../utils/sorting';
+import { sortByField } from '../../../../utils/sorting';
 import MetricsTable, { type SortState as TableSortState, type TableColumn } from '../../../ui/MetricsTable';
 import {
   formatAcceptanceRate,
@@ -15,41 +15,35 @@ interface CompleteLanguagesBreakdownSectionProps {
   languages: LanguageStats[];
 }
 
-type SortField = 'language' | 'totalGenerations' | 'totalAcceptances' | 'totalEngagements' | 'uniqueUsers' | 'locAdded' | 'locDeleted' | 'locSuggestedToAdd' | 'locSuggestedToDelete';
+type BreakdownMode = 'totals' | 'normalized';
+type SortField = keyof LanguageStats;
 
 export default function CompleteLanguagesBreakdownSection({
   sectionId,
   languages,
 }: CompleteLanguagesBreakdownSectionProps) {
-  const [tableSortState, setTableSortState] = useState<TableSortState>({
+  const [mode, setMode] = useState<BreakdownMode>('totals');
+  const [totalsSortState, setTotalsSortState] = useState<TableSortState>({
     field: 'totalEngagements',
     direction: 'desc',
   });
 
-  const sortSelectors = useMemo<Record<SortField, (lang: LanguageStats) => string | number>>(
-    () => ({
-      language: (lang) => lang.language.toLowerCase(),
-      totalGenerations: (lang) => lang.totalGenerations,
-      totalAcceptances: (lang) => lang.totalAcceptances,
-      totalEngagements: (lang) => lang.totalEngagements,
-      uniqueUsers: (lang) => lang.uniqueUsers,
-      locAdded: (lang) => lang.locAdded,
-      locDeleted: (lang) => lang.locDeleted,
-      locSuggestedToAdd: (lang) => lang.locSuggestedToAdd,
-      locSuggestedToDelete: (lang) => lang.locSuggestedToDelete,
-    }),
-    [],
-  );
+  const [normalizedSortState, setNormalizedSortState] = useState<TableSortState>({
+    field: 'generationsPerUser',
+    direction: 'desc',
+  });
+  const tableSortState = mode === 'totals' ? totalsSortState : normalizedSortState;
 
   const sortedLanguages = useMemo(() => {
-    const field = (tableSortState.field as SortField) || 'totalEngagements';
-    const selector = sortSelectors[field];
-    return sortBySelector(languages, selector, tableSortState.direction);
-  }, [languages, sortSelectors, tableSortState]);
+    return sortByField(languages, tableSortState.field as SortField, tableSortState.direction);
+  }, [languages, tableSortState]);
 
   const handleTableSortChange = (next: TableSortState) => {
-    const field = (next.field as SortField) || 'totalEngagements';
-    setTableSortState({ field, direction: next.direction });
+    if (mode === 'totals') {
+      setTotalsSortState(next);
+    } else {
+      setNormalizedSortState(next);
+    }
   };
 
   const completeLanguagesColumns: TableColumn<LanguageStats>[] = [
@@ -144,12 +138,69 @@ export default function CompleteLanguagesBreakdownSection({
     },
   ];
 
+  const normalizedColumns: TableColumn<LanguageStats>[] = [
+    completeLanguagesColumns[0],
+    {
+      id: 'uniqueUsers',
+      header: 'Observed Language Users',
+      sortable: true,
+      accessor: 'uniqueUsers',
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
+    },
+    completeLanguagesColumns[2],
+    {
+      id: 'generationsPerUser',
+      header: 'Generations / Observed User',
+      sortable: true,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
+      renderCell: (lang) => lang.generationsPerUser == null
+        ? '-'
+        : lang.generationsPerUser.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 }),
+    },
+    {
+      id: 'generationShare',
+      header: 'Share of Language Generations',
+      sortable: true,
+      headerClassName: wideHeaderRightClassName,
+      className: wideCellRightClassName,
+      renderCell: (lang) => lang.generationShare == null
+        ? '-'
+        : lang.generationShare.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 1 }),
+    },
+  ];
+
   return (
     <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
+      <div role="group" aria-label="Language breakdown view" className="inline-flex rounded-md border border-gray-300 mb-4">
+        {(['totals', 'normalized'] as const).map((view) => (
+          <button
+            key={view}
+            type="button"
+            aria-pressed={mode === view}
+            onClick={() => setMode(view)}
+            className={`px-4 py-2 text-sm font-medium first:rounded-l-md last:rounded-r-md focus-visible:outline-2 focus-visible:outline-blue-600 ${
+              mode === view ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            {view === 'totals' ? 'Totals' : 'Normalized'}
+          </button>
+        ))}
+      </div>
+      {mode === 'normalized' && (
+        <p className="text-sm text-gray-600 mb-4">
+          Across the uploaded period, generations are divided by distinct users with a reported
+          language-feature entry, including zero-activity entries. Users can appear in multiple languages;
+          these are not all developers coding that language. Share uses generations across all reported
+          language rows, including hidden rows. A dash means the denominator is zero.
+          These describe recorded activity, not weekly rates or productivity.
+        </p>
+      )}
       <MetricsTable
         data={sortedLanguages}
-        columns={completeLanguagesColumns}
+        columns={mode === 'totals' ? completeLanguagesColumns : normalizedColumns}
         sortState={tableSortState}
         onSortChange={handleTableSortChange}
         rowClassName={tableRowClassName}

@@ -4,6 +4,8 @@ export interface LanguageStats {
   totalAcceptances: number;
   totalEngagements: number;
   uniqueUsers: number;
+  generationsPerUser: number | null;
+  generationShare: number | null;
   locAdded: number;
   locDeleted: number;
   locSuggestedToAdd: number;
@@ -62,6 +64,9 @@ export function accumulateLanguageStats(
 }
 
 export function computeLanguageStats(accumulator: LanguageAccumulator): LanguageStats[] {
+  const totalLanguageGenerations = Array.from(accumulator.languageStatsMap.values())
+    .reduce((total, stats) => total + stats.totalGenerations, 0);
+
   return Array.from(accumulator.languageStatsMap.entries())
     .map(([language, stats]) => ({
       language,
@@ -69,6 +74,8 @@ export function computeLanguageStats(accumulator: LanguageAccumulator): Language
       totalAcceptances: stats.totalAcceptances,
       totalEngagements: stats.totalGenerations + stats.totalAcceptances,
       uniqueUsers: stats.users.size,
+      generationsPerUser: stats.users.size > 0 ? stats.totalGenerations / stats.users.size : null,
+      generationShare: totalLanguageGenerations > 0 ? stats.totalGenerations / totalLanguageGenerations : null,
       locAdded: stats.locAdded,
       locDeleted: stats.locDeleted,
       locSuggestedToAdd: stats.locSuggestedToAdd,
