@@ -12,6 +12,8 @@ function makeLanguageMetrics(): AggregatedMetrics {
         totalAcceptances: 6,
         totalEngagements: 18,
         uniqueUsers: 2,
+        generationsPerUser: 6,
+        generationShare: 1,
         locAdded: 24,
         locDeleted: 4,
         locSuggestedToAdd: 30,

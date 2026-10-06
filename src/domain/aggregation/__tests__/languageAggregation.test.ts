@@ -112,6 +112,8 @@ describe('language aggregation orchestration', () => {
       totalAcceptances: 5,
       totalEngagements: 8,
       uniqueUsers: 2,
+      generationsPerUser: 1.5,
+      generationShare: 3 / 17,
       locAdded: 11,
       locDeleted: 3,
       locSuggestedToAdd: 22,
