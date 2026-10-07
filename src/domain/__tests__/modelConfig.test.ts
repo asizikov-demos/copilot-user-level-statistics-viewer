@@ -30,6 +30,7 @@ describe('modelConfig', () => {
       ['gpt-6.1-sol', 'GPT-6.1 Sol', '  GPT_6.1_SOL  ', 'Powerful', 'OpenAI'],
       ['claude-opus-5.5', 'Claude Opus 5.5', '  CLAUDE_OPUS_5.5  ', 'Powerful', 'Anthropic'],
       ['claude-sonnet-5.5', 'Claude Sonnet 5.5', '  CLAUDE_SONNET_5.5  ', 'Versatile', 'Anthropic'],
+      ['claude-haiku-5.5', 'Claude Haiku 5.5', '  CLAUDE_HAIKU_5.5  ', 'Lightweight', 'Anthropic'],
     ])('should recognize %s with its published category and vendor', (canonical, displayName, alias, category, vendor) => {
       for (const modelName of [canonical, displayName, alias]) {
         expect(classifyModelRequest(modelName)).toEqual({

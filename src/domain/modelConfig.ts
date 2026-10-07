@@ -96,6 +96,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-opus-4.6-fast-mode-preview', 'Powerful', 'Anthropic'),
   new Model('claude-4.5-haiku', 'Versatile', 'Anthropic'),
   new Model('claude-haiku-4.5', 'Versatile', 'Anthropic'),
+  new Model('claude-haiku-5.5', 'Lightweight', 'Anthropic'),
   new Model('claude-sonnet-4', 'Versatile', 'Anthropic'),
   new Model('claude-sonnet-4.5', 'Versatile', 'Anthropic'),
   new Model('claude-sonnet-4.6', 'Versatile', 'Anthropic'),
