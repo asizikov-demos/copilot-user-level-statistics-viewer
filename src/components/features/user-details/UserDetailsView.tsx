@@ -34,6 +34,7 @@ import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { isCliFeature } from '../../../domain/featureCategories';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
 import { USER_DETAILS_SECTIONS } from './userDetailsSections';
+import ClientTelemetryNotice from '../../ClientTelemetryNotice';
 
 registerChartJS();
 
@@ -339,6 +340,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       )}
       contentClassName="space-y-8"
     >
+      <ClientTelemetryNotice warnings={headerSummary.telemetryWarnings} showUserCounts={false} />
       <UserDetailsOverviewSection
         sectionId={overviewSection.id}
         days={userDetails.days}

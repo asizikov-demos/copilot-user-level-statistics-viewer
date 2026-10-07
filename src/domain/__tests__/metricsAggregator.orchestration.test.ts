@@ -271,6 +271,7 @@ describe('metrics aggregation orchestration characterization', () => {
       },
     };
     const clientAggregation = {
+      telemetryWarnings: defaults.clients.telemetryWarnings,
       ideStats: [...defaults.clients.ideStats],
       multiIDEUsersCount: 12,
       totalUniqueIDEUsers: 13,

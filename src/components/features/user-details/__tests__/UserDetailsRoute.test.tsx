@@ -74,6 +74,7 @@ vi.mock('../UserDetailsView', () => ({
 }));
 
 const details: UserDetailedMetrics = {
+  telemetryWarnings: [],
   agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: aggregateMetrics([]).aggregated.adoption.vscodeAgentUsage,

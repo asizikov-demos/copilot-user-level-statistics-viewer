@@ -1,5 +1,11 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import {
+  accumulateClientTelemetry,
+  computeClientTelemetryWarnings,
+  createClientTelemetryAccumulator,
+  type ClientTelemetryAccumulator,
+} from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
 import {
   accumulateCliCustomizations,
@@ -96,6 +102,7 @@ interface CliVersionEntry {
 }
 
 interface UserAccState {
+  telemetry: ClientTelemetryAccumulator;
   cliCustomizations: CliCustomizationAccumulator;
   totalModelRequests: number;
   totalAiCreditsUsed: number;
@@ -126,6 +133,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   let state = accumulator.users.get(userId);
   if (!state) {
     state = {
+      telemetry: createClientTelemetryAccumulator(),
       cliCustomizations: createCliCustomizationAccumulator(),
       totalModelRequests: 0,
       totalAiCreditsUsed: 0,
@@ -233,6 +241,7 @@ export function accumulateUserDetail(
   }
 
   for (const [index, ide] of metric.totals_by_ide.entries()) {
+    accumulateClientTelemetry(state.telemetry, userId, ide);
     const ideEntry: IDEAgg = {
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
@@ -305,6 +314,9 @@ export function accumulateUserDetail(
       loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
       last_known_plugin_version: ide.last_known_plugin_version
         ? { ...ide.last_known_plugin_version }
+        : undefined,
+      last_known_ide_version: ide.last_known_ide_version
+        ? { ...ide.last_known_ide_version }
         : undefined,
     })),
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
@@ -379,6 +391,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     totalModelRequests: state.totalModelRequests,
+    telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),
     agentActivity: computeAgentActivity(state.days),
     cliCustomizations: computeCliCustomizations(state.cliCustomizations),
     vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),

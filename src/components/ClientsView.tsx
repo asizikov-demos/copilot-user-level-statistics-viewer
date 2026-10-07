@@ -184,6 +184,7 @@ export default function ClientsView({ model }: IDEViewProps) {
             data={dailyIdeUsersData}
             reportStartDay={reportStartDay}
             reportEndDay={reportEndDay}
+            telemetryWarnings={model.telemetryWarnings}
           />
         </div>
 

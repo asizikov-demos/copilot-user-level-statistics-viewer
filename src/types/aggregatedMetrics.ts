@@ -34,6 +34,7 @@ import type { VSCodeAgentUsage } from './vscodeAgent';
 import type { CliCustomizationSummary } from './cliCustomizations';
 import type { AgentActivity } from './agentActivity';
 import type { ExecutiveSummaryMetrics } from '../domain/calculators/executiveSummaryCalculator';
+import type { ClientTelemetryWarning } from '../domain/calculators/clientTelemetryCalculator';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -74,6 +75,7 @@ export interface LanguagesMetricsSlice {
 }
 
 export interface ClientsMetricsSlice {
+  telemetryWarnings: ClientTelemetryWarning[];
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
@@ -112,6 +114,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  telemetryWarnings: ClientTelemetryWarning[];
   agentActivity: AgentActivity;
   cliCustomizations: CliCustomizationSummary[];
   vscodeAgentUsage: VSCodeAgentUsage;

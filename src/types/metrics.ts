@@ -45,6 +45,10 @@ export interface CopilotMetrics extends CliCustomizationFields {
     loc_deleted_sum: number;
     loc_suggested_to_add_sum: number;
     loc_suggested_to_delete_sum: number;
+    last_known_ide_version?: {
+      sampled_at: string;
+      ide_version: string;
+    };
     last_known_plugin_version?: {
       sampled_at: string;
       plugin: string;
@@ -299,6 +303,10 @@ export interface UserDayData {
     loc_deleted_sum: number;
     loc_suggested_to_add_sum: number;
     loc_suggested_to_delete_sum: number;
+    last_known_ide_version?: {
+      sampled_at: string;
+      ide_version: string;
+    };
     last_known_plugin_version?: {
       sampled_at: string;
       plugin: string;

@@ -41,6 +41,7 @@ describe('client aggregation orchestration', () => {
     const accumulator = createClientAggregationAccumulator();
 
     expect(finalizeClientAggregation(accumulator)).toEqual({
+      telemetryWarnings: [],
       ideStats: [],
       multiIDEUsersCount: 0,
       totalUniqueIDEUsers: 0,

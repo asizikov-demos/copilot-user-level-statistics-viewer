@@ -36,6 +36,7 @@ export interface UserDetailsViewModel {
 }
 
 export interface UserDetailsHeaderReadModel {
+  telemetryWarnings: UserDetailedMetrics['telemetryWarnings'];
   daysActive: number;
   reportDays: number;
   activeDaysPercent: number;
@@ -190,6 +191,7 @@ export function selectUserDetailsHeaderReadModel(
 
   return {
     daysActive: userSummary.days_active,
+    telemetryWarnings: userDetails.telemetryWarnings,
     reportDays,
     activeDaysPercent: reportDays > 0 ? Math.round((userSummary.days_active / reportDays) * 100) : 0,
     interactions: userSummary.total_user_initiated_interactions,
