@@ -12,6 +12,9 @@ import { mapReportRangeData } from '../../utils/timeSeries';
 import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
 import ChartContainer from '../ui/ChartContainer';
 import type { DailyIdeUsersData } from '../../domain/calculators/dailyIdeUsersCalculator';
+import type { ClientTelemetryWarning } from '../../domain/calculators/clientTelemetryCalculator';
+import { getIDEMetadata } from '../../utils/ideMetadata';
+import ClientTelemetryNotice from '../ClientTelemetryNotice';
 
 registerChartJS();
 
@@ -19,12 +22,14 @@ interface DailyIDEUsersChartProps {
   data: DailyIdeUsersData;
   reportStartDay: string;
   reportEndDay: string;
+  telemetryWarnings?: ClientTelemetryWarning[];
 }
 
 export default function DailyIDEUsersChart({
   data,
   reportStartDay,
   reportEndDay,
+  telemetryWarnings = [],
 }: DailyIDEUsersChartProps) {
   const [selectedIde, setSelectedIde] = useState<string>('');
 
@@ -40,6 +45,10 @@ export default function DailyIDEUsersChart({
   }, [data, selectedIde]);
 
   const activeEntry = data.find(entry => entry.ide === activeIde);
+  const activeTelemetryWarnings = useMemo(() => {
+    const canonicalIde = getIDEMetadata(activeIde)?.canonicalKey;
+    return telemetryWarnings.filter(warning => warning.ide === canonicalIde);
+  }, [activeIde, telemetryWarnings]);
 
   const displayData = useMemo(
     () =>
@@ -96,6 +105,7 @@ export default function DailyIDEUsersChart({
       description="Unique users interacting with the selected client each day."
       isEmpty={data.length === 0}
       emptyState="No client usage data available"
+      footer={<ClientTelemetryNotice key={activeIde} warnings={activeTelemetryWarnings} />}
       headerActions={
         <div className="min-w-44">
           <label htmlFor="daily-ide-users-filter" className="block text-xs font-medium text-gray-700 mb-1">

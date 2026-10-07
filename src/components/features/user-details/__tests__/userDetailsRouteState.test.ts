@@ -37,6 +37,7 @@ const userSummary: UserSummary = {
   used_copilot_code_review_passive: false,
 };
 const details: UserDetailedMetrics = {
+  telemetryWarnings: [],
   agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,

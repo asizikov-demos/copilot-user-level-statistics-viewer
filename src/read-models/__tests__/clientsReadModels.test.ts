@@ -95,6 +95,7 @@ describe('client read models', () => {
     const model = selectClientsReadModel(metrics);
 
     expect(model).toEqual({
+      telemetryWarnings: metrics.clients.telemetryWarnings,
       ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: 2,
       totalUniqueIDEUsers: 5,
@@ -109,6 +110,7 @@ describe('client read models', () => {
     expect(model.ideStats).toBe(metrics.clients.ideStats);
     expect(model.ideStats[0]).toBe(metrics.clients.ideStats[0]);
     expect(Object.keys(model)).toEqual([
+      'telemetryWarnings',
       'ideStats',
       'multiIDEUsersCount',
       'totalUniqueIDEUsers',
@@ -177,6 +179,7 @@ describe('client read models', () => {
     });
 
     expect(selectClientsReadModel(metrics)).toEqual({
+      telemetryWarnings: [],
       ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: -2,
       totalUniqueIDEUsers: -3,
@@ -196,6 +199,7 @@ describe('client read models', () => {
     const model = selectClientVersionsReadModel(metrics);
 
     expect(model).toEqual({
+      telemetryWarnings: metrics.clients.telemetryWarnings,
       pluginVersionData: metrics.clients.pluginVersionData,
       reportStartDay: '2026-01-15',
     });
@@ -208,7 +212,7 @@ describe('client read models', () => {
       metrics.clients.pluginVersionData.jetbrains[0].usernames
     );
     expect(model.pluginVersionData.vscode).toBe(metrics.clients.pluginVersionData.vscode);
-    expect(Object.keys(model)).toEqual(['pluginVersionData', 'reportStartDay']);
+    expect(Object.keys(model)).toEqual(['telemetryWarnings', 'pluginVersionData', 'reportStartDay']);
     expect(model).not.toHaveProperty('stats');
     expect(model).not.toHaveProperty('ideStats');
     expect(model).not.toHaveProperty('userSummaries');
@@ -221,6 +225,7 @@ describe('client read models', () => {
     const clientVersions = selectClientVersionsReadModel(metrics);
 
     expect(clients).toEqual({
+      telemetryWarnings: [],
       ideStats: [],
       multiIDEUsersCount: 0,
       totalUniqueIDEUsers: 0,
@@ -234,6 +239,7 @@ describe('client read models', () => {
     });
     expect(clients.ideStats).toBe(metrics.clients.ideStats);
     expect(clientVersions).toEqual({
+      telemetryWarnings: [],
       pluginVersionData: metrics.clients.pluginVersionData,
       reportStartDay: '',
     });

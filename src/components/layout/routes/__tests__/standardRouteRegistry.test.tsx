@@ -270,6 +270,7 @@ describe('standard route registry', () => {
       dailyCodeReviewAdoptionData: aggregatedMetrics.adoption.dailyCodeReviewAdoptionData,
     };
     clientVersionsModel = {
+      telemetryWarnings: aggregatedMetrics.clients.telemetryWarnings,
       pluginVersionData: aggregatedMetrics.clients.pluginVersionData,
       reportStartDay: aggregatedMetrics.overview.stats.reportStartDay,
     };

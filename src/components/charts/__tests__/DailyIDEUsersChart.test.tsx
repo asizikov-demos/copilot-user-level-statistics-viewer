@@ -6,6 +6,8 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DailyIDEUsersChart from '../DailyIDEUsersChart';
 import type { DailyIdeUsersData } from '../../../domain/calculators/dailyIdeUsersCalculator';
+import type { ClientTelemetryWarning } from '../../../domain/calculators/clientTelemetryCalculator';
+import ClientTelemetryNotice from '../../ClientTelemetryNotice';
 
 const { bar } = vi.hoisted(() => ({ bar: vi.fn() }));
 vi.mock('react-chartjs-2', () => ({
@@ -40,13 +42,17 @@ describe('DailyIDEUsersChart', () => {
     bar.mockClear();
   });
 
-  async function renderChart(chartData: DailyIdeUsersData = data) {
+  async function renderChart(
+    chartData: DailyIdeUsersData = data,
+    telemetryWarnings: ClientTelemetryWarning[] = [],
+  ) {
     await act(async () => {
       renderer = create(
         <DailyIDEUsersChart
           data={chartData}
           reportStartDay="2024-01-15"
           reportEndDay="2024-01-17"
+          telemetryWarnings={telemetryWarnings}
         />
       );
     });
@@ -118,5 +124,87 @@ describe('DailyIDEUsersChart', () => {
         node => node.type === 'div' && node.children[0] === 'No client usage data available'
       )
     ).toHaveLength(1);
+  });
+
+  it('filters telemetry warnings to the active client and hides them for unaffected clients', async () => {
+    const warnings: ClientTelemetryWarning[] = [
+      {
+        ide: 'vscode',
+        version: '1.138.0',
+        versionKind: 'ide',
+        userCount: 3,
+        action: 'upgrade',
+        recommendation: 'Update VS Code to 1.139.0 or later.',
+      },
+      {
+        ide: 'visualstudio',
+        version: '18.11.0',
+        versionKind: 'ide',
+        userCount: 1,
+        action: 'upgrade',
+        recommendation: 'Update Visual Studio to 18.12 or later when available.',
+      },
+      {
+        ide: 'jetbrains',
+        version: '1.5.0',
+        versionKind: 'plugin',
+        userCount: 1,
+        action: 'verify',
+        recommendation: 'Check for the fixed JetBrains Copilot plugin release.',
+      },
+    ];
+    const chartData = [
+      ...data,
+      { ...data[0], ide: 'visual_studio' },
+      { ...data[0], ide: 'intellij' },
+    ];
+    await renderChart(chartData, warnings);
+
+    const notice = () => renderer!.root.findByType(ClientTelemetryNotice);
+    expect(notice().props.warnings).toEqual([warnings[0]]);
+    expect(renderer!.root.findAllByType('li')).toHaveLength(1);
+    await act(async () => {
+      renderer!.root.findByType('select').props.onChange({ target: { value: 'visual_studio' } });
+    });
+    expect(notice().props.warnings).toEqual([warnings[1]]);
+    await act(async () => {
+      renderer!.root.findByType('select').props.onChange({ target: { value: 'intellij' } });
+    });
+    expect(notice().props.warnings).toEqual([warnings[2]]);
+    await act(async () => {
+      renderer!.root.findByType('select').props.onChange({ target: { value: 'copilot_cli' } });
+    });
+    expect(notice().props.warnings).toEqual([]);
+    expect(renderer!.root.findAllByType('aside')).toHaveLength(0);
+
+    await act(async () => {
+      renderer!.root.findByType('select').props.onChange({ target: { value: 'vscode' } });
+    });
+    expect(notice().props.warnings).toEqual([warnings[0]]);
+
+    await act(async () => {
+      renderer!.update(
+        <DailyIDEUsersChart
+          data={[chartData[2]]}
+          reportStartDay="2024-01-15"
+          reportEndDay="2024-01-17"
+          telemetryWarnings={warnings}
+        />,
+      );
+    });
+    expect(renderer!.root.findByType('select').props.value).toBe('visual_studio');
+    expect(notice().props.warnings).toEqual([warnings[1]]);
+  });
+
+  it('omits telemetry warnings when no client is selected in an empty chart', async () => {
+    await renderChart([], [{
+      ide: 'vscode',
+      version: '1.138.0',
+      versionKind: 'ide',
+      userCount: 1,
+      action: 'upgrade',
+      recommendation: 'Update VS Code.',
+    }]);
+    expect(renderer!.root.findAllByType('aside')).toHaveLength(0);
   });
 });

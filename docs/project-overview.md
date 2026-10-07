@@ -154,6 +154,23 @@ breakdowns do not leave links to empty or missing sections.
 
 Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview` and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
 
+Client telemetry notices reference GitHub's [October 6, 2026 announcement](https://github.blog/changelog/2026-10-06-update-your-ide-to-restore-agent-activity-in-copilot-usage-metrics/).
+The worker groups observed IDE/plugin versions and deduplicates users per version,
+including server-side-only IDE rows with zero activity. It returns compact warnings
+in `clients.telemetryWarnings` and on-demand `UserDetailedMetrics.telemetryWarnings`.
+Client Versions shows the notice above its dashboard, Client Analysis below Daily
+IDE Users (filtered to the chart's selected client), and user profiles at the top.
+Selecting a client without warnings hides the chart notice; Client Versions and
+user profiles retain their full warning lists. VS Code's fixed baseline is IDE 1.139.0;
+Visual Studio's is IDE 18.12 (expected October 2026). Plugin versions are never
+compared to IDE baselines. JetBrains, Eclipse, and Xcode have pending plugin fixes
+without published version numbers, so their observed versions prompt verification,
+not a confirmed-fault claim. Missing or unparseable IDE versions also prompt
+verification when a version is observed. Earlier non-SDK releases are not necessarily
+affected: the announcement does not publish affected lower bounds. Historical
+observations remain flagged even after a later upgrade; missing activity cannot be
+backfilled. Billing is unaffected and CLI-only users are not flagged.
+
 The Executive Summary is a printable Leadership Brief. Its compact `overview.executiveSummary`
 payload is computed in the worker from finalized user summaries and daily engagement:
 observed users, mean/median recorded active days, daily participation, AI credits per

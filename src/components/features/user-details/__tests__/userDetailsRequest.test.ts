@@ -5,6 +5,7 @@ import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregate
 import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
 
 const details: UserDetailedMetrics = {
+  telemetryWarnings: [],
   agentActivity: computeAgentActivity([]),
   cliCustomizations: [],
   vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,

@@ -1,6 +1,7 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface ClientsReadModel {
+  telemetryWarnings: AggregatedMetrics['clients']['telemetryWarnings'];
   ideStats: AggregatedMetrics['clients']['ideStats'];
   multiIDEUsersCount: number;
   totalUniqueIDEUsers: number;
@@ -14,6 +15,7 @@ export interface ClientsReadModel {
 }
 
 export interface ClientVersionsReadModel {
+  telemetryWarnings: AggregatedMetrics['clients']['telemetryWarnings'];
   pluginVersionData: AggregatedMetrics['clients']['pluginVersionData'];
   reportStartDay: string;
 }
@@ -22,6 +24,7 @@ export function selectClientsReadModel(
   metrics: AggregatedMetrics
 ): ClientsReadModel {
   return {
+    telemetryWarnings: metrics.clients.telemetryWarnings,
     ideStats: metrics.clients.ideStats,
     multiIDEUsersCount: metrics.clients.multiIDEUsersCount,
     totalUniqueIDEUsers: metrics.clients.totalUniqueIDEUsers,
@@ -48,6 +51,7 @@ export function selectClientVersionsReadModel(
   metrics: AggregatedMetrics
 ): ClientVersionsReadModel {
   return {
+    telemetryWarnings: metrics.clients.telemetryWarnings,
     pluginVersionData: metrics.clients.pluginVersionData,
     reportStartDay: metrics.overview.stats.reportStartDay,
   };

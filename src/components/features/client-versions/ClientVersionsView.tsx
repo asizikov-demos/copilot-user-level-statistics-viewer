@@ -6,6 +6,7 @@ import { usePluginVersions } from '../../../hooks/usePluginVersions';
 import { CLIENT_VERSIONS_SECTIONS } from '../../layout/contextSections';
 import type { ClientVersionsReadModel } from '../../../read-models/clients';
 import ClientVersionsDashboard from './ClientVersionsDashboard';
+import ClientTelemetryNotice from '../../ClientTelemetryNotice';
 import {
   analyzeJetBrainsHealth,
   analyzeVsCodeHealth,
@@ -67,7 +68,9 @@ export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
         title: 'Client Versions',
         description: 'Prioritize plugin and extension upgrades that can affect Copilot feature availability and telemetry quality.',
       }}
+      contentClassName="space-y-6"
     >
+      <ClientTelemetryNotice warnings={model.telemetryWarnings} />
       <ClientVersionsDashboard
         platforms={platforms}
         reportStartDay={reportStartDay}
