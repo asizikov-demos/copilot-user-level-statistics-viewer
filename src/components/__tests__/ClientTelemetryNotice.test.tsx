@@ -61,7 +61,9 @@ describe('client telemetry notice', () => {
       <ClientTelemetryNotice warnings={aggregated.clients.telemetryWarnings} />,
     );
     expect(markup).toContain(noticeLabel);
-    expect(markup).toContain('VS Code ide 1.138.0');
+    expect(markup).toContain('VS Code IDE 1.138.0');
+    expect(markup).toContain('<p class="font-semibold">Copilot agent telemetry: client upgrades may be needed</p>');
+    expect(markup).not.toMatch(/<h[1-6]/);
     expect(markup).toContain('(1 user)');
     expect(markup).toContain('Update VS Code to 1.139.0 or later.');
     expect(markup).toContain('older versions are not');

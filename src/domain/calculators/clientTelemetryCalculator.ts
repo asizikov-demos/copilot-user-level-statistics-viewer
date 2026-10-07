@@ -54,9 +54,11 @@ function detectTelemetryRisk(ideTotal: IdeTotal): WarningObservation | null {
 
   const ideVersion = ideTotal.last_known_ide_version?.ide_version;
   const pluginVersion = ideTotal.last_known_plugin_version?.plugin_version;
-  const version = policy.fixedVersion ? ideVersion || pluginVersion : pluginVersion || ideVersion;
+  const versionKind = (policy.fixedVersion ? Boolean(ideVersion) : !pluginVersion)
+    ? 'ide'
+    : 'plugin';
+  const version = versionKind === 'ide' ? ideVersion : pluginVersion;
   if (!version) return null;
-  const versionKind = version === ideVersion ? 'ide' : 'plugin';
   let action: ClientTelemetryWarning['action'] = 'verify';
 
   const fixedVersion = policy.fixedVersion;

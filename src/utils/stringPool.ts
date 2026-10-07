@@ -50,7 +50,11 @@ export function internMetricStrings<T extends {
   day?: string;
   enterprise_id?: string;
   user_login?: string;
-  totals_by_ide?: Array<{ ide: string; last_known_plugin_version?: { plugin: string; plugin_version: string } }>;
+  totals_by_ide?: Array<{
+    ide: string;
+    last_known_ide_version?: { ide_version: string };
+    last_known_plugin_version?: { plugin: string; plugin_version: string };
+  }>;
   totals_by_feature?: Array<{ feature: string }>;
   totals_by_language_feature?: Array<{ language: string; feature: string }>;
   totals_by_language_model?: Array<{ language: string; model: string }>;
@@ -77,6 +81,9 @@ export function internMetricStrings<T extends {
   if (metric.totals_by_ide) {
     for (const item of metric.totals_by_ide) {
       item.ide = pool.intern(item.ide);
+      if (item.last_known_ide_version) {
+        item.last_known_ide_version.ide_version = pool.intern(item.last_known_ide_version.ide_version);
+      }
       if (item.last_known_plugin_version) {
         item.last_known_plugin_version.plugin = pool.intern(item.last_known_plugin_version.plugin);
         item.last_known_plugin_version.plugin_version = pool.intern(item.last_known_plugin_version.plugin_version);

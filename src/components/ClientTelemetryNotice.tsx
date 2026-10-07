@@ -26,7 +26,7 @@ export default function ClientTelemetryNotice({
       aria-label="Copilot client telemetry warning"
       className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"
     >
-      <h2 className="font-semibold">Copilot agent telemetry: client upgrades may be needed</h2>
+      <p className="font-semibold">Copilot agent telemetry: client upgrades may be needed</p>
       <p className="mt-2">
         Versions requiring an upgrade or verification were detected in this report.
         SDK-based IDE agent activity and lines of code may be undercounted, and some
@@ -37,7 +37,7 @@ export default function ClientTelemetryNotice({
       <ul id={listId} className="mt-2 list-disc space-y-1 pl-5">
         {visibleItems.map(warning => (
           <li key={`${warning.ide}-${warning.versionKind}-${warning.version}`}>
-            <strong>{formatIDEName(warning.ide)} {warning.versionKind} {warning.version}</strong>
+            <strong>{formatIDEName(warning.ide)} {warning.versionKind === 'ide' ? 'IDE' : 'plugin'} {warning.version}</strong>
             {showUserCounts && ` (${warning.userCount} ${warning.userCount === 1 ? 'user' : 'users'})`}
             {' — '}{warning.action === 'verify' ? 'Verify whether this release is affected. ' : ''}
             {warning.recommendation}

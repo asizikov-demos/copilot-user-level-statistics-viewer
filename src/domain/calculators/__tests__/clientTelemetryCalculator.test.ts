@@ -77,6 +77,21 @@ describe('client telemetry warnings', () => {
     expect(warnings(ideTotal('vscode', '1.138.0', '1.200.0'))[0].action).toBe('upgrade');
   });
 
+  it.each(['intellij', 'eclipse', 'xcode'])(
+    'uses the plugin source for %s even when both version texts are identical',
+    ide => {
+      expect(warnings(ideTotal(ide, '1.2.3', '1.2.3'))).toEqual([
+        expect.objectContaining({ version: '1.2.3', versionKind: 'plugin' }),
+      ]);
+    },
+  );
+
+  it('uses the IDE source for fixed baselines when both version texts are identical', () => {
+    expect(warnings(ideTotal('vscode', '1.138.0', '1.138.0'))).toEqual([
+      expect.objectContaining({ version: '1.138.0', versionKind: 'ide' }),
+    ]);
+  });
+
   it.each(['1.139.0-insider', 'unknown', '1', '1.139.0.1'])(
     'requires verification rather than claiming a fixed or faulty IDE for %s',
     version => {
