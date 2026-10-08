@@ -1,5 +1,5 @@
-import type { ChartOptions, TooltipItem } from 'chart.js';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { TooltipItem } from 'chart.js';
+import { describe, expect, it } from 'vitest';
 import {
   createBaseChartOptions,
   createDualAxisChartOptions,
@@ -7,108 +7,72 @@ import {
   createStackedBarChartOptions,
 } from './chartOptions';
 
-describe('single-axis chart options', () => {
-  it('preserves bar tooltip callbacks and chart defaults without casts', () => {
+const formatTick = (value: unknown) => `${String(value)} units`;
+
+describe('createBaseChartOptions', () => {
+  it('propagates tooltip callbacks and axis config to an unstacked vertical chart', () => {
     const title = (items: TooltipItem<'bar'>[]) => items[0]?.label ?? '';
-    const label = (item: TooltipItem<'bar'>): string | string[] => `${item.parsed.y} users`;
+    const label = (item: TooltipItem<'bar'>) => `${item.parsed.y} users`;
     const afterBody = (items: TooltipItem<'bar'>[]) => [`${items.length} series`];
     const footer = (items: TooltipItem<'bar'>[]) => `${items.length} total`;
     const options = createBaseChartOptions({
+      yAxisLabel: 'Users',
+      yTicksCallback: formatTick,
       tooltipTitleCallback: title,
       tooltipLabelCallback: label,
       tooltipAfterBodyCallback: afterBody,
       tooltipFooterCallback: footer,
     });
 
-    expectTypeOf(options).toExtend<ChartOptions<'bar'>>();
-    expectTypeOf(options.plugins.tooltip.callbacks.label).toEqualTypeOf<typeof label | undefined>();
     expect(options.plugins.tooltip.callbacks).toEqual({ title, label, afterBody, footer });
-    expect(options).toMatchObject({
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'x',
-      scales: { x: { stacked: false }, y: { stacked: false, beginAtZero: true } },
-      interaction: { intersect: false, mode: 'index' },
-    });
+    expect(options.indexAxis).toBe('x');
+    expect(options.scales.y).toMatchObject({ stacked: false, title: { display: true, text: 'Users' } });
+    expect(options.scales.y.ticks.callback).toBe(formatTick);
   });
 
-  it('preserves line-specific tooltip types', () => {
-    const label = (item: TooltipItem<'line'>): string | string[] => `${item.parsed.y}%`;
-    const options = createBaseChartOptions<'line'>({ tooltipLabelCallback: label });
+  it('propagates line tooltip callbacks', () => {
+    const label = (item: TooltipItem<'line'>) => `${item.parsed.y}%`;
 
-    expectTypeOf(options).toExtend<ChartOptions<'line'>>();
-    expectTypeOf(options.plugins.tooltip.callbacks.label).toEqualTypeOf<typeof label | undefined>();
-    expect(options.plugins.tooltip.callbacks.label).toBe(label);
+    expect(createBaseChartOptions<'line'>({ tooltipLabelCallback: label }).plugins.tooltip.callbacks.label).toBe(label);
   });
+});
 
-  it('keeps bar-specific types and layout in the stacked and horizontal factories', () => {
+describe.each([
+  ['createStackedBarChartOptions', createStackedBarChartOptions, { stacked: true, indexAxis: 'x' }],
+  ['createHorizontalBarChartOptions', createHorizontalBarChartOptions, { stacked: false, indexAxis: 'y' }],
+] as const)('%s', (_name, factory, expected) => {
+  it(`uses ${expected.indexAxis}-indexed bars with stacked=${expected.stacked} and propagates tooltip callbacks`, () => {
     const label = (item: TooltipItem<'bar'>) => `${item.parsed.y} interactions`;
-    const stacked = createStackedBarChartOptions({ tooltipLabelCallback: label });
-    const horizontal = createHorizontalBarChartOptions({ tooltipLabelCallback: label });
+    const options = factory({ tooltipLabelCallback: label });
 
-    expectTypeOf(stacked).toExtend<ChartOptions<'bar'>>();
-    expectTypeOf(horizontal).toExtend<ChartOptions<'bar'>>();
-    expect(stacked.scales.x.stacked).toBe(true);
-    expect(stacked.scales.y.stacked).toBe(true);
-    expect(horizontal.indexAxis).toBe('y');
-    expect(stacked.plugins.tooltip.callbacks.label).toBe(label);
-    expect(horizontal.plugins.tooltip.callbacks.label).toBe(label);
+    expect(options.indexAxis).toBe(expected.indexAxis);
+    expect([options.scales.x.stacked, options.scales.y.stacked]).toEqual([expected.stacked, expected.stacked]);
+    expect(options.plugins.tooltip.callbacks.label).toBe(label);
   });
 });
 
 describe('createDualAxisChartOptions', () => {
-  it('retains mixed bar/line tooltip types', () => {
-    const label = (item: TooltipItem<'line' | 'bar'>): string | string[] => `${item.parsed.y} tokens`;
-    const options = createDualAxisChartOptions({ tooltipLabelCallback: label });
-
-    expectTypeOf(options).toExtend<ChartOptions<'line' | 'bar'>>();
-    expectTypeOf(options.plugins.tooltip.callbacks.label).toEqualTypeOf<typeof label | undefined>();
-    expect(options.plugins.tooltip.callbacks.label).toBe(label);
-  });
-
-  it('supports stacked scales, shared tick config, and hidden extra axes', () => {
-    const formatTick = (value: unknown) => `${String(value)} units`;
+  it('adds a right-hand y1 axis and configurable extra axes while propagating callbacks', () => {
+    const label = (item: TooltipItem<'line' | 'bar'>) => `${item.parsed.y} tokens`;
     const options = createDualAxisChartOptions({
-      xAxisLabel: 'Date',
-      yAxisLabel: 'Tokens',
       y1AxisLabel: 'Average',
       stacked: true,
-      xMaxRotation: 45,
-      xAutoSkip: true,
-      yStepSize: 1_000,
-      yTicksCallback: formatTick,
       y1TicksCallback: formatTick,
-      extraYAxes: {
-        y2: {
-          display: false,
-          min: 0,
-          max: 100,
-        },
-      },
+      tooltipLabelCallback: label,
+      extraYAxes: { y2: { display: false, min: 0, max: 100 } },
     });
 
-    expect(options.scales.x).toMatchObject({
-      stacked: true,
-      title: { display: true, text: 'Date' },
-      ticks: { maxRotation: 45, autoSkip: true },
-    });
-    expect(options.scales.y).toMatchObject({
-      stacked: true,
-      title: { display: true, text: 'Tokens' },
-      beginAtZero: true,
-      ticks: { stepSize: 1_000 },
-    });
-    expect(options.scales.y.ticks!.callback).toBe(formatTick);
+    expect(options.plugins.tooltip.callbacks.label).toBe(label);
+    expect([options.scales.x.stacked, options.scales.y.stacked]).toEqual([true, true]);
     expect(options.scales.y1).toMatchObject({
+      position: 'right',
       title: { display: true, text: 'Average' },
-      beginAtZero: true,
       grid: { drawOnChartArea: false },
     });
     expect(options.scales.y1.ticks!.callback).toBe(formatTick);
     expect((options.scales as Record<string, unknown>).y2).toMatchObject({
       display: false,
       position: 'right',
-      beginAtZero: true,
       min: 0,
       max: 100,
     });

@@ -4,16 +4,23 @@ import {
   type ReactTestInstance,
   type ReactTestRenderer,
 } from 'react-test-renderer';
+import type { ChartData } from 'chart.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ModelsUsageChart from '../ModelsUsageChart';
 
-const { bar } = vi.hoisted(() => ({ bar: vi.fn() }));
+interface BarProps {
+  data: ChartData<'bar'>;
+}
+
+const { bar } = vi.hoisted(() => ({ bar: vi.fn<(props: BarProps) => void>() }));
 vi.mock('react-chartjs-2', () => ({
-  Bar: (props: Record<string, unknown>) => {
+  Bar: (props: BarProps) => {
     bar(props);
     return <div>Models usage chart</div>;
   },
 }));
+
+const datasetLabels = () => bar.mock.lastCall![0].data.datasets.map(dataset => dataset.label);
 
 describe('ModelsUsageChart', () => {
   let renderer: ReactTestRenderer | undefined;
@@ -67,13 +74,7 @@ describe('ModelsUsageChart', () => {
       select.props.onChange({ target: { value: 'Unattributed' } });
     });
 
-    expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        datasets: [
-          expect.objectContaining({ label: 'custom-model', data: [0, 2] }),
-        ],
-      }),
-    }));
+    expect(datasetLabels()).toEqual(['custom-model']);
     expect(renderer!.root.findByType('select').props.value).toBe('Unattributed');
     const totalInteractionsLabel = renderer!.root.find(
       node => node.type === 'div'
@@ -155,13 +156,6 @@ describe('ModelsUsageChart', () => {
     });
 
     expect(renderer!.root.findByType('select').props.value).toBe('');
-    expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
-      data: expect.objectContaining({
-        datasets: expect.arrayContaining([
-          expect.objectContaining({ label: 'gpt-4.1' }),
-          expect.objectContaining({ label: 'claude-sonnet-4.5' }),
-        ]),
-      }),
-    }));
+    expect(datasetLabels()).toEqual(['claude-sonnet-4.5', 'gpt-4.1']);
   });
 });

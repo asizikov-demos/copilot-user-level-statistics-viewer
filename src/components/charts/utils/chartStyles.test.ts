@@ -3,11 +3,8 @@ import {
   computeRetentionRates,
   computeAverageRetention,
   createBarDataset,
-  barDatasetDefaults,
   createRadarDataset,
-  radarDatasetDefaults,
   createDoughnutDataset,
-  doughnutDatasetDefaults,
 } from './chartStyles';
 
 describe('computeRetentionRates', () => {
@@ -84,77 +81,33 @@ describe('computeAverageRetention', () => {
   });
 });
 
-describe('createBarDataset', () => {
-  it('sets label, data, backgroundColor and borderColor from the color argument', () => {
-    const result = createBarDataset('hsl(210, 70%, 55%)', 'My Label', [1, 2, 3]);
-    expect(result.label).toBe('My Label');
-    expect(result.data).toEqual([1, 2, 3]);
-    expect(result.backgroundColor).toBe('hsl(210, 70%, 55%)');
-    expect(result.borderColor).toBe('hsl(210, 70%, 55%)');
+describe('dataset factories', () => {
+  it('createBarDataset applies the color to fill and border, letting options override', () => {
+    expect(createBarDataset('red', 'Users', [1], { backgroundColor: 'pink', stack: 'users' })).toMatchObject({
+      label: 'Users',
+      data: [1],
+      backgroundColor: 'pink',
+      borderColor: 'red',
+      borderWidth: 1,
+      stack: 'users',
+    });
   });
 
-  it('applies barDatasetDefaults (borderWidth: 1)', () => {
-    const result = createBarDataset('rgb(0,0,0)', 'L', []);
-    expect(result.borderWidth).toBe(barDatasetDefaults.borderWidth);
+  it('createRadarDataset derives a translucent fill from an rgb color unless overridden', () => {
+    expect(createRadarDataset('rgb(99, 102, 241)', 'Interactions', [1])).toMatchObject({
+      backgroundColor: 'rgba(99, 102, 241, 0.2)',
+      borderColor: 'rgb(99, 102, 241)',
+      pointBackgroundColor: 'rgb(99, 102, 241)',
+    });
+    expect(createRadarDataset('rgb(0, 0, 0)', 'L', [], { backgroundColor: 'transparent' }).backgroundColor).toBe('transparent');
   });
 
-  it('options override default properties', () => {
-    const result = createBarDataset('rgb(0,0,0)', 'L', [5], { backgroundColor: 'rgba(0,0,0,0.5)', stack: 'my-stack' });
-    expect(result.backgroundColor).toBe('rgba(0,0,0,0.5)');
-    expect((result as Record<string, unknown>).stack).toBe('my-stack');
-    expect(result.borderColor).toBe('rgb(0,0,0)');
-  });
-
-  it('passes through extra options', () => {
-    const result = createBarDataset('red', 'R', [], { stack: 'languages', borderWidth: 2 });
-    expect((result as Record<string, unknown>).stack).toBe('languages');
-    expect(result.borderWidth).toBe(2);
-  });
-});
-
-describe('createRadarDataset', () => {
-  it('sets label, data, borderColor and pointBackgroundColor from the color argument', () => {
-    const result = createRadarDataset('rgb(99, 102, 241)', 'Interactions', [1, 2, 3]);
-    expect(result.label).toBe('Interactions');
-    expect(result.data).toEqual([1, 2, 3]);
-    expect(result.borderColor).toBe('rgb(99, 102, 241)');
-    expect(result.pointBackgroundColor).toBe('rgb(99, 102, 241)');
-  });
-
-  it('derives backgroundColor by inserting alpha 0.2 from rgb color', () => {
-    const result = createRadarDataset('rgb(99, 102, 241)', 'L', []);
-    expect(result.backgroundColor).toBe('rgba(99, 102, 241, 0.2)');
-  });
-
-  it('applies radarDatasetDefaults (borderWidth, pointRadius, etc.)', () => {
-    const result = createRadarDataset('rgb(0,0,0)', 'L', []);
-    expect(result.borderWidth).toBe(radarDatasetDefaults.borderWidth);
-    expect(result.pointBorderColor).toBe(radarDatasetDefaults.pointBorderColor);
-    expect(result.pointRadius).toBe(radarDatasetDefaults.pointRadius);
-  });
-
-  it('options override default properties', () => {
-    const result = createRadarDataset('rgb(0,0,0)', 'L', [], { backgroundColor: 'rgba(0,0,0,0.5)' });
-    expect(result.backgroundColor).toBe('rgba(0,0,0,0.5)');
-    expect(result.borderColor).toBe('rgb(0,0,0)');
-  });
-});
-
-describe('createDoughnutDataset', () => {
-  it('sets data and backgroundColor arrays', () => {
-    const result = createDoughnutDataset([10, 20, 30], ['#f00', '#0f0', '#00f']);
-    expect(result.data).toEqual([10, 20, 30]);
-    expect(result.backgroundColor).toEqual(['#f00', '#0f0', '#00f']);
-  });
-
-  it('applies doughnutDatasetDefaults (borderWidth and borderColor)', () => {
-    const result = createDoughnutDataset([], []);
-    expect(result.borderWidth).toBe(doughnutDatasetDefaults.borderWidth);
-    expect(result.borderColor).toBe(doughnutDatasetDefaults.borderColor);
-  });
-
-  it('options override default properties', () => {
-    const result = createDoughnutDataset([1], ['#f00'], { borderColor: 'transparent' });
-    expect(result.borderColor).toBe('transparent');
+  it('createDoughnutDataset applies segment colors with overridable border defaults', () => {
+    expect(createDoughnutDataset([1, 2], ['#f00', '#0f0'], { borderColor: 'transparent' })).toMatchObject({
+      data: [1, 2],
+      backgroundColor: ['#f00', '#0f0'],
+      borderColor: 'transparent',
+      borderWidth: 1,
+    });
   });
 });

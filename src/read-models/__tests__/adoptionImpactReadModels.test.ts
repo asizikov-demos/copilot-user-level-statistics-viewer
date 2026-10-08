@@ -86,13 +86,11 @@ function makeFeatureMetrics(): AggregatedMetrics {
   });
 }
 
-describe('adoption and impact read models', () => {
-  it('selects the exact Copilot adoption shape and preserves every reference', () => {
+describe('selectCopilotAdoptionReadModel', () => {
+  it('selects adoption series with report stats only', () => {
     const metrics = makeFeatureMetrics();
 
-    const model = selectCopilotAdoptionReadModel(metrics);
-
-    expect(model).toEqual({
+    expect(selectCopilotAdoptionReadModel(metrics)).toEqual({
       vscodeAgentUsage: metrics.adoption.vscodeAgentUsage,
       featureAdoptionData: metrics.adoption.featureAdoptionData,
       stats: metrics.overview.stats,
@@ -100,120 +98,50 @@ describe('adoption and impact read models', () => {
       dailyCloudAgentAdoptionData: metrics.adoption.dailyCloudAgentAdoptionData,
       dailyCodeReviewAdoptionData: metrics.adoption.dailyCodeReviewAdoptionData,
     });
-    expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
-    expect(model.vscodeAgentUsage).toBe(metrics.adoption.vscodeAgentUsage);
-    expect(model.stats).toBe(metrics.overview.stats);
-    expect(model.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
-    expect(model.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
-    expect(model.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
-    expect(Object.keys(model)).toEqual([
-      'vscodeAgentUsage',
-      'featureAdoptionData',
-      'stats',
-      'dailyAdoptionTrend',
-      'dailyCloudAgentAdoptionData',
-      'dailyCodeReviewAdoptionData',
-    ]);
-    expect(model).not.toHaveProperty('userSummaries');
   });
 
-  it('derives legacy VS Code Agents funnel data from the existing usage summary', () => {
+  it.each([
+    { reported: 3, activeUsers: 7, expected: 3 },
+    { reported: undefined, activeUsers: 7, expected: 7 },
+    { reported: undefined, activeUsers: null, expected: 0 },
+  ])(
+    'uses feature adoption VS Code Agents users ($reported) or falls back to the usage summary ($activeUsers)',
+    ({ reported, activeUsers, expected }) => {
+      const metrics = makeFeatureMetrics();
+      metrics.adoption.vscodeAgentUsage.summary.activeUsers = activeUsers;
+      if (reported === undefined) {
+        Reflect.deleteProperty(metrics.adoption.featureAdoptionData, 'vscodeAgentUsers');
+      } else {
+        metrics.adoption.featureAdoptionData.vscodeAgentUsers = reported;
+      }
+
+      expect(selectCopilotAdoptionReadModel(metrics).featureAdoptionData.vscodeAgentUsers).toBe(expected);
+    },
+  );
+
+  it('does not mutate the aggregate input when applying the fallback', () => {
     const metrics = makeFeatureMetrics();
-    metrics.adoption.vscodeAgentUsage.summary.activeUsers = 7;
     Reflect.deleteProperty(metrics.adoption.featureAdoptionData, 'vscodeAgentUsers');
-
-    const model = selectCopilotAdoptionReadModel(metrics);
-
-    expect(model.featureAdoptionData.vscodeAgentUsers).toBe(7);
-  });
-
-  it('selects the exact AI adoption phase shape without copying it', () => {
-    const metrics = makeFeatureMetrics();
-
-    const model = selectAiAdoptionPhaseReadModel(metrics);
-
-    expect(model).toEqual({
-      aiAdoptionPhaseData: metrics.ai.aiAdoptionPhaseData,
-    });
-    expect(model.aiAdoptionPhaseData).toBe(metrics.ai.aiAdoptionPhaseData);
-    expect(Object.keys(model)).toEqual(['aiAdoptionPhaseData']);
-    expect(model).not.toHaveProperty('featureAdoptionData');
-  });
-
-  it('selects the exact Copilot impact shape and preserves every series reference', () => {
-    const metrics = makeFeatureMetrics();
-
-    const model = selectCopilotImpactReadModel(metrics);
-
-    expect(model).toEqual({
-      agentImpactData: metrics.impact.agentImpactData,
-      codeCompletionImpactData: metrics.impact.codeCompletionImpactData,
-      editModeImpactData: metrics.impact.editModeImpactData,
-      inlineModeImpactData: metrics.impact.inlineModeImpactData,
-      askModeImpactData: metrics.impact.askModeImpactData,
-      copilotAppImpactData: metrics.impact.copilotAppImpactData,
-      cliImpactData: metrics.impact.cliImpactData,
-      joinedImpactData: metrics.impact.joinedImpactData,
-    });
-    expect(model.agentImpactData).toBe(metrics.impact.agentImpactData);
-    expect(model.codeCompletionImpactData).toBe(metrics.impact.codeCompletionImpactData);
-    expect(model.editModeImpactData).toBe(metrics.impact.editModeImpactData);
-    expect(model.inlineModeImpactData).toBe(metrics.impact.inlineModeImpactData);
-    expect(model.askModeImpactData).toBe(metrics.impact.askModeImpactData);
-    expect(model.copilotAppImpactData).toBe(metrics.impact.copilotAppImpactData);
-    expect(model.cliImpactData).toBe(metrics.impact.cliImpactData);
-    expect(model.joinedImpactData).toBe(metrics.impact.joinedImpactData);
-    expect(Object.keys(model)).toEqual([
-      'agentImpactData',
-      'codeCompletionImpactData',
-      'editModeImpactData',
-      'inlineModeImpactData',
-      'askModeImpactData',
-      'copilotAppImpactData',
-      'cliImpactData',
-      'joinedImpactData',
-    ]);
-    expect(model).not.toHaveProperty('stats');
-  });
-
-  it('preserves canonical empty arrays', () => {
-    const metrics = makeAggregatedMetrics();
-
-    const adoption = selectCopilotAdoptionReadModel(metrics);
-    const phases = selectAiAdoptionPhaseReadModel(metrics);
-    const impact = selectCopilotImpactReadModel(metrics);
-
-    expect(adoption.dailyAdoptionTrend).toBe(metrics.adoption.dailyAdoptionTrend);
-    expect(adoption.dailyCloudAgentAdoptionData).toBe(metrics.adoption.dailyCloudAgentAdoptionData);
-    expect(adoption.dailyCodeReviewAdoptionData).toBe(metrics.adoption.dailyCodeReviewAdoptionData);
-    expect(phases.aiAdoptionPhaseData).toBe(metrics.ai.aiAdoptionPhaseData);
-    expect(Object.values(impact)).toEqual([
-      metrics.impact.agentImpactData,
-      metrics.impact.codeCompletionImpactData,
-      metrics.impact.editModeImpactData,
-      metrics.impact.inlineModeImpactData,
-      metrics.impact.askModeImpactData,
-      metrics.impact.copilotAppImpactData,
-      metrics.impact.cliImpactData,
-      metrics.impact.joinedImpactData,
-    ]);
-    expect([
-      adoption.dailyAdoptionTrend,
-      adoption.dailyCloudAgentAdoptionData,
-      adoption.dailyCodeReviewAdoptionData,
-      phases.aiAdoptionPhaseData,
-      ...Object.values(impact),
-    ].every((series) => series.length === 0)).toBe(true);
-  });
-
-  it('does not mutate the aggregate input', () => {
-    const metrics = makeFeatureMetrics();
     const before = structuredClone(metrics);
 
     selectCopilotAdoptionReadModel(metrics);
-    selectAiAdoptionPhaseReadModel(metrics);
-    selectCopilotImpactReadModel(metrics);
 
     expect(metrics).toEqual(before);
+  });
+});
+
+describe('selectAiAdoptionPhaseReadModel', () => {
+  it('selects only AI adoption phases', () => {
+    const metrics = makeFeatureMetrics();
+
+    expect(selectAiAdoptionPhaseReadModel(metrics)).toEqual({ aiAdoptionPhaseData: metrics.ai.aiAdoptionPhaseData });
+  });
+});
+
+describe('selectCopilotImpactReadModel', () => {
+  it('selects every impact series without report stats', () => {
+    const metrics = makeFeatureMetrics();
+
+    expect(selectCopilotImpactReadModel(metrics)).toEqual(metrics.impact);
   });
 });

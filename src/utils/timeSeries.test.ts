@@ -7,180 +7,109 @@ import {
   padReportRangeWithCarryForward,
 } from './timeSeries';
 
-// ── padSeriesWithDefaults ─────────────────────────────────────────────────────
+const DAY_1 = '2024-01-01';
+const DAY_2 = '2024-01-02';
+const DAY_3 = '2024-01-03';
+const DAY_4 = '2024-01-04';
+
+interface Point {
+  date: string;
+  value: number;
+}
+
+interface CumulativePoint extends Point {
+  cumulative: number;
+}
+
+const point = (date: string, value: number): Point => ({ date, value });
+const cumulativePoint = (date: string, value: number, cumulative: number): CumulativePoint => ({
+  date, value, cumulative,
+});
+const toMap = <T extends { date: string }>(entries: T[]) => new Map(entries.map(entry => [entry.date, entry]));
 
 describe('padSeriesWithDefaults', () => {
-  it('returns an empty array for an empty date list', () => {
-    const result = padSeriesWithDefaults<number>([], new Map(), () => 0);
-    expect(result).toEqual([]);
-  });
-
-  it('returns existing entries when every date is present', () => {
-    const dates = ['2024-01-01', '2024-01-02', '2024-01-03'];
-    const dataMap = new Map([
-      ['2024-01-01', { date: '2024-01-01', value: 10 }],
-      ['2024-01-02', { date: '2024-01-02', value: 20 }],
-      ['2024-01-03', { date: '2024-01-03', value: 30 }],
-    ]);
-    const result = padSeriesWithDefaults(dates, dataMap, date => ({ date, value: 0 }));
-    expect(result).toEqual([
-      { date: '2024-01-01', value: 10 },
-      { date: '2024-01-02', value: 20 },
-      { date: '2024-01-03', value: 30 },
-    ]);
-  });
-
-  it('fills a gap in the middle with the default factory', () => {
-    const dates = ['2024-01-01', '2024-01-02', '2024-01-03'];
-    const dataMap = new Map([
-      ['2024-01-01', { date: '2024-01-01', value: 5 }],
-      ['2024-01-03', { date: '2024-01-03', value: 15 }],
-    ]);
-    const result = padSeriesWithDefaults(dates, dataMap, date => ({ date, value: 0 }));
-    expect(result).toEqual([
-      { date: '2024-01-01', value: 5 },
-      { date: '2024-01-02', value: 0 },
-      { date: '2024-01-03', value: 15 },
-    ]);
-  });
-
-  it('fills all dates when the data map is empty', () => {
-    const dates = ['2024-01-01', '2024-01-02'];
-    const result = padSeriesWithDefaults<{ date: string; count: number }>(
-      dates,
-      new Map(),
-      date => ({ date, count: 0 }),
-    );
-    expect(result).toEqual([
-      { date: '2024-01-01', count: 0 },
-      { date: '2024-01-02', count: 0 },
-    ]);
-  });
-
-  it('passes the correct date string to the default factory', () => {
-    const dates = ['2024-03-01', '2024-03-02'];
-    const seen: string[] = [];
-    padSeriesWithDefaults<string>(dates, new Map(), date => {
-      seen.push(date);
-      return date;
-    });
-    expect(seen).toEqual(['2024-03-01', '2024-03-02']);
+  it.each([
+    { name: 'an empty date list', dates: [], present: [], expected: [] },
+    {
+      name: 'every date present',
+      dates: [DAY_1, DAY_2, DAY_3],
+      present: [point(DAY_1, 10), point(DAY_2, 20), point(DAY_3, 30)],
+      expected: [point(DAY_1, 10), point(DAY_2, 20), point(DAY_3, 30)],
+    },
+    {
+      name: 'a gap in the middle',
+      dates: [DAY_1, DAY_2, DAY_3],
+      present: [point(DAY_1, 5), point(DAY_3, 15)],
+      expected: [point(DAY_1, 5), point(DAY_2, 0), point(DAY_3, 15)],
+    },
+    {
+      name: 'no data',
+      dates: [DAY_1, DAY_2],
+      present: [],
+      expected: [point(DAY_1, 0), point(DAY_2, 0)],
+    },
+  ])('fills missing dates from the default factory for $name', ({ dates, present, expected }) => {
+    expect(padSeriesWithDefaults(dates, toMap(present), date => point(date, 0))).toEqual(expected);
   });
 
   it('preserves explicitly stored nullish values', () => {
-    const dates = ['2024-01-01', '2024-01-02', '2024-01-03'];
-    const dataMap = new Map<string, string | null | undefined>([
-      ['2024-01-01', null],
-      ['2024-01-02', undefined],
-    ]);
+    const dataMap = new Map<string, string | null | undefined>([[DAY_1, null], [DAY_2, undefined]]);
 
-    const result = padSeriesWithDefaults(dates, dataMap, date => `default-${date}`);
-
-    expect(result).toEqual([null, undefined, 'default-2024-01-03']);
+    expect(padSeriesWithDefaults([DAY_1, DAY_2, DAY_3], dataMap, date => `default-${date}`))
+      .toEqual([null, undefined, `default-${DAY_3}`]);
   });
 });
 
-// ── padSeriesWithCarryForward ─────────────────────────────────────────────────
-
 describe('padSeriesWithCarryForward', () => {
-  type Entry = { date: string; value: number; cumulative: number };
-
-  const makeEntry = (date: string, value: number, cumulative: number): Entry => ({
-    date, value, cumulative,
-  });
-
-  it('returns an empty array for an empty date list', () => {
-    const result = padSeriesWithCarryForward<Entry, number>(
-      [],
-      new Map(),
-      0,
-      (entry) => entry.cumulative,
-      (date, cum) => makeEntry(date, 0, cum),
-    );
-    expect(result).toEqual([]);
-  });
-
-  it('returns existing entries when every date is present', () => {
-    const dates = ['2024-01-01', '2024-01-02'];
-    const dataMap = new Map([
-      ['2024-01-01', makeEntry('2024-01-01', 5, 5)],
-      ['2024-01-02', makeEntry('2024-01-02', 3, 8)],
-    ]);
-    const result = padSeriesWithCarryForward(
+  it.each([
+    { name: 'an empty date list', dates: [], present: [], initial: 0, expected: [] },
+    {
+      name: 'every date present',
+      dates: [DAY_1, DAY_2],
+      present: [cumulativePoint(DAY_1, 5, 5), cumulativePoint(DAY_2, 3, 8)],
+      initial: 0,
+      expected: [cumulativePoint(DAY_1, 5, 5), cumulativePoint(DAY_2, 3, 8)],
+    },
+    {
+      name: 'a single missing day',
+      dates: [DAY_1, DAY_2, DAY_3],
+      present: [cumulativePoint(DAY_1, 5, 5), cumulativePoint(DAY_3, 2, 7)],
+      initial: 0,
+      expected: [cumulativePoint(DAY_1, 5, 5), cumulativePoint(DAY_2, 0, 5), cumulativePoint(DAY_3, 2, 7)],
+    },
+    {
+      name: 'consecutive missing days',
+      dates: [DAY_1, DAY_2, DAY_3, DAY_4],
+      present: [cumulativePoint(DAY_1, 10, 10), cumulativePoint(DAY_4, 4, 14)],
+      initial: 0,
+      expected: [
+        cumulativePoint(DAY_1, 10, 10),
+        cumulativePoint(DAY_2, 0, 10),
+        cumulativePoint(DAY_3, 0, 10),
+        cumulativePoint(DAY_4, 4, 14),
+      ],
+    },
+    {
+      name: 'no data, using the initial value',
+      dates: [DAY_1, DAY_2],
+      present: [],
+      initial: 42,
+      expected: [cumulativePoint(DAY_1, 0, 42), cumulativePoint(DAY_2, 0, 42)],
+    },
+  ])('carries the last cumulative value across $name', ({ dates, present, initial, expected }) => {
+    expect(padSeriesWithCarryForward<CumulativePoint, number>(
       dates,
-      dataMap,
-      0,
-      (e) => e.cumulative,
-      (date, cum) => makeEntry(date, 0, cum),
-    );
-    expect(result).toEqual([
-      makeEntry('2024-01-01', 5, 5),
-      makeEntry('2024-01-02', 3, 8),
-    ]);
-  });
-
-  it('carries forward cumulative value across a gap in the middle', () => {
-    const dates = ['2024-01-01', '2024-01-02', '2024-01-03'];
-    const dataMap = new Map([
-      ['2024-01-01', makeEntry('2024-01-01', 5, 5)],
-      ['2024-01-03', makeEntry('2024-01-03', 2, 7)],
-    ]);
-    const result = padSeriesWithCarryForward(
-      dates,
-      dataMap,
-      0,
-      (e) => e.cumulative,
-      (date, cum) => makeEntry(date, 0, cum),
-    );
-    expect(result).toEqual([
-      makeEntry('2024-01-01', 5, 5),
-      makeEntry('2024-01-02', 0, 5), // carried from 2024-01-01
-      makeEntry('2024-01-03', 2, 7),
-    ]);
-  });
-
-  it('carries forward the initial value when data is empty', () => {
-    const dates = ['2024-01-01', '2024-01-02'];
-    const result = padSeriesWithCarryForward<Entry, number>(
-      dates,
-      new Map(),
-      42,
-      (e) => e.cumulative,
-      (date, cum) => makeEntry(date, 0, cum),
-    );
-    expect(result).toEqual([
-      makeEntry('2024-01-01', 0, 42),
-      makeEntry('2024-01-02', 0, 42),
-    ]);
-  });
-
-  it('carries forward across multiple consecutive missing days', () => {
-    const dates = ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04'];
-    const dataMap = new Map([
-      ['2024-01-01', makeEntry('2024-01-01', 10, 10)],
-      ['2024-01-04', makeEntry('2024-01-04', 4, 14)],
-    ]);
-    const result = padSeriesWithCarryForward(
-      dates,
-      dataMap,
-      0,
-      (e) => e.cumulative,
-      (date, cum) => makeEntry(date, 0, cum),
-    );
-    expect(result[1].cumulative).toBe(10); // carried from day 1
-    expect(result[2].cumulative).toBe(10); // still carried
-    expect(result[3].cumulative).toBe(14); // real value
+      toMap(present),
+      initial,
+      entry => entry.cumulative,
+      (date, cumulative) => cumulativePoint(date, 0, cumulative),
+    )).toEqual(expected);
   });
 
   it('treats explicitly stored undefined as present when carrying forward', () => {
-    const dates = ['2024-01-01', '2024-01-02'];
-    const dataMap = new Map<string, string | undefined>([
-      ['2024-01-01', undefined],
-    ]);
-
     const result = padSeriesWithCarryForward<string | undefined, number>(
-      dates,
-      dataMap,
+      [DAY_1, DAY_2],
+      new Map([[DAY_1, undefined]]),
       0,
       (entry, previous) => entry === undefined ? previous + 1 : previous,
       (_date, carried) => `default-${carried}`,
@@ -190,85 +119,36 @@ describe('padSeriesWithCarryForward', () => {
   });
 });
 
-describe('padReportRangeWithDefaults', () => {
-  it('pads report range using date selector and default factory', () => {
-    const result = padReportRangeWithDefaults(
-      [
-        { day: '2024-01-01', value: 5 },
-        { day: '2024-01-03', value: 10 },
-      ],
-      '2024-01-01',
-      '2024-01-03',
-      entry => entry.day,
-      day => ({ day, value: 0 }),
-    );
+describe('report range helpers', () => {
+  const sparse = [point(DAY_1, 5), point(DAY_3, 10)];
 
-    expect(result).toEqual([
-      { day: '2024-01-01', value: 5 },
-      { day: '2024-01-02', value: 0 },
-      { day: '2024-01-03', value: 10 },
-    ]);
-  });
-});
-
-describe('mapReportRangeData', () => {
-  it('maps the full report range and passes undefined for missing days', () => {
-    const result = mapReportRangeData(
-      [
-        { day: '2024-01-01', value: 5 },
-        { day: '2024-01-03', value: 10 },
-      ],
-      '2024-01-01',
-      '2024-01-03',
-      entry => entry.day,
-      (day, entry) => ({
-        day,
-        value: entry?.value ?? 0,
-      }),
-    );
-
-    expect(result).toEqual([
-      { day: '2024-01-01', value: 5 },
-      { day: '2024-01-02', value: 0 },
-      { day: '2024-01-03', value: 10 },
-    ]);
+  it('padReportRangeWithDefaults pads every report day using the date selector', () => {
+    expect(padReportRangeWithDefaults(sparse, DAY_1, DAY_3, entry => entry.date, date => point(date, 0)))
+      .toEqual([point(DAY_1, 5), point(DAY_2, 0), point(DAY_3, 10)]);
   });
 
-  it('maps every report day even when the source data is empty', () => {
-    const result = mapReportRangeData<{ day: string; value: number }, string>(
-      [],
-      '2024-01-01',
-      '2024-01-02',
-      entry => entry.day,
-      (day, entry) => `${day}:${entry === undefined ? 'missing' : 'present'}`,
-    );
-
-    expect(result).toEqual([
-      '2024-01-01:missing',
-      '2024-01-02:missing',
-    ]);
+  it.each([
+    { name: 'sparse data', data: sparse, end: DAY_3, expected: [`${DAY_1}:5`, `${DAY_2}:missing`, `${DAY_3}:10`] },
+    { name: 'empty data', data: [], end: DAY_2, expected: [`${DAY_1}:missing`, `${DAY_2}:missing`] },
+  ])('mapReportRangeData maps every report day and passes undefined for missing days ($name)', ({ data, end, expected }) => {
+    expect(mapReportRangeData<Point, string>(
+      data,
+      DAY_1,
+      end,
+      entry => entry.date,
+      (date, entry) => `${date}:${entry?.value ?? 'missing'}`,
+    )).toEqual(expected);
   });
-});
 
-describe('padReportRangeWithCarryForward', () => {
-  it('pads report range and carries forward cumulative values', () => {
-    const result = padReportRangeWithCarryForward(
-      [
-        { date: '2024-01-01', cumulative: 2, value: 2 },
-        { date: '2024-01-03', cumulative: 3, value: 1 },
-      ],
-      '2024-01-01',
-      '2024-01-03',
+  it('padReportRangeWithCarryForward pads every report day and carries cumulative values', () => {
+    expect(padReportRangeWithCarryForward(
+      [cumulativePoint(DAY_1, 2, 2), cumulativePoint(DAY_3, 1, 3)],
+      DAY_1,
+      DAY_3,
       entry => entry.date,
       0,
       entry => entry.cumulative,
-      (date, cumulative) => ({ date, cumulative, value: 0 }),
-    );
-
-    expect(result).toEqual([
-      { date: '2024-01-01', cumulative: 2, value: 2 },
-      { date: '2024-01-02', cumulative: 2, value: 0 },
-      { date: '2024-01-03', cumulative: 3, value: 1 },
-    ]);
+      (date, cumulative) => cumulativePoint(date, 0, cumulative),
+    )).toEqual([cumulativePoint(DAY_1, 2, 2), cumulativePoint(DAY_2, 0, 2), cumulativePoint(DAY_3, 1, 3)]);
   });
 });
