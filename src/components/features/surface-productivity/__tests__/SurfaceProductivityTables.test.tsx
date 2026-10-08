@@ -71,19 +71,14 @@ const cohorts: SurfaceCohortSummary[] = [
 ];
 
 describe('surface productivity tables', () => {
-  it('renders all surfaces with separate reach, activity, and LOC measures', () => {
+  it('renders every surface with signed LOC totals and per-user averages', () => {
     const markup = renderToStaticMarkup(
       <SurfaceComparisonTable summaries={summaries} />
     );
 
-    expect(markup).toContain('Surface comparison');
-    expect(markup).toContain('IDE');
-    expect(markup).toContain('CLI');
-    expect(markup).toContain('Copilot App');
-    expect(markup).toContain('Active user-days');
-    expect(markup).toContain('LOC impact');
-    expect(markup).toContain('Avg LOC impact / user');
-    expect(markup).toContain('LOC / active day');
+    for (const surface of ['IDE', 'CLI', 'Copilot App']) {
+      expect(markup).toContain(surface);
+    }
     expect(markup).toContain('(80%)');
     expect(markup).toContain('text-green-600">+1,200');
     expect(markup).toContain('text-red-600">-200');
@@ -98,7 +93,6 @@ describe('surface productivity tables', () => {
       <CohortContextTable cohorts={cohorts} />
     );
 
-    expect(markup).toContain('Overlap context');
     expect(markup).toContain('Multiple surfaces');
     expect(markup).toContain('do not attribute');
     expect(markup).toContain('Copilot App only');

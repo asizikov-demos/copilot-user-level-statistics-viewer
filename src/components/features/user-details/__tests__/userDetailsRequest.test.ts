@@ -1,33 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import { runUserDetailsRequest } from '../userDetailsRequest';
-import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
-import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
+import { makeUserDetails } from './helpers/userDetailsFixtures';
 
-const details: UserDetailedMetrics = {
-  telemetryWarnings: [],
-  agentActivity: computeAgentActivity([]),
-  cliCustomizations: [],
-  vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
-  totalModelRequests: 0,
-  total_ai_credits_used: 0,
-  featureAggregates: [],
-  ideAggregates: [],
-  languageFeatureAggregates: [],
-  modelFeatureAggregates: [],
-  pluginVersions: [],
-  cliVersions: [],
-  dailyCombinedImpact: [],
-  dailyModelUsage: [],
-  dailyAgentImpact: [],
-  dailyAskModeImpact: [],
-  dailyCompletionImpact: [],
-  dailyCopilotAppImpact: [],
-  dailyCliImpact: [],
-  days: [],
-  reportStartDay: '2024-01-01',
-  reportEndDay: '2024-01-31',
-};
+const details = makeUserDetails();
 
 describe('runUserDetailsRequest', () => {
   it('preserves the worker error message', async () => {

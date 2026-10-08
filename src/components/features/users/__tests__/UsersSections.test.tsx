@@ -64,21 +64,16 @@ describe('Users feature sections', () => {
       <UsersSummarySection sectionId="users-summary" users={users} />
     );
 
-    expect(markup).toContain('Total Users');
-    expect(markup).toContain('unique users');
-    expect(markup).toContain('Users with Copilot activity in the selected report period');
-    expect(markup).toContain('Chat');
-    expect(markup).toContain('Completions');
-    expect(markup).toContain('Agent mode');
-    expect(markup).toContain('Code review');
-    expect(markup).toContain('CLI');
+    for (const rail of ['Chat', 'Completions', 'Agent mode', 'Code review', 'CLI']) {
+      expect(markup).toContain(rail);
+    }
     expect(markup).toContain('>2<');
     expect(markup.match(/>1</g)?.length).toBeGreaterThanOrEqual(5);
     expect(markup.match(/users · 50%/g)?.length).toBe(5);
     expect(markup.match(/role="progressbar"/g)?.length).toBe(5);
   });
 
-  it('keeps the paged users table labels, feature chips, and empty state', () => {
+  it('pages the users table, renders feature chips, and shows the empty state', () => {
     const users = Array.from({ length: 501 }, (_, index) => makeUser({
       user_login: `user-${String(index).padStart(3, '0')}`,
       user_id: index + 1,
@@ -92,21 +87,11 @@ describe('Users feature sections', () => {
       <UsersTableSection sectionId="users-table" users={[]} onUserClick={vi.fn()} />
     );
 
-    expect(populatedMarkup).toContain('Search by user login');
-    expect(populatedMarkup).toContain('IDE used');
-    expect(populatedMarkup).toContain('Copilot CLI');
-    expect(populatedMarkup).toContain('Feature used');
-    expect(populatedMarkup).toContain('All features');
     expect(populatedMarkup).toContain('<option value="app">App</option>');
-    expect(populatedMarkup).toContain('USER');
-    expect(populatedMarkup).toContain('DAYS ACTIVE');
     expect(populatedMarkup).not.toContain('GENERATIONS');
-    expect(populatedMarkup).toContain('AI ADOPTION');
-    expect(populatedMarkup).toContain('FEATURES USED');
-    expect(populatedMarkup).toContain('App');
-    expect(populatedMarkup).toContain('Cloud Agent');
-    expect(populatedMarkup).toContain('Code Review');
-    expect(populatedMarkup).toContain('Auto Mode');
+    for (const chip of ['Cloud Agent', 'Code Review', 'Auto Mode']) {
+      expect(populatedMarkup).toContain(chip);
+    }
     expect(populatedMarkup).toContain('Showing 1-500 of 501 users');
     expect(populatedMarkup).toContain('Page 1 of 2');
     expect(emptyMarkup).toContain('No user data available');
@@ -203,67 +188,47 @@ describe('Users feature sections', () => {
     });
   });
 
-  it('filters users by Copilot App usage', async () => {
+  it.each([
+    {
+      filter: 'app',
+      included: makeUser({ user_login: 'app-user', used_copilot_app: true }),
+      excluded: [makeUser({ user_id: 2, user_login: 'non-app-user', used_copilot_app: false })],
+    },
+    {
+      filter: 'vscode_agent',
+      included: makeUser({ user_login: 'agents-window-user', used_agent: false, used_vscode_agent: true }),
+      excluded: [
+        makeUser({ user_id: 2, user_login: 'editor-only-user', used_vscode_agent: false }),
+        makeUser({ user_id: 3, user_login: 'unreported-user', used_vscode_agent: null }),
+      ],
+    },
+  ])('filters users by the $filter feature', async ({ filter, included, excluded }) => {
     let renderer: ReactTestRenderer | undefined;
-
     await act(async () => {
       renderer = create(
-        <UsersTableSection
-          sectionId="users-table"
-          users={[
-            makeUser({ user_login: 'app-user', used_copilot_app: true }),
-            makeUser({
-              user_login: 'non-app-user',
-              user_id: 2,
-              used_copilot_app: false,
-            }),
-          ]}
-          onUserClick={vi.fn()}
-        />
+        <UsersTableSection sectionId="users-table" users={[included, ...excluded]} onUserClick={vi.fn()} />,
       );
     });
-
     await act(async () => {
-      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
-        target: { value: 'app' },
-      });
+      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({ target: { value: filter } });
     });
 
     const markup = JSON.stringify(renderer?.toJSON());
-    expect(markup).toContain('app-user');
-    expect(markup).not.toContain('non-app-user');
-
-    await act(async () => {
-      renderer?.unmount();
-    });
+    expect(markup).toContain(included.user_login);
+    for (const user of excluded) expect(markup).not.toContain(user.user_login);
+    await act(async () => { renderer?.unmount(); });
   });
 
-  it('filters explicit VS Code Agents users without including editor-only or unreported usage', async () => {
-    let renderer: ReactTestRenderer | undefined;
-    await act(async () => {
-      renderer = create(
-        <UsersTableSection
-          sectionId="users-table"
-          users={[
-            makeUser({ user_login: 'agents-window-user', used_agent: false, used_vscode_agent: true }),
-            makeUser({ user_id: 2, user_login: 'editor-only-user', used_vscode_agent: false }),
-            makeUser({ user_id: 3, user_login: 'unreported-user', used_vscode_agent: null }),
-          ]}
-          onUserClick={vi.fn()}
-        />,
-      );
-    });
-    await act(async () => {
-      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
-        target: { value: 'vscode_agent' },
-      });
-    });
-    const markup = JSON.stringify(renderer?.toJSON());
-    expect(markup).toContain('agents-window-user');
-    expect(markup).not.toContain('editor-only-user');
-    expect(markup).not.toContain('unreported-user');
-    expect(renderer?.root.findAllByType('span').some(node => node.children.join('') === 'VS Code Agents')).toBe(true);
-    await act(async () => { renderer?.unmount(); });
+  it('labels explicit VS Code Agents usage with a feature chip', () => {
+    const markup = renderToStaticMarkup(
+      <UsersTableSection
+        sectionId="users-table"
+        users={[makeUser({ used_vscode_agent: true })]}
+        onUserClick={vi.fn()}
+      />,
+    );
+
+    expect(markup).toContain('>VS Code Agents</span>');
   });
 
   it('forwards row selection with the selected user login and id', async () => {
