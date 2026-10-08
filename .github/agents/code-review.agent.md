@@ -1,49 +1,56 @@
 ---
-description: 'Reviews code changes for type mismatches, dead code, logic bugs, and contract violations based on patterns from past PR reviews'
+description: 'Reviews changes for high-confidence correctness defects and repository-specific contract violations'
 tools: ['search', 'problems', 'changes', 'usages']
-model: 'GPT-5.3 Codex (copilot)'
 ---
 
 # Code Review
 
-Review the current changes and report only issues that genuinely matter: bugs, type errors, logic mistakes, and dead code. Do NOT comment on style, formatting, or architecture. Do NOT modify any code.
+Review the full current diff and report only high-confidence defects introduced by the changes: bugs, type errors, logic mistakes, and broken contracts. Do NOT modify any code.
+
+## Review Method
+
+- Read the applicable repository instructions and enough surrounding code, producers, consumers, and tests to establish the behavior.
+- Trace each suspected issue to a concrete triggering input or scenario and an observable consequence. A suspicious pattern alone is not evidence.
+- Anchor findings to changed lines. Do not report unrelated pre-existing issues; if they prevent assessing the change, describe that limitation separately.
+- Keep the review criteria below independent of editor-specific tool configuration. Use the tools available to the caller and disclose any material inspection limitations.
 
 ## What to Look For
 
 ### 1. Type-Level Correctness
 
-- Props or parameters typed as non-null (e.g., `data: FeatureAdoptionData`) but the component uses optional chaining (`data?.field`) or nullish fallbacks (`data ?? default`). The type should reflect nullability if the value can be null.
+- Nullability declarations that disagree with values actually produced or accepted. Optional chaining or a nullish fallback on a non-null type is not, by itself, a defect.
 - Return types that don't match actual returned values (e.g., function declares `string` but can return `undefined`).
 - Producer passes `T | null` but consumer declares `T` — or vice versa.
 - Context values typed without `null` but initial context value is `null`.
 
 ### 2. Dead Code
 
-- Variables destructured from `useMemo`, `useCallback`, or hook returns but never referenced.
-- Imports that are unused or used only as types but not marked `import type`.
-- CSS selectors (including print `@media`) targeting classes that no element in the codebase has.
-- Unreachable code after early returns or inside impossible conditions.
+- Unreachable branches that prevent required behavior, or obsolete code that still executes and causes incorrect results or side effects.
+- Removed or renamed markup that breaks required styles, including print output. Check dynamic class usage before declaring a selector orphaned.
+- Do not report harmless unused declarations, unused props, or missing `import type` as correctness defects. Leave routine lint findings to the linter.
 
 ### 3. Logic Correctness
 
-- Double-counting in aggregations: e.g., `total = groupA + groupB` where items can belong to both groups. Flag when a union/intersection should be used or a cap applied.
+- Double-counting users or activity when groups overlap. Establish whether the metric counts unique users or additive events; recommend the appropriate union/intersection, not a cap that conceals incorrect aggregation.
+- Percentages using a denominator inconsistent with the metric's defined population, filters, or reporting period.
 - Division that can produce `NaN` or `Infinity` — any division where the denominator could be zero without a guard.
-- `Math.round`/`toFixed` applied after percentage calculation instead of before display, causing precision loss in intermediate values.
-- `.reduce()`, `.map()`, or `.filter()` on arrays that may be `undefined` or empty without a fallback.
+- Rounding intermediate values that changes subsequent calculations. Rounding or formatting final values for display is normally correct.
+- Array operations on values that can actually be null or undefined, or `.reduce()` without an initial value on an array that can be empty. Empty arrays are safe for `.map()`, `.filter()`, and `.reduce()` with an initial value.
 - Off-by-one in `.slice()`, loop bounds, or index comparisons.
 
 ### 4. Contract Consistency
 
-- Props interface declares fields that the component never reads, or component reads fields not in the interface.
-- Data shapes emitted by the Web Worker (`postMessage`) that don't match the types the consuming component expects.
-- Entries in `src/domain/modelConfig.ts` not following the stated ordering convention (check comments in that file).
+- Parsing or metrics aggregation moved outside the Web Worker / `parseAndAggregate` flow, or raw metrics retained on the main thread.
+- Worker output, read models, route adapters, and consuming components that disagree on data shapes, nullability, or semantics. Trace shared consumers when a contract changes.
+- Changes requiring a runtime server, SSR, or API routes that break the Next.js static export deployed to GitHub Pages.
+- Model catalog changes that break normalization, lookup, or a documented ordering invariant in `src/domain/modelConfig.ts`.
 - React context provider value shape vs. consumer destructuring.
 
 ### 5. React Hooks
 
-- `useMemo` or `useCallback` referencing variables/functions not listed in the dependency array — stale closure risk.
-- Functions defined inside the component body and used inside `useMemo`/`useCallback` but not wrapped in `useCallback` themselves and not included as dependencies.
-- `useMemo` with an empty dependency array (`[]`) that references props or state — will never recompute.
+- Missing dependencies in effects, memos, or callbacks that demonstrably retain stale props/state or fail to update required behavior.
+- Dependency or state-update cycles that cause infinite re-renders or repeated side effects.
+- A function does not need `useCallback` merely because it is defined inside a component. Report an actual closure or lifecycle defect, not a memoization preference.
 
 ### 6. Test Correctness
 
@@ -52,20 +59,25 @@ Review the current changes and report only issues that genuinely matter: bugs, t
 
 ### 7. Chart.js / react-chartjs-2
 
-- Tooltip callbacks using `any` instead of `TooltipItem<'bar' | 'pie' | 'line'>`.
+- Follow `.github/instructions/charts.instructions.md`. Match tooltip callbacks and option factories to the actual chart type: `TooltipItem<'bar'>` or `TooltipItem<'line'>`; reserve `TooltipItem<'line' | 'bar'>` for mixed charts using `createDualAxisChartOptions`. Do not recommend casts that hide contract mismatches.
+- Chart semantics that misrepresent the data, such as stacking overlapping populations or including display-only zero padding in aggregate statistics.
 - Missing chart cleanup (charts should be destroyed or handled via react-chartjs-2 component lifecycle).
-- `responsive: true` without a properly sized container, or missing `maintainAspectRatio` when needed.
+- Container/options changes that demonstrably hide, clip, or incorrectly size a chart. Missing `maintainAspectRatio` alone is not evidence of a defect.
 
 ## Output Format
 
 For each issue found, report:
 
-1. **File and line** — exact location.
-2. **Issue** — one-sentence description of what is wrong.
-3. **Evidence** — the specific code or type mismatch.
-4. **Suggested fix** — brief, actionable recommendation.
+1. **Severity** — high (critical functionality broken or widespread incorrect results), medium (incorrect behavior in a supported scenario), or low (limited-impact correctness defect).
+2. **File and line** — exact changed location.
+3. **Issue** — one-sentence description of what is wrong.
+4. **Trigger and consequence** — the input/scenario and observable failure.
+5. **Evidence** — the relevant producer/consumer code, calculation, or test demonstrating the defect.
+6. **Suggested fix** — brief, actionable recommendation.
 
-If no issues are found, say so explicitly. Do not invent problems.
+Order findings by severity. Omit speculative findings rather than padding the report.
+
+If no issues are found, say "No high-confidence correctness defects found." Disclose material review limitations without claiming unverified behavior is correct.
 
 ## What to Ignore
 
