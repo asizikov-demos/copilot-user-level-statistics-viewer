@@ -75,6 +75,7 @@ describe('ModelsUsageChart', () => {
     });
 
     expect(datasetLabels()).toEqual(['custom-model']);
+    expect(bar.mock.lastCall![0].data.datasets[0].data).toEqual([0, 2]);
     expect(renderer!.root.findByType('select').props.value).toBe('Unattributed');
     const totalInteractionsLabel = renderer!.root.find(
       node => node.type === 'div'
