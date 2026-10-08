@@ -15,7 +15,7 @@ All parsing and metrics aggregation should run in a **Web Worker** via the `pars
 - `npm run lint` — ESLint
 - `npm run test:run` — run the test suite
 
-> **VS Code note**: avoid running `npm run build` while the "Next.js Development Server" task is active — they conflict.
+> **Development server note**: stop `npm run dev` before running `npm run build` — both use `.next` and conflict. Copilot app setup and the manual Run script are configured in `.github/github-app.yml`.
 
 ## Code Quality
 

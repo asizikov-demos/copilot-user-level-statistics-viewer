@@ -1,0 +1,22 @@
+instructions: |
+  Use npm and a Node.js version supported by package.json:
+  Node 20.19.x or later within Node 20, or Node 22.12.0 or later.
+  Run all commands from the session workspace, not the main checkout.
+  The Setup script installs dependencies with npm ci on session creation.
+  Use the manual Run script to start the development server.
+  npm run dev and npm run build automatically bundle the metrics Web Worker.
+  Stop the development server before running npm run build; both use .next.
+  This app uses Next.js static export for GitHub Pages. Do not use npm start
+  to preview the exported production site.
+  Follow AGENTS.md for coding, review, validation, and commit approval rules.
+
+scripts:
+  - name: Setup
+    command: npm ci
+    triggers:
+      - session.create
+  - name: Run
+    command: npm run dev
+
+server_ready_pattern: 'Local:\s+(https?://\S+)'
+auto_open_in_browser: true
