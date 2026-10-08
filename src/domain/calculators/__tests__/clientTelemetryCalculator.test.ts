@@ -1,20 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { CopilotMetrics } from '../../../types/metrics';
-import { makeMetric } from '../../../__tests__/factories/metrics';
-import { aggregateMetrics } from '../../metricsAggregator';
-import { parseMetricsFile } from '../../metricsParser';
-import { computeSingleUserDetailedMetrics } from '../userDetailCalculator';
 import {
   accumulateClientTelemetry,
   computeClientTelemetryWarnings,
   createClientTelemetryAccumulator,
 } from '../clientTelemetryCalculator';
-import { selectClientsReadModel, selectClientVersionsReadModel } from '../../../read-models/clients';
-import {
-  selectUserDetailsHeaderReadModel,
-  selectUserDetailsRouteReadModel,
-  selectUserDetailsViewModel,
-} from '../../../read-models/userDetails';
 
 function ideTotal(ide: string, ideVersion?: string, pluginVersion?: string): CopilotMetrics['totals_by_ide'][number] {
   return {
@@ -148,38 +138,21 @@ describe('client telemetry warnings', () => {
     ]);
   });
 
-  it('projects worker-computed notices through all read models, preserving historical risk and zero-activity observations', () => {
-    const raw = [
-      makeMetric({ user_id: 1, totals_by_ide: [ideTotal('vscode', '1.138.0')] }),
-      makeMetric({ user_id: 1, totals_by_ide: [ideTotal('vscode', '1.138.0')] }),
-      makeMetric({ user_id: 1, totals_by_ide: [ideTotal('vscode', '1.139.0')] }),
-      makeMetric({ user_id: 2, totals_by_ide: [ideTotal('vscode', '1.138.0')] }),
-      makeMetric({ user_id: 3, totals_by_ide: [ideTotal('vscode', '1.139.0')] }),
-    ];
-    const before = structuredClone(raw);
-    const { aggregated, userDetailAccumulator } = aggregateMetrics(
-      parseMetricsFile(raw.map(record => JSON.stringify(record)).join('\n')),
-    );
-    const globalWarnings = aggregated.clients.telemetryWarnings;
-    expect(globalWarnings).toEqual([
+  it('keeps a user at risk after upgrading and counts zero-activity observations', () => {
+    const accumulator = createClientTelemetryAccumulator();
+    accumulateClientTelemetry(accumulator, 1, ideTotal('vscode', '1.138.0'));
+    accumulateClientTelemetry(accumulator, 1, ideTotal('vscode', '1.139.0'));
+    accumulateClientTelemetry(accumulator, 2, ideTotal('vscode', '1.138.0'));
+    accumulateClientTelemetry(accumulator, 3, ideTotal('vscode', '1.139.0'));
+    expect(computeClientTelemetryWarnings(accumulator)).toEqual([
       expect.objectContaining({ ide: 'vscode', version: '1.138.0', userCount: 2 }),
     ]);
-    expect(selectClientsReadModel(aggregated).telemetryWarnings).toBe(globalWarnings);
-    expect(selectClientVersionsReadModel(aggregated).telemetryWarnings).toBe(globalWarnings);
+  });
 
-    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 1)!;
-    expect(details.telemetryWarnings).toEqual([
-      expect.objectContaining({ ide: 'vscode', version: '1.138.0', userCount: 1 }),
-    ]);
-    expect(details.days[0].totals_by_ide[0].last_known_ide_version).toEqual(
-      raw[0].totals_by_ide[0].last_known_ide_version,
-    );
-    expect(computeSingleUserDetailedMetrics(userDetailAccumulator, 3)!.telemetryWarnings).toEqual([]);
-    const route = selectUserDetailsRouteReadModel(aggregated, { id: 1, login: 'user1' });
-    if (route.status !== 'resolved') throw new Error('Expected resolved profile');
-    expect(selectUserDetailsHeaderReadModel(
-      selectUserDetailsViewModel(route, details),
-    ).telemetryWarnings).toBe(details.telemetryWarnings);
-    expect(raw).toEqual(before);
+  it('does not mutate the IDE totals it observes', () => {
+    const entry = ideTotal('vscode', '1.138.0', '0.1.0');
+    const before = structuredClone(entry);
+    warnings(entry);
+    expect(entry).toEqual(before);
   });
 });

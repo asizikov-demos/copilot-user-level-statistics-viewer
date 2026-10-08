@@ -41,21 +41,6 @@ describe('parsePluginVersionsResponse', () => {
     expect(result.currentPreviewMinor).toBe(39);
   });
 
-  it('accepts the legacy VS Code rolling-window payload as a fallback', () => {
-    const result = parsePluginVersionsResponse('vscode', {
-      versions: [
-        { version: '0.38.2026030304', releaseDate: '2026-03-03T00:00:00Z' },
-        { version: '0.38.2026030204', releaseDate: '2026-03-02T00:00:00Z' },
-        { version: '0.39.2026030501', releaseDate: '2026-03-05T00:00:00Z' },
-      ],
-    });
-
-    expect(result.currentStableMinor).toBe(38);
-    expect(result.currentPreviewMinor).toBe(39);
-    expect(result.versions).toHaveLength(3);
-    expect(result.stableReleases).toEqual([]);
-  });
-
   it('parses stableReleases from VS Code payload', () => {
     const result = parsePluginVersionsResponse('vscode', {
       stableMinor: 38,

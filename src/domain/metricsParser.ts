@@ -1,7 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
 import type { NdjsonLine } from '../utils/ndjsonParser';
-import { splitNdjsonLines } from '../utils/ndjsonParser';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { normalizeLanguage } from './languageNormalizer';
 
@@ -212,8 +211,4 @@ export function parseMetricsLines(lines: Iterable<Pick<NdjsonLine, 'line'>>): Co
   }
 
   return metrics;
-}
-
-export function parseMetricsFile(fileContent: string): CopilotMetrics[] {
-  return parseMetricsLines(splitNdjsonLines(fileContent));
 }

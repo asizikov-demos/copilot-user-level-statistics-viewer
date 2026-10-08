@@ -1,7 +1,5 @@
 import type { CopilotMetrics } from '../../types/metrics';
 
-type NdjsonValue = CopilotMetrics | Record<string, unknown> | string;
-
 /**
  * Creates a valid {@link CopilotMetrics} record with sensible zero/false defaults.
  * Pass overrides to customise only the fields relevant to your test.
@@ -45,10 +43,4 @@ export function makeMetric(overrides: Partial<CopilotMetrics> = {}): CopilotMetr
 
 export function makeMetricLine(overrides: Partial<CopilotMetrics> = {}): string {
   return JSON.stringify(makeMetric(overrides));
-}
-
-export function makeNdjson(values: NdjsonValue[], lineEnding: '\n' | '\r\n' = '\n'): string {
-  return values
-    .map(value => typeof value === 'string' ? value : JSON.stringify(value))
-    .join(lineEnding);
 }

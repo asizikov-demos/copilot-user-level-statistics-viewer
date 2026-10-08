@@ -6,14 +6,13 @@ export type VsCodeVersionClassification =
   | 'unknown';
 
 import {
-  deriveCurrentStableMinor,
   parseVersionMinor,
   parseVsCodeVersion,
   type ParsedVsCodeVersion,
   type VersionLike,
 } from './vscodeVersionRules';
 
-export { parseVsCodeVersion, parseVersionMinor, deriveCurrentStableMinor, type ParsedVsCodeVersion, type VersionLike };
+export { parseVsCodeVersion, parseVersionMinor, type ParsedVsCodeVersion, type VersionLike };
 
 export function classifyVsCodeVersion(
   version: string,

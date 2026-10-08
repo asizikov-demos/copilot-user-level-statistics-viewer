@@ -1,47 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { createChunkedFile, createFailingFile } from '../../__tests__/factories/files';
 import { makeMetric } from '../../__tests__/factories/metrics';
-import { parseMetricsFile } from '../../domain/metricsParser';
+import { parseMetricsLines } from '../../domain/metricsParser';
+import { splitNdjsonLines } from '../../utils/ndjsonParser';
 import type { MultiFileProgress } from '../metricsFileParser';
 import { parseMultipleMetricsStreams } from '../metricsFileParser';
 
-const encoder = new TextEncoder();
-
-function createChunkedFile(chunks: string[], name: string = 'metrics.ndjson'): File {
-  const file = new File([''], name, { type: 'application/x-ndjson' });
-  const encodedChunks = chunks.map(chunk => encoder.encode(chunk));
-
-  Object.defineProperty(file, 'stream', {
-    value: () =>
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          for (const chunk of encodedChunks) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
-        },
-      }),
-  });
-
-  return file;
-}
-
-function createFailingFile(name: string, error: Error): File {
-  const file = new File([''], name, { type: 'application/x-ndjson' });
-
-  Object.defineProperty(file, 'stream', {
-    value: () =>
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.error(error);
-        },
-      }),
-  });
-
-  return file;
-}
-
 describe('parseMultipleMetricsStreams', () => {
-  it('matches parseMetricsFile for equivalent NDJSON content across chunk boundaries', async () => {
+  it('matches whole-content parsing for equivalent NDJSON content across chunk boundaries', async () => {
     const baseRecord = makeMetric({
       user_id: 123,
       user_login: 'user1',
@@ -71,7 +37,7 @@ describe('parseMultipleMetricsStreams', () => {
     ]);
 
     const streamed = await parseMultipleMetricsStreams([file]);
-    const parsedFromString = parseMetricsFile(fileContent);
+    const parsedFromString = parseMetricsLines(splitNdjsonLines(fileContent));
 
     expect(streamed.errors).toEqual([]);
     expect(streamed.metrics).toEqual(parsedFromString);
