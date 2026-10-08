@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
+import { makeLanguageFeatureTotal } from '../../../__tests__/factories/metricTotals';
 import {
   computeStats,
   createStatsAccumulator,
@@ -10,33 +11,7 @@ import {
   finalizeLanguageAggregation,
 } from '../languageAggregation';
 
-describe('language aggregation orchestration', () => {
-  it('preserves empty family defaults without replacing the shared stats accumulator', () => {
-    const statsAccumulator = createStatsAccumulator();
-    const accumulator = createLanguageAggregationAccumulator();
-
-    expect(finalizeLanguageAggregation(accumulator)).toEqual({
-      languageStats: [],
-      languageFeatureImpactData: { rows: [], features: [] },
-      dailyLanguageGenerationsData: {
-        dates: [],
-        languages: [],
-        data: {},
-        totals: {},
-      },
-      dailyLanguageLocData: {
-        dates: [],
-        languages: [],
-        data: {},
-        totals: {},
-      },
-    });
-    expect(computeStats(statsAccumulator, 0).topLanguage).toEqual({
-      name: 'N/A',
-      engagements: 0,
-    });
-  });
-
+describe('language aggregation', () => {
   it('coordinates stats, language totals, impact filtering, ordering, and daily padding', () => {
     const statsAccumulator = createStatsAccumulator();
     const accumulator = createLanguageAggregationAccumulator();
@@ -44,52 +19,39 @@ describe('language aggregation orchestration', () => {
       user_id: 1,
       day: '2024-01-16',
       totals_by_language_feature: [
-        {
-          language: 'typescript',
-          feature: 'code_completion',
+        makeLanguageFeatureTotal('typescript', 'code_completion', {
           code_generation_activity_count: 2,
           code_acceptance_activity_count: 1,
           loc_added_sum: 10,
           loc_deleted_sum: 2,
           loc_suggested_to_add_sum: 20,
           loc_suggested_to_delete_sum: 4,
-        },
-        {
-          language: 'unknown',
-          feature: 'chat_panel_ask_mode',
+        }),
+        makeLanguageFeatureTotal('unknown', 'chat_panel_ask_mode', {
           code_generation_activity_count: 9,
-          code_acceptance_activity_count: 0,
           loc_added_sum: 100,
           loc_deleted_sum: 25,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
+        }),
       ],
     });
     const earlierMetric = makeMetric({
       user_id: 2,
       day: '2024-01-15',
       totals_by_language_feature: [
-        {
-          language: 'python',
-          feature: 'chat_panel_ask_mode',
+        makeLanguageFeatureTotal('python', 'chat_panel_ask_mode', {
           code_generation_activity_count: 5,
           code_acceptance_activity_count: 2,
           loc_added_sum: 8,
           loc_deleted_sum: 3,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-        {
-          language: 'typescript',
-          feature: 'chat_panel_ask_mode',
+        }),
+        makeLanguageFeatureTotal('typescript', 'chat_panel_ask_mode', {
           code_generation_activity_count: 1,
           code_acceptance_activity_count: 4,
           loc_added_sum: 1,
           loc_deleted_sum: 1,
           loc_suggested_to_add_sum: 2,
           loc_suggested_to_delete_sum: 1,
-        },
+        }),
       ],
     });
 

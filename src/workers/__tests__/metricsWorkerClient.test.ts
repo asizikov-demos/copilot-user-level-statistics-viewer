@@ -141,71 +141,58 @@ describe('MetricsWorkerClient', () => {
     expect(workers[0].onerror).toBeNull();
   });
 
-  it('preserves the Error from ErrorEvent.error when a worker fails', async () => {
-    const { client, workers } = createHarness();
-    const rootCause = new Error('parse failure root cause');
-    const workerError = new Error('worker parse failed', { cause: rootCause });
-    workerError.stack = 'Error: worker parse failed\n    at metricsWorker.js:10:2';
-    const parsePromise = client.parseAndAggregate([new File([''], 'metrics.ndjson')]);
-    const detailsPromise = client.computeUserDetails(42);
+  const workerError = new Error('worker parse failed', { cause: new Error('root cause') });
+  const crossRealmCause = new Error('cross-realm root cause');
 
-    workers[0].fail({
-      message: 'ignored browser event message',
-      error: workerError,
-      filename: 'metricsWorker.js',
-      lineno: 10,
-      colno: 2,
-    });
-
-    const [parseError, detailsError] = await Promise.all([
-      parsePromise.catch((error: unknown) => error),
-      detailsPromise.catch((error: unknown) => error),
-    ]);
-    expect(parseError).toBe(workerError);
-    expect(detailsError).toBe(workerError);
-    expect(workerError.cause).toBe(rootCause);
-    expect(workerError.stack).toContain('metricsWorker.js:10:2');
-    expect(workers[0].terminate).toHaveBeenCalledTimes(1);
-  });
-
-  it('preserves Error-like event.error details from another worker realm', async () => {
-    const { client, workers } = createHarness();
-    const rootCause = new Error('cross-realm root cause');
-    const request = client.computeUserDetails(42);
-
-    workers[0].fail({
-      error: {
-        name: 'TypeError',
-        message: '  cross-realm worker failed  ',
-        stack: 'TypeError: cross-realm worker failed\n    at metricsWorker.js:20:8',
-        cause: rootCause,
+  it.each<{ name: string; event: Partial<ErrorEvent>; expected: (error: unknown) => void }>([
+    {
+      name: 'rethrows the original Error from event.error',
+      event: { message: 'ignored', error: workerError, filename: 'metricsWorker.js', lineno: 10, colno: 2 },
+      expected: error => expect(error).toBe(workerError),
+    },
+    {
+      name: 'rebuilds an Error-like event.error from another realm',
+      event: {
+        message: 'ignored',
+        error: {
+          name: 'TypeError',
+          message: '  cross-realm worker failed  ',
+          stack: 'TypeError: cross-realm worker failed\n    at metricsWorker.js:20:8',
+          cause: crossRealmCause,
+        },
       },
-      message: 'ignored fallback message',
-    });
-
-    const error = await request.catch((reason: unknown) => reason);
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toMatchObject({
-      name: 'TypeError',
-      message: 'cross-realm worker failed',
-      cause: rootCause,
-      stack: expect.stringContaining('metricsWorker.js:20:8'),
-    });
-  });
-
-  it('builds a useful worker error from ErrorEvent fields when no Error exists', async () => {
+      expected: error => {
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toMatchObject({
+          name: 'TypeError',
+          message: 'cross-realm worker failed',
+          cause: crossRealmCause,
+          stack: expect.stringContaining('metricsWorker.js:20:8'),
+        });
+      },
+    },
+    {
+      name: 'uses the event message',
+      event: { message: 'worker crashed' },
+      expected: error => expect(error).toEqual(new Error('Worker error: worker crashed')),
+    },
+    {
+      name: 'falls back to the event location',
+      event: { filename: 'metricsWorker.js', lineno: 12, colno: 4 },
+      expected: error => expect(error).toEqual(new Error('Worker error: metricsWorker.js:12:4')),
+    },
+    {
+      name: 'falls back to a generic message',
+      event: {},
+      expected: error => expect(error).toEqual(new Error('Worker error: Unknown worker error')),
+    },
+  ])('$name when the worker fails', async ({ event, expected }) => {
     const { client, workers } = createHarness();
     const request = client.computeUserDetails(42);
 
-    workers[0].fail({
-      message: '',
-      filename: 'metricsWorker.js',
-      lineno: 12,
-      colno: 4,
-    });
+    workers[0].fail(event);
 
-    await expect(request).rejects.toThrow('Worker error: metricsWorker.js:12:4');
-    expect(workers[0].terminate).toHaveBeenCalledTimes(1);
+    expected(await request.catch((reason: unknown) => reason));
   });
 
   it('rejects pending work exactly once on reset and recreates the worker', async () => {

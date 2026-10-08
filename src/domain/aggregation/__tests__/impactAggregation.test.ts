@@ -1,40 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
+import { makeFeatureTotal } from '../../../__tests__/factories/metricTotals';
 import {
   accumulateImpactAggregation,
   createImpactAggregationAccumulator,
   finalizeImpactAggregation,
 } from '../impactAggregation';
 
-const impactFeature = (
-  feature: string,
-  locAdded: number,
-  locDeleted: number
-) => ({
-  feature,
-  user_initiated_interaction_count: 1,
-  code_generation_activity_count: 0,
-  code_acceptance_activity_count: 0,
-  loc_added_sum: locAdded,
-  loc_deleted_sum: locDeleted,
-  loc_suggested_to_add_sum: 0,
-  loc_suggested_to_delete_sum: 0,
-});
+const impactFeature = (feature: string, locAdded: number, locDeleted: number) =>
+  makeFeatureTotal(feature, 1, { loc_added_sum: locAdded, loc_deleted_sum: locDeleted });
 
-describe('impact aggregation orchestration', () => {
-  it('preserves empty impact defaults', () => {
-    expect(finalizeImpactAggregation(createImpactAggregationAccumulator())).toEqual({
-      agentImpactData: [],
-      codeCompletionImpactData: [],
-      editModeImpactData: [],
-      inlineModeImpactData: [],
-      askModeImpactData: [],
-      copilotAppImpactData: [],
-      cliImpactData: [],
-      joinedImpactData: [],
-    });
-  });
-
+describe('impact aggregation', () => {
   it('owns date ensuring, feature input collection, every impact output, and ordering', () => {
     const accumulator = createImpactAggregationAccumulator();
     accumulateImpactAggregation(accumulator, makeMetric({

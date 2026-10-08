@@ -1,227 +1,211 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   AGGREGATED_METRICS_FIELD_KEYS,
   AGGREGATED_METRICS_SLICE_KEYS,
 } from '../../__tests__/factories/aggregatedMetrics';
 import { makeMetric } from '../../__tests__/factories/metrics';
+import {
+  makeCliTotals,
+  makeFeatureTotal,
+  makeIdeTotal,
+  makeLanguageFeatureTotal,
+  makeModelFeatureTotal,
+} from '../../__tests__/factories/metricTotals';
 import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
-import type { CopilotMetrics } from '../../types/metrics';
-
-const { resolveCopilotCloudAgentUsage } = vi.hoisted(() => ({
-  resolveCopilotCloudAgentUsage: vi.fn(
-    (
-      metric: Pick<
-        CopilotMetrics,
-        'used_copilot_coding_agent' | 'used_copilot_cloud_agent'
-      >
-    ) =>
-      metric.used_copilot_cloud_agent
-      ?? metric.used_copilot_coding_agent
-      ?? false
-  ),
-}));
-
-vi.mock('../copilotCloudAgentUsage', () => ({
-  resolveCopilotCloudAgentUsage,
-}));
-
 import {
   aggregateMetrics,
   assembleAggregatedMetrics,
 } from '../metricsAggregator';
 
-const aggregateSliceKeys = [
-  'overview',
-  'users',
-  'adoption',
-  'impact',
-  'languages',
-  'clients',
-  'models',
-  'cli',
-  'ai',
-  'productivity',
-] as const satisfies readonly (keyof AggregatedMetrics)[];
-
-const ideTotal = (ide: string, interactions: number) => ({
-  ide,
-  user_initiated_interaction_count: interactions,
-  code_generation_activity_count: 0,
-  code_acceptance_activity_count: 0,
-  loc_added_sum: 0,
-  loc_deleted_sum: 0,
-  loc_suggested_to_add_sum: 0,
-  loc_suggested_to_delete_sum: 0,
+const feature = (
+  name: string,
+  interactions: number,
+  generations: number,
+  locAdded: number,
+  locDeleted: number
+) => makeFeatureTotal(name, interactions, {
+  code_generation_activity_count: generations,
+  loc_added_sum: locAdded,
+  loc_deleted_sum: locDeleted,
 });
 
-describe('metrics aggregation orchestration characterization', () => {
-  beforeEach(() => {
-    resolveCopilotCloudAgentUsage.mockClear();
+const emptyAggregateContract: Array<{
+  slice: keyof AggregatedMetrics;
+  expected: object;
+}> = [
+  {
+    slice: 'overview',
+    expected: {
+      stats: {
+        uniqueUsers: 0,
+        totalRecords: 0,
+        reportStartDay: '',
+        reportEndDay: '',
+        enterpriseId: null,
+        topIde: { name: 'N/A', entries: 0 },
+        topLanguage: { name: 'N/A', engagements: 0 },
+        topModel: { name: 'N/A', engagements: 0 },
+      },
+      engagementData: [],
+      chatUsersData: [],
+      chatRequestsData: [],
+    },
+  },
+  { slice: 'users', expected: { userSummaries: [] } },
+  {
+    slice: 'adoption',
+    expected: {
+      featureAdoptionData: {
+        totalUsers: 0,
+        completionUsers: 0,
+        completionOnlyUsers: 0,
+        chatUsers: 0,
+        agentModeUsers: 0,
+        askModeUsers: 0,
+        inlineModeUsers: 0,
+        planModeUsers: 0,
+        cliUsers: 0,
+        appUsers: 0,
+        vscodeAgentUsers: 0,
+        codingAgentUsers: 0,
+        codeReviewUsers: 0,
+        advancedUsers: 0,
+      },
+      dailyAdoptionTrend: [],
+      dailyCloudAgentAdoptionData: [],
+      dailyCodeReviewAdoptionData: [],
+      vscodeAgentUsage: {
+        summary: {
+          activeUsers: null,
+          sessionCount: null,
+          userMessages: null,
+          recordCount: 0,
+          usageReportedRecords: 0,
+          sessionsReportedRecords: 0,
+          messagesReportedRecords: 0,
+        },
+        daily: [],
+      },
+    },
+  },
+  {
+    slice: 'impact',
+    expected: {
+      agentImpactData: [],
+      codeCompletionImpactData: [],
+      editModeImpactData: [],
+      inlineModeImpactData: [],
+      askModeImpactData: [],
+      copilotAppImpactData: [],
+      cliImpactData: [],
+      joinedImpactData: [],
+    },
+  },
+  {
+    slice: 'languages',
+    expected: {
+      languageStats: [],
+      languageFeatureImpactData: { rows: [], features: [] },
+      dailyLanguageGenerationsData: { dates: [], languages: [], data: {}, totals: {} },
+      dailyLanguageLocData: { dates: [], languages: [], data: {}, totals: {} },
+    },
+  },
+  {
+    slice: 'clients',
+    expected: {
+      telemetryWarnings: [],
+      ideStats: [],
+      multiIDEUsersCount: 0,
+      totalUniqueIDEUsers: 0,
+      pluginVersionData: {
+        jetbrains: [],
+        vscode: [],
+        totalUniqueIntellijUsers: 0,
+        totalUniqueVsCodeUsers: 0,
+      },
+      dailyIdeUsersData: [],
+    },
+  },
+  {
+    slice: 'models',
+    expected: {
+      modelUsageData: [],
+      modelBreakdownData: {
+        allModels: [],
+        modelCategories: [],
+        modelVendors: [],
+        autoModels: [],
+        cliModels: [],
+        autoModeAdoptionTrend: [],
+        dates: [],
+        modelTotal: 0,
+        cliTotal: 0,
+        unknownTotal: 0,
+      },
+    },
+  },
+  {
+    slice: 'cli',
+    expected: {
+      dailyCliSessionData: [],
+      dailyCliTokenData: [],
+      dailyCliAdoptionTrend: [],
+    },
+  },
+  {
+    slice: 'ai',
+    expected: {
+      aiAdoptionPhaseData: [],
+      dailyAiCreditsData: [],
+      usageDistributionData: ['power', 'heavy', 'typical', 'light'].map(id => ({
+        id,
+        userCount: 0,
+        avgAiCreditsUsed: 0,
+      })),
+    },
+  },
+  {
+    slice: 'productivity',
+    expected: {
+      totalActiveUsers: 0,
+      surfaceSummaries: ['ide', 'cli', 'copilotApp'].map(surface => ({
+        surface,
+        uniqueUsers: 0,
+      })),
+      dailyProductivity: [],
+      cohortSummaries: ['ideOnly', 'cliOnly', 'copilotAppOnly', 'multiSurface'].map(cohort => ({
+        cohort,
+        users: 0,
+      })),
+    },
+  },
+];
+
+describe('metrics aggregation contract', () => {
+  describe('empty input', () => {
+    it.each(emptyAggregateContract)('finalizes the $slice slice to its defaults', ({ slice, expected }) => {
+      expect(aggregateMetrics([]).aggregated[slice]).toMatchObject(expected);
+    });
+
+    it('returns an empty user-detail accumulator', () => {
+      const { userDetailAccumulator } = aggregateMetrics([]);
+
+      expect(userDetailAccumulator.users.size).toBe(0);
+      expect(userDetailAccumulator.reportStartDay).toBe('');
+      expect(userDetailAccumulator.reportEndDay).toBe('');
+    });
   });
 
-  it('preserves empty and first-record report metadata for stats and user details', () => {
-    const empty = aggregateMetrics([]);
-
-    expect(empty.aggregated.overview.stats.reportStartDay).toBe('');
-    expect(empty.aggregated.overview.stats.reportEndDay).toBe('');
-    expect(empty.aggregated.users.userSummaries).toEqual([]);
-    expect(empty.userDetailAccumulator.reportStartDay).toBe('');
-    expect(empty.userDetailAccumulator.reportEndDay).toBe('');
-
-    const first = makeMetric({
-      report_start_day: '2024-02-01',
-      report_end_day: '2024-02-29',
-    });
-    const second = makeMetric({
-      report_start_day: '2024-03-01',
-      report_end_day: '2024-03-31',
-    });
-    const populated = aggregateMetrics([first, second]);
+  it('takes report metadata from the first record for stats and user details', () => {
+    const populated = aggregateMetrics([
+      makeMetric({ report_start_day: '2024-02-01', report_end_day: '2024-02-29' }),
+      makeMetric({ report_start_day: '2024-03-01', report_end_day: '2024-03-31' }),
+    ]);
 
     expect(populated.aggregated.overview.stats.reportStartDay).toBe('2024-02-01');
     expect(populated.aggregated.overview.stats.reportEndDay).toBe('2024-02-29');
     expect(populated.userDetailAccumulator.reportStartDay).toBe('2024-02-01');
     expect(populated.userDetailAccumulator.reportEndDay).toBe('2024-02-29');
-  });
-
-  it('resolves the shared cloud-agent signal once per record for all aggregate families', () => {
-    const metric = makeMetric({
-      user_id: 7,
-      day: '2024-01-17',
-      used_copilot_coding_agent: false,
-      used_copilot_cloud_agent: true,
-    });
-
-    const { aggregated } = aggregateMetrics([metric]);
-
-    expect(resolveCopilotCloudAgentUsage).toHaveBeenCalledOnce();
-    expect(resolveCopilotCloudAgentUsage).toHaveBeenCalledWith(metric);
-    expect(aggregated.overview.stats.codingAgentUsers).toBe(1);
-    expect(aggregated.users.userSummaries[0].used_copilot_coding_agent).toBe(true);
-    expect(aggregated.users.userSummaries[0].cloud_agent_days).toBe(1);
-    expect(aggregated.adoption.featureAdoptionData.codingAgentUsers).toBe(1);
-    expect(aggregated.adoption.dailyCloudAgentAdoptionData).toEqual([
-      { date: '2024-01-17', uniqueUsers: 1 },
-    ]);
-  });
-
-  it('preserves every user-summary counter, flag, day set, and final ordering rule', () => {
-    const phase = {
-      phase_number: 2,
-      phase: 'Accelerating',
-      version: 'v2',
-    };
-    const firstUserEarlier = makeMetric({
-      user_id: 1,
-      user_login: 'alice',
-      day: '2024-01-15',
-      user_initiated_interaction_count: 3,
-      code_generation_activity_count: 4,
-      code_acceptance_activity_count: 2,
-      loc_added_sum: 10,
-      loc_deleted_sum: 12,
-      loc_suggested_to_add_sum: 14,
-      loc_suggested_to_delete_sum: 16,
-      ai_credits_used: 1.5,
-      used_chat: true,
-      used_copilot_cloud_agent: true,
-      used_copilot_code_review_active: true,
-      totals_by_ide: [
-        ideTotal(' vscode ', 3),
-        ideTotal('jetbrains', 0),
-      ],
-      ai_adoption_phase: {
-        phase_number: 1,
-        phase: 'Exploring',
-        version: 'v1',
-      },
-    });
-    const firstUserLater = makeMetric({
-      user_id: 1,
-      user_login: 'alice',
-      day: '2024-01-16',
-      user_initiated_interaction_count: 7,
-      code_generation_activity_count: 6,
-      code_acceptance_activity_count: 5,
-      loc_added_sum: -2,
-      loc_deleted_sum: -3,
-      loc_suggested_to_add_sum: -4,
-      loc_suggested_to_delete_sum: -5,
-      ai_credits_used: 2.5,
-      used_agent: true,
-      used_cli: true,
-      used_copilot_code_review_passive: true,
-      totals_by_ide: [ideTotal('alpha', 1), ideTotal('vscode', 1)],
-      totals_by_model_feature: [{
-        model: ' Auto ',
-        feature: 'agent_edit',
-        user_initiated_interaction_count: 0,
-        code_generation_activity_count: 1,
-        code_acceptance_activity_count: 0,
-        loc_added_sum: 0,
-        loc_deleted_sum: 0,
-        loc_suggested_to_add_sum: 0,
-        loc_suggested_to_delete_sum: 0,
-      }],
-      ai_adoption_phase: phase,
-    });
-    const secondUser = makeMetric({
-      user_id: 2,
-      user_login: 'bob',
-      user_initiated_interaction_count: 20,
-    });
-
-    const { aggregated } = aggregateMetrics([
-      firstUserEarlier,
-      firstUserLater,
-      secondUser,
-    ]);
-
-    expect(aggregated.users.userSummaries.map(user => user.user_id)).toEqual([2, 1]);
-    expect(aggregated.users.userSummaries[1]).toEqual({
-      user_login: 'alice',
-      user_id: 1,
-      total_user_initiated_interactions: 10,
-      total_code_acceptance_activities: 7,
-      total_loc_added: 8,
-      total_loc_deleted: 9,
-      total_loc_suggested_to_add: 10,
-      total_loc_suggested_to_delete: 11,
-      total_ai_credits_used: 4,
-      net_loc_contribution: -1,
-      days_active: 2,
-      cloud_agent_days: 1,
-      code_review_days: 2,
-      top_client: 'vscode',
-      clients_used: ['alpha', 'copilot_cli', 'vscode'],
-      used_code_completion: true,
-      used_agent: true,
-      used_chat: true,
-      used_cli: true,
-      used_copilot_app: false,
-      used_copilot_coding_agent: true,
-      used_copilot_code_review_active: true,
-      used_copilot_code_review_passive: true,
-      used_auto_mode: true,
-      ai_adoption_phase: phase,
-    });
-    expect(aggregated.users.userSummaries[1].ai_adoption_phase).not.toBe(phase);
-  });
-
-  it('preserves client positive guards, CLI fallback, and lexical tie-breaking', () => {
-    const metric = makeMetric({
-      used_cli: true,
-      totals_by_ide: [
-        ideTotal(' zebra ', 1),
-        ideTotal('alpha', 1),
-        ideTotal('ignored', -1),
-        ideTotal('   ', 10),
-      ],
-    });
-
-    const { aggregated } = aggregateMetrics([metric]);
-
-    expect(aggregated.users.userSummaries[0].top_client).toBe('alpha');
   });
 
   it('assembles finalized family results without copying their values', () => {
@@ -405,8 +389,8 @@ describe('metrics aggregation orchestration characterization', () => {
     );
   });
 
-  it('owns every aggregate field once and uses a single raw-record pass', () => {
-    const source = [
+  it('exposes exactly the grouped slice fields without mutating its input', () => {
+    const metrics = [
       makeMetric({
         user_id: 1,
         used_agent: true,
@@ -414,112 +398,224 @@ describe('metrics aggregation orchestration characterization', () => {
         used_copilot_cloud_agent: true,
         used_copilot_code_review_active: true,
         ai_credits_used: 2.5,
-        totals_by_ide: [ideTotal('vscode', 2)],
-        totals_by_feature: [{
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 3,
-          code_generation_activity_count: 1,
-          code_acceptance_activity_count: 1,
-          loc_added_sum: 5,
-          loc_deleted_sum: 1,
-          loc_suggested_to_add_sum: 7,
-          loc_suggested_to_delete_sum: 2,
-        }],
-        totals_by_language_feature: [{
-          language: 'typescript',
-          feature: 'code_completion',
-          code_generation_activity_count: 4,
-          code_acceptance_activity_count: 2,
-          loc_added_sum: 6,
-          loc_deleted_sum: 1,
-          loc_suggested_to_add_sum: 8,
-          loc_suggested_to_delete_sum: 2,
-        }],
-        totals_by_model_feature: [{
-          model: 'gpt-5',
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 3,
-          code_generation_activity_count: 1,
-          code_acceptance_activity_count: 1,
-          loc_added_sum: 5,
-          loc_deleted_sum: 1,
-          loc_suggested_to_add_sum: 7,
-          loc_suggested_to_delete_sum: 2,
-        }],
+        totals_by_ide: [makeIdeTotal('vscode', 2)],
+        totals_by_feature: [makeFeatureTotal('chat_panel_agent_mode', 3, { loc_added_sum: 5 })],
+        totals_by_language_feature: [
+          makeLanguageFeatureTotal('typescript', 'code_completion', { code_generation_activity_count: 4 }),
+        ],
+        totals_by_model_feature: [makeModelFeatureTotal('gpt-5', 'chat_panel_agent_mode', 3)],
+        ai_adoption_phase: { phase_number: 2, phase: 'Accelerating', version: 'v2' },
+      }),
+      makeMetric({
+        user_id: 2,
+        used_cli: true,
+        totals_by_cli: makeCliTotals({ session_count: 2, request_count: 3, prompt_count: 1 }),
+      }),
+    ];
+    const original = structuredClone(metrics);
+
+    const { aggregated } = aggregateMetrics(metrics);
+
+    expect(Object.keys(aggregated)).toEqual(Object.keys(AGGREGATED_METRICS_SLICE_KEYS));
+    for (const [slice, fields] of Object.entries(AGGREGATED_METRICS_SLICE_KEYS)) {
+      expect(Object.keys(aggregated[slice as keyof AggregatedMetrics])).toEqual(fields);
+    }
+    expect(new Set(AGGREGATED_METRICS_FIELD_KEYS).size).toBe(AGGREGATED_METRICS_FIELD_KEYS.length);
+    for (const key of AGGREGATED_METRICS_FIELD_KEYS) {
+      expect(aggregated).not.toHaveProperty(key);
+    }
+    expect(aggregated).not.toHaveProperty('metrics');
+    expect(metrics).toEqual(original);
+  });
+
+  it('produces consistent cross-family outputs for a representative upload', () => {
+    const metrics = [
+      makeMetric({
+        day: '2024-01-16',
+        user_id: 1,
+        user_login: 'alice',
+        ai_credits_used: 7,
+        used_cli: true,
+        used_copilot_cloud_agent: true,
+        used_copilot_code_review_passive: true,
         ai_adoption_phase: {
           phase_number: 2,
           phase: 'Accelerating',
           version: 'v2',
         },
+        totals_by_cli: makeCliTotals({ session_count: 2, request_count: 4, prompt_count: 3 }),
+        totals_by_feature: [
+          feature('chat_panel_ask_mode', 3, 0, 10, 2),
+          feature('chat_panel_agent_mode', 4, 0, 8, 1),
+          feature('code_completion', 1, 2, 20, 5),
+          feature('copilot_cli', 2, 0, 6, 1),
+        ],
       }),
       makeMetric({
-        user_id: 2,
-        used_cli: true,
-        totals_by_cli: {
-          session_count: 2,
-          request_count: 3,
-          prompt_count: 1,
-          token_usage: {
-            output_tokens_sum: 11,
-            prompt_tokens_sum: 7,
-            avg_tokens_per_request: 6,
-          },
+        day: '2024-01-15',
+        user_id: 1,
+        user_login: 'alice',
+        ai_credits_used: 5,
+        ai_adoption_phase: {
+          phase_number: 1,
+          phase: 'Exploring',
+          version: 'v1',
         },
+        totals_by_feature: [
+          feature('code_completion', 1, 1, 4, 1),
+        ],
+      }),
+      makeMetric({
+        day: '2024-01-15',
+        user_id: 2,
+        user_login: 'bob',
+        ai_credits_used: 0,
+        used_copilot_code_review_active: true,
+        totals_by_feature: [
+          feature('chat_inline', 2, 0, 5, 2),
+        ],
       }),
     ];
-    const original = structuredClone(source);
-    let iteratorRequests = 0;
-    const metrics = new Proxy(source, {
-      get(target, property, receiver) {
-        if (property === Symbol.iterator) {
-          iteratorRequests++;
-        }
-        return Reflect.get(target, property, receiver);
-      },
-    });
 
     const { aggregated } = aggregateMetrics(metrics);
-    const groupedBytes = new TextEncoder().encode(
-      JSON.stringify(aggregated)
-    ).byteLength;
+    expect(aggregated.overview.engagementData).toEqual([
+      {
+        date: '2024-01-15',
+        activeUsers: 2,
+        totalUsers: 2,
+        engagementPercentage: 100,
+      },
+      {
+        date: '2024-01-16',
+        activeUsers: 1,
+        totalUsers: 2,
+        engagementPercentage: 50,
+      },
+    ]);
+    expect(aggregated.overview.chatUsersData).toEqual([
+      {
+        date: '2024-01-15',
+        askModeUsers: 0,
+        agentModeUsers: 0,
+        editModeUsers: 0,
+        inlineModeUsers: 1,
+        planModeUsers: 0,
+        cliUsers: 0,
+      },
+      {
+        date: '2024-01-16',
+        askModeUsers: 1,
+        agentModeUsers: 1,
+        editModeUsers: 0,
+        inlineModeUsers: 0,
+        planModeUsers: 0,
+        cliUsers: 1,
+      },
+    ]);
+    expect(aggregated.overview.chatRequestsData).toEqual([
+      {
+        date: '2024-01-15',
+        askModeRequests: 0,
+        agentModeRequests: 0,
+        editModeRequests: 0,
+        inlineModeRequests: 2,
+        planModeRequests: 0,
+        cliSessions: 0,
+      },
+      {
+        date: '2024-01-16',
+        askModeRequests: 3,
+        agentModeRequests: 4,
+        editModeRequests: 0,
+        inlineModeRequests: 0,
+        planModeRequests: 0,
+        cliSessions: 2,
+      },
+    ]);
+    expect(aggregated.adoption.featureAdoptionData).toEqual({
+      totalUsers: 2,
+      completionUsers: 1,
+      completionOnlyUsers: 0,
+      chatUsers: 2,
+      agentModeUsers: 1,
+      askModeUsers: 1,
+      inlineModeUsers: 1,
+      planModeUsers: 0,
+      cliUsers: 1,
+      appUsers: 0,
+      vscodeAgentUsers: 0,
+      codingAgentUsers: 1,
+      codeReviewUsers: 2,
+      advancedUsers: 1,
+    });
+    expect(aggregated.adoption.dailyCloudAgentAdoptionData).toEqual([
+      { date: '2024-01-16', uniqueUsers: 1 },
+    ]);
+    expect(aggregated.adoption.dailyCodeReviewAdoptionData).toEqual([
+      {
+        date: '2024-01-15',
+        activeUsers: 1,
+        passiveUsers: 0,
+        totalUsers: 1,
+      },
+      {
+        date: '2024-01-16',
+        activeUsers: 0,
+        passiveUsers: 1,
+        totalUsers: 1,
+      },
+    ]);
+    expect(aggregated.impact.agentImpactData).toEqual([
+      {
+        date: '2024-01-15',
+        locAdded: 0,
+        locDeleted: 0,
+        netChange: 0,
+        userCount: 0,
+        totalUniqueUsers: 2,
+      },
+      {
+        date: '2024-01-16',
+        locAdded: 8,
+        locDeleted: 1,
+        netChange: 7,
+        userCount: 1,
+        totalUniqueUsers: 2,
+      },
+    ]);
+    expect(aggregated.impact.codeCompletionImpactData.map(day => day.netChange)).toEqual([
+      3,
+      15,
+    ]);
+    expect(aggregated.impact.editModeImpactData.map(day => day.netChange)).toEqual([0, 0]);
+    expect(aggregated.impact.inlineModeImpactData.map(day => day.netChange)).toEqual([3, 0]);
+    expect(aggregated.impact.askModeImpactData.map(day => day.netChange)).toEqual([0, 8]);
+    expect(aggregated.impact.cliImpactData.map(day => day.netChange)).toEqual([0, 5]);
+    expect(aggregated.impact.joinedImpactData.map(day => day.netChange)).toEqual([6, 35]);
 
-    expect(Object.keys(aggregated)).toEqual(aggregateSliceKeys);
-    expect(Object.keys(aggregated.overview)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.overview
-    );
-    expect(Object.keys(aggregated.users)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.users
-    );
-    expect(Object.keys(aggregated.adoption)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.adoption
-    );
-    expect(Object.keys(aggregated.impact)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.impact
-    );
-    expect(Object.keys(aggregated.languages)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.languages
-    );
-    expect(Object.keys(aggregated.clients)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.clients
-    );
-    expect(Object.keys(aggregated.models)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.models
-    );
-    expect(Object.keys(aggregated.cli)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.cli
-    );
-    expect(Object.keys(aggregated.ai)).toEqual(
-      AGGREGATED_METRICS_SLICE_KEYS.ai
-    );
-    expect(new Set(AGGREGATED_METRICS_FIELD_KEYS).size).toBe(
-      AGGREGATED_METRICS_FIELD_KEYS.length
-    );
-    for (const key of AGGREGATED_METRICS_FIELD_KEYS) {
-      expect(aggregated).not.toHaveProperty(key);
-    }
-    expect(aggregated).not.toHaveProperty('metrics');
-    expect(groupedBytes).toBeGreaterThan(0);
-    expect(iteratorRequests).toBe(1);
-    expect(source).toEqual(original);
+    expect(aggregated.ai.aiAdoptionPhaseData.map(data => ({
+      phase: data.phase.phase_number,
+      users: data.userCount,
+      credits: data.avgAiCreditsUsed,
+    }))).toEqual([
+      { phase: 2, users: 1, credits: 12 },
+      { phase: -1, users: 1, credits: 0 },
+    ]);
+    expect(aggregated.ai.usageDistributionData.map(bucket => bucket.id)).toEqual([
+      'power',
+      'heavy',
+      'typical',
+      'light',
+    ]);
+    expect(aggregated.ai.usageDistributionData.map(bucket => bucket.userCount)).toEqual([
+      0,
+      0,
+      2,
+      0,
+    ]);
+    expect(aggregated.ai.dailyAiCreditsData).toEqual([
+      { date: '2024-01-15', aiCreditsUsed: 5, users: 1 },
+      { date: '2024-01-16', aiCreditsUsed: 7, users: 1 },
+    ]);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
+import { makeCliTotals, makeIdeTotal } from '../../../__tests__/factories/metricTotals';
 import {
   computeStats,
   createStatsAccumulator,
@@ -10,15 +11,13 @@ import {
   finalizeClientAggregation,
 } from '../clientAggregation';
 
-function makeIdeTotal(
+function ideRow(
   ide: string,
   interactions: number,
   plugin?: string,
   pluginVersion?: string
 ) {
-  return {
-    ide,
-    user_initiated_interaction_count: interactions,
+  return makeIdeTotal(ide, interactions, {
     code_generation_activity_count: interactions + 1,
     code_acceptance_activity_count: interactions + 2,
     loc_added_sum: interactions + 3,
@@ -32,33 +31,10 @@ function makeIdeTotal(
           plugin_version: pluginVersion,
         }
       : undefined,
-  };
+  });
 }
 
-describe('client aggregation orchestration', () => {
-  it('preserves empty client defaults without replacing shared stats', () => {
-    const statsAccumulator = createStatsAccumulator();
-    const accumulator = createClientAggregationAccumulator();
-
-    expect(finalizeClientAggregation(accumulator)).toEqual({
-      telemetryWarnings: [],
-      ideStats: [],
-      multiIDEUsersCount: 0,
-      totalUniqueIDEUsers: 0,
-      pluginVersionData: {
-        jetbrains: [],
-        vscode: [],
-        totalUniqueIntellijUsers: 0,
-        totalUniqueVsCodeUsers: 0,
-      },
-      dailyIdeUsersData: [],
-    });
-    expect(computeStats(statsAccumulator, 0).topIde).toEqual({
-      name: 'N/A',
-      entries: 0,
-    });
-  });
-
+describe('client aggregation', () => {
   it('coordinates every IDE total, CLI overlap flags, shared stats, and plugin identities', () => {
     const statsAccumulator = createStatsAccumulator();
     const accumulator = createClientAggregationAccumulator();
@@ -71,8 +47,8 @@ describe('client aggregation orchestration', () => {
         user_login: 'zoe',
         used_cli: true,
         totals_by_ide: [
-          makeIdeTotal('vscode', 3, 'copilot-chat', '1.2.0'),
-          makeIdeTotal('intellij', 5, 'copilot', '2024.1'),
+          ideRow('vscode', 3, 'copilot-chat', '1.2.0'),
+          ideRow('intellij', 5, 'copilot', '2024.1'),
         ],
       })
     );
@@ -83,19 +59,10 @@ describe('client aggregation orchestration', () => {
         user_id: 2,
         user_login: 'amy',
         used_cli: false,
-        totals_by_cli: {
-          session_count: 2,
-          request_count: 4,
-          prompt_count: 3,
-          token_usage: {
-            output_tokens_sum: 20,
-            prompt_tokens_sum: 10,
-            avg_tokens_per_request: 7.5,
-          },
-        },
+        totals_by_cli: makeCliTotals({ session_count: 2, request_count: 4, prompt_count: 3 }),
         totals_by_ide: [
-          makeIdeTotal('vscode', 7, 'copilot-chat', '1.2.0'),
-          makeIdeTotal('intellij', 1, 'copilot', '2024.2-nightly'),
+          ideRow('vscode', 7, 'copilot-chat', '1.2.0'),
+          ideRow('intellij', 1, 'copilot', '2024.2-nightly'),
         ],
       })
     );
@@ -106,8 +73,8 @@ describe('client aggregation orchestration', () => {
         user_id: 3,
         user_login: 'mia',
         totals_by_ide: [
-          makeIdeTotal('vscode', 2, 'copilot-chat', '1.1.0'),
-          makeIdeTotal('vscode', 4, 'copilot', 'ignored-version'),
+          ideRow('vscode', 2, 'copilot-chat', '1.1.0'),
+          ideRow('vscode', 4, 'copilot', 'ignored-version'),
         ],
       })
     );
