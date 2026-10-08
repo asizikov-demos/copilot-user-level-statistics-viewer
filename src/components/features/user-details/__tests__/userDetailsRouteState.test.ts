@@ -1,65 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
-import type { UserSummary } from '../../../../types/metrics';
 import { VIEW_MODES } from '../../../../types/navigation';
-import { makeAggregatedMetrics } from '../../../../__tests__/factories/aggregatedMetrics';
-import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
+import { makeUserSummary } from '../../../../__tests__/factories/aggregatedMetrics';
 import {
   resolveUserDetailsRouteState,
   type UserDetailsLoadState,
 } from '../userDetailsRouteState';
+import { makeUserDetails } from './helpers/userDetailsFixtures';
 
 const dataset = {};
 const selectedUser = { id: 42, login: 'octocat' };
-const userSummary: UserSummary = {
+const userSummary = makeUserSummary({
   user_id: selectedUser.id,
   user_login: selectedUser.login,
-  total_user_initiated_interactions: 0,
-  total_code_acceptance_activities: 0,
-  total_loc_added: 0,
-  total_loc_deleted: 0,
-  total_loc_suggested_to_add: 0,
-  total_loc_suggested_to_delete: 0,
-  total_ai_credits_used: 0,
-  net_loc_contribution: 0,
-  days_active: 0,
-  cloud_agent_days: 0,
-  code_review_days: 0,
-  top_client: null,
-  clients_used: [],
-  used_code_completion: false,
-  used_agent: false,
-  used_chat: false,
-  used_cli: false,
-  used_copilot_app: false,
-  used_copilot_coding_agent: false,
-  used_copilot_code_review_active: false,
-  used_copilot_code_review_passive: false,
-};
-const details: UserDetailedMetrics = {
-  telemetryWarnings: [],
-  agentActivity: computeAgentActivity([]),
-  cliCustomizations: [],
-  vscodeAgentUsage: makeAggregatedMetrics().adoption.vscodeAgentUsage,
-  totalModelRequests: 0,
-  total_ai_credits_used: 0,
-  featureAggregates: [],
-  ideAggregates: [],
-  languageFeatureAggregates: [],
-  modelFeatureAggregates: [],
-  pluginVersions: [],
-  cliVersions: [],
-  dailyCombinedImpact: [],
-  dailyModelUsage: [],
-  dailyAgentImpact: [],
-  dailyAskModeImpact: [],
-  dailyCompletionImpact: [],
-  dailyCopilotAppImpact: [],
-  dailyCliImpact: [],
-  days: [],
-  reportStartDay: '2024-01-01',
-  reportEndDay: '2024-01-31',
-};
+});
+const details = makeUserDetails();
 
 function resolve(loadState: UserDetailsLoadState) {
   return resolveUserDetailsRouteState({
@@ -146,11 +100,14 @@ describe('resolveUserDetailsRouteState', () => {
     });
   });
 
-  it('treats results from an obsolete dataset as loading', () => {
+  it.each([
+    { obsolete: 'dataset', loadDataset: {}, userId: selectedUser.id },
+    { obsolete: 'user', loadDataset: dataset, userId: 7 },
+  ])('treats results from an obsolete $obsolete as loading', ({ loadDataset, userId }) => {
     expect(resolve({
       status: 'ready',
-      dataset: {},
-      userId: selectedUser.id,
+      dataset: loadDataset,
+      userId,
       details,
     })).toMatchObject({ status: 'loading', userSummary });
   });

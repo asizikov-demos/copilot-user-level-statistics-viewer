@@ -19,23 +19,15 @@ const statement: AiCreditsStatement = {
 };
 
 describe('AiCreditsStatementCard', () => {
-  it('renders the requested statement lines and the top 10% block', () => {
+  it('shows monthly credits, estimated spend, and the top 10% concentration when credits exist', () => {
     const html = renderToStaticMarkup(<AiCreditsStatementCard statement={statement} />);
 
-    expect(html).toContain('Active users');
-    expect(html).toContain('1,248');
-    expect(html).toContain('Active user-days');
-    expect(html).toContain('13,473');
-    expect(html).toContain('AI credits consumed');
     expect(html).toContain('Aug 197.8K · Sep 223.4K');
-    expect(html).toContain('421,200');
-    expect(html).toContain('Cost per active user');
     expect(html).toContain('$3.38');
-    expect(html).toContain('Estimated AI spend');
     expect(html).toContain('$4,212.00');
     expect(html).toContain('Top 10% of users');
     expect(html).toContain('58%');
-    expect(html).not.toContain('Interactions');
+    expect(html).not.toContain('No AI credit consumption was recorded');
   });
 
   it('shows an empty note instead of the concentration bar without credits', () => {

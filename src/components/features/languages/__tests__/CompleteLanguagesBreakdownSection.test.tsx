@@ -1,22 +1,30 @@
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it } from 'vitest';
-import {
-  accumulateLanguageStats,
-  computeLanguageStats,
-  createLanguageAccumulator,
-  type LanguageStats,
-} from '../../../../domain/calculators/languageCalculator';
+import type { LanguageStats } from '../../../../domain/calculators/languageCalculator';
 import CompleteLanguagesBreakdownSection from '../sections/CompleteLanguagesBreakdownSection';
 
+function makeLanguage(language: string, overrides: Partial<LanguageStats> = {}): LanguageStats {
+  return {
+    language,
+    totalGenerations: 0,
+    totalAcceptances: 0,
+    totalEngagements: 0,
+    uniqueUsers: 0,
+    generationsPerUser: null,
+    generationShare: null,
+    locAdded: 0,
+    locDeleted: 0,
+    locSuggestedToAdd: 0,
+    locSuggestedToDelete: 0,
+    ...overrides,
+  };
+}
+
 function makeLanguages(): LanguageStats[] {
-  const accumulator = createLanguageAccumulator();
-  for (let user = 1; user <= 150; user++) {
-    accumulateLanguageStats(accumulator, user, 'typescript', 4, 0, 0, 0, 0, 0);
-    if (user <= 50) {
-      accumulateLanguageStats(accumulator, user, 'kotlin', 8, 0, 0, 0, 0, 0);
-    }
-  }
-  return computeLanguageStats(accumulator);
+  return [
+    makeLanguage('typescript', { totalGenerations: 600, totalEngagements: 600, uniqueUsers: 150, generationsPerUser: 4, generationShare: 0.6 }),
+    makeLanguage('kotlin', { totalGenerations: 400, totalEngagements: 400, uniqueUsers: 50, generationsPerUser: 8, generationShare: 0.4 }),
+  ];
 }
 
 async function withTable(languages: LanguageStats[], test: (root: ReactTestInstance) => Promise<void>) {
@@ -99,11 +107,10 @@ describe('Complete Languages Breakdown view toggle', () => {
   });
 
   it('preserves top-ten disclosure and all-row shares across sorting and view changes', async () => {
-    const accumulator = createLanguageAccumulator();
-    for (let index = 0; index < 12; index++) {
-      accumulateLanguageStats(accumulator, 1, `language-${index}`, 10, 0, 0, 0, 0, 0);
-    }
-    await withTable(computeLanguageStats(accumulator), async root => {
+    const languages = Array.from({ length: 12 }, (_, index) => makeLanguage(`language-${index}`, {
+      totalGenerations: 10, totalEngagements: 10, uniqueUsers: 1, generationsPerUser: 10, generationShare: 1 / 12,
+    }));
+    await withTable(languages, async root => {
       expect(rows(root)).toHaveLength(10);
       await click(root, 'Normalized');
       expect(rows(root)).toHaveLength(10);
@@ -120,8 +127,7 @@ describe('Complete Languages Breakdown view toggle', () => {
   });
 
   it('displays dashes for unavailable ratios and sorts them last in either direction', async () => {
-    const languages = makeLanguages();
-    languages.push({ ...languages[0], language: 'unavailable', uniqueUsers: 0, totalGenerations: 0, generationsPerUser: null, generationShare: null });
+    const languages = [...makeLanguages(), makeLanguage('unavailable')];
     await withTable(languages, async root => {
       await click(root, 'Normalized');
       expect(rows(root)[2]).toEqual(['unavailable', '0', '0', '-', '-']);
@@ -135,9 +141,7 @@ describe('Complete Languages Breakdown view toggle', () => {
   });
 
   it('renders real zero averages, zero-total shares, and the empty state', async () => {
-    const accumulator = createLanguageAccumulator();
-    accumulateLanguageStats(accumulator, 1, 'zero', 0, 0, 0, 0, 0, 0);
-    await withTable(computeLanguageStats(accumulator), async root => {
+    await withTable([makeLanguage('zero', { uniqueUsers: 1, generationsPerUser: 0 })], async root => {
       await click(root, 'Normalized');
       expect(rows(root)).toEqual([['zero', '1', '0', '0.0', '-']]);
     });

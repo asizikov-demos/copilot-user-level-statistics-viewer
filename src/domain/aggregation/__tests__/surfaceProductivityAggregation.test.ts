@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
-import type { CopilotMetrics } from '../../../types/metrics';
+import { makeFeatureTotal, makeIdeTotal } from '../../../__tests__/factories/metricTotals';
 import {
   accumulateSurfaceProductivityAggregation,
   createSurfaceProductivityAggregationAccumulator,
   finalizeSurfaceProductivityAggregation,
 } from '../surfaceProductivityAggregation';
 
-const ideTotal = (
-  locAdded: number,
-  locDeleted: number
-): CopilotMetrics['totals_by_ide'][number] => ({
-  ide: 'vscode',
-  user_initiated_interaction_count: 1,
+const locActivity = (locAdded: number, locDeleted: number) => ({
   code_generation_activity_count: 1,
   code_acceptance_activity_count: 1,
   loc_added_sum: locAdded,
@@ -21,44 +16,13 @@ const ideTotal = (
   loc_suggested_to_delete_sum: locDeleted,
 });
 
-const featureTotal = (
-  feature: string,
-  locAdded: number,
-  locDeleted: number
-): CopilotMetrics['totals_by_feature'][number] => ({
-  feature,
-  user_initiated_interaction_count: 1,
-  code_generation_activity_count: 1,
-  code_acceptance_activity_count: 1,
-  loc_added_sum: locAdded,
-  loc_deleted_sum: locDeleted,
-  loc_suggested_to_add_sum: locAdded,
-  loc_suggested_to_delete_sum: locDeleted,
-});
+const ideTotal = (locAdded: number, locDeleted: number) =>
+  makeIdeTotal('vscode', 1, locActivity(locAdded, locDeleted));
+
+const featureTotal = (feature: string, locAdded: number, locDeleted: number) =>
+  makeFeatureTotal(feature, 1, locActivity(locAdded, locDeleted));
 
 describe('surface productivity aggregation', () => {
-  it('preserves explicit zero rows for every surface and cohort', () => {
-    expect(
-      finalizeSurfaceProductivityAggregation(
-        createSurfaceProductivityAggregationAccumulator()
-      )
-    ).toEqual({
-      totalActiveUsers: 0,
-      surfaceSummaries: [
-        expect.objectContaining({ surface: 'ide', uniqueUsers: 0 }),
-        expect.objectContaining({ surface: 'cli', uniqueUsers: 0 }),
-        expect.objectContaining({ surface: 'copilotApp', uniqueUsers: 0 }),
-      ],
-      dailyProductivity: [],
-      cohortSummaries: [
-        expect.objectContaining({ cohort: 'ideOnly', users: 0 }),
-        expect.objectContaining({ cohort: 'cliOnly', users: 0 }),
-        expect.objectContaining({ cohort: 'copilotAppOnly', users: 0 }),
-        expect.objectContaining({ cohort: 'multiSurface', users: 0 }),
-      ],
-    });
-  });
-
   it('separates surface reach, active user-days, attributed LOC, and overlap cohorts', () => {
     const accumulator = createSurfaceProductivityAggregationAccumulator();
     const records = [

@@ -53,20 +53,3 @@ export function isStableVsCodeVersion(version: string): boolean {
 export function derivePreviewMinor(stableMinor: number): number {
   return stableMinor + 1;
 }
-
-export function deriveCurrentStableMinor(versions: VersionLike[]): number | null {
-  if (versions.length === 0) return null;
-
-  const minorCounts = new Map<number, number>();
-  for (const { version } of versions) {
-    const minor = parseVersionMinor(version);
-    if (minor !== null) {
-      minorCounts.set(minor, (minorCounts.get(minor) ?? 0) + 1);
-    }
-  }
-
-  if (minorCounts.size === 0) return null;
-
-  const sorted = Array.from(minorCounts.entries()).sort((a, b) => b[1] - a[1]);
-  return sorted[0][0];
-}

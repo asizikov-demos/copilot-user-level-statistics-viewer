@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
 import {
+  makeCliTotals,
+  makeFeatureTotal,
+} from '../../../__tests__/factories/metricTotals';
+import type { CopilotMetrics } from '../../../types/metrics';
+import type { FeatureAdoptionData } from '../../calculators/featureAdoptionCalculator';
+import {
   accumulateCliAggregation,
   createCliAggregationAccumulator,
   getCliUsageForDownstreamCalculations,
@@ -11,117 +17,52 @@ import {
   finalizeEngagementAdoptionAggregation,
 } from '../engagementAdoptionAggregation';
 
-describe('engagement and adoption aggregation orchestration', () => {
-  it('preserves empty engagement, chat, adoption, and advanced-adoption defaults', () => {
-    const cliUsage = getCliUsageForDownstreamCalculations(
-      createCliAggregationAccumulator()
-    );
+type EngagementRecord = { metric: Partial<CopilotMetrics>; usedCloudAgent?: boolean };
 
-    expect(finalizeEngagementAdoptionAggregation(
-      createEngagementAdoptionAggregationAccumulator(),
-      cliUsage
-    )).toEqual({
-      engagementData: [],
-      chatUsersData: [],
-      chatRequestsData: [],
-      featureAdoptionData: {
-        totalUsers: 0,
-        completionUsers: 0,
-        completionOnlyUsers: 0,
-        chatUsers: 0,
-        agentModeUsers: 0,
-        askModeUsers: 0,
-        inlineModeUsers: 0,
-        planModeUsers: 0,
-        cliUsers: 0,
-        appUsers: 0,
-        vscodeAgentUsers: 0,
-        codingAgentUsers: 0,
-        codeReviewUsers: 0,
-        advancedUsers: 0,
-      },
-      dailyAdoptionTrend: [],
-      dailyCloudAgentAdoptionData: [],
-      dailyCodeReviewAdoptionData: [],
-      vscodeAgentUsage: {
-        summary: {
-          activeUsers: null,
-          sessionCount: null,
-          userMessages: null,
-          recordCount: 0,
-          usageReportedRecords: 0,
-          sessionsReportedRecords: 0,
-          messagesReportedRecords: 0,
-        },
-        daily: [],
-      },
-    });
-  });
+function aggregateEngagement(records: EngagementRecord[]) {
+  const accumulator = createEngagementAdoptionAggregationAccumulator();
+  const cliAccumulator = createCliAggregationAccumulator();
+  for (const { metric, usedCloudAgent = false } of records) {
+    const record = makeMetric(metric);
+    accumulateCliAggregation(cliAccumulator, record);
+    accumulateEngagementAdoptionAggregation(accumulator, record, usedCloudAgent);
+  }
+  return finalizeEngagementAdoptionAggregation(
+    accumulator,
+    getCliUsageForDownstreamCalculations(cliAccumulator)
+  );
+}
 
+const completionOnlyFeatures = [
+  makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 5 }),
+];
+
+describe('engagement and adoption aggregation', () => {
   it('coordinates feature signals and consumes CLI daily sessions without accumulating CLI twice', () => {
-    const accumulator = createEngagementAdoptionAggregationAccumulator();
-    const cliAccumulator = createCliAggregationAccumulator();
-    const cliMetric = makeMetric({
-      day: '2024-01-16',
-      user_id: 1,
-      used_cli: true,
-      used_vscode_agent: true,
-      used_copilot_code_review_active: true,
-      used_copilot_code_review_passive: true,
-      totals_by_cli: {
-        session_count: 2,
-        request_count: 4,
-        prompt_count: 3,
-        token_usage: {
-          output_tokens_sum: 100,
-          prompt_tokens_sum: 50,
-          avg_tokens_per_request: 37.5,
+    const result = aggregateEngagement([
+      {
+        metric: {
+          day: '2024-01-16',
+          user_id: 1,
+          used_cli: true,
+          used_vscode_agent: true,
+          used_copilot_code_review_active: true,
+          used_copilot_code_review_passive: true,
+          totals_by_cli: makeCliTotals({ session_count: 2, request_count: 4, prompt_count: 3 }),
+          totals_by_feature: [makeFeatureTotal('chat_panel_agent_mode', 5)],
+        },
+        usedCloudAgent: true,
+      },
+      {
+        metric: {
+          day: '2024-01-15',
+          user_id: 2,
+          totals_by_feature: [makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 1 })],
         },
       },
-      totals_by_feature: [
-        {
-          feature: 'chat_panel_agent_mode',
-          user_initiated_interaction_count: 5,
-          code_generation_activity_count: 0,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-      ],
-    });
-    const completionMetric = makeMetric({
-      day: '2024-01-15',
-      user_id: 2,
-      totals_by_feature: [
-        {
-          feature: 'code_completion',
-          user_initiated_interaction_count: 0,
-          code_generation_activity_count: 1,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
-        },
-      ],
-    });
-
-    accumulateCliAggregation(cliAccumulator, cliMetric);
-    accumulateCliAggregation(cliAccumulator, completionMetric);
-    accumulateEngagementAdoptionAggregation(accumulator, cliMetric, true);
-    accumulateEngagementAdoptionAggregation(accumulator, completionMetric, false);
-
-    const result = finalizeEngagementAdoptionAggregation(
-      accumulator,
-      getCliUsageForDownstreamCalculations(cliAccumulator)
-    );
-
-    expect(result.engagementData.map(day => day.date)).toEqual([
-      '2024-01-15',
-      '2024-01-16',
     ]);
+
+    expect(result.engagementData.map(day => day.date)).toEqual(['2024-01-15', '2024-01-16']);
     expect(result.chatRequestsData[1]).toEqual({
       date: '2024-01-16',
       askModeRequests: 0,
@@ -142,16 +83,108 @@ describe('engagement and adoption aggregation orchestration', () => {
       vscodeAgentUsers: 1,
       advancedUsers: 1,
     });
+  });
+
+  it('counts unique active users per day', () => {
+    const result = aggregateEngagement([
+      { metric: { user_id: 1, day: '2024-01-15' } },
+      { metric: { user_id: 2, day: '2024-01-15' } },
+      { metric: { user_id: 1, day: '2024-01-15' } },
+      { metric: { user_id: 1, day: '2024-01-16' } },
+    ]);
+
+    expect(result.engagementData.map(({ date, activeUsers }) => ({ date, activeUsers }))).toEqual([
+      { date: '2024-01-15', activeUsers: 2 },
+      { date: '2024-01-16', activeUsers: 1 },
+    ]);
+  });
+
+  it.each<{ name: string; record: EngagementRecord; expected: Partial<FeatureAdoptionData> }>([
+    {
+      name: 'used_cli without feature rows',
+      record: { metric: { used_cli: true } },
+      expected: { totalUsers: 1, cliUsers: 1, advancedUsers: 1 },
+    },
+    {
+      name: 'the cloud-agent signal alone',
+      record: { metric: {}, usedCloudAgent: true },
+      expected: { totalUsers: 1, codingAgentUsers: 1, advancedUsers: 1 },
+    },
+    {
+      name: 'active code review',
+      record: { metric: { used_copilot_code_review_active: true } },
+      expected: { totalUsers: 1, codeReviewUsers: 1 },
+    },
+    {
+      name: 'passive code review',
+      record: { metric: { used_copilot_code_review_passive: true } },
+      expected: { totalUsers: 1, codeReviewUsers: 1 },
+    },
+    {
+      name: 'completion plus used_cli',
+      record: { metric: { used_cli: true, totals_by_feature: completionOnlyFeatures } },
+      expected: { cliUsers: 1, completionOnlyUsers: 0 },
+    },
+    {
+      name: 'completion plus the cloud-agent signal',
+      record: { metric: { totals_by_feature: completionOnlyFeatures }, usedCloudAgent: true },
+      expected: { codingAgentUsers: 1, completionOnlyUsers: 0 },
+    },
+  ])('adopts a user from $name', ({ record, expected }) => {
+    expect(aggregateEngagement([record]).featureAdoptionData).toMatchObject(expected);
+  });
+
+  it('deduplicates daily cloud-agent and code-review adopters', () => {
+    const result = aggregateEngagement([
+      {
+        metric: { user_id: 1, day: '2024-01-15', used_copilot_code_review_active: true },
+        usedCloudAgent: true,
+      },
+      {
+        metric: { user_id: 2, day: '2024-01-15', used_copilot_code_review_passive: true },
+        usedCloudAgent: true,
+      },
+      {
+        metric: { user_id: 1, day: '2024-01-15', used_copilot_code_review_active: true },
+        usedCloudAgent: true,
+      },
+      {
+        metric: {
+          user_id: 3,
+          day: '2024-01-16',
+          used_copilot_code_review_active: true,
+          used_copilot_code_review_passive: true,
+        },
+      },
+    ]);
+
     expect(result.dailyCloudAgentAdoptionData).toEqual([
-      { date: '2024-01-16', uniqueUsers: 1 },
+      { date: '2024-01-15', uniqueUsers: 2 },
     ]);
     expect(result.dailyCodeReviewAdoptionData).toEqual([
+      { date: '2024-01-15', activeUsers: 1, passiveUsers: 1, totalUsers: 2 },
+      { date: '2024-01-16', activeUsers: 1, passiveUsers: 1, totalUsers: 1 },
+    ]);
+  });
+
+  it('computes the daily adoption trend with new and returning users across surfaces', () => {
+    const result = aggregateEngagement([
+      { metric: { user_id: 1, day: '2024-01-15' } },
+      { metric: { user_id: 2, day: '2024-01-15' } },
+      { metric: { user_id: 1, day: '2024-01-16' } },
       {
-        date: '2024-01-16',
-        activeUsers: 1,
-        passiveUsers: 1,
-        totalUsers: 1,
+        metric: {
+          user_id: 3,
+          day: '2024-01-16',
+          used_cli: true,
+          totals_by_cli: makeCliTotals({ session_count: 1, request_count: 2, prompt_count: 1 }),
+        },
       },
+    ]);
+
+    expect(result.dailyAdoptionTrend).toEqual([
+      { date: '2024-01-15', newUsers: 2, returningUsers: 0, totalActiveUsers: 2, cumulativeUsers: 2 },
+      { date: '2024-01-16', newUsers: 1, returningUsers: 1, totalActiveUsers: 2, cumulativeUsers: 3 },
     ]);
   });
 });

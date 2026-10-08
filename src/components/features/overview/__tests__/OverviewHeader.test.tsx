@@ -1,26 +1,52 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { describe, expect, it } from 'vitest';
-import { buildOverviewHeaderModel } from '../../../../read-models/overviewHeader';
+import type {
+  OverviewBillingMonth,
+  OverviewHeaderModel,
+  OverviewWindowDay,
+} from '../../../../read-models/overviewHeader';
 import OverviewHeader from '../OverviewHeader';
 
-const model = buildOverviewHeaderModel({
+function makeDay(overrides: Partial<OverviewWindowDay> & Pick<OverviewWindowDay, 'date'>): OverviewWindowDay {
+  return { activeUsers: 0, aiCreditsUsed: 0, locAdded: 0, locDeleted: 0, isWeekend: false, isPeak: false, ...overrides };
+}
+
+function makeBillingMonth(overrides: Partial<OverviewBillingMonth> & Pick<OverviewBillingMonth, 'key' | 'label' | 'shortLabel'>): OverviewBillingMonth {
+  return { daysInWindow: 1, avgDailyActiveUsers: 0, aiCreditsUsed: 0, locAdded: 0, locDeleted: 0, ...overrides };
+}
+
+function makeModel(overrides: Partial<OverviewHeaderModel> = {}): OverviewHeaderModel {
+  return {
+    uniqueUsers: 1,
+    enterpriseId: null,
+    reportStartDay: '',
+    reportEndDay: '',
+    days: [],
+    billingMonths: [],
+    peakDay: null,
+    typicalWeekdayActiveUsers: null,
+    ...overrides,
+  };
+}
+
+const peakDay = makeDay({ date: '2026-09-01', activeUsers: 700, aiCreditsUsed: 2500, locAdded: 400, locDeleted: 100, isPeak: true });
+
+const model = makeModel({
   uniqueUsers: 1248,
   enterpriseId: '48213',
   reportStartDay: '2026-08-31',
   reportEndDay: '2026-09-01',
-  engagementData: [
-    { date: '2026-08-31', activeUsers: 600, totalUsers: 1248, engagementPercentage: 48 },
-    { date: '2026-09-01', activeUsers: 700, totalUsers: 1248, engagementPercentage: 56 },
+  days: [
+    makeDay({ date: '2026-08-31', activeUsers: 600, aiCreditsUsed: 1000, locAdded: 1200, locDeleted: 300 }),
+    peakDay,
   ],
-  dailyAiCreditsData: [
-    { date: '2026-08-31', aiCreditsUsed: 1000, users: 600 },
-    { date: '2026-09-01', aiCreditsUsed: 2500, users: 700 },
+  billingMonths: [
+    makeBillingMonth({ key: '2026-08', label: 'August 2026', shortLabel: 'Aug', avgDailyActiveUsers: 600, aiCreditsUsed: 1000, locAdded: 1200, locDeleted: 300 }),
+    makeBillingMonth({ key: '2026-09', label: 'September 2026', shortLabel: 'Sep', avgDailyActiveUsers: 700, aiCreditsUsed: 2500, locAdded: 400, locDeleted: 100 }),
   ],
-  dailyLocData: [
-    { date: '2026-08-31', locAdded: 1200, locDeleted: 300, netChange: 900, userCount: 50, totalUniqueUsers: 1248 },
-    { date: '2026-09-01', locAdded: 400, locDeleted: 100, netChange: 300, userCount: 40, totalUniqueUsers: 1248 },
-  ],
+  peakDay,
+  typicalWeekdayActiveUsers: 650,
 });
 
 describe('OverviewHeader', () => {
@@ -77,14 +103,11 @@ describe('OverviewHeader', () => {
     const twoMonths = renderToStaticMarkup(<OverviewHeader model={model} enterpriseName="acme" />);
     const oneMonth = renderToStaticMarkup(
       <OverviewHeader
-        model={buildOverviewHeaderModel({
-          uniqueUsers: 1,
-          enterpriseId: null,
+        model={makeModel({
           reportStartDay: '2026-09-01',
           reportEndDay: '2026-09-28',
-          engagementData: [],
-          dailyAiCreditsData: [],
-          dailyLocData: [],
+          days: [makeDay({ date: '2026-09-01' }), makeDay({ date: '2026-09-28' })],
+          billingMonths: [makeBillingMonth({ key: '2026-09', label: 'September 2026', shortLabel: 'Sep', daysInWindow: 28 })],
         })}
         enterpriseName={null}
       />
@@ -96,14 +119,10 @@ describe('OverviewHeader', () => {
   });
 
   it('includes both years when the window crosses a year boundary', () => {
-    const crossYear = buildOverviewHeaderModel({
-      uniqueUsers: 1,
-      enterpriseId: null,
+    const crossYear = makeModel({
       reportStartDay: '2025-12-31',
       reportEndDay: '2026-01-01',
-      engagementData: [],
-      dailyAiCreditsData: [],
-      dailyLocData: [],
+      days: [makeDay({ date: '2025-12-31' }), makeDay({ date: '2026-01-01' })],
     });
     const html = renderToStaticMarkup(<OverviewHeader model={crossYear} enterpriseName={null} />);
 
@@ -111,15 +130,7 @@ describe('OverviewHeader', () => {
   });
 
   it('omits the window strip when the report has no days', () => {
-    const empty = buildOverviewHeaderModel({
-      uniqueUsers: 0,
-      enterpriseId: null,
-      reportStartDay: '',
-      reportEndDay: '',
-      engagementData: [],
-      dailyAiCreditsData: [],
-      dailyLocData: [],
-    });
+    const empty = makeModel({ uniqueUsers: 0 });
     const html = renderToStaticMarkup(<OverviewHeader model={empty} enterpriseName={null} />);
 
     expect(html).toContain('>Metrics Overview</h2>');

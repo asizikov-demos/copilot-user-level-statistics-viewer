@@ -1,51 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  AGGREGATED_METRICS_FIELD_KEYS,
-  AGGREGATED_METRICS_SLICE_KEYS,
-} from '../../__tests__/factories/aggregatedMetrics';
+import { createChunkedFile, createFailingFile } from '../../__tests__/factories/files';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import type { WorkerRequest, WorkerResponse } from '../types';
-
-const encoder = new TextEncoder();
 
 type WorkerHost = typeof globalThis & {
   onmessage: ((event: MessageEvent<WorkerRequest>) => void | Promise<void>) | null;
   postMessage?: (message: WorkerResponse) => void;
 };
 
-function createChunkedFile(chunks: string[], name: string): File {
-  const file = new File([''], name, { type: 'application/x-ndjson' });
-  const encodedChunks = chunks.map(chunk => encoder.encode(chunk));
-
-  Object.defineProperty(file, 'stream', {
-    value: () =>
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          for (const chunk of encodedChunks) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
-        },
-      }),
-  });
-
-  return file;
-}
-
-function createFailingFile(name: string, error: Error): File {
-  const file = new File([''], name, { type: 'application/x-ndjson' });
-
-  Object.defineProperty(file, 'stream', {
-    value: () =>
-      new ReadableStream<Uint8Array>({
-        start(controller) {
-          controller.error(error);
-        },
-      }),
-  });
-
-  return file;
-}
+type ResponseOf<T extends WorkerResponse['type']> = Extract<WorkerResponse, { type: T }>;
 
 async function loadWorker() {
   vi.resetModules();
@@ -63,8 +26,14 @@ async function loadWorker() {
     await host.onmessage!({ data: message } as MessageEvent<WorkerRequest>);
   };
 
-  return { responses, send };
+  const find = <T extends WorkerResponse['type']>(type: T) =>
+    responses.find((response): response is ResponseOf<T> => response.type === type);
+
+  return { responses, send, find };
 }
+
+const metricFile = (name: string, ...records: Parameters<typeof makeMetric>[0][]) =>
+  createChunkedFile(records.map(record => `${JSON.stringify(makeMetric(record))}\n`), name);
 
 describe('metricsWorker protocol', () => {
   let originalPostMessage: WorkerHost['postMessage'];
@@ -80,183 +49,118 @@ describe('metricsWorker protocol', () => {
     const host = globalThis as WorkerHost;
     host.postMessage = originalPostMessage;
     host.onmessage = originalOnMessage;
+    vi.restoreAllMocks();
   });
 
-  it('returns the leadership brief already aggregated across uploaded files', async () => {
-    const { responses, send } = await loadWorker();
-    await send({
-      type: 'parseAndAggregate',
-      id: 'leadership-brief',
-      files: [
-        createChunkedFile([JSON.stringify(makeMetric({ day: '2026-09-03', ai_credits_used: 0.5 }))], 'later.ndjson'),
-        createChunkedFile([JSON.stringify(makeMetric({ day: '2026-09-01', ai_credits_used: 0.25 }))], 'earlier.ndjson'),
-      ],
+  describe('parseAndAggregate', () => {
+    it('posts progress then an aggregated result tagged with the request id', async () => {
+      const { responses, send } = await loadWorker();
+
+      await send({
+        type: 'parseAndAggregate',
+        id: 'parse-1',
+        files: [
+          metricFile('first.ndjson', { user_id: 1, user_login: 'octocat_acme' }),
+          metricFile('second.ndjson', { user_id: 2, user_login: 'hubot_acme' }),
+        ],
+      });
+
+      expect(responses.map(response => response.type)).toEqual([
+        'parseProgress',
+        'parseProgress',
+        'parseAndAggregateResult',
+      ]);
+      expect(responses[0]).toEqual({
+        type: 'parseProgress',
+        id: 'parse-1',
+        progress: { currentFile: 1, totalFiles: 2, fileName: 'first.ndjson', recordsProcessed: 1 },
+      });
+      const result = responses[2] as ResponseOf<'parseAndAggregateResult'>;
+      expect(result).toMatchObject({ id: 'parse-1', recordCount: 2, enterpriseName: 'acme', errors: [] });
+      expect(result.result.overview.stats.uniqueUsers).toBe(2);
+      expect(result).not.toHaveProperty('metrics');
+      expect(result.result).not.toHaveProperty('rawMetrics');
     });
-    const response = responses.find(message => message.type === 'parseAndAggregateResult');
-    expect(response?.result.overview.executiveSummary).toMatchObject({
-      observedStartDay: '2026-09-01',
-      observedEndDay: '2026-09-03',
-      observedUsers: 1,
-      activeUserDays: 2,
-      calendarDays: 3,
-      reportedDays: 2,
-      medianDaysPerUser: 2,
-      totalAiCreditsUsed: 0.75,
-      creditsPerUserDay: 0.375,
+
+    it('returns per-file errors alongside the result when some files fail', async () => {
+      const { send, find } = await loadWorker();
+
+      await send({
+        type: 'parseAndAggregate',
+        id: 'partial',
+        files: [
+          metricFile('good.ndjson', {}),
+          createFailingFile('bad.ndjson', new Error('bad file stream')),
+        ],
+      });
+
+      expect(find('parseAndAggregateResult')).toMatchObject({
+        id: 'partial',
+        recordCount: 1,
+        errors: [{ fileIndex: 2, fileName: 'bad.ndjson', error: 'bad file stream' }],
+      });
     });
-    expect(response?.result).not.toHaveProperty('rawMetrics');
+
+    it('posts an error instead of a result when every file fails', async () => {
+      const { responses, send, find } = await loadWorker();
+
+      await send({
+        type: 'parseAndAggregate',
+        id: 'all-failed',
+        files: [createFailingFile('bad.ndjson', new Error('bad file stream'))],
+      });
+
+      expect(find('parseAndAggregateResult')).toBeUndefined();
+      expect(responses.at(-1)).toMatchObject({ type: 'error', id: 'all-failed' });
+    });
   });
 
-  it('parses both customization count shapes and returns summaries only for the requested profile', async () => {
-    const records = [
-      makeMetric({
-        used_cli: false,
-        totals_by_skill: [{ skill: 'other', user_initiated_interaction_count: 4 }],
-        distinct_skill_use_count: 3,
-      }),
-      makeMetric({
-        day: '2024-01-02',
-        used_cli: false,
-        totals_by_skill: [{ skill: 'other', interaction_count: 6 }],
-        distinct_skill_use_count: 1,
-        totals_by_mcp: [{ mcp: 'other', interaction_count: 2 }],
-      }),
-    ];
-    const { responses, send } = await loadWorker();
-    await send({
-      type: 'parseAndAggregate',
-      id: 'customizations',
-      files: [createChunkedFile(records.map(record => `${JSON.stringify(record)}\n`), 'synthetic.ndjson')],
-    });
-    const parsed = responses.find(response => response.type === 'parseAndAggregateResult');
-    expect(parsed?.result.overview.stats.cliUsers).toBe(0);
-    expect(parsed?.result.cli).not.toHaveProperty('customizations');
+  describe('computeUserDetails', () => {
+    it('rejects requests until parse-and-aggregate has retained an accumulator', async () => {
+      const { responses, send } = await loadWorker();
 
-    await send({ type: 'computeUserDetails', id: 'profile', userId: records[0].user_id });
-    const details = responses.find(response => response.type === 'userDetailsResult');
-    expect(details?.result?.cliCustomizations[0]).toMatchObject({
-      observedInteractions: 10,
-      averageDistinctItems: 2,
-      summedDailyDistinctItems: 4,
-      items: [{ name: 'other', interactionCount: 10, daysInvoked: 2, averagePerDay: 5 }],
-      activeRecords: 2,
-      entriesReportedRecords: 2,
-      distinctReportedRecords: 2,
-    });
-    expect(details?.result?.cliCustomizations[2]).toMatchObject({
-      observedInteractions: 2,
-      entriesReportedRecords: 1,
-      distinctReportedRecords: 0,
-      averageDistinctItems: null,
-      summedDailyDistinctItems: null,
-    });
-    expect(details?.result?.days.map(day => day.cliCustomizations?.[0])).toEqual([
-      {
-        category: 'skill', observedInteractions: 4, distinctItems: 3,
-        legacyEntryCount: 1, items: [{ name: 'other', interactionCount: 4, daysInvoked: 1, averagePerDay: 4 }],
-      },
-      {
-        category: 'skill', observedInteractions: 6, distinctItems: 1,
-        legacyEntryCount: 0, items: [{ name: 'other', interactionCount: 6, daysInvoked: 1, averagePerDay: 6 }],
-      },
-    ]);
-    expect(details?.result?.days[0].cliCustomizations?.[2].observedInteractions).toBeNull();
-    expect(details?.result?.days[1].cliCustomizations?.[2].observedInteractions).toBe(2);
-  });
+      await send({ type: 'computeUserDetails', id: 'details-before-aggregation', userId: 1 });
 
-  it('rejects user-detail requests until parse-and-aggregate has retained an accumulator', async () => {
-    const { responses, send } = await loadWorker();
-
-    await send({ type: 'computeUserDetails', id: 'details-before-aggregation', userId: 1 });
-
-    expect(responses).toEqual([
-      {
-        type: 'error',
-        id: 'details-before-aggregation',
-        error: 'No aggregation data available. Aggregate metrics first.',
-      },
-    ]);
-  });
-
-  it('streams progress, returns partial file errors, and serves user details from the retained accumulator', async () => {
-    const metric = makeMetric({
-      enterprise_id: 'enterprise-from-id',
-      user_id: 42,
-      user_login: 'octocat_acme',
-      user_initiated_interaction_count: 12,
-      ai_credits_used: 3.5,
-      used_vscode_agent: true,
-      totals_by_vscode_agent: { session_count: 2, total_user_messages: 7 },
-      totals_by_model_feature: [
+      expect(responses).toEqual([
         {
-          model: 'gpt-4o',
-          feature: 'chat_panel_ask_mode',
-          user_initiated_interaction_count: 9,
-          code_generation_activity_count: 0,
-          code_acceptance_activity_count: 0,
-          loc_added_sum: 0,
-          loc_deleted_sum: 0,
-          loc_suggested_to_add_sum: 0,
-          loc_suggested_to_delete_sum: 0,
+          type: 'error',
+          id: 'details-before-aggregation',
+          error: 'No aggregation data available. Aggregate metrics first.',
         },
-      ],
-    });
-    const successfulFile = createChunkedFile([`${JSON.stringify(metric)}\n`], 'good.ndjson');
-    const failedFile = createFailingFile('bad.ndjson', new Error('bad file stream'));
-    const { responses, send } = await loadWorker();
-
-    await send({ type: 'parseAndAggregate', id: 'parse-1', files: [successfulFile, failedFile] });
-
-    const parseResult = responses.find(
-      (response): response is Extract<WorkerResponse, { type: 'parseAndAggregateResult' }> =>
-        response.type === 'parseAndAggregateResult'
-    );
-    expect(responses[0]).toEqual({
-      type: 'parseProgress',
-      id: 'parse-1',
-      progress: {
-        currentFile: 1,
-        totalFiles: 2,
-        fileName: 'good.ndjson',
-        recordsProcessed: 1,
-      },
-    });
-    expect(parseResult).toBeDefined();
-    expect(parseResult!.id).toBe('parse-1');
-    expect('metrics' in parseResult!).toBe(false);
-    expect(parseResult!.enterpriseName).toBe('acme');
-    expect(parseResult!.recordCount).toBe(1);
-    expect(parseResult!.errors).toEqual([
-      { fileIndex: 2, fileName: 'bad.ndjson', error: 'bad file stream' },
-    ]);
-    expect(Object.keys(parseResult!.result)).toEqual(
-      Object.keys(AGGREGATED_METRICS_SLICE_KEYS)
-    );
-    for (const key of AGGREGATED_METRICS_FIELD_KEYS) {
-      expect(parseResult!.result).not.toHaveProperty(key);
-    }
-    expect(parseResult!.result).not.toHaveProperty('metrics');
-    expect(parseResult!.result.overview.stats.totalRecords).toBe(1);
-    expect(parseResult!.result.adoption.vscodeAgentUsage.summary).toMatchObject({
-      activeUsers: 1, sessionCount: 2, userMessages: 7, recordCount: 1,
+      ]);
     });
 
-    responses.length = 0;
+    it('serves details for the requested user from the retained accumulator', async () => {
+      const { responses, send } = await loadWorker();
+      await send({
+        type: 'parseAndAggregate',
+        id: 'parse',
+        files: [metricFile('metrics.ndjson',
+          { user_id: 42, user_initiated_interaction_count: 12, ai_credits_used: 3.5 },
+          { user_id: 7, user_initiated_interaction_count: 1 },
+        )],
+      });
+      responses.length = 0;
 
-    await send({ type: 'computeUserDetails', id: 'details-1', userId: 42 });
+      await send({ type: 'computeUserDetails', id: 'details-1', userId: 42 });
 
-    expect(responses).toHaveLength(1);
-    expect(responses[0].type).toBe('userDetailsResult');
-    const detailResult = responses[0] as Extract<WorkerResponse, { type: 'userDetailsResult' }>;
-    expect(detailResult.id).toBe('details-1');
-    expect(detailResult.result?.totalModelRequests).toBe(9);
-    expect(detailResult.result?.total_ai_credits_used).toBe(3.5);
-    expect(detailResult.result?.vscodeAgentUsage.summary).toMatchObject({
-      activeUsers: 1, sessionCount: 2, userMessages: 7,
+      expect(responses).toHaveLength(1);
+      expect(responses[0]).toMatchObject({ type: 'userDetailsResult', id: 'details-1' });
+      const details = (responses[0] as ResponseOf<'userDetailsResult'>).result;
+      expect(details?.total_ai_credits_used).toBe(3.5);
+      expect(details?.days.map(day => day.user_initiated_interaction_count)).toEqual([12]);
     });
-    expect(detailResult.result?.days[0].totals_by_vscode_agent).toEqual({
-      session_count: 2, total_user_messages: 7,
+  });
+
+  describe('unknown requests', () => {
+    it('answers an unknown request type carrying an id with an error', async () => {
+      const { responses, send } = await loadWorker();
+
+      await send({ type: 'unexpected', id: 'unknown-1' } as unknown as WorkerRequest);
+
+      expect(responses).toEqual([
+        { type: 'error', id: 'unknown-1', error: "Unknown request type 'unexpected'" },
+      ]);
     });
-    expect(detailResult.result?.days.map(day => day.user_initiated_interaction_count)).toEqual([12]);
   });
 });

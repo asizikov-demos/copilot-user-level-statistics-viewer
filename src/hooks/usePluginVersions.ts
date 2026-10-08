@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getBasePath } from '../utils/basePath';
-import { deriveCurrentStableMinor, isStableVsCodeVersion } from '../domain/vscodeVersionRules';
+import { isStableVsCodeVersion } from '../domain/vscodeVersionRules';
 
 export interface PluginVersion {
   version: string;
@@ -70,14 +70,10 @@ export function parsePluginVersionsResponse(
   }
 
   const versions = Array.isArray(raw.versions) ? mapPluginVersions(raw.versions) : [];
-  const currentStableMinor =
-    typeof raw.stableMinor === 'number' && Number.isInteger(raw.stableMinor)
-      ? raw.stableMinor
-      : deriveCurrentStableMinor(versions);
-
-  if (currentStableMinor === null) {
+  if (typeof raw.stableMinor !== 'number' || !Number.isInteger(raw.stableMinor)) {
     throw new Error('Unexpected response shape');
   }
+  const currentStableMinor = raw.stableMinor;
 
   // Parse stable release window, keeping only versions accepted by the shared stability rules
   const stableReleases = Array.isArray(raw.stableReleases)

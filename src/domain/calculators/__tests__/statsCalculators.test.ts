@@ -72,149 +72,68 @@ describe('compareByDateAsc', () => {
   });
 });
 
-describe('findMaxValue', () => {
-  it('should find the maximum value without calling the accessor more than once per item', () => {
-    const data = [{ value: 1 }, { value: 5 }, { value: 3 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
+type Item = { value: number; id?: string };
+const value = (item: Item) => item.value;
+const mixed: Item[] = [{ value: 3 }, { value: 1 }, { value: 5 }];
+const negatives: Item[] = [{ value: -8 }, { value: -2 }, { value: -5 }];
+const ties: Item[] = [{ value: 5, id: 'first' }, { value: 5, id: 'second' }];
 
-    expect(findMaxValue(data, accessor)).toBe(5);
-    expect(accessor).toHaveBeenCalledTimes(data.length);
+describe('value finders', () => {
+  it.each([
+    { name: 'findMaxValue', find: findMaxValue<Item>, data: mixed, expected: 5 },
+    { name: 'findMinValue', find: findMinValue<Item>, data: mixed, expected: 1 },
+    { name: 'findMinMaxValues', find: findMinMaxValues<Item>, data: mixed, expected: { min: 1, max: 5 } },
+    { name: 'findMaxValue', find: findMaxValue<Item>, data: negatives, expected: -2 },
+    { name: 'findMinValue', find: findMinValue<Item>, data: negatives, expected: -8 },
+    { name: 'findMinMaxValues', find: findMinMaxValues<Item>, data: negatives, expected: { min: -8, max: -2 } },
+    { name: 'findMaxValue', find: findMaxValue<Item>, data: [], expected: 0 },
+    { name: 'findMinValue', find: findMinValue<Item>, data: [], expected: 0 },
+    { name: 'findMinMaxValues', find: findMinMaxValues<Item>, data: [], expected: { min: 0, max: 0 } },
+  ])('$name returns $expected for $data.length items', ({ find, data, expected }) => {
+    expect(find(data, value)).toEqual(expected);
   });
 
-  it('should return 0 for empty data', () => {
-    expect(findMaxValue([], (value: number) => value)).toBe(0);
-  });
-
-  it('should handle a single item', () => {
-    expect(findMaxValue([{ value: 7 }], item => item.value)).toBe(7);
-  });
-
-  it('should handle tied maximum values', () => {
-    expect(findMaxValue([{ value: 5 }, { value: 5 }], item => item.value)).toBe(5);
-  });
-
-  it('should handle negative values', () => {
-    expect(findMaxValue([{ value: -8 }, { value: -2 }, { value: -5 }], item => item.value)).toBe(-2);
-  });
-});
-
-describe('findMinValue', () => {
-  it('should find the minimum value without calling the accessor more than once per item', () => {
-    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
-
-    expect(findMinValue(data, accessor)).toBe(1);
-    expect(accessor).toHaveBeenCalledTimes(data.length);
-  });
-
-  it('should return 0 for empty data', () => {
-    expect(findMinValue([], (value: number) => value)).toBe(0);
-  });
-
-  it('should handle a single item', () => {
-    expect(findMinValue([{ value: 7 }], item => item.value)).toBe(7);
-  });
-
-  it('should handle tied minimum values', () => {
-    expect(findMinValue([{ value: 1 }, { value: 1 }], item => item.value)).toBe(1);
-  });
-
-  it('should handle negative values', () => {
-    expect(findMinValue([{ value: -8 }, { value: -2 }, { value: -5 }], item => item.value)).toBe(-8);
+  it.each([
+    ['findMaxValue', findMaxValue<Item>],
+    ['findMinValue', findMinValue<Item>],
+    ['findMinMaxValues', findMinMaxValues<Item>],
+  ])('%s calls the accessor once per item', (_name, find) => {
+    const accessor = vi.fn(value);
+    find(mixed, accessor);
+    expect(accessor).toHaveBeenCalledTimes(mixed.length);
   });
 });
 
-describe('findMinMaxValues', () => {
-  it('should find minimum and maximum values in one pass', () => {
-    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
-
-    expect(findMinMaxValues(data, accessor)).toEqual({ min: 1, max: 5 });
-    expect(accessor).toHaveBeenCalledTimes(data.length);
+describe('item finders', () => {
+  it.each([
+    { name: 'findMaxItem', find: findMaxItem<Item>, data: mixed, expected: mixed[2] },
+    { name: 'findMinItem', find: findMinItem<Item>, data: mixed, expected: mixed[1] },
+    { name: 'findMinMaxItems', find: findMinMaxItems<Item>, data: mixed, expected: { minItem: mixed[1], maxItem: mixed[2] } },
+    { name: 'findMaxItem', find: findMaxItem<Item>, data: negatives, expected: negatives[1] },
+    { name: 'findMinItem', find: findMinItem<Item>, data: negatives, expected: negatives[0] },
+    { name: 'findMaxItem (tie keeps first)', find: findMaxItem<Item>, data: ties, expected: ties[0] },
+    { name: 'findMinItem (tie keeps first)', find: findMinItem<Item>, data: ties, expected: ties[0] },
+    { name: 'findMaxItem', find: findMaxItem<Item>, data: [], expected: undefined },
+    { name: 'findMinItem', find: findMinItem<Item>, data: [], expected: undefined },
+    { name: 'findMinMaxItems', find: findMinMaxItems<Item>, data: [], expected: undefined },
+  ])('$name selects the expected item from $data.length items', ({ find, data, expected }) => {
+    expect(find(data, value)).toEqual(expected);
   });
 
-  it('should return 0 for both values for empty data', () => {
-    expect(findMinMaxValues([], (value: number) => value)).toEqual({ min: 0, max: 0 });
-  });
-});
-
-describe('findMaxItem', () => {
-  it('should find the item with the maximum value without calling the accessor more than once per item', () => {
-    const data = [{ value: 1 }, { value: 5 }, { value: 3 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
-
-    expect(findMaxItem(data, accessor)).toBe(data[1]);
-    expect(accessor).toHaveBeenCalledTimes(data.length);
+  it('returns the original item references rather than copies', () => {
+    expect(findMaxItem(mixed, value)).toBe(mixed[2]);
+    expect(findMinItem(mixed, value)).toBe(mixed[1]);
+    expect(findMinMaxItems(mixed, value)?.minItem).toBe(mixed[1]);
+    expect(findMinMaxItems(mixed, value)?.maxItem).toBe(mixed[2]);
   });
 
-  it('should return undefined for empty data', () => {
-    expect(findMaxItem([], (value: number) => value)).toBeUndefined();
-  });
-
-  it('should return the only item for single-item data', () => {
-    const data = [{ value: 7 }];
-
-    expect(findMaxItem(data, item => item.value)).toBe(data[0]);
-  });
-
-  it('should keep the first item when maximum values tie', () => {
-    const data = [{ value: 5, id: 'first' }, { value: 5, id: 'second' }];
-
-    expect(findMaxItem(data, item => item.value)).toBe(data[0]);
-  });
-
-  it('should handle negative values', () => {
-    const data = [{ value: -8 }, { value: -2 }, { value: -5 }];
-
-    expect(findMaxItem(data, item => item.value)).toBe(data[1]);
-  });
-});
-
-describe('findMinItem', () => {
-  it('should find the item with the minimum value without calling the accessor more than once per item', () => {
-    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
-
-    expect(findMinItem(data, accessor)).toBe(data[1]);
-    expect(accessor).toHaveBeenCalledTimes(data.length);
-  });
-
-  it('should return undefined for empty data', () => {
-    expect(findMinItem([], (value: number) => value)).toBeUndefined();
-  });
-
-  it('should return the only item for single-item data', () => {
-    const data = [{ value: 7 }];
-
-    expect(findMinItem(data, item => item.value)).toBe(data[0]);
-  });
-
-  it('should keep the first item when minimum values tie', () => {
-    const data = [{ value: 1, id: 'first' }, { value: 1, id: 'second' }];
-
-    expect(findMinItem(data, item => item.value)).toBe(data[0]);
-  });
-
-  it('should handle negative values', () => {
-    const data = [{ value: -8 }, { value: -2 }, { value: -5 }];
-
-    expect(findMinItem(data, item => item.value)).toBe(data[0]);
-  });
-});
-
-describe('findMinMaxItems', () => {
-  it('should find minimum and maximum items in one pass', () => {
-    const data = [{ value: 3 }, { value: 1 }, { value: 5 }];
-    const accessor = vi.fn((item: { value: number }) => item.value);
-
-    expect(findMinMaxItems(data, accessor)).toEqual({
-      minItem: data[1],
-      maxItem: data[2],
-    });
-    expect(accessor).toHaveBeenCalledTimes(data.length);
-  });
-
-  it('should return undefined for empty data', () => {
-    expect(findMinMaxItems([], (value: number) => value)).toBeUndefined();
+  it.each([
+    ['findMaxItem', findMaxItem<Item>],
+    ['findMinItem', findMinItem<Item>],
+    ['findMinMaxItems', findMinMaxItems<Item>],
+  ])('%s calls the accessor once per item', (_name, find) => {
+    const accessor = vi.fn(value);
+    find(mixed, accessor);
+    expect(accessor).toHaveBeenCalledTimes(mixed.length);
   });
 });

@@ -71,16 +71,6 @@ describe('cliUsageCalculator', () => {
             loc_suggested_to_delete_sum: 8,
           },
           {
-            feature: 'cli_agent',
-            user_initiated_interaction_count: 10,
-            code_generation_activity_count: 11,
-            code_acceptance_activity_count: 12,
-            loc_added_sum: 13,
-            loc_deleted_sum: 14,
-            loc_suggested_to_add_sum: 15,
-            loc_suggested_to_delete_sum: 16,
-          },
-          {
             feature: 'code_completions',
             user_initiated_interaction_count: 100,
             code_generation_activity_count: 100,
@@ -96,13 +86,13 @@ describe('cliUsageCalculator', () => {
       const totals = computeCliFeatureTotals(day.totals_by_feature);
 
       expect(totals).toEqual({
-        interactions: 12,
-        generations: 14,
-        acceptances: 16,
-        locAdded: 18,
-        locDeleted: 20,
-        locSuggestedToAdd: 22,
-        locSuggestedToDelete: 24,
+        interactions: 2,
+        generations: 3,
+        acceptances: 4,
+        locAdded: 5,
+        locDeleted: 6,
+        locSuggestedToAdd: 7,
+        locSuggestedToDelete: 8,
       });
     });
   });

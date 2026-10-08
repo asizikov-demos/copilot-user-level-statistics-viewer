@@ -67,12 +67,6 @@ const FEATURE_TAXONOMY: readonly FeatureTaxonomyEntry[] = [
     isJoinedImpact: true,
   },
   {
-    feature: 'cli_agent',
-    label: 'CLI Agent',
-    isCli: true,
-    isJoinedImpact: true,
-  },
-  {
     feature: 'copilot_cli',
     label: 'Copilot CLI',
     isCli: true,

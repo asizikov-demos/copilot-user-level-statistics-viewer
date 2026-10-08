@@ -7,9 +7,10 @@ import {
   type ReactTestInstance,
 } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { makeMetric } from '../../../../__tests__/factories/metrics';
-import { aggregateMetrics } from '../../../../domain/metricsAggregator';
-import { computeAgentActivity } from '../../../../domain/calculators/agentActivityCalculator';
+import {
+  makeAggregatedMetrics,
+  makeUserSummary,
+} from '../../../../__tests__/factories/aggregatedMetrics';
 import type {
   AggregatedMetrics,
   UserDetailedMetrics,
@@ -21,6 +22,7 @@ import {
   type ViewMode,
 } from '../../../../types/navigation';
 import UserDetailsRoute from '../UserDetailsRoute';
+import { makeUserDetails } from './helpers/userDetailsFixtures';
 
 interface Deferred<T> {
   promise: Promise<T>;
@@ -73,30 +75,18 @@ vi.mock('../UserDetailsView', () => ({
   },
 }));
 
-const details: UserDetailedMetrics = {
-  telemetryWarnings: [],
-  agentActivity: computeAgentActivity([]),
-  cliCustomizations: [],
-  vscodeAgentUsage: aggregateMetrics([]).aggregated.adoption.vscodeAgentUsage,
-  totalModelRequests: 0,
-  total_ai_credits_used: 0,
-  featureAggregates: [],
-  ideAggregates: [],
-  languageFeatureAggregates: [],
-  modelFeatureAggregates: [],
-  pluginVersions: [],
-  cliVersions: [],
-  dailyCombinedImpact: [],
-  dailyModelUsage: [],
-  dailyAgentImpact: [],
-  dailyAskModeImpact: [],
-  dailyCompletionImpact: [],
-  dailyCopilotAppImpact: [],
-  dailyCliImpact: [],
-  days: [],
-  reportStartDay: '2024-01-01',
-  reportEndDay: '2024-01-31',
-};
+const details = makeUserDetails();
+
+function makeDataset() {
+  return makeAggregatedMetrics({
+    users: {
+      userSummaries: [
+        makeUserSummary({ user_id: 1, user_login: 'testuser', total_user_initiated_interactions: 5 }),
+        makeUserSummary({ user_id: 2, user_login: 'octocat', total_user_initiated_interactions: 9 }),
+      ],
+    },
+  });
+}
 
 let renderer: ReactTestRenderer | null = null;
 
@@ -152,7 +142,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.currentView = VIEW_MODES.USER_DETAILS;
   mocks.selectedUser = { id: 1, login: 'testuser' };
-  mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
+  mocks.aggregatedMetrics = makeDataset();
 });
 
 afterEach(async () => {
@@ -165,18 +155,11 @@ afterEach(async () => {
 });
 
 describe('UserDetailsRoute', () => {
-  it('stays inactive outside the specialized view', async () => {
-    mocks.currentView = VIEW_MODES.USERS;
-
-    const route = await mount();
-
-    expect(route.toJSON()).toBeNull();
-    expect(mocks.navigateTo).not.toHaveBeenCalled();
-    expect(mocks.computeUserDetails).not.toHaveBeenCalled();
-  });
-
-  it('redirects missing selections after render without starting a request', async () => {
-    mocks.selectedUser = null;
+  it.each([
+    { name: 'selection', selectedUser: null },
+    { name: 'user summary', selectedUser: { id: 99, login: 'ghost' } },
+  ])('redirects a missing $name after render without starting a request', async ({ selectedUser }) => {
+    mocks.selectedUser = selectedUser;
 
     renderToStaticMarkup(<UserDetailsRoute />);
     expect(mocks.navigateTo).not.toHaveBeenCalled();
@@ -184,46 +167,6 @@ describe('UserDetailsRoute', () => {
     const route = await mount();
 
     expect(route.toJSON()).toBeNull();
-    expect(mocks.navigateTo).toHaveBeenCalledWith(VIEW_MODES.USERS);
-    expect(mocks.computeUserDetails).not.toHaveBeenCalled();
-  });
-
-  it('invalidates requests when the selected user id changes', async () => {
-    const originalRequest = deferred<UserDetailedMetrics | null>();
-    const selectedRequest = deferred<UserDetailedMetrics | null>();
-    mocks.aggregatedMetrics = aggregateMetrics([
-      makeMetric(),
-      makeMetric({ user_id: 2, user_login: 'octocat' }),
-    ]).aggregated;
-    mocks.computeUserDetails
-      .mockReturnValueOnce(originalRequest.promise)
-      .mockReturnValueOnce(selectedRequest.promise);
-    await mount();
-
-    mocks.selectedUser = { id: 2, login: 'octocat' };
-    await update();
-
-    expect(mocks.computeUserDetails).toHaveBeenNthCalledWith(2, 2);
-    originalRequest.resolve(details);
-    await settle();
-    expect(mocks.userDetailsView).not.toHaveBeenCalled();
-
-    selectedRequest.resolve(details);
-    await settle();
-    expect(mocks.userDetailsView).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userLogin: 'octocat',
-        userId: 2,
-        userSummary: expect.objectContaining({ user_id: 2 }),
-      })
-    );
-  });
-
-  it('redirects missing summaries without starting a request', async () => {
-    mocks.selectedUser = { id: 999, login: 'missing-user' };
-
-    await mount();
-
     expect(mocks.navigateTo).toHaveBeenCalledWith(VIEW_MODES.USERS);
     expect(mocks.computeUserDetails).not.toHaveBeenCalled();
   });
@@ -245,7 +188,7 @@ describe('UserDetailsRoute', () => {
     expect(mocks.userDetailsView).toHaveBeenCalledWith({
       userDetails: details,
       userSummary: mocks.aggregatedMetrics?.users.userSummaries[0],
-      interactionRank: expect.objectContaining({ rank: expect.any(Number) }),
+      interactionRank: { rank: 2, totalUsers: 2 },
       userLogin: 'testuser',
       userId: 1,
     });
@@ -285,7 +228,23 @@ describe('UserDetailsRoute', () => {
     expect(mocks.userDetailsView).toHaveBeenCalledOnce();
   });
 
-  it('invalidates results when the aggregate dataset changes', async () => {
+  it.each([
+    {
+      change: 'selected user id',
+      apply: () => { mocks.selectedUser = { id: 2, login: 'octocat' }; },
+      expected: { userId: 2, userLogin: 'octocat' },
+    },
+    {
+      change: 'selected user login',
+      apply: () => { mocks.selectedUser = { id: 1, login: 'renamed-user' }; },
+      expected: { userId: 1, userLogin: 'renamed-user' },
+    },
+    {
+      change: 'aggregate dataset',
+      apply: () => { mocks.aggregatedMetrics = makeDataset(); },
+      expected: { userId: 1, userLogin: 'testuser' },
+    },
+  ])('starts a fresh request and ignores the obsolete one when the $change changes', async ({ apply, expected }) => {
     const originalRequest = deferred<UserDetailedMetrics | null>();
     const replacementRequest = deferred<UserDetailedMetrics | null>();
     mocks.computeUserDetails
@@ -293,44 +252,22 @@ describe('UserDetailsRoute', () => {
       .mockReturnValueOnce(replacementRequest.promise);
     await mount();
 
-    mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
+    apply();
     await update();
-    expect(mocks.computeUserDetails).toHaveBeenCalledTimes(2);
+    expect(mocks.computeUserDetails).toHaveBeenNthCalledWith(2, expected.userId);
 
-    originalRequest.resolve(details);
-    await settle();
-    expect(mocks.userDetailsView).not.toHaveBeenCalled();
-
-    replacementRequest.resolve(details);
-    await settle();
-    expect(mocks.userDetailsView).toHaveBeenCalledOnce();
-  });
-
-  it('uses login identity changes to start a fresh request for the same id', async () => {
-    const originalRequest = deferred<UserDetailedMetrics | null>();
-    const renamedRequest = deferred<UserDetailedMetrics | null>();
-    mocks.computeUserDetails
-      .mockReturnValueOnce(originalRequest.promise)
-      .mockReturnValueOnce(renamedRequest.promise);
-    await mount();
-
-    mocks.selectedUser = { id: 1, login: 'renamed-user' };
-    await update();
-
-    expect(mocks.computeUserDetails).toHaveBeenNthCalledWith(2, 1);
     originalRequest.reject(new Error('Obsolete request'));
     await settle();
     expect(textOf(renderer?.root.findAllByType('p') ?? [])).not.toContain(
       'Obsolete request'
     );
+    expect(mocks.userDetailsView).not.toHaveBeenCalled();
 
-    renamedRequest.resolve(details);
+    replacementRequest.resolve(details);
     await settle();
+    expect(mocks.userDetailsView).toHaveBeenCalledOnce();
     expect(mocks.userDetailsView).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userLogin: 'renamed-user',
-        userId: 1,
-      })
+      expect.objectContaining(expected)
     );
   });
 
@@ -353,21 +290,19 @@ describe('UserDetailsRoute', () => {
     const activeRequest = deferred<UserDetailedMetrics | null>();
     mocks.currentView = VIEW_MODES.USERS;
     mocks.computeUserDetails.mockReturnValueOnce(activeRequest.promise);
-
-    await mount(
+    const strictRoute = () => (
       <StrictMode>
         <UserDetailsRoute />
       </StrictMode>
     );
 
+    const route = await mount(strictRoute());
+
+    expect(route.toJSON()).toBeNull();
     expect(mocks.computeUserDetails).not.toHaveBeenCalled();
 
     mocks.currentView = VIEW_MODES.USER_DETAILS;
-    await update(
-      <StrictMode>
-        <UserDetailsRoute />
-      </StrictMode>
-    );
+    await update(strictRoute());
     expect(mocks.computeUserDetails).toHaveBeenCalledOnce();
 
     activeRequest.resolve(details);

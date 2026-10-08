@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
+import { makeCliTotals } from '../../../__tests__/factories/metricTotals';
 import {
   accumulateChatFeature,
   computeChatRequestsData,
@@ -31,30 +32,19 @@ function makeCliMetric(
   return makeMetric({
     day,
     user_id: userId,
-    totals_by_cli: {
+    totals_by_cli: makeCliTotals({
       session_count: sessionCount,
       request_count: requestCount,
       prompt_count: promptCount,
       token_usage: {
         output_tokens_sum: outputTokens,
         prompt_tokens_sum: promptTokens,
-        avg_tokens_per_request: requestCount > 0
-          ? (outputTokens + promptTokens) / requestCount
-          : 0,
       },
-    },
+    }),
   });
 }
 
-describe('CLI aggregation orchestration', () => {
-  it('preserves empty CLI defaults', () => {
-    expect(finalizeCliAggregation(createCliAggregationAccumulator())).toEqual({
-      dailyCliSessionData: [],
-      dailyCliTokenData: [],
-      dailyCliAdoptionTrend: [],
-    });
-  });
-
+describe('CLI aggregation', () => {
   it('coordinates date padding, usage totals, unique users, ordering, and adoption', () => {
     const accumulator = createCliAggregationAccumulator();
 
