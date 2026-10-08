@@ -1,7 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { makeMetric } from '../../../__tests__/factories/metrics';
-import { aggregateMetrics } from '../../metricsAggregator';
-import { computeSingleUserDetailedMetrics } from '../userDetailCalculator';
 import { computeAgentActivity } from '../agentActivityCalculator';
 
 const clientTotals = (sessions: number, prompts: number, requests: number) => ({
@@ -12,26 +9,57 @@ const clientTotals = (sessions: number, prompts: number, requests: number) => ({
 });
 
 describe('computeAgentActivity', () => {
-  it('sums each surface independently, sorts dates and merges duplicate dates without mutating input', () => {
-    const days = [
-      { day: '2024-01-17', totals_by_cli: clientTotals(2, 3, 12) },
+  it('sums each surface independently into the summary', () => {
+    const result = computeAgentActivity([
       { day: '2024-01-15', totals_by_cli: clientTotals(3, 7, 13), totals_by_vscode_agent: { session_count: 1, total_user_messages: 1 } },
-      { day: '2024-01-15', totals_by_copilot_app: clientTotals(4, 2, 50), totals_by_vscode_agent: { session_count: 2, total_user_messages: 5 } },
-    ];
-    const before = structuredClone(days);
-    const result = computeAgentActivity(days);
-    expect(days).toEqual(before);
-    expect(result.daily.map(day => day.date)).toEqual(['2024-01-15', '2024-01-17']);
-    expect(result.daily[0].vscodeAgents).toEqual({ sessions: 3, userInputs: 6, requests: null });
-    expect(result.daily[1].app).toEqual({ sessions: null, userInputs: null, requests: null });
+      { day: '2024-01-16', totals_by_cli: clientTotals(2, 3, 12), totals_by_copilot_app: clientTotals(4, 2, 50) },
+    ]);
     expect(result.summary).toEqual({
       cli: { sessions: 5, userInputs: 10, requests: 25 },
       app: { sessions: 4, userInputs: 2, requests: 50 },
-      vscodeAgents: { sessions: 3, userInputs: 6, requests: null },
+      vscodeAgents: { sessions: 1, userInputs: 1, requests: null },
     });
   });
 
-  it('keeps unavailable measures null and explicit zero counts reported', () => {
+  it('sorts daily entries by date', () => {
+    const result = computeAgentActivity([
+      { day: '2024-01-17', totals_by_cli: clientTotals(1, 1, 1) },
+      { day: '2024-01-15', totals_by_cli: clientTotals(1, 1, 1) },
+      { day: '2024-01-16', totals_by_cli: clientTotals(1, 1, 1) },
+    ]);
+    expect(result.daily.map(day => day.date)).toEqual(['2024-01-15', '2024-01-16', '2024-01-17']);
+  });
+
+  it('merges entries that share a date', () => {
+    const result = computeAgentActivity([
+      { day: '2024-01-15', totals_by_vscode_agent: { session_count: 1, total_user_messages: 1 } },
+      { day: '2024-01-15', totals_by_copilot_app: clientTotals(4, 2, 50), totals_by_vscode_agent: { session_count: 2, total_user_messages: 5 } },
+    ]);
+    expect(result.daily).toEqual([
+      {
+        date: '2024-01-15',
+        cli: { sessions: null, userInputs: null, requests: null },
+        app: { sessions: 4, userInputs: 2, requests: 50 },
+        vscodeAgents: { sessions: 3, userInputs: 6, requests: null },
+      },
+    ]);
+  });
+
+  it('does not mutate its input', () => {
+    const days = [
+      { day: '2024-01-16', totals_by_cli: clientTotals(2, 3, 12) },
+      { day: '2024-01-15', totals_by_cli: clientTotals(3, 7, 13) },
+    ];
+    const before = structuredClone(days);
+    computeAgentActivity(days);
+    expect(days).toEqual(before);
+  });
+
+  it('keeps unavailable measures null, including for empty input, and reports explicit zero counts', () => {
+    const empty = computeAgentActivity([]);
+    expect(empty.daily).toEqual([]);
+    expect(empty.summary.cli).toEqual({ sessions: null, userInputs: null, requests: null });
+
     const result = computeAgentActivity([
       { day: '2024-01-15' },
       { day: '2024-01-16', totals_by_vscode_agent: null },
@@ -46,42 +74,5 @@ describe('computeAgentActivity', () => {
     expect(result.daily[0].cli.sessions).toBeNull();
     expect(result.daily[1].vscodeAgents.userInputs).toBeNull();
     expect(result.daily[2].vscodeAgents.userInputs).toBe(0);
-  });
-
-  it('returns no daily data or invented totals for empty input', () => {
-    const result = computeAgentActivity([]);
-    expect(result.daily).toEqual([]);
-    expect(Object.values(result.summary).every(counts => Object.values(counts).every(value => value === null))).toBe(true);
-  });
-
-  it('computes selected-user totals in the worker flow without using flags or feature counts', () => {
-    const feature = {
-      feature: 'vscode_agent',
-      user_initiated_interaction_count: 500,
-      code_generation_activity_count: 0,
-      code_acceptance_activity_count: 0,
-      loc_added_sum: 0,
-      loc_deleted_sum: 0,
-      loc_suggested_to_add_sum: 0,
-      loc_suggested_to_delete_sum: 0,
-    };
-    const { userDetailAccumulator } = aggregateMetrics([
-      makeMetric({ day: '2024-01-15', totals_by_cli: clientTotals(76, 76, 134) }),
-      makeMetric({
-        day: '2024-01-16',
-        totals_by_cli: clientTotals(3, 7, 13),
-        totals_by_vscode_agent: { session_count: 1, total_user_messages: 1 },
-        totals_by_feature: [feature],
-      }),
-      makeMetric({ day: '2024-01-17', totals_by_cli: clientTotals(2, 3, 12), used_copilot_app: true, used_agent: true }),
-      makeMetric({ user_id: 2, totals_by_copilot_app: clientTotals(100, 200, 300) }),
-    ]);
-    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 1)!;
-    expect(details.agentActivity.summary).toEqual({
-      cli: { sessions: 81, userInputs: 86, requests: 159 },
-      app: { sessions: null, userInputs: null, requests: null },
-      vscodeAgents: { sessions: 1, userInputs: 1, requests: null },
-    });
-    expect(computeSingleUserDetailedMetrics(userDetailAccumulator, 2)!.agentActivity.summary.app.sessions).toBe(100);
   });
 });

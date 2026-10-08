@@ -14,18 +14,6 @@ const makeModelFeature = (
 ) => ({ model, feature, user_initiated_interaction_count, code_generation_activity_count, code_acceptance_activity_count });
 
 describe('modelBreakdownCalculator', () => {
-  describe('createModelBreakdownAccumulator', () => {
-    it('should initialise all counters to zero and maps to empty', () => {
-      const acc = createModelBreakdownAccumulator();
-      expect(acc.cliTotal).toBe(0);
-      expect(acc.unknownTotal).toBe(0);
-      expect(acc.modelTotal).toBe(0);
-      expect(acc.modelCategories.size).toBe(0);
-      expect(acc.modelVendors.size).toBe(0);
-      expect(acc.allModels.size).toBe(0);
-    });
-  });
-
   describe('model normalization and unknown handling', () => {
     it('should aggregate known model interactions into neutral totals and entries', () => {
       const acc = createModelBreakdownAccumulator();
@@ -163,6 +151,21 @@ describe('modelBreakdownCalculator', () => {
   });
 
   describe('computeModelBreakdownData', () => {
+    it('should return empty entries and zero totals for an empty accumulator', () => {
+      expect(computeModelBreakdownData(createModelBreakdownAccumulator())).toEqual({
+        allModels: [],
+        modelCategories: [],
+        modelVendors: [],
+        autoModels: [],
+        cliModels: [],
+        autoModeAdoptionTrend: [],
+        dates: [],
+        modelTotal: 0,
+        cliTotal: 0,
+        unknownTotal: 0,
+      });
+    });
+
     it('should return sorted dates and totals', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('gpt-5'));

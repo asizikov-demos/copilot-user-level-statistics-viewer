@@ -7,34 +7,56 @@ import {
   parseVsCodeVersion,
 } from '../vscodeVersionRules';
 
-describe('vscodeVersionRules', () => {
-  it('parses minor from both prefixed and unprefixed versions', () => {
-    expect(parseVersionMinor('v0.38.2')).toBe(38);
-    expect(parseVersionMinor('0.38.2')).toBe(38);
+describe('parseVsCodeVersion', () => {
+  it.each([
+    ['0.38.2', { major: 0, minor: 38, patch: '2', isTimestampBuild: false }],
+    ['0.38.2026030304', { major: 0, minor: 38, patch: '2026030304', isTimestampBuild: true }],
+    ['0.38', { major: 0, minor: 38, patch: null, isTimestampBuild: false }],
+  ])('parses %s', (version, expected) => {
+    expect(parseVsCodeVersion(version)).toEqual(expected);
   });
 
-  it('parses tag minor from prefixed tags with suffixes', () => {
+  it('returns null for invalid versions', () => {
+    expect(parseVsCodeVersion('not-a-version')).toBeNull();
+  });
+});
+
+describe('parseVersionMinor', () => {
+  it.each([
+    ['0.38', 38],
+    ['0.38.2', 38],
+    ['v0.38.2', 38],
+    ['0.38.2026030304', 38],
+    ['0.39.2026030501', 39],
+    ['1.100.0', 100],
+  ])('parses the minor of %s as %d', (version, minor) => {
+    expect(parseVersionMinor(version)).toBe(minor);
+  });
+
+  it.each(['42', '', '0.abc.1'])('returns null for %j', version => {
+    expect(parseVersionMinor(version)).toBeNull();
+  });
+});
+
+describe('parseTagMinor', () => {
+  it('parses the minor from prefixed tags with suffixes', () => {
     expect(parseTagMinor('v0.38.2-insider')).toBe(38);
   });
+});
 
-  it('parses timestamp prerelease builds', () => {
-    expect(parseVsCodeVersion('0.39.2026030604')?.isTimestampBuild).toBe(true);
+describe('isStableVsCodeVersion', () => {
+  it.each([
+    ['0.38.2', true],
+    ['0.38.2026030604', false],
+    ['0.38', false],
+    ['insider', false],
+  ])('treats %s as stable: %s', (version, stable) => {
+    expect(isStableVsCodeVersion(version)).toBe(stable);
   });
+});
 
-  it('accepts stable patch releases', () => {
-    expect(isStableVsCodeVersion('0.38.2')).toBe(true);
-  });
-
-  it('rejects timestamp prerelease builds as stable', () => {
-    expect(isStableVsCodeVersion('0.38.2026030604')).toBe(false);
-  });
-
-  it('rejects versions without a numeric patch from stable release list', () => {
-    expect(isStableVsCodeVersion('0.38')).toBe(false);
-    expect(isStableVsCodeVersion('insider')).toBe(false);
-  });
-
-  it('derives preview minor from the stable minor', () => {
+describe('derivePreviewMinor', () => {
+  it('derives the preview minor from the stable minor', () => {
     expect(derivePreviewMinor(38)).toBe(39);
   });
 });

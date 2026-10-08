@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  computeFeatureAdoptionInsights,
-  CLI_DOCS_URL,
-} from '../featureAdoptionInsights';
+import { computeFeatureAdoptionInsights } from '../featureAdoptionInsights';
 import type { FeatureAdoptionData } from '../calculators/featureAdoptionCalculator';
 
 const baseFeatureAdoption: FeatureAdoptionData = {
@@ -28,46 +25,24 @@ function buildData(overrides: Partial<FeatureAdoptionData>): FeatureAdoptionData
 
 describe('computeFeatureAdoptionInsights', () => {
   describe('Low CLI Adoption', () => {
-    it('shows below 5% threshold', () => {
+    it('reports the CLI share and links to the CLI administration docs', () => {
       const insights = computeFeatureAdoptionInsights(buildData({ cliUsers: 2 }));
 
       const cliInsight = insights.find((i) => i.title === 'Low CLI Adoption');
-      expect(cliInsight).toBeDefined();
       expect(cliInsight?.message).toContain('2.0%');
-      expect(cliInsight?.ctaHref).toBe(CLI_DOCS_URL);
+      expect(cliInsight?.ctaHref).toBe(
+        'https://docs.github.com/en/enterprise-cloud@latest/copilot/how-tos/copilot-cli/administer-copilot-cli-for-your-enterprise'
+      );
     });
 
-    it('should show when CLI usage is exactly 0%', () => {
-      const insights = computeFeatureAdoptionInsights(
-        buildData({ totalUsers: 1000, cliUsers: 0 })
-      );
-      const cliInsight = insights.find((i) => i.title === 'Low CLI Adoption');
-      expect(cliInsight).toBeDefined();
-      expect(cliInsight?.message).toContain('0.0%');
-    });
-
-    it('should show when CLI is just below 5%', () => {
-      // 49/1000 = 4.9%
-      const insights = computeFeatureAdoptionInsights(
-        buildData({ totalUsers: 1000, cliUsers: 49 })
-      );
-      expect(insights.find((i) => i.title === 'Low CLI Adoption')).toBeDefined();
-    });
-
-    it('should not show when CLI is exactly 5%', () => {
-      // 50/1000 = 5.0%
-      const insights = computeFeatureAdoptionInsights(
-        buildData({ totalUsers: 1000, cliUsers: 50 })
-      );
-      expect(insights.find((i) => i.title === 'Low CLI Adoption')).toBeUndefined();
-    });
-
-    it('should not show when CLI is above 5%', () => {
-      // 100/1000 = 10%
-      const insights = computeFeatureAdoptionInsights(
-        buildData({ totalUsers: 1000, cliUsers: 100 })
-      );
-      expect(insights.find((i) => i.title === 'Low CLI Adoption')).toBeUndefined();
+    it.each([
+      { cliUsers: 0, shown: true },
+      { cliUsers: 49, shown: true },
+      { cliUsers: 50, shown: false },
+      { cliUsers: 100, shown: false },
+    ])('shown=$shown when $cliUsers of 1000 users use the CLI (threshold 5%)', ({ cliUsers, shown }) => {
+      const insights = computeFeatureAdoptionInsights(buildData({ totalUsers: 1000, cliUsers }));
+      expect(insights.some((i) => i.title === 'Low CLI Adoption')).toBe(shown);
     });
   });
 

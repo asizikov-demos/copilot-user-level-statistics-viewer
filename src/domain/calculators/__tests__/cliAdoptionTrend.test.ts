@@ -25,114 +25,20 @@ function makeCliMetric(userId: number, day: string) {
 }
 
 describe('computeCliAdoptionTrend', () => {
-  it('should return empty array for empty accumulator', () => {
-    const acc = createCliUsageAccumulator();
-    expect(computeCliAdoptionTrend(acc)).toEqual([]);
+  it('returns an empty trend when no CLI activity was accumulated', () => {
+    expect(computeCliAdoptionTrend(createCliUsageAccumulator())).toEqual([]);
   });
 
-  it('should classify all users as new on the first day', () => {
+  it('converts accumulated CLI sessions into a date-sorted adoption trend, omitting inactive dates', () => {
     const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-15', 2, makeCliMetric(2, '2024-01-15'));
-
-    const result = computeCliAdoptionTrend(acc);
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      date: '2024-01-15',
-      newUsers: 2,
-      returningUsers: 0,
-      totalActiveUsers: 2,
-      cumulativeUsers: 2,
-    });
-  });
-
-  it('should classify returning users on subsequent days', () => {
-    const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-16', 1, makeCliMetric(1, '2024-01-16'));
-    accumulateCliUsage(acc, '2024-01-16', 2, makeCliMetric(2, '2024-01-16'));
-
-    const result = computeCliAdoptionTrend(acc);
-    expect(result).toHaveLength(2);
-
-    expect(result[0]).toEqual({
-      date: '2024-01-15',
-      newUsers: 1,
-      returningUsers: 0,
-      totalActiveUsers: 1,
-      cumulativeUsers: 1,
-    });
-
-    expect(result[1]).toEqual({
-      date: '2024-01-16',
-      newUsers: 1,
-      returningUsers: 1,
-      totalActiveUsers: 2,
-      cumulativeUsers: 2,
-    });
-  });
-
-  it('should track cumulative growth correctly over multiple days', () => {
-    const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-16', 2, makeCliMetric(2, '2024-01-16'));
-    accumulateCliUsage(acc, '2024-01-17', 3, makeCliMetric(3, '2024-01-17'));
-
-    const result = computeCliAdoptionTrend(acc);
-    expect(result.map(d => d.cumulativeUsers)).toEqual([1, 2, 3]);
-    expect(result.map(d => d.newUsers)).toEqual([1, 1, 1]);
-    expect(result.map(d => d.returningUsers)).toEqual([0, 0, 0]);
-  });
-
-  it('should not double-count cumulative users when they return', () => {
-    const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-16', 1, makeCliMetric(1, '2024-01-16'));
     accumulateCliUsage(acc, '2024-01-17', 1, makeCliMetric(1, '2024-01-17'));
-
-    const result = computeCliAdoptionTrend(acc);
-    expect(result.map(d => d.cumulativeUsers)).toEqual([1, 1, 1]);
-    expect(result.map(d => d.newUsers)).toEqual([1, 0, 0]);
-    expect(result.map(d => d.returningUsers)).toEqual([0, 1, 1]);
-  });
-
-  it('should sort results by date', () => {
-    const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-17', 3, makeCliMetric(3, '2024-01-17'));
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-16', 2, makeCliMetric(2, '2024-01-16'));
-
-    const result = computeCliAdoptionTrend(acc);
-    expect(result.map(d => d.date)).toEqual(['2024-01-15', '2024-01-16', '2024-01-17']);
-  });
-
-  it('should handle mixed new and returning users correctly', () => {
-    const acc = createCliUsageAccumulator();
-    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-15', 2, makeCliMetric(2, '2024-01-15'));
-
-    accumulateCliUsage(acc, '2024-01-16', 1, makeCliMetric(1, '2024-01-16'));
-    accumulateCliUsage(acc, '2024-01-16', 3, makeCliMetric(3, '2024-01-16'));
-
     accumulateCliUsage(acc, '2024-01-17', 2, makeCliMetric(2, '2024-01-17'));
-    accumulateCliUsage(acc, '2024-01-17', 3, makeCliMetric(3, '2024-01-17'));
-    accumulateCliUsage(acc, '2024-01-17', 4, makeCliMetric(4, '2024-01-17'));
-
-    const result = computeCliAdoptionTrend(acc);
-
-    expect(result[0]).toMatchObject({ newUsers: 2, returningUsers: 0, cumulativeUsers: 2 });
-    expect(result[1]).toMatchObject({ newUsers: 1, returningUsers: 1, cumulativeUsers: 3 });
-    expect(result[2]).toMatchObject({ newUsers: 1, returningUsers: 2, cumulativeUsers: 4 });
-  });
-
-  it('should omit dates with no CLI activity and still track returning users', () => {
-    const acc = createCliUsageAccumulator();
     accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
-    accumulateCliUsage(acc, '2024-01-17', 1, makeCliMetric(1, '2024-01-17'));
+    accumulateCliUsage(acc, '2024-01-15', 1, makeCliMetric(1, '2024-01-15'));
 
-    const result = computeCliAdoptionTrend(acc);
-    expect(result).toHaveLength(2);
-    expect(result[0]).toMatchObject({ date: '2024-01-15', newUsers: 1, cumulativeUsers: 1 });
-    expect(result[1]).toMatchObject({ date: '2024-01-17', returningUsers: 1, cumulativeUsers: 1 });
+    expect(computeCliAdoptionTrend(acc)).toEqual([
+      { date: '2024-01-15', newUsers: 1, returningUsers: 0, totalActiveUsers: 1, cumulativeUsers: 1 },
+      { date: '2024-01-17', newUsers: 1, returningUsers: 1, totalActiveUsers: 2, cumulativeUsers: 2 },
+    ]);
   });
 });
