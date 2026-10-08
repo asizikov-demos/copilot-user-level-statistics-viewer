@@ -19,7 +19,9 @@ concurrency:
   cancel-in-progress: false
 
 strict: true
-engine: copilot
+engine:
+  id: copilot
+  model: gpt-6-luna
 network: defaults
 
 runtimes:
