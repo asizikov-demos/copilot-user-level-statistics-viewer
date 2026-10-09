@@ -97,6 +97,24 @@ describe('UserDetailsCustomizationsSection', () => {
   });
 
   describe('expansion', () => {
+    it.each(['period', 'day'] as const)('shows unavailable item values as dashes in %s mode', async mode => {
+      const items = [makeCustomizationItem('other', 0, {
+        interactionCount: null,
+        daysInvoked: null,
+        averagePerDay: null,
+      })];
+      const root = (await mount(mode === 'period'
+        ? renderPeriod([makeCustomizationSummary('skill', 2, items)])
+        : <UserDetailsCustomizationsSection sectionId="daily-customizations" mode="day"
+            summaries={[makeCustomizationDaySummary('skill', 2, items)]} />,
+      )).root;
+      expect(root.findAllByType('td')[1].children.join('')).toBe('2');
+      await act(async () => { root.findByType('button').props.onClick(); });
+      const region = root.findByProps({ role: 'region' });
+      expect(cellText(region.findByType('tbody').findByType('tr')).slice(1)).toEqual(['-', '-', '-']);
+      expect(region.findByType('p').children.join('')).toContain('Missing interaction counts');
+    });
+
     it('expands category rows independently and labels each item region', async () => {
       const root = (await mount(renderPeriod([
         makeCustomizationSummary('skill', 2, [

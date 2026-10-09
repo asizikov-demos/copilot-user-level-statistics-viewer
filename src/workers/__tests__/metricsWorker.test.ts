@@ -53,6 +53,34 @@ describe('metricsWorker protocol', () => {
   });
 
   describe('parseAndAggregate', () => {
+    it('accepts name-only customization entries and retains unavailable counts in user details', async () => {
+      const { send, find } = await loadWorker();
+      await send({
+        type: 'parseAndAggregate',
+        id: 'name-only',
+        files: [metricFile('customizations.ndjson', {
+          user_id: 42,
+          totals_by_custom_agent: [{ custom_agent: 'other' }],
+          distinct_custom_agent_use_count: 2,
+        })],
+      });
+      expect(find('error')).toBeUndefined();
+      expect(find('parseAndAggregateResult')).toMatchObject({ recordCount: 1, errors: [] });
+      await send({ type: 'computeUserDetails', id: 'details', userId: 42 });
+      const details = find('userDetailsResult')?.result;
+      expect(details?.cliCustomizations[1]).toMatchObject({
+        summedDailyDistinctItems: 2,
+        observedInteractions: null,
+        legacyEntryCount: 0,
+        items: [{ name: 'other', interactionCount: null, daysInvoked: null, averagePerDay: null }],
+      });
+      expect(details?.days[0].cliCustomizations?.[1]).toMatchObject({
+        distinctItems: 2,
+        observedInteractions: null,
+        items: [{ name: 'other', interactionCount: null, daysInvoked: null, averagePerDay: null }],
+      });
+    });
+
     it('posts progress then an aggregated result tagged with the request id', async () => {
       const { responses, send } = await loadWorker();
 

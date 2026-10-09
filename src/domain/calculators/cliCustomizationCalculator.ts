@@ -15,7 +15,8 @@ interface CategoryAccumulator {
   distinctSum: number;
   observedInteractions: number;
   legacyEntryCount: number;
-  items: Map<string, { interactionCount: number; activeDays: Set<string> }>;
+  hasMissingCount: boolean;
+  items: Map<string, { interactionCount: number; activeDays: Set<string>; hasMissingCount: boolean }>;
 }
 
 export type CliCustomizationAccumulator = Record<CliCustomizationCategory, CategoryAccumulator>;
@@ -29,6 +30,7 @@ function createCategoryAccumulator(): CategoryAccumulator {
     distinctSum: 0,
     observedInteractions: 0,
     legacyEntryCount: 0,
+    hasMissingCount: false,
     items: new Map(),
   };
 }
@@ -68,13 +70,21 @@ function accumulateCategory<Entry extends CliCustomizationCounts>(
   accumulator.entriesReportedRecords++;
   for (const entry of entries) {
     // Older exports used this alias; a reported modern zero must take precedence.
-    const count = requireCount(entry.interaction_count ?? entry.user_initiated_interaction_count);
-    if (entry.interaction_count == null) accumulator.legacyEntryCount++;
+    const reportedCount = entry.interaction_count ?? entry.user_initiated_interaction_count;
+    const count = reportedCount == null ? null : requireCount(reportedCount);
+    if (entry.interaction_count == null && entry.user_initiated_interaction_count != null) {
+      accumulator.legacyEntryCount++;
+    }
     const name = getName(entry);
     let item = accumulator.items.get(name);
     if (!item) {
-      item = { interactionCount: 0, activeDays: new Set() };
+      item = { interactionCount: 0, activeDays: new Set(), hasMissingCount: false };
       accumulator.items.set(name, item);
+    }
+    if (count === null) {
+      accumulator.hasMissingCount = true;
+      item.hasMissingCount = true;
+      continue;
     }
     item.interactionCount += count;
     if (count > 0) item.activeDays.add(day);
@@ -107,15 +117,19 @@ export function computeCliCustomizations(
       averageDistinctItems: state.distinctReportedRecords > 0
         ? state.distinctSum / state.distinctReportedRecords
         : null,
-      observedInteractions: state.entriesReportedRecords > 0 ? state.observedInteractions : null,
+      observedInteractions: state.entriesReportedRecords > 0 && !state.hasMissingCount
+        ? state.observedInteractions
+        : null,
       legacyEntryCount: state.legacyEntryCount,
       items: Array.from(state.items, ([name, item]) => ({
         name,
-        interactionCount: item.interactionCount,
-        daysInvoked: item.activeDays.size,
-        averagePerDay: item.activeDays.size > 0 ? item.interactionCount / item.activeDays.size : null,
+        interactionCount: item.hasMissingCount ? null : item.interactionCount,
+        daysInvoked: item.hasMissingCount ? null : item.activeDays.size,
+        averagePerDay: !item.hasMissingCount && item.activeDays.size > 0
+          ? item.interactionCount / item.activeDays.size
+          : null,
       }))
-        .sort((a, b) => b.interactionCount - a.interactionCount || a.name.localeCompare(b.name)),
+        .sort((a, b) => (b.interactionCount ?? -1) - (a.interactionCount ?? -1) || a.name.localeCompare(b.name)),
     };
   });
 }

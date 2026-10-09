@@ -112,6 +112,14 @@ chart retains its active-user counts and line series. Day details preserve the o
 flag and totals; the Users feature filter selects users explicitly reported as having
 used VS Code Agents. Parsing and all new aggregation remain inside the worker.
 
+Customization entries may report a name without either interaction-count field.
+These entries are retained without rejecting the upload or assuming zero. Their
+interaction totals, days invoked, and averages are unavailable (displayed as a dash);
+period item totals and category interaction totals are also unavailable if any
+contributing entry omits its count. Reported distinct-use counts remain independent
+and unchanged. Missing counts do not count as legacy-alias usage, while supplied
+interaction and distinct counts must still be nonnegative safe integers.
+
 User profiles show a Customizations table with Skills, Custom agents, MCP servers,
 and Slash commands, independent of `used_cli` and CLI session totals. Each total
 sums the corresponding `distinct_*_use_count` across reported user-day records.

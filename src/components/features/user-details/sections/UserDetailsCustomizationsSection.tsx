@@ -17,8 +17,8 @@ function getDistinctCount(summary: CustomizationSummary): number | null {
   return 'distinctItems' in summary ? summary.distinctItems : summary.summedDailyDistinctItems;
 }
 
-function formatCount(value: number): string {
-  return value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+function formatCount(value: number | null): string {
+  return value === null ? '-' : value.toLocaleString(undefined, { maximumFractionDigits: 1 });
 }
 
 const numericColumnStyles = {
@@ -41,12 +41,12 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
         </>
       ),
     },
-    { id: 'interactionCount', header: CATEGORY_LABELS[summary.category].measure, accessor: 'interactionCount', ...numericColumnStyles },
-    { id: 'daysInvoked', header: summary.category === 'mcp' ? 'Days with attempts' : 'Days invoked', accessor: 'daysInvoked', ...numericColumnStyles },
+    { id: 'interactionCount', header: CATEGORY_LABELS[summary.category].measure, renderCell: item => formatCount(item.interactionCount), ...numericColumnStyles },
+    { id: 'daysInvoked', header: summary.category === 'mcp' ? 'Days with attempts' : 'Days invoked', renderCell: item => formatCount(item.daysInvoked), ...numericColumnStyles },
     {
       id: 'averagePerDay',
       header: 'Avg. / day',
-      renderCell: item => item.averagePerDay === null ? '-' : formatCount(item.averagePerDay),
+      renderCell: item => formatCount(item.averagePerDay),
       ...numericColumnStyles,
     },
   ];
@@ -57,6 +57,7 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
           ? 'Reported top items for this day.'
           : 'Reported top items only. Averages use days with reported activity.'}
         {summary.category === 'mcp' && ' Connections include failed attempts, not tool calls.'}
+        {summary.items.some(item => item.interactionCount === null) && ' Missing interaction counts and derived values are shown as a dash.'}
       </p>
       <MetricsTable
         data={summary.items}
