@@ -1,6 +1,12 @@
+import type { TooltipItem } from 'chart.js';
 import { describe, expect, it } from 'vitest';
 import { formatShortDate } from '../../../utils/formatters';
-import { createDailyBarChartConfig, padDailyReportRangeData } from './dailyBarChart';
+import {
+  createDailyBarChartConfig,
+  createDailyReportRangeChartConfig,
+  padDailyReportRangeData,
+} from './dailyBarChart';
+import { createLineDataset } from './chartStyles';
 
 describe('padDailyReportRangeData', () => {
   it('fills the report range and supports post-processing for derived fields', () => {
@@ -68,5 +74,46 @@ describe('createDailyBarChartConfig', () => {
     expect(options.plugins?.legend?.display).toBe(false);
     expect(options.scales?.x?.title).toMatchObject({ display: true, text: 'Date' });
     expect(options.scales?.y?.title).toMatchObject({ display: true, text: 'Values' });
+  });
+});
+
+describe('createDailyReportRangeChartConfig', () => {
+  it('builds a line chart over the report range and exposes padded entries to typed options', () => {
+    const { chartData, displayData, options } = createDailyReportRangeChartConfig<
+      { date: string; value: number },
+      'line'
+    >({
+      data: [
+        { date: '2024-01-15', value: 4 },
+        { date: '2024-01-17', value: 0 },
+      ],
+      reportStartDay: '2024-01-15',
+      reportEndDay: '2024-01-17',
+      type: 'line',
+      series: [{
+        color: 'rgb(1, 2, 3)',
+        label: 'Activity',
+        getValue: entry => entry?.value ?? null,
+      }],
+      createDataset: (series, values) => createLineDataset(series.color, series.label, values),
+      options: displayData => ({
+        xAxisLabel: 'Date',
+        yAxisLabel: 'Activity',
+        tooltipLabelCallback: context => `${displayData[context.dataIndex].entry?.value ?? null}`,
+      }),
+    });
+    const tooltipLabel = options.plugins?.tooltip?.callbacks?.label;
+    if (!tooltipLabel) throw new Error('Tooltip callback is required');
+    const tooltip = {} as ThisParameterType<typeof tooltipLabel>;
+
+    expect(displayData.map(entry => entry.entry?.value ?? null)).toEqual([4, null, 0]);
+    expect(chartData.labels).toEqual(['Jan 15', 'Jan 16', 'Jan 17']);
+    expect(chartData.datasets[0]).toMatchObject({
+      label: 'Activity',
+      data: [4, null, 0],
+      borderColor: 'rgb(1, 2, 3)',
+    });
+    expect(tooltipLabel.call(tooltip, { dataIndex: 1 } as TooltipItem<'line'>)).toBe('null');
+    expect(options.scales?.y?.title).toMatchObject({ text: 'Activity' });
   });
 });

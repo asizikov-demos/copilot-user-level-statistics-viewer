@@ -3,13 +3,12 @@
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { AgentActivity, AgentSurface } from '../../types/agentActivity';
-import { formatShortDate } from '../../utils/formatters';
-import { mapReportRangeData } from '../../utils/timeSeries';
 import ChartContainer from '../ui/ChartContainer';
 import { registerChartJS } from './utils/chartSetup';
-import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
+import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
+import { createDailyReportRangeChartConfig } from './utils/dailyBarChart';
 
 registerChartJS();
 
@@ -37,27 +36,38 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
   if (reportedSurfaces.length === 0) return null;
 
   const visibleSurfaces = reportedSurfaces.filter(surface => data.summary[surface.key][measure] !== null);
-  const displayData = mapReportRangeData(
-    data.daily, reportStartDay, reportEndDay, day => day.date,
-    (date, day) => ({ date, day }),
-  );
   const isSessions = measure === 'sessions';
   const title = isSessions ? 'Daily agent sessions' : 'Daily agent prompts & messages';
-  const options = createBaseChartOptions({
-    xAxisLabel: 'Date',
-    yAxisLabel: isSessions ? 'Reported sessions' : 'Reported prompts / messages',
-    yTicksCallback: yAxisFormatters.integer,
-    xAutoSkip: true,
-    tooltipLabelCallback: context => {
-      const surface = visibleSurfaces[context.datasetIndex];
-      const counts = displayData[context.dataIndex].day?.[surface.key];
-      return [
-        surface.label,
-        `Sessions: ${formatCount(counts?.sessions)}`,
-        `${surface.inputLabel}: ${formatCount(counts?.userInputs)}`,
-        ...(surface.key === 'vscodeAgents' ? [] : [`Requests: ${formatCount(counts?.requests)}`]),
-      ];
-    },
+  const { chartData, options } = createDailyReportRangeChartConfig<
+    AgentActivity['daily'][number],
+    'bar'
+  >({
+    data: data.daily,
+    reportStartDay,
+    reportEndDay,
+    type: 'bar',
+    series: visibleSurfaces.map(surface => ({
+      color: surface.color,
+      label: isSessions ? surface.label : `${surface.label} ${surface.inputLabel.toLowerCase()}`,
+      getValue: entry => entry?.[surface.key][measure] ?? null,
+    })),
+    createDataset: (series, values) => createBarDataset(series.color, series.label, values),
+    options: displayData => ({
+      xAxisLabel: 'Date',
+      yAxisLabel: isSessions ? 'Reported sessions' : 'Reported prompts / messages',
+      yTicksCallback: yAxisFormatters.integer,
+      xAutoSkip: true,
+      tooltipLabelCallback: context => {
+        const surface = visibleSurfaces[context.datasetIndex];
+        const counts = displayData[context.dataIndex].entry?.[surface.key];
+        return [
+          surface.label,
+          `Sessions: ${formatCount(counts?.sessions)}`,
+          `${surface.inputLabel}: ${formatCount(counts?.userInputs)}`,
+          ...(surface.key === 'vscodeAgents' ? [] : [`Requests: ${formatCount(counts?.requests)}`]),
+        ];
+      },
+    }),
   });
 
   return (
@@ -92,14 +102,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
     >
       {visibleSurfaces.length > 0 ? (
         <Bar
-          data={{
-            labels: displayData.map(entry => formatShortDate(entry.date)),
-            datasets: visibleSurfaces.map(surface => createBarDataset(
-              surface.color,
-              isSessions ? surface.label : `${surface.label} ${surface.inputLabel.toLowerCase()}`,
-              displayData.map(entry => entry.day?.[surface.key][measure] ?? null),
-            )),
-          }}
+          data={chartData}
           options={options}
           role="img"
           aria-label={`${title}: ${visibleSurfaces.map(surface => surface.label).join(', ')}.`}
