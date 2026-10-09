@@ -1,14 +1,15 @@
 'use client';
 
 import { Bar, Line } from 'react-chartjs-2';
-import type { VSCodeAgentUsage } from '../../types/vscodeAgent';
-import { formatShortDate } from '../../utils/formatters';
-import { mapReportRangeData } from '../../utils/timeSeries';
+import type { ChartDataset, TooltipItem } from 'chart.js';
+import type { DailyVSCodeAgentUsage, VSCodeAgentUsage } from '../../types/vscodeAgent';
 import ChartContainer from '../ui/ChartContainer';
 import { chartColors } from './utils/chartColors';
-import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
+import type { BaseChartConfig } from './utils/chartOptions';
+import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset, createLineDataset } from './utils/chartStyles';
 import { registerChartJS } from './utils/chartSetup';
+import { createDailyReportRangeChartConfig } from './utils/dailyBarChart';
 
 registerChartJS();
 
@@ -46,29 +47,65 @@ export default function VSCodeAgentUsageChart({
     : measures;
   if (visibleMeasures.length === 0) return null;
 
-  const displayData = mapReportRangeData(
-    data.daily, reportStartDay, reportEndDay, day => day.date,
-    (date, day) => ({ date, day }),
-  );
-  const labels = displayData.map(entry => formatShortDate(entry.date));
-  const series = visibleMeasures.map(measure => ({
-    ...measure,
-    values: displayData.map(entry => entry.day?.[measure.key] ?? null),
-  }));
   const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.`;
-  const createOptions = <TType extends 'bar' | 'line',>() => createBaseChartOptions<TType>({
+  const chartInput = {
+    data: data.daily,
+    reportStartDay,
+    reportEndDay,
+  };
+  const chartSeries: Array<{
+    color: string;
+    label: string;
+    getValue: (entry: DailyVSCodeAgentUsage | undefined) => number | null;
+  }> = visibleMeasures.map(measure => ({
+    color: measure.color,
+    label: measure.label,
+    getValue: (entry: DailyVSCodeAgentUsage | undefined) => entry?.[measure.key] ?? null,
+  }));
+  const getOptions = <TType extends 'bar' | 'line',>(
+    displayData: Array<{ date: string; entry: DailyVSCodeAgentUsage | undefined }>,
+  ): BaseChartConfig<TType> => ({
     xAxisLabel: 'Date',
     yAxisLabel: 'Reported count',
     yTicksCallback: yAxisFormatters.integer,
     xAutoSkip: true,
-    tooltipLabelCallback: context => {
+    tooltipLabelCallback: (context: TooltipItem<TType>) => {
       const measure = visibleMeasures[context.datasetIndex];
-      const day = displayData[context.dataIndex].day;
+      const day = displayData[context.dataIndex].entry;
       return day
         ? `${measure.label}: ${formatCount(day[measure.key])} (${coverage(day[measure.coverageKey], day.recordCount)})`
         : 'Not reported';
     },
   });
+  const createChartConfig = <TType extends 'bar' | 'line',>(
+    type: TType,
+    createDataset: (
+      series: (typeof chartSeries)[number],
+      values: (number | null)[],
+    ) => ChartDataset<TType, (number | null)[]>,
+  ) => createDailyReportRangeChartConfig<DailyVSCodeAgentUsage, TType>({
+    ...chartInput,
+    type,
+    series: chartSeries,
+    createDataset,
+    options: displayData => getOptions<TType>(displayData),
+  });
+
+  const renderChart = () => {
+    if (isUser) {
+      const { chartData, options } = createChartConfig(
+        'bar',
+        (series, values) => createBarDataset(series.color, series.label, values),
+      );
+      return <Bar data={chartData} options={options} role="img" aria-label={ariaLabel} />;
+    }
+    const { chartData, options } = createChartConfig(
+      'line',
+      (series, values) =>
+        createLineDataset(series.color, series.label, values, { spanGaps: false }),
+    );
+    return <Line data={chartData} options={options} role="img" aria-label={ariaLabel} />;
+  };
 
   return (
     <ChartContainer
@@ -81,27 +118,7 @@ export default function VSCodeAgentUsageChart({
         value: formatCount(summary[measure.key]),
       }))}
     >
-      {isUser ? (
-        <Bar
-          data={{
-            labels,
-            datasets: series.map(measure => createBarDataset(measure.color, measure.label, measure.values)),
-          }}
-          options={createOptions<'bar'>()}
-          role="img"
-          aria-label={ariaLabel}
-        />
-      ) : (
-        <Line
-          data={{
-            labels,
-            datasets: series.map(measure => createLineDataset(measure.color, measure.label, measure.values, { spanGaps: false })),
-          }}
-          options={createOptions<'line'>()}
-          role="img"
-          aria-label={ariaLabel}
-        />
-      )}
+      {renderChart()}
     </ChartContainer>
   );
 }
