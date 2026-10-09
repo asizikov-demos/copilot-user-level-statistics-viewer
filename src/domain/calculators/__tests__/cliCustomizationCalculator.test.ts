@@ -157,8 +157,66 @@ describe('CLI customization summaries', () => {
     expect(summaries[1].averageDistinctItems).toBeNull();
   });
 
-  it.each([undefined, -1, NaN, Infinity, 1.5])('surfaces invalid event counts (%s)', value => {
+  it('retains name-only entries in every category without inventing counts or legacy coverage', () => {
+    const daily = computeDailyCliCustomizations({
+      day: '2024-01-01',
+      totals_by_skill: [{ skill: 'other' }],
+      totals_by_custom_agent: [{ custom_agent: 'other', interaction_count: null }],
+      totals_by_mcp: [{ mcp: 'other', user_initiated_interaction_count: null }],
+      totals_by_slash_cmd: [{ slash_cmd: 'custom', interaction_count: null, user_initiated_interaction_count: null }],
+      distinct_skill_use_count: 2,
+      distinct_custom_agent_use_count: 3,
+      distinct_mcp_use_count: 4,
+      distinct_slash_cmd_use_count: 5,
+    });
+    expect(daily.map(summary => summary.distinctItems)).toEqual([2, 3, 4, 5]);
+    for (const summary of daily) {
+      expect(summary).toMatchObject({ observedInteractions: null, legacyEntryCount: 0 });
+      expect(summary.items).toEqual([{
+        name: summary.category === 'slash_cmd' ? 'custom' : 'other',
+        interactionCount: null,
+        daysInvoked: null,
+        averagePerDay: null,
+      }]);
+    }
+  });
+
+  it('does not present partial item totals as complete and sorts unavailable counts last', () => {
+    const [skills] = summarize(
+      { totals_by_skill: [
+        { skill: 'missing-first' },
+        { skill: 'missing-last', interaction_count: 4 },
+        { skill: 'reported', interaction_count: 2 },
+        { skill: 'zero', interaction_count: 0 },
+      ], distinct_skill_use_count: 4 },
+      { totals_by_skill: [
+        { skill: 'missing-first', user_initiated_interaction_count: 3 },
+        { skill: 'missing-last' },
+        { skill: 'reported', interaction_count: 1 },
+      ], distinct_skill_use_count: 3 },
+    );
+    expect(skills).toMatchObject({
+      entriesReportedRecords: 2,
+      observedInteractions: null,
+      summedDailyDistinctItems: 7,
+      activeRecords: 2,
+      legacyEntryCount: 1,
+    });
+    expect(skills.items).toEqual([
+      { name: 'reported', interactionCount: 3, daysInvoked: 2, averagePerDay: 1.5 },
+      { name: 'zero', interactionCount: 0, daysInvoked: 0, averagePerDay: null },
+      { name: 'missing-first', interactionCount: null, daysInvoked: null, averagePerDay: null },
+      { name: 'missing-last', interactionCount: null, daysInvoked: null, averagePerDay: null },
+    ]);
+  });
+
+  it.each([-1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])('surfaces invalid event counts (%s)', value => {
     expect(() => summarize({ totals_by_skill: [{ skill: 'other', interaction_count: value }] }))
+      .toThrow('Invalid CLI customization count');
+  });
+
+  it.each([-1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])('surfaces invalid distinct counts (%s)', value => {
+    expect(() => summarize({ distinct_skill_use_count: value }))
       .toThrow('Invalid CLI customization count');
   });
 });

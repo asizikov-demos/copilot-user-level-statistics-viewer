@@ -36,7 +36,7 @@ export interface CliCustomizationSummary extends CliCustomizationActivity {
 
 export interface CliCustomizationItemSummary {
   name: string;
-  interactionCount: number;
-  daysInvoked: number;
+  interactionCount: number | null;
+  daysInvoked: number | null;
   averagePerDay: number | null;
 }
