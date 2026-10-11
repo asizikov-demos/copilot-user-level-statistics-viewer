@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
-import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
+import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
+import { createDailyReportRangeChartConfig } from './utils/dailyBarChart';
 import { getIdeColor } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
-import { mapReportRangeData } from '../../utils/timeSeries';
 import { getIDEIcon, formatIDEName } from '../icons/IDEIcons';
 import ChartContainer from '../ui/ChartContainer';
 import type { DailyIdeUsersData } from '../../domain/calculators/dailyIdeUsersCalculator';
@@ -50,18 +49,6 @@ export default function DailyIDEUsersChart({
     return telemetryWarnings.filter(warning => warning.ide === canonicalIde);
   }, [activeIde, telemetryWarnings]);
 
-  const displayData = useMemo(
-    () =>
-      mapReportRangeData(
-        activeEntry?.daily ?? [],
-        reportStartDay,
-        reportEndDay,
-        day => day.date,
-        (date, day) => ({ date, uniqueUsers: day?.uniqueUsers ?? 0 })
-      ),
-    [activeEntry, reportStartDay, reportEndDay]
-  );
-
   const activeDays = activeEntry?.daily ?? [];
   const peakDailyUsers = activeDays.reduce(
     (max, day) => Math.max(max, day.uniqueUsers),
@@ -75,29 +62,43 @@ export default function DailyIDEUsersChart({
   const IDEIcon = getIDEIcon(activeIde);
   const color = getIdeColor(activeIde, 0);
 
-  const chartData = {
-    labels: displayData.map(day => formatShortDate(day.date)),
-    datasets: [
-      createBarDataset(color, `${ideLabel} Users`, displayData.map(day => day.uniqueUsers)),
-    ],
-  };
+  const { displayData, chartData, options } = useMemo(
+    () => createDailyReportRangeChartConfig<
+      DailyIdeUsersData[number]['daily'][number],
+      'bar'
+    >({
+      data: activeEntry?.daily ?? [],
+      reportStartDay,
+      reportEndDay,
+      type: 'bar',
+      series: [{
+        color,
+        label: `${ideLabel} Users`,
+        getValue: day => day?.uniqueUsers ?? 0,
+      }],
+      createDataset: (series, values) => createBarDataset(series.color, series.label, values),
+      options: () => ({
+        xAxisLabel: 'Date',
+        yAxisLabel: 'Users',
+        showLegend: false,
+        yStepSize: 1,
+        yTicksCallback: yAxisFormatters.integer,
+        xMaxRotation: 45,
+        xAutoSkip: true,
+        tooltipLabelCallback: context => {
+          const value = context.parsed.y || 0;
+          return `${ideLabel}: ${value} ${value === 1 ? 'user' : 'users'}`;
+        },
+      }),
+    }),
+    [activeEntry, color, ideLabel, reportEndDay, reportStartDay]
+  );
   const chartAriaLabel = `Daily IDE Users for ${ideLabel}: ${displayData
-    .map(day => `${formatShortDate(day.date)}, ${day.uniqueUsers} ${day.uniqueUsers === 1 ? 'user' : 'users'}`)
+    .map(day => {
+      const uniqueUsers = day.entry?.uniqueUsers ?? 0;
+      return `${formatShortDate(day.date)}, ${uniqueUsers} ${uniqueUsers === 1 ? 'user' : 'users'}`;
+    })
     .join('; ')}.`;
-
-  const options = createBaseChartOptions({
-    xAxisLabel: 'Date',
-    yAxisLabel: 'Users',
-    showLegend: false,
-    yStepSize: 1,
-    yTicksCallback: yAxisFormatters.integer,
-    xMaxRotation: 45,
-    xAutoSkip: true,
-    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
-      const value = context.parsed.y || 0;
-      return `${ideLabel}: ${value} ${value === 1 ? 'user' : 'users'}`;
-    },
-  });
 
   return (
     <ChartContainer

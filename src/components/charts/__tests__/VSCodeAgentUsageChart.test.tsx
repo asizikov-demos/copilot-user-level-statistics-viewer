@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ChartData } from 'chart.js';
+import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { VSCodeAgentUsage } from '../../../types/vscodeAgent';
 import VSCodeAgentUsageChart from '../VSCodeAgentUsageChart';
@@ -7,6 +7,7 @@ import { makeVSCodeAgentUsage } from './helpers/chartFixtures';
 
 interface ChartProps<TType extends 'bar' | 'line'> {
   data: ChartData<TType>;
+  options: ChartOptions<TType>;
   'aria-label': string;
 }
 
@@ -92,6 +93,22 @@ describe('VSCodeAgentUsageChart', () => {
       expect(markup).toContain('Distinct active users');
       expect(markup).toContain('separate from editor Agent Mode');
       expect(markup).not.toContain('records reporting');
+    });
+
+    it('uses padded daily entries for coverage tooltip text', () => {
+      renderChart(makeVSCodeAgentUsage(
+        { activeUsers: 0, usageReportedRecords: 1, recordCount: 2 },
+        [{ date: '2024-01-15', activeUsers: 0, usageReportedRecords: 1, recordCount: 2 }],
+      ));
+
+      const label = line.mock.lastCall![0].options.plugins?.tooltip?.callbacks?.label;
+      if (!label) throw new Error('Tooltip callback is required');
+      const tooltip = {} as ThisParameterType<typeof label>;
+
+      expect(label.call(tooltip, { datasetIndex: 0, dataIndex: 0 } as TooltipItem<'line'>))
+        .toBe('Active users: 0 (1 of 2 records reporting)');
+      expect(label.call(tooltip, { datasetIndex: 0, dataIndex: 1 } as TooltipItem<'line'>))
+        .toBe('Not reported');
     });
 
     it('does not render a table or progressive-disclosure control for long ranges', () => {
