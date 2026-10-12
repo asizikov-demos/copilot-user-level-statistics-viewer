@@ -58,6 +58,27 @@ steps:
 
 Perform a full dependency audit, apply safe updates, and open a pull request.
 
+## Assessment command protocol
+
+- Run each assessment as a separate shell tool call using exactly
+  `npm audit --json` or `npm outdated --json`. Save their JSON tool outputs with
+  the provided edit/write tool as `/tmp/gh-aw/agent/npm-audit.json` and
+  `/tmp/gh-aw/agent/npm-outdated.json`.
+- Do not wrap these calls in directory creation, output redirection, exit-code
+  assignments, `exit`, `|| true`, or other commands. Every operation in a
+  compound command needs separate permission; an allowed npm command does not
+  authorize the rest of the shell expression.
+- Exit code 1 can mean vulnerabilities or outdated packages were found, not
+  that the command was blocked. Read each saved report in a separate `cat`
+  call and inspect its JSON before classifying the result.
+- If an assessment is accidentally wrapped and denied, retry only the
+  corresponding exact standalone command once. Do not switch to offline mode
+  or infer a network failure from a tool denial.
+- If a standalone call is denied, report `missing_tool` with reason `security` and
+  `report_incomplete` with the exact denied command. Stop without dependency
+  changes or a PR. Invalid JSON or an npm registry/error response is also an
+  incomplete assessment, never evidence that dependencies are up to date.
+
 ## Phase 1 — Assess
 
 1. Run `npm audit --json` and save the output. Identify all vulnerabilities grouped by severity (critical, high, moderate, low). For each vulnerability, note whether it affects a **production** dependency or a **dev-only** dependency.
