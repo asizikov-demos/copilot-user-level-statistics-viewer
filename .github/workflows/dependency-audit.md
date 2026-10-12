@@ -21,7 +21,7 @@ concurrency:
 strict: true
 engine:
   id: copilot
-  model: gpt-6-luna
+  model: gpt-5.5
 network: defaults
 
 runtimes:
