@@ -8,40 +8,17 @@ Next.js App Router single-page application. TypeScript, Tailwind CSS, Chart.js f
 
 All parsing and metrics aggregation should run in a **Web Worker** via the `parseAndAggregate` flow — avoid persisting raw metrics on the main thread. The worker is pre-bundled via esbuild (`scripts/build-worker.mjs` → `public/workers/metricsWorker.js`). The `build:worker` step runs automatically before `next build` and `next dev`.
 
-## Development Commands
+## Development
 
-- `npm run dev` — start dev server
-- `npm run build` — production build (runs worker build automatically)
-- `npm run lint` — ESLint
-- `npm run test:run` — run the test suite
-
-> **Development server note**: stop `npm run dev` before running `npm run build` — both use `.next` and conflict. Copilot app setup and the manual Run script are configured in `.github/github-app.yml`.
-
-## Code Quality
-
-- No unused variables (`@typescript-eslint/no-unused-vars`)
-- No explicit `any` — use proper types (e.g., `TooltipItem<'bar'>` for Chart.js tooltips)
-- Escape special characters in JSX (`&apos;`, `&quot;`, `&amp;`)
-- Always run `npm run build` before committing to catch TypeScript and ESLint issues early
-
-## Key Domain File
-
-`src/domain/modelConfig.ts` contains Copilot model normalization and known-model catalog helpers.
+Stop `npm run dev` before running `npm run build` because both use `.next`.
 
 ## UX Patterns
 
 - **Progressive disclosure** for data tables: show top N items by default, expand to see all
-- Do not add comments documenting refactoring process (e.g., "Moved to X component")
 
 ## Workflow Conventions
 
 - Scan/audit tasks are **read-only** — no surprise code changes
-- When using sub-agents, parallelize independent work
-- Reference items by name/description, not by number
-
-## Code Navigation
-
-Prefer the **TypeScript LSP** for code navigation and analysis — use `goToDefinition`, `findReferences`, `incomingCalls`, `hover`, and `documentSymbol` before falling back to grep/glob.
 
 ## Git Workflow
 
@@ -55,11 +32,13 @@ Do NOT create branches, commits, or PRs automatically after completing code chan
 
 Exception: if the user's original prompt explicitly requests commits/PR (e.g., "…create atomic commits and PR"), skip the confirmation and proceed directly.
 
-### Pre-Commit Pipeline
+### Pre-Commit Validation
 
-The flow is strictly linear — do not skip or reorder steps:
+Validate changes according to their scope:
 
-1. **Code Review** — run as a sub-agent on all changes. If issues are found, fix them before proceeding. The Code Review agent itself never modifies code.
-2. **Build gate** — run `npm run build && npm run lint && npm run test:run` (build + lint + test). If it fails, fix the issue and re-run. If the fix changes application logic, go back to step 1.
-3. **User approval** — Commit Gate (above)
-4. **Git Workflow** — create branch, atomic commits, push, PR. The build is already verified — just do the git mechanics.
+- **Application logic or non-trivial source changes** — run a read-only code-review sub-agent, then `npm run build && npm run lint && npm run test:run`.
+- **Test-only changes** — run the affected tests and any build or type-check needed to cover changed contracts.
+- **Configuration changes** — validate the changed configuration and run only directly affected checks.
+- **Documentation-only changes** — no application validation is required unless documentation checks exist.
+
+If a validation fix changes application logic, repeat the code review. After validation, follow the Commit Gate before committing, pushing, or creating a PR.
