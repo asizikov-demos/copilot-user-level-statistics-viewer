@@ -69,6 +69,9 @@ Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
 
 `src/domain/modelConfig.ts` contains a curated catalog of known LLM models. Calculators use model helpers for normalization, known-model alias recognition, and explicit unknown/empty model detection.
 
+Both `claude-fable-5.1` and the report spelling `claude-fable-5-1` are recognized as Anthropic models in the Powerful category.
+`grok-4` is recognized as an xAI model in the Versatile category, alongside the other Grok 4 versions.
+
 ### 3.4. Feature Read-Model Boundaries
 
 The successful worker payload is one grouped `AggregatedMetrics` object. Each aggregate field has exactly one owning slice:

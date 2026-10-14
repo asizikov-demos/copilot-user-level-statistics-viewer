@@ -151,6 +151,38 @@ describe('modelBreakdownCalculator', () => {
   });
 
   describe('computeModelBreakdownData', () => {
+    it('should attribute Grok 4 report interactions to xAI', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('grok-4', 'chat_panel', 12));
+
+      const data = computeModelBreakdownData(acc);
+      expect(data.modelVendors).toEqual([
+        { vendor: 'xAI', total: 12, dailyData: { '2024-01-15': 12 }, users: 1 },
+      ]);
+      expect(data.modelCategories).toEqual([
+        { category: 'Versatile', total: 12, dailyData: { '2024-01-15': 12 }, users: 1 },
+      ]);
+      expect(data.modelTotal).toBe(12);
+      expect(data.unknownTotal).toBe(0);
+    });
+
+    it('should attribute both Fable 5.1 report spellings to Anthropic', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('claude-fable-5-1', 'chat_panel', 12));
+      accumulateModelBreakdown(acc, '2024-01-16', 2, makeModelFeature('claude-fable-5.1', 'copilot_cli', 5));
+
+      const data = computeModelBreakdownData(acc);
+      expect(data.modelVendors).toEqual([
+        { vendor: 'Anthropic', total: 17, dailyData: { '2024-01-15': 12, '2024-01-16': 5 }, users: 2 },
+      ]);
+      expect(data.modelCategories).toEqual([
+        { category: 'Powerful', total: 17, dailyData: { '2024-01-15': 12, '2024-01-16': 5 }, users: 2 },
+      ]);
+      expect(data.modelTotal).toBe(17);
+      expect(data.cliTotal).toBe(5);
+      expect(data.unknownTotal).toBe(0);
+    });
+
     it('should return empty entries and zero totals for an empty accumulator', () => {
       expect(computeModelBreakdownData(createModelBreakdownAccumulator())).toEqual({
         allModels: [],
