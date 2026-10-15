@@ -1,6 +1,10 @@
 {
   "versions": [
     {
+      "version": "1.19.1-252",
+      "releaseDate": "2026-10-13T09:14:35.000Z"
+    },
+    {
       "version": "1.19.0-261-linux-arm64",
       "releaseDate": "2026-10-09T05:28:49.000Z"
     },
@@ -75,10 +79,6 @@
     {
       "version": "1.17.0-261-windows-arm64",
       "releaseDate": "2026-09-07T03:31:50.000Z"
-    },
-    {
-      "version": "1.17.0-261-windows-x64",
-      "releaseDate": "2026-09-07T03:31:16.000Z"
     }
   ]
 }
