@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
+import { Banner, Button, Spinner } from '@primer/react';
+import { FileIcon } from '@primer/octicons-react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
 import { MultiFileProgress } from '../../../infra/metricsFileParser';
@@ -112,22 +114,15 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           </div>
 
           <div className="text-center">
-            <button
-              onClick={onSampleLoad}
-              disabled={isLoading}
-              className="inline-flex items-center gap-2 px-4 py-1.5 text-sm font-medium rounded-md border border-[#218739] bg-[#2da44e] text-white hover:bg-[#2c974b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <Button variant="primary" leadingVisual={FileIcon} onClick={onSampleLoad} disabled={isLoading}>
               Try with sample data
-            </button>
+            </Button>
           </div>
 
           {isLoading && (
-            <div className="flex flex-col items-center gap-2 py-2">
+            <div role="status" className="flex flex-col items-center gap-2 py-2">
               <div className="flex items-center gap-2 text-sm text-muted">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-default border-t-accent-emphasis" />
+                <Spinner size="small" srText={null} />
                 <span>
                   {uploadProgress && uploadProgress.totalFiles > 1
                     ? `Processing file ${uploadProgress.currentFile} of ${uploadProgress.totalFiles}\u2026`
@@ -145,12 +140,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           )}
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-danger-muted bg-danger-muted px-3 py-2">
-              <svg className="w-4 h-4 text-danger flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p className="text-sm text-danger">{error}</p>
-            </div>
+            <Banner variant="critical" layout="compact" title="Upload failed" hideTitle description={error} />
           )}
         </div>
       </div>
