@@ -115,7 +115,7 @@ describe('DailyIDEUsersChart', () => {
     expect(renderer!.root.findAllByType('select')).toHaveLength(0);
     expect(
       renderer!.root.findAll(
-        node => node.type === 'div' && node.children[0] === 'No client usage data available'
+        node => node.type === 'h4' && node.children[0] === 'No client usage data available'
       )
     ).toHaveLength(1);
   });

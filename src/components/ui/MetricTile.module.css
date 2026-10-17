@@ -86,19 +86,3 @@
   color: var(--fgColor-default);
 }
 
-.skeleton {
-  display: inline-block;
-  vertical-align: middle;
-  background-color: var(--bgColor-neutral-muted);
-  border-radius: var(--borderRadius-small);
-}
-
-.valueSkeleton {
-  width: 5rem;
-  height: 1.5rem;
-}
-
-.subtitleSkeleton {
-  width: 7rem;
-  height: 0.75rem;
-}
