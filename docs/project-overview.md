@@ -30,7 +30,7 @@ Static plugin version metadata (`public/data/vscode.json`, `public/data/jetbrain
 
 ## 3. Architecture
 
-Next.js App Router SPA, TypeScript, Tailwind CSS. All rendering is client-side.
+Next.js App Router SPA, TypeScript, Tailwind CSS, with GitHub's Primer design system being adopted incrementally. All rendering is client-side.
 
 ### 3.1. Key Design Decisions
 
@@ -296,6 +296,8 @@ Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly 
 `ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the feature-owned `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the relevant presentation boundary with a narrow shared route context. `CopilotAdoptionView` presentation, adoption-only charts, visible sections, and focused tests are co-located under `src/components/features/adoption/`; shared adoption chart utilities remain in `src/components/charts/utils/` because CLI adoption and model details also consume them. `AiAdoptionPhaseView` presentation, table column metadata, phase definitions, visible sections, and focused tests are co-located under `src/components/features/ai-adoption-phases/`. `CopilotImpactView` presentation, impact mode metadata, visible sections, and focused tests are co-located under `src/components/features/impact/`; `ModeImpactChart` remains shared because executive summary and user details also render it. `UsersView` presentation, visible summary/table sections, feature constants, and focused tests are co-located under `src/components/features/users/`. `LanguagesView` presentation, feature-only daily chart, visible sections, and focused tests are co-located under `src/components/features/languages/`. `ClientVersionsView` presentation and its JetBrains/VS Code version sections are co-located under `src/components/features/client-versions/`. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. User-details presentation, feature-only charts, day-details helpers, and route-focused tests are co-located under `src/components/features/user-details/`; pure read-model selectors remain in `src/read-models/` as the shared application projection layer. This completes Phase 6 feature organization while preserving Phase 7 routing and Phase 10 dependency enforcement.
 
 Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
+
+**Primer foundation.** `src/app/providers.tsx` wraps the app in Primer's `ThemeProvider` (pinned to `colorMode="day"` for deterministic static export) and `BaseStyles`; `src/app/globals.css` imports the `@primer/primitives` tokens and light theme. Existing views are still styled with Tailwind utilities. Primer component CSS is unlayered and therefore outranks Tailwind's cascade layers, so `globals.css` neutralizes `BaseStyles`' global text color, font stack, and link styling to keep the pre-Primer appearance. Vitest inlines `@primer/*` so its CSS imports work in tests; `src/__tests__/setup.ts` ports Primer's JSDOM polyfills, and tests that need a DOM (for portal components such as `Dialog`) opt in with `// @vitest-environment jsdom`.
 
 ---
 
