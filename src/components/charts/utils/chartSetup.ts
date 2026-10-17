@@ -4,19 +4,30 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  RadialLinearScale,
   PointElement,
   LineElement,
   BarElement,
-  ArcElement,
-  RadarController,
   Title,
   Tooltip,
   Legend,
   Filler,
 } from 'chart.js';
+import { resetChartThemeCache, resolveChartTheme } from './chartTheme';
 
 let isRegistered = false;
+
+/**
+ * Applies Primer tokens (font stack, text and grid colors) to Chart.js defaults.
+ * Pass `refresh` to re-read tokens after the document theme changes.
+ */
+export function applyChartTheme({ refresh = false }: { refresh?: boolean } = {}): void {
+  if (refresh) resetChartThemeCache();
+
+  const theme = resolveChartTheme();
+  ChartJS.defaults.font.family = theme.fontFamily;
+  ChartJS.defaults.color = theme.textColor;
+  ChartJS.defaults.borderColor = theme.gridColor;
+}
 
 /**
  * Registers all Chart.js components once. Safe to call multiple times.
@@ -28,17 +39,15 @@ export function registerChartJS(): void {
   ChartJS.register(
     CategoryScale,
     LinearScale,
-    RadialLinearScale,
     PointElement,
     LineElement,
     BarElement,
-    ArcElement,
-    RadarController,
     Title,
     Tooltip,
     Legend,
     Filler
   );
+  applyChartTheme();
 
   isRegistered = true;
 }

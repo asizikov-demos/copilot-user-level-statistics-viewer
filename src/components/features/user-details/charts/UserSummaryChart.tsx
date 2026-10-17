@@ -1,8 +1,8 @@
 'use client';
 
-import { Pie } from 'react-chartjs-2';
-import { ChartData, ChartOptions } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
+import { createDistributionBarChartConfig, type DistributionBarEntry } from '../../../charts/utils/distributionBarChart';
 import ChartContainer from '../../../ui/ChartContainer';
 
 registerChartJS();
@@ -14,15 +14,34 @@ interface UserSummaryChartProps {
   usedCodingAgent: boolean;
   usedCodeReview: boolean;
   usedAutoMode: boolean;
-  ideChartData?: ChartData<'pie'>;
-  languageChartData?: ChartData<'pie'>;
-  modelChartData?: ChartData<'pie'>;
-  chartOptions?: ChartOptions<'pie'>;
+  ideDistribution?: DistributionBarEntry[];
+  languageDistribution?: DistributionBarEntry[];
+  modelDistribution?: DistributionBarEntry[];
+}
+
+interface DistributionTileProps {
+  title: string;
+  entries: DistributionBarEntry[];
+  datasetLabel: string;
+  unit: string;
+}
+
+function DistributionTile({ title, entries, datasetLabel, unit }: DistributionTileProps) {
+  const { chartData, options } = createDistributionBarChartConfig({ entries, datasetLabel, unit });
+
+  return (
+    <div className="bg-muted rounded-lg p-4">
+      <h4 className="text-sm font-medium text-default mb-3 text-center">{title}</h4>
+      <div className="h-48">
+        <Bar data={chartData} options={options} />
+      </div>
+    </div>
+  );
 }
 
 /**
  * Displays a summary of a user's usage across features, IDEs, languages, and models.
- * Expects pre-built Chart.js data objects for each pie chart. Each chart is optional.
+ * Each distribution renders as a horizontal bar chart and is optional.
  */
 export default function UserSummaryChart({
   usedChat,
@@ -31,10 +50,9 @@ export default function UserSummaryChart({
   usedCodingAgent,
   usedCodeReview,
   usedAutoMode,
-  ideChartData,
-  languageChartData,
-  modelChartData,
-  chartOptions
+  ideDistribution,
+  languageDistribution,
+  modelDistribution,
 }: UserSummaryChartProps) {
   return (
     <ChartContainer title="Summary">
@@ -82,34 +100,29 @@ export default function UserSummaryChart({
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* IDEs Chart */}
-        {ideChartData && ideChartData.labels && ideChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Client Interactions</h4>
-            <div className="h-48">
-              <Pie data={ideChartData} options={chartOptions} />
-            </div>
-          </div>
+        {ideDistribution && ideDistribution.length > 0 && (
+          <DistributionTile
+            title="Client Interactions"
+            entries={ideDistribution}
+            datasetLabel="Interactions"
+            unit="interactions"
+          />
         )}
-
-        {/* Languages Chart */}
-        {languageChartData && languageChartData.labels && languageChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Languages (Generations)</h4>
-            <div className="h-48">
-              <Pie data={languageChartData} options={chartOptions} />
-            </div>
-          </div>
+        {languageDistribution && languageDistribution.length > 0 && (
+          <DistributionTile
+            title="Languages (Generations)"
+            entries={languageDistribution}
+            datasetLabel="Generations"
+            unit="generations"
+          />
         )}
-
-        {/* Models Chart */}
-        {modelChartData && modelChartData.labels && modelChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Models (Interactions)</h4>
-            <div className="h-48">
-              <Pie data={modelChartData} options={chartOptions} />
-            </div>
-          </div>
+        {modelDistribution && modelDistribution.length > 0 && (
+          <DistributionTile
+            title="Models (Interactions)"
+            entries={modelDistribution}
+            datasetLabel="Interactions"
+            unit="interactions"
+          />
         )}
       </div>
     </ChartContainer>

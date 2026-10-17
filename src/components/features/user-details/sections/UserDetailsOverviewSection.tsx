@@ -2,7 +2,7 @@
 
 import type { UserDayData } from '../../../../types/metrics';
 import ActivityCalendar from '../day-details/ActivityCalendar';
-import FeatureAdoptionRadarChart from '../charts/FeatureAdoptionRadarChart';
+import UserFeatureAdoptionChart from '../charts/UserFeatureAdoptionChart';
 
 interface UserDetailsOverviewSectionProps {
   sectionId: string;
@@ -46,7 +46,7 @@ export default function UserDetailsOverviewSection({
         />
       </div>
       <div className="lg:col-span-1">
-        <FeatureAdoptionRadarChart
+        <UserFeatureAdoptionChart
           agentInteractions={agentInteractions}
           planInteractions={planInteractions}
           cliInteractions={cliInteractions}

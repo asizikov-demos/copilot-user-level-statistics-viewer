@@ -3,8 +3,7 @@ import {
   computeRetentionRates,
   computeAverageRetention,
   createBarDataset,
-  createRadarDataset,
-  createDoughnutDataset,
+  createLineDataset,
 } from './chartStyles';
 
 describe('computeRetentionRates', () => {
@@ -93,21 +92,11 @@ describe('dataset factories', () => {
     });
   });
 
-  it('createRadarDataset derives a translucent fill from an rgb color unless overridden', () => {
-    expect(createRadarDataset('rgb(99, 102, 241)', 'Interactions', [1])).toMatchObject({
-      backgroundColor: 'rgba(99, 102, 241, 0.2)',
-      borderColor: 'rgb(99, 102, 241)',
-      pointBackgroundColor: 'rgb(99, 102, 241)',
+  it('createLineDataset derives a 10% fill from rgb or hex colors', () => {
+    expect(createLineDataset('rgb(34, 197, 94)', 'Users', [1])).toMatchObject({
+      borderColor: 'rgb(34, 197, 94)',
+      backgroundColor: 'rgba(34, 197, 94, 0.1)',
     });
-    expect(createRadarDataset('rgb(0, 0, 0)', 'L', [], { backgroundColor: 'transparent' }).backgroundColor).toBe('transparent');
-  });
-
-  it('createDoughnutDataset applies segment colors with overridable border defaults', () => {
-    expect(createDoughnutDataset([1, 2], ['#f00', '#0f0'], { borderColor: 'transparent' })).toMatchObject({
-      data: [1, 2],
-      backgroundColor: ['#f00', '#0f0'],
-      borderColor: 'transparent',
-      borderWidth: 1,
-    });
+    expect(createLineDataset('#006edb', 'Users', [1]).backgroundColor).toBe('rgba(0, 110, 219, 0.1)');
   });
 });

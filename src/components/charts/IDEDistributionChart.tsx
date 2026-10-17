@@ -1,11 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Doughnut } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
-import { createDoughnutChartOptions } from './utils/chartOptions';
-import { createDoughnutDataset } from './utils/chartStyles';
+import { createDistributionBarChartConfig, type DistributionBarEntry } from './utils/distributionBarChart';
 import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
@@ -24,45 +22,22 @@ export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistribu
   const hasCliUsers = cliUsers > 0;
   const hasData = sorted.length > 0 || hasCliUsers;
 
-  const labels = [
-    ...sorted.map((ide) => formatIDEName(ide.ide)),
-    ...(hasCliUsers ? ['Copilot CLI'] : []),
-  ];
-
-  const dataValues = [
-    ...sorted.map((ide) => ide.uniqueUsers),
-    ...(hasCliUsers ? [cliUsers] : []),
-  ];
-
   let fallbackIndex = 0;
-  const backgroundColors = [
-    ...sorted.map((ide) => {
-      const color = getIdeColor(ide.ide, fallbackIndex);
-      if (!hasIdeColor(ide.ide)) {
-        fallbackIndex += 1;
-      }
-      return color;
-    }),
-    ...(hasCliUsers ? [ideColors['copilot_cli']] : []),
-  ];
+  const entries: DistributionBarEntry[] = sorted.map((ide) => {
+    const color = getIdeColor(ide.ide, fallbackIndex);
+    if (!hasIdeColor(ide.ide)) {
+      fallbackIndex += 1;
+    }
+    return { label: formatIDEName(ide.ide), value: ide.uniqueUsers, color };
+  });
+  if (hasCliUsers) {
+    entries.push({ label: 'Copilot CLI', value: cliUsers, color: ideColors['copilot_cli'] });
+  }
 
-  const totalUsers = dataValues.reduce((sum, v) => sum + v, 0);
-
-  const chartData = {
-    labels,
-    datasets: [
-      createDoughnutDataset(dataValues, backgroundColors),
-    ],
-  };
-
-  const options = createDoughnutChartOptions({
-    tooltipLabelCallback: (context: TooltipItem<'doughnut'>) => {
-      const value = context.parsed;
-      const percentage = totalUsers > 0
-        ? ((value / totalUsers) * 100).toFixed(1)
-        : '0.0';
-      return `${context.label}: ${value} users (${percentage}%)`;
-    },
+  const { chartData, options } = createDistributionBarChartConfig({
+    entries,
+    datasetLabel: 'Unique users',
+    unit: 'users',
   });
 
   return (
@@ -73,7 +48,7 @@ export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistribu
       isEmpty={!hasData}
       emptyState="No IDE or CLI usage data available"
     >
-      <Doughnut data={chartData} options={options} />
+      <Bar data={chartData} options={options} />
     </ChartContainer>
   );
 }

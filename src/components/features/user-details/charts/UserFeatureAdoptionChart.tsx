@@ -1,17 +1,15 @@
 'use client';
 
-import { Radar } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
-import { createRadarChartOptions } from '../../../charts/utils/chartOptions';
-import { createRadarDataset } from '../../../charts/utils/chartStyles';
+import { createDistributionBarChartConfig } from '../../../charts/utils/distributionBarChart';
 import { chartColors } from '../../../charts/utils/chartColors';
 import ChartContainer from '../../../ui/ChartContainer';
 import { FEATURE_ADOPTION_RADAR_METADATA } from '../../../../domain/featureCategories';
 
 registerChartJS();
 
-interface FeatureAdoptionRadarChartProps {
+interface UserFeatureAdoptionChartProps {
   agentInteractions: number;
   planInteractions: number;
   cliInteractions: number;
@@ -20,15 +18,15 @@ interface FeatureAdoptionRadarChartProps {
   completionInteractions: number;
 }
 
-export default function FeatureAdoptionRadarChart({
+export default function UserFeatureAdoptionChart({
   agentInteractions,
   planInteractions,
   cliInteractions,
   askModeInteractions,
   editModeInteractions,
   completionInteractions,
-}: FeatureAdoptionRadarChartProps) {
-  const radarValues = {
+}: UserFeatureAdoptionChartProps) {
+  const featureValues = {
     agentInteractions,
     planInteractions,
     cliInteractions,
@@ -37,30 +35,25 @@ export default function FeatureAdoptionRadarChart({
     completionInteractions,
   } as const;
 
-  const radarItems = FEATURE_ADOPTION_RADAR_METADATA.map((item) => ({
+  const featureItems = FEATURE_ADOPTION_RADAR_METADATA.map((item) => ({
     ...item,
-    value: radarValues[item.key],
+    value: featureValues[item.key],
   }));
 
-  const chartData = {
-    labels: radarItems.map((item) => item.label),
-    datasets: [
-      createRadarDataset(
-        chartColors.indigo.solid,
-        'Interactions',
-        radarItems.map((item) => item.value)
-      ),
-    ],
-  };
-
-  const options = createRadarChartOptions({
-    tooltipLabelCallback: (context: TooltipItem<'radar'>) => {
-      const unit = radarItems[context.dataIndex]?.unit || 'interactions';
-      return `${context.label}: ${context.parsed.r.toLocaleString()} ${unit}`;
-    },
+  const featureColor = chartColors.indigo.solid;
+  const { chartData, options } = createDistributionBarChartConfig({
+    entries: featureItems.map((item) => ({
+      label: item.label,
+      value: item.value,
+      color: featureColor,
+      unit: item.unit,
+    })),
+    datasetLabel: 'Interactions',
+    unit: 'interactions',
+    showShare: false,
   });
 
-  const total = radarItems.reduce((sum, item) => sum + item.value, 0);
+  const total = featureItems.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <ChartContainer
@@ -71,13 +64,13 @@ export default function FeatureAdoptionRadarChart({
       chartHeight="flex-1 min-h-0"
       footer={
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted">
-          {radarItems.map((item) => (
+          {featureItems.map((item) => (
             <span key={item.key}>{item.summaryLabel}: <strong>{item.value.toLocaleString()}</strong></span>
           ))}
         </div>
       }
     >
-      <Radar data={chartData} options={options} />
+      <Bar data={chartData} options={options} />
     </ChartContainer>
   );
 }

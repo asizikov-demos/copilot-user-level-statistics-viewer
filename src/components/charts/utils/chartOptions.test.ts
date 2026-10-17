@@ -78,3 +78,19 @@ describe('createDualAxisChartOptions', () => {
     });
   });
 });
+
+describe('grid colors', () => {
+  it('uses the Primer muted border token for both axes', () => {
+    const options = createBaseChartOptions({ showGridX: true });
+
+    expect(options.scales.x.grid.color).toBe('rgba(209, 217, 224, 0.7)');
+    expect(options.scales.y.grid.color).toBe('rgba(209, 217, 224, 0.7)');
+  });
+});
+
+describe('tooltip interaction axis', () => {
+  it('hit-tests along the index axis so horizontal bars match the hovered category', () => {
+    expect(createBaseChartOptions().interaction.axis).toBe('x');
+    expect(createHorizontalBarChartOptions().interaction.axis).toBe('y');
+  });
+});

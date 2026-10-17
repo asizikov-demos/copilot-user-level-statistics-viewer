@@ -1,11 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Doughnut } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
-import { createDoughnutChartOptions } from '../../../charts/utils/chartOptions';
-import { createDoughnutDataset } from '../../../charts/utils/chartStyles';
+import { createDistributionBarChartConfig, type DistributionBarEntry } from '../../../charts/utils/distributionBarChart';
 import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
 import ChartContainer from '../../../ui/ChartContainer';
 import { formatIDEName } from '../../../icons/IDEIcons';
@@ -29,45 +27,22 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
   const hasCliActivity = cliInteractionCount > 0;
   const hasData = sorted.length > 0 || hasCliActivity;
 
-  const labels = [
-    ...sorted.map((ide) => formatIDEName(ide.ide)),
-    ...(hasCliActivity ? ['Copilot CLI'] : []),
-  ];
-
-  const dataValues = [
-    ...sorted.map(getTotalUserInitiatedInteractionCount),
-    ...(hasCliActivity ? [cliInteractionCount] : []),
-  ];
-
   let fallbackIndex = 0;
-  const backgroundColors = [
-    ...sorted.map((ide) => {
-      const color = getIdeColor(ide.ide, fallbackIndex);
-      if (!hasIdeColor(ide.ide)) {
-        fallbackIndex += 1;
-      }
-      return color;
-    }),
-    ...(hasCliActivity ? [ideColors['copilot_cli']] : []),
-  ];
+  const entries: DistributionBarEntry[] = sorted.map((ide) => {
+    const color = getIdeColor(ide.ide, fallbackIndex);
+    if (!hasIdeColor(ide.ide)) {
+      fallbackIndex += 1;
+    }
+    return { label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color };
+  });
+  if (hasCliActivity) {
+    entries.push({ label: 'Copilot CLI', value: cliInteractionCount, color: ideColors['copilot_cli'] });
+  }
 
-  const totalInteractions = dataValues.reduce((sum, v) => sum + v, 0);
-
-  const chartData = {
-    labels,
-    datasets: [
-      createDoughnutDataset(dataValues, backgroundColors),
-    ],
-  };
-
-  const options = createDoughnutChartOptions({
-    tooltipLabelCallback: (context: TooltipItem<'doughnut'>) => {
-      const value = context.parsed;
-      const percentage = totalInteractions > 0
-        ? ((value / totalInteractions) * 100).toFixed(1)
-        : '0.0';
-      return `${context.label}: ${value.toLocaleString()} interactions (${percentage}%)`;
-    },
+  const { chartData, options } = createDistributionBarChartConfig({
+    entries,
+    datasetLabel: 'Interactions',
+    unit: 'interactions',
   });
 
   return (
@@ -79,7 +54,7 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       isEmpty={!hasData}
       emptyState="No client activity recorded"
     >
-      <Doughnut data={chartData} options={options} />
+      <Bar data={chartData} options={options} />
     </ChartContainer>
   );
 }

@@ -30,6 +30,15 @@ import { useNavigation } from '../../../state/NavigationContext';
 import type { ModeImpactData } from '../../../domain/calculators/metricCalculators';
 import type { DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
 import { registerChartJS } from '../../charts/utils/chartSetup';
+import {
+  getIdeColor,
+  getLanguageColor,
+  getSequentialColor,
+  hasIdeColor,
+  ideColors,
+} from '../../charts/utils/chartColors';
+import type { DistributionBarEntry } from '../../charts/utils/distributionBarChart';
+import { sortBySelector } from '../../../utils/sorting';
 import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { isCliFeature } from '../../../domain/featureCategories';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
@@ -181,30 +190,28 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     .reduce((sum, f) => sum + getTotalUserInitiatedInteractionCount(f), 0);
   const cliInteractions = totalCliPrompts;
 
-  const ideChartData = useMemo(() => {
-    const labels = ideAggregates.map(ide => formatIDEName(ide.ide));
-    const data = ideAggregates.map(getTotalUserInitiatedInteractionCount);
+  const ideDistribution = useMemo<DistributionBarEntry[]>(() => {
+    let fallbackIndex = 0;
+    const entries = ideAggregates.map(ide => {
+      const color = getIdeColor(ide.ide, fallbackIndex);
+      if (!hasIdeColor(ide.ide)) {
+        fallbackIndex += 1;
+      }
+      return {
+        label: formatIDEName(ide.ide),
+        value: getTotalUserInitiatedInteractionCount(ide),
+        color,
+      };
+    });
 
     if (totalCliPrompts > 0) {
-      labels.push('Copilot CLI');
-      data.push(totalCliPrompts);
+      entries.push({ label: 'Copilot CLI', value: totalCliPrompts, color: ideColors['copilot_cli'] });
     }
 
-    return {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: [
-          '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316',
-          '#6E40C9', '#06B6D4', '#84CC16', '#EC4899',
-        ],
-        borderWidth: 2,
-        borderColor: '#fff',
-      }]
-    };
+    return sortBySelector(entries, entry => entry.value, 'desc');
   }, [ideAggregates, totalCliPrompts]);
 
-  const { languageGenerations, languageChartData } = useMemo(() => {
+  const languageDistribution = useMemo<DistributionBarEntry[]>(() => {
     const generations = languageFeatureAggregates.reduce((acc, item) => {
       if (item.language && item.language !== '' && item.language !== 'unknown') {
         acc[item.language] = (acc[item.language] || 0) + item.code_generation_activity_count;
@@ -212,23 +219,15 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    return {
-      languageGenerations: generations,
-      languageChartData: {
-        labels: Object.keys(generations),
-        datasets: [{
-          data: Object.values(generations),
-          backgroundColor: [
-            '#06B6D4', '#84CC16', '#F59E0B', '#EC4899', '#8B5CF6', '#10B981', '#F97316', '#EF4444',
-          ],
-          borderWidth: 2,
-          borderColor: '#fff',
-        }]
-      }
-    };
+    const entries = Object.entries(generations).map(([language, value], index) => ({
+      label: language,
+      value,
+      color: getLanguageColor(language, index),
+    }));
+    return sortBySelector(entries, entry => entry.value, 'desc');
   }, [languageFeatureAggregates]);
 
-  const { modelInteractions, modelChartData } = useMemo(() => {
+  const modelDistribution = useMemo<DistributionBarEntry[]>(() => {
     const interactions = modelFeatureAggregates.reduce((acc, item) => {
       if (item.model && item.model !== '') {
         acc[item.model] = (acc[item.model] || 0) + getTotalUserInitiatedInteractionCount(item);
@@ -236,46 +235,13 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    return {
-      modelInteractions: interactions,
-      modelChartData: {
-        labels: Object.keys(interactions),
-        datasets: [{
-          data: Object.values(interactions),
-          backgroundColor: [
-            '#6366F1', '#14B8A6', '#F59E0B', '#EF4444', '#8B5CF6', '#10B981',
-          ],
-          borderWidth: 2,
-          borderColor: '#fff',
-        }]
-      }
-    };
+    const entries = Object.entries(interactions).map(([model, value], index) => ({
+      label: model,
+      value,
+      color: getSequentialColor(index),
+    }));
+    return sortBySelector(entries, entry => entry.value, 'desc');
   }, [modelFeatureAggregates]);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          padding: 15,
-          usePointStyle: true,
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: { label: string; parsed: number; dataset: { data: number[] } }) {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      }
-    }
-  };
 
   const cliAndAppUsage = useMemo(
     () => selectCopilotCliAndAppUsageReadModel(userDetails),
@@ -409,10 +375,9 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           usedCodingAgent={usedCodingAgent}
           usedCodeReview={usedCodeReview}
           usedAutoMode={usedAutoMode}
-          ideChartData={ideAggregates.length > 0 || totalCliPrompts > 0 ? ideChartData : undefined}
-          languageChartData={Object.keys(languageGenerations).length > 0 ? languageChartData : undefined}
-          modelChartData={Object.keys(modelInteractions).length > 0 ? modelChartData : undefined}
-          chartOptions={chartOptions}
+          ideDistribution={ideDistribution}
+          languageDistribution={languageDistribution}
+          modelDistribution={modelDistribution}
         />
       </div>
 

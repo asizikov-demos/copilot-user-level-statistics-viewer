@@ -1,6 +1,7 @@
 'use client';
 
 import type { TooltipItem } from 'chart.js';
+import { resolveChartTheme } from './chartTheme';
 
 /**
  * Configuration for creating base chart options
@@ -50,11 +51,6 @@ export interface DualAxisExtraAxisConfig {
 }
 
 /**
- * Default grid color used across charts
- */
-const DEFAULT_GRID_COLOR = 'rgba(0, 0, 0, 0.1)';
-
-/**
  * Creates base chart options with common configuration.
  * Reduces duplication across chart components.
  */
@@ -81,6 +77,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
     xMaxRotation,
     xAutoSkip,
   } = config;
+  const { gridColor } = resolveChartTheme();
 
   return {
     responsive: true,
@@ -112,6 +109,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
         },
         grid: {
           display: showGridX,
+          color: gridColor,
         },
         ...(xMaxRotation !== undefined || xAutoSkip !== undefined ? {
           ticks: {
@@ -130,7 +128,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
         ...(yMax !== undefined && { max: yMax }),
         grid: {
           display: showGridY,
-          color: DEFAULT_GRID_COLOR,
+          color: gridColor,
         },
         ticks: {
           ...(yStepSize !== undefined && { stepSize: yStepSize }),
@@ -141,6 +139,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
     interaction: {
       intersect: false,
       mode: 'index' as const,
+      axis: indexAxis,
     },
   };
 }
@@ -316,95 +315,3 @@ export const yAxisFormatters = {
     return numeric.toLocaleString();
   },
 };
-
-/**
- * Configuration for radar chart options
- */
-export interface RadarChartConfig {
-  showLegend?: boolean;
-  tooltipLabelCallback?: (context: TooltipItem<'radar'>) => string | string[];
-  gridColor?: string;
-  angleLineColor?: string;
-  pointLabelFontSize?: number;
-  pointLabelFontWeight?: 'normal' | 'bold' | 'lighter' | 'bolder' | number;
-  pointLabelColor?: string;
-}
-
-/**
- * Creates chart options for radar charts.
- */
-export function createRadarChartOptions(config: RadarChartConfig = {}) {
-  const {
-    showLegend = false,
-    tooltipLabelCallback,
-    gridColor = 'rgba(0, 0, 0, 0.08)',
-    angleLineColor = 'rgba(0, 0, 0, 0.08)',
-    pointLabelFontSize = 13,
-    pointLabelFontWeight = 'bold',
-    pointLabelColor = '#374151',
-  } = config;
-
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: showLegend },
-      tooltip: {
-        callbacks: {
-          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
-        },
-      },
-    },
-    scales: {
-      r: {
-        beginAtZero: true,
-        ticks: {
-          display: true,
-          backdropColor: 'transparent',
-        },
-        pointLabels: {
-          font: { size: pointLabelFontSize, weight: pointLabelFontWeight },
-          color: pointLabelColor,
-        },
-        grid: { color: gridColor },
-        angleLines: { color: angleLineColor },
-      },
-    },
-  };
-}
-
-/**
- * Configuration for doughnut chart options
- */
-export interface DoughnutChartConfig {
-  cutout?: string;
-  legendPosition?: 'top' | 'bottom' | 'left' | 'right';
-  tooltipLabelCallback?: (context: TooltipItem<'doughnut'>) => string | string[];
-}
-
-/**
- * Creates chart options for doughnut charts.
- */
-export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
-  const {
-    cutout = '55%',
-    legendPosition = 'right',
-    tooltipLabelCallback,
-  } = config;
-
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout,
-    plugins: {
-      legend: {
-        position: legendPosition,
-      },
-      tooltip: {
-        callbacks: {
-          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
-        },
-      },
-    },
-  };
-}
