@@ -2,12 +2,25 @@ import type {
   CopilotSurface,
   SurfaceCohort,
 } from '../../../types/surfaceProductivity';
+import { chartColors, type ChartColor } from '../../charts/utils/chartColors';
 
 export interface SurfaceMetadata {
   label: string;
   shortDescription: string;
-  color: string;
+  readonly color: string;
   dotClassName: string;
+}
+
+function createSurfaceMetadata(
+  metadata: Omit<SurfaceMetadata, 'color'>,
+  chartColor: ChartColor,
+): SurfaceMetadata {
+  return {
+    ...metadata,
+    get color() {
+      return chartColor.solid;
+    },
+  };
 }
 
 export const SURFACE_ORDER: readonly CopilotSurface[] = [
@@ -17,24 +30,21 @@ export const SURFACE_ORDER: readonly CopilotSurface[] = [
 ];
 
 export const SURFACE_METADATA: Record<CopilotSurface, SurfaceMetadata> = {
-  ide: {
+  ide: createSurfaceMetadata({
     label: 'IDE',
     shortDescription: 'Editor-attributed activity across installed IDE clients',
-    color: 'rgb(59, 130, 246)',
-    dotClassName: 'bg-blue-500',
-  },
-  cli: {
+    dotClassName: 'bg-[var(--data-blue-color-emphasis)]',
+  }, chartColors.blue),
+  cli: createSurfaceMetadata({
     label: 'CLI',
     shortDescription: 'Copilot CLI sessions and CLI-attributed code impact',
-    color: 'rgb(244, 63, 94)',
-    dotClassName: 'bg-rose-500',
-  },
-  copilotApp: {
+    dotClassName: 'bg-[var(--data-coral-color-emphasis)]',
+  }, chartColors.rose),
+  copilotApp: createSurfaceMetadata({
     label: 'Copilot App',
     shortDescription: 'Activity attributed to the Copilot App surface',
-    color: 'rgb(20, 184, 166)',
-    dotClassName: 'bg-teal-500',
-  },
+    dotClassName: 'bg-[var(--data-teal-color-emphasis)]',
+  }, chartColors.teal),
 };
 
 export const COHORT_LABELS: Record<SurfaceCohort, string> = {
