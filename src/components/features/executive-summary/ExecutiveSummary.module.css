@@ -11,11 +11,7 @@
 .toolbar { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
 .toolbar h1 { font-size: 24px; font-weight: 650; letter-spacing: -.025em; }
 .toolbar p { font-size: 13px; color: var(--brief-muted); margin-top: 4px; }
-.controls { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-.controls select, .controls button { border: 1px solid #b7c4ce; border-radius: 6px; background: white; padding: 8px 10px; cursor: pointer; }
-.controls button { background: #263944; color: white; border-color: #263944; }
-.controls button:hover { background: #152935; }
-.controls select:focus-visible, .controls button:focus-visible { outline: 3px solid #247eb2; outline-offset: 3px; }
+.controls { display: flex; align-items: flex-end; gap: 8px; }
 .report { background: white; border: 1px solid #d1d9e0; padding: 34px 38px 24px; font-size: 13px; line-height: 1.5; }
 .identity { display: flex; justify-content: space-between; align-items: start; gap: 20px; border-bottom: 2px solid var(--brief-ink); padding-bottom: 16px; }
 .identity > div { min-width: 0; }
