@@ -172,6 +172,11 @@
     overflow: visible;
   }
 
+  /* Self-sizing content (composition tiles, timelines) keeps its natural height in print. */
+  .chart.autoHeight {
+    height: auto;
+  }
+
   .footer {
     margin-top: var(--base-size-8);
     font-size: 10px;

@@ -98,7 +98,7 @@ export default function ChartContainer({
         </div>
       )}
 
-      <div className={cn(styles.chart, chartHeight)}>{children}</div>
+      <div className={cn(styles.chart, chartHeight === 'h-auto' && styles.autoHeight, chartHeight)}>{children}</div>
 
       {footer && <div className={styles.footer}>{footer}</div>}
     </div>
