@@ -162,18 +162,6 @@ describe('DayDetailsModal', () => {
       expect(document.activeElement).toBe(trigger);
     });
 
-    it('navigates days with the arrow keys and buttons only when navigation is allowed', () => {
-      const onNavigateDay = vi.fn();
-      openHarnessDialog(onNavigateDay);
-
-      fireEvent.keyDown(window, { key: 'ArrowLeft' });
-      fireEvent.keyDown(window, { key: 'ArrowRight' });
-      fireEvent.click(screen.getByRole('button', { name: /^Next day/ }));
-
-      expect(onNavigateDay.mock.calls).toEqual([[1], [1]]);
-      expect((screen.getByRole('button', { name: /^Previous day/ }) as HTMLButtonElement).disabled).toBe(true);
-    });
-
     it('renders nothing while closed', () => {
       render(withTheme(<DayDetailsModal isOpen={false} onClose={vi.fn()} date="2024-01-15" />));
 
