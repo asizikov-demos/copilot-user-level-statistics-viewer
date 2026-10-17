@@ -4,12 +4,11 @@ import { formatIDEName, getIDEIcon } from '../../icons/IDEIcons';
 import { getModelIcon } from '../../icons/ModelIcons';
 import type { AiAdoptionPhaseReadModel } from '../../../read-models/aiAdoptionPhases';
 import {
-  formatAiAdoptionPhase,
   formatAiCreditCost,
   formatModelDisplayName,
   formatNumber,
 } from '../../../utils/formatters';
-import { PHASE_PILL_CLASS } from './aiAdoptionPhaseMetadata';
+import AiAdoptionPhaseLabel from './AiAdoptionPhaseLabel';
 
 type AiAdoptionPhaseData = AiAdoptionPhaseReadModel['aiAdoptionPhaseData'][number];
 
@@ -28,9 +27,7 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
       headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 whitespace-nowrap',
       renderCell: (phase) => (
-        <span className={PHASE_PILL_CLASS}>
-          {formatAiAdoptionPhase(phase.phase)}
-        </span>
+        <AiAdoptionPhaseLabel phase={phase.phase} />
       ),
     },
     {
