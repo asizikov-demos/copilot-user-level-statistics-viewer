@@ -1,0 +1,17 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base-size-16);
+}
+
+.title {
+  color: var(--fgColor-default);
+}
+
+.description {
+  max-width: 42rem;
+  margin: var(--base-size-4) 0 0;
+  font-size: var(--text-body-size-medium);
+  color: var(--fgColor-muted);
+}
