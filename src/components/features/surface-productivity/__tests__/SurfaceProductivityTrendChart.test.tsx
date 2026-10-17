@@ -1,4 +1,4 @@
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SurfaceProductivityReadModel } from '../../../../read-models/surfaceProductivity';
@@ -40,6 +40,10 @@ const model: Pick<SurfaceProductivityReadModel, 'dailyProductivity' | 'reportSta
   ],
 };
 
+function textContent(node: ReactTestInstance | string): string {
+  return typeof node === 'string' ? node : node.children.map(textContent).join('');
+}
+
 describe('SurfaceProductivityTrendChart', () => {
   let renderer: ReactTestRenderer | undefined;
 
@@ -60,7 +64,7 @@ describe('SurfaceProductivityTrendChart', () => {
     ]);
 
     await act(async () => {
-      renderer!.root.findAllByType('button').find(button => button.children.join('') === 'Daily net LOC')!.props.onClick();
+      renderer!.root.findAllByType('button').find(button => textContent(button) === 'Daily net LOC')!.props.onClick();
     });
 
     expect(line.mock.lastCall![0].data.datasets.map(dataset => dataset.data)).toEqual([

@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import { Heading } from "@primer/react";
 import StatsGrid, { type StatsGridColumns } from "./StatsGrid";
 import { cn } from '../../utils/cn';
+import styles from "./StatsCardGroup.module.css";
 
 export interface StatsCardGroupProps<T> {
   title?: string;
@@ -35,23 +37,25 @@ export default function StatsCardGroup<T>({
     return null;
   }
 
-  const Heading = headingTag;
-
   return (
-    <section className={cn("space-y-4", className)}>
+    <section className={cn(styles.group, className)}>
       {(title || description || actions) && (
-        <div className={cn("flex flex-wrap items-start justify-between gap-3", headerClassName)}>
-          <div className="space-y-1">
-            {title && <Heading className="text-lg font-medium text-default">{title}</Heading>}
+        <div className={cn(styles.header, headerClassName)}>
+          <div className={styles.headerText}>
+            {title && (
+              <Heading as={headingTag} variant="small" className={styles.title}>
+                {title}
+              </Heading>
+            )}
             {description && (
               typeof description === "string" ? (
-                <p className="text-sm text-muted max-w-2xl">{description}</p>
+                <p className={styles.description}>{description}</p>
               ) : (
                 description
               )
             )}
           </div>
-          {actions && <div className="flex-shrink-0">{actions}</div>}
+          {actions && <div className={styles.actions}>{actions}</div>}
         </div>
       )}
 

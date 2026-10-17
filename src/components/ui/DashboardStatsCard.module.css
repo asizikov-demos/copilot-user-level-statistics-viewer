@@ -1,0 +1,78 @@
+.card {
+  padding: var(--base-size-16);
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-default);
+  border: var(--borderWidth-thin) solid var(--borderColor-default);
+  border-radius: var(--borderRadius-medium);
+}
+
+.card[data-tone='tint'] {
+  background-color: var(--role-bgColor);
+  border-color: var(--role-borderColor);
+}
+
+.card[data-alignment='center'] {
+  text-align: center;
+}
+
+.content[data-has-icon='true'] {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--base-size-12);
+}
+
+.card[data-alignment='center'] .content[data-has-icon='true'] {
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--role-iconColor);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-size-4);
+  min-width: 0;
+}
+
+.value {
+  font: var(--text-title-shorthand-medium);
+  line-height: var(--base-text-lineHeight-tight);
+  color: var(--role-fgColor);
+}
+
+.card[data-size='md'] .value {
+  font: var(--text-title-shorthand-small);
+  line-height: var(--base-text-lineHeight-tight);
+}
+
+.label {
+  font-size: var(--text-body-size-medium);
+  color: var(--fgColor-muted);
+}
+
+.helper {
+  font-size: var(--text-body-size-small);
+  color: var(--fgColor-muted);
+}
+
+.skeleton {
+  display: inline-block;
+  vertical-align: middle;
+  background-color: var(--bgColor-neutral-muted);
+  border-radius: var(--borderRadius-small);
+}
+
+.valueSkeleton {
+  width: 5rem;
+  height: 1.5rem;
+}
+
+.helperSkeleton {
+  width: 6rem;
+  height: 0.75rem;
+}

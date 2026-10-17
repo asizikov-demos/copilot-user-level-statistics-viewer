@@ -2,23 +2,23 @@
 
 import { useId, useState } from 'react';
 import type { ReactNode } from 'react';
+import { ChevronDownIcon } from '@primer/octicons-react';
+import { cn } from '../../utils/cn';
+import styles from './DisclosureSection.module.css';
 
 interface DisclosureSectionProps {
   label: ReactNode;
   children: ReactNode;
   defaultExpanded?: boolean;
+  /** Replaces the default container styling. */
   containerClassName?: string;
+  /** Replaces the default toggle styling; the focus-visible outline is always applied. */
   buttonClassName?: string;
+  /** Replaces the default content styling. */
   contentClassName?: string;
+  /** Replaces the default label styling. */
   labelClassName?: string;
 }
-
-const DEFAULT_LABEL_CLASS = 'text-sm font-medium text-muted';
-
-const DEFAULT_CONTAINER_CLASS = 'border-t border-default pt-4';
-const DEFAULT_BUTTON_CLASS =
-  'flex items-center justify-between w-full px-4 py-3 bg-muted hover:bg-[var(--control-bgColor-hover)] rounded-lg transition-colors';
-const DEFAULT_CONTENT_CLASS = 'mt-4';
 
 export default function DisclosureSection({
   label,
@@ -33,28 +33,22 @@ export default function DisclosureSection({
   const contentId = useId();
 
   return (
-    <div className={containerClassName ?? DEFAULT_CONTAINER_CLASS}>
+    <div className={containerClassName ?? styles.container} data-component="DisclosureSection">
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className={buttonClassName ?? DEFAULT_BUTTON_CLASS}
+        className={cn(styles.toggle, buttonClassName ?? styles.button)}
         aria-expanded={isExpanded}
         aria-controls={contentId}
       >
-        <span className={labelClassName ?? DEFAULT_LABEL_CLASS}>{label}</span>
-        <svg
-          className={`w-5 h-5 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className={labelClassName ?? styles.label}>{label}</span>
+        <span className={styles.chevron} data-expanded={isExpanded ? 'true' : 'false'} aria-hidden="true">
+          <ChevronDownIcon size={20} />
+        </span>
       </button>
 
       {isExpanded && (
-        <div id={contentId} className={contentClassName ?? DEFAULT_CONTENT_CLASS}>
+        <div id={contentId} className={contentClassName ?? styles.content}>
           {children}
         </div>
       )}
