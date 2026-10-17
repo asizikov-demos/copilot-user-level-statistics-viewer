@@ -3,6 +3,329 @@
 @import "@primer/primitives/dist/css/functional/themes/light.css";
 
 /*
+ * Primer semantic color utilities (text-default, bg-muted, border-default, divide-muted, ...).
+ * Vendored from @primer/tailwind-config@1.0.0 src/color.css: only the --background-color-*,
+ * --border-color-* and --text-color-* declarations. The package itself is not imported because
+ * it resets Tailwind's palette, type scale, radii, shadows and breakpoints.
+ * `inline` is required because the values reference Primer CSS variables.
+ */
+@theme inline {
+  /* ===========================================
+   * BACKGROUND COLORS
+   * =========================================== */
+  --background-color-default: var(--bgColor-default);
+  --background-color-muted: var(--bgColor-muted);
+  --background-color-inset: var(--bgColor-inset);
+  --background-color-emphasis: var(--bgColor-emphasis);
+  --background-color-inverse: var(--bgColor-inverse);
+  --background-color-disabled: var(--bgColor-disabled);
+  --background-color-transparent: var(--bgColor-transparent);
+  --background-color-white: var(--bgColor-white);
+  --background-color-black: var(--bgColor-black);
+
+  /* Accent */
+  --background-color-accent-emphasis: var(--bgColor-accent-emphasis);
+  --background-color-accent-muted: var(--bgColor-accent-muted);
+
+  /* Attention */
+  --background-color-attention-emphasis: var(--bgColor-attention-emphasis);
+  --background-color-attention-muted: var(--bgColor-attention-muted);
+
+  /* Success */
+  --background-color-success-emphasis: var(--bgColor-success-emphasis);
+  --background-color-success-muted: var(--bgColor-success-muted);
+
+  /* Danger */
+  --background-color-danger-emphasis: var(--bgColor-danger-emphasis);
+  --background-color-danger-muted: var(--bgColor-danger-muted);
+
+  /* Severe */
+  --background-color-severe-emphasis: var(--bgColor-severe-emphasis);
+  --background-color-severe-muted: var(--bgColor-severe-muted);
+
+  /* Done */
+  --background-color-done-emphasis: var(--bgColor-done-emphasis);
+  --background-color-done-muted: var(--bgColor-done-muted);
+
+  /* Sponsors */
+  --background-color-sponsors-emphasis: var(--bgColor-sponsors-emphasis);
+  --background-color-sponsors-muted: var(--bgColor-sponsors-muted);
+
+  /* Open */
+  --background-color-open-emphasis: var(--bgColor-open-emphasis);
+  --background-color-open-muted: var(--bgColor-open-muted);
+
+  /* Closed */
+  --background-color-closed-emphasis: var(--bgColor-closed-emphasis);
+  --background-color-closed-muted: var(--bgColor-closed-muted);
+
+  /* Draft */
+  --background-color-draft-emphasis: var(--bgColor-draft-emphasis);
+  --background-color-draft-muted: var(--bgColor-draft-muted);
+
+  /* Neutral */
+  --background-color-neutral-emphasis: var(--bgColor-neutral-emphasis);
+  --background-color-neutral-muted: var(--bgColor-neutral-muted);
+
+  /* Upsell */
+  --background-color-upsell-emphasis: var(--bgColor-upsell-emphasis);
+  --background-color-upsell-muted: var(--bgColor-upsell-muted);
+
+  /* ===========================================
+   * LABEL BACKGROUND COLORS
+   * =========================================== */
+  --background-color-label-auburn-rest: var(--label-auburn-bgColor-rest);
+  --background-color-label-auburn-hover: var(--label-auburn-bgColor-hover);
+  --background-color-label-auburn-active: var(--label-auburn-bgColor-active);
+  --background-color-label-blue-rest: var(--label-blue-bgColor-rest);
+  --background-color-label-blue-hover: var(--label-blue-bgColor-hover);
+  --background-color-label-blue-active: var(--label-blue-bgColor-active);
+  --background-color-label-brown-rest: var(--label-brown-bgColor-rest);
+  --background-color-label-brown-hover: var(--label-brown-bgColor-hover);
+  --background-color-label-brown-active: var(--label-brown-bgColor-active);
+  --background-color-label-coral-rest: var(--label-coral-bgColor-rest);
+  --background-color-label-coral-hover: var(--label-coral-bgColor-hover);
+  --background-color-label-coral-active: var(--label-coral-bgColor-active);
+  --background-color-label-cyan-rest: var(--label-cyan-bgColor-rest);
+  --background-color-label-cyan-hover: var(--label-cyan-bgColor-hover);
+  --background-color-label-cyan-active: var(--label-cyan-bgColor-active);
+  --background-color-label-gray-rest: var(--label-gray-bgColor-rest);
+  --background-color-label-gray-hover: var(--label-gray-bgColor-hover);
+  --background-color-label-gray-active: var(--label-gray-bgColor-active);
+  --background-color-label-green-rest: var(--label-green-bgColor-rest);
+  --background-color-label-green-hover: var(--label-green-bgColor-hover);
+  --background-color-label-green-active: var(--label-green-bgColor-active);
+  --background-color-label-indigo-rest: var(--label-indigo-bgColor-rest);
+  --background-color-label-indigo-hover: var(--label-indigo-bgColor-hover);
+  --background-color-label-indigo-active: var(--label-indigo-bgColor-active);
+  --background-color-label-lemon-rest: var(--label-lemon-bgColor-rest);
+  --background-color-label-lemon-hover: var(--label-lemon-bgColor-hover);
+  --background-color-label-lemon-active: var(--label-lemon-bgColor-active);
+  --background-color-label-lime-rest: var(--label-lime-bgColor-rest);
+  --background-color-label-lime-hover: var(--label-lime-bgColor-hover);
+  --background-color-label-lime-active: var(--label-lime-bgColor-active);
+  --background-color-label-olive-rest: var(--label-olive-bgColor-rest);
+  --background-color-label-olive-hover: var(--label-olive-bgColor-hover);
+  --background-color-label-olive-active: var(--label-olive-bgColor-active);
+  --background-color-label-orange-rest: var(--label-orange-bgColor-rest);
+  --background-color-label-orange-hover: var(--label-orange-bgColor-hover);
+  --background-color-label-orange-active: var(--label-orange-bgColor-active);
+  --background-color-label-pine-rest: var(--label-pine-bgColor-rest);
+  --background-color-label-pine-hover: var(--label-pine-bgColor-hover);
+  --background-color-label-pine-active: var(--label-pine-bgColor-active);
+  --background-color-label-pink-rest: var(--label-pink-bgColor-rest);
+  --background-color-label-pink-hover: var(--label-pink-bgColor-hover);
+  --background-color-label-pink-active: var(--label-pink-bgColor-active);
+  --background-color-label-plum-rest: var(--label-plum-bgColor-rest);
+  --background-color-label-plum-hover: var(--label-plum-bgColor-hover);
+  --background-color-label-plum-active: var(--label-plum-bgColor-active);
+  --background-color-label-purple-rest: var(--label-purple-bgColor-rest);
+  --background-color-label-purple-hover: var(--label-purple-bgColor-hover);
+  --background-color-label-purple-active: var(--label-purple-bgColor-active);
+  --background-color-label-red-rest: var(--label-red-bgColor-rest);
+  --background-color-label-red-hover: var(--label-red-bgColor-hover);
+  --background-color-label-red-active: var(--label-red-bgColor-active);
+  --background-color-label-teal-rest: var(--label-teal-bgColor-rest);
+  --background-color-label-teal-hover: var(--label-teal-bgColor-hover);
+  --background-color-label-teal-active: var(--label-teal-bgColor-active);
+  --background-color-label-yellow-rest: var(--label-yellow-bgColor-rest);
+  --background-color-label-yellow-hover: var(--label-yellow-bgColor-hover);
+  --background-color-label-yellow-active: var(--label-yellow-bgColor-active);
+
+  /* ===========================================
+   * BORDER COLORS
+   * =========================================== */
+  --border-color-default: var(--borderColor-default);
+  --border-color-muted: var(--borderColor-muted);
+  --border-color-emphasis: var(--borderColor-emphasis);
+  --border-color-disabled: var(--borderColor-disabled);
+  --border-color-transparent: var(--borderColor-transparent);
+  --border-color-translucent: var(--borderColor-translucent);
+
+  /* Accent */
+  --border-color-accent-emphasis: var(--borderColor-accent-emphasis);
+  --border-color-accent-muted: var(--borderColor-accent-muted);
+
+  /* Attention */
+  --border-color-attention-emphasis: var(--borderColor-attention-emphasis);
+  --border-color-attention-muted: var(--borderColor-attention-muted);
+
+  /* Success */
+  --border-color-success-emphasis: var(--borderColor-success-emphasis);
+  --border-color-success-muted: var(--borderColor-success-muted);
+
+  /* Danger */
+  --border-color-danger-emphasis: var(--borderColor-danger-emphasis);
+  --border-color-danger-muted: var(--borderColor-danger-muted);
+
+  /* Severe */
+  --border-color-severe-emphasis: var(--borderColor-severe-emphasis);
+  --border-color-severe-muted: var(--borderColor-severe-muted);
+
+  /* Done */
+  --border-color-done-emphasis: var(--borderColor-done-emphasis);
+  --border-color-done-muted: var(--borderColor-done-muted);
+
+  /* Sponsors */
+  --border-color-sponsors-emphasis: var(--borderColor-sponsors-emphasis);
+  --border-color-sponsors-muted: var(--borderColor-sponsors-muted);
+
+  /* Open */
+  --border-color-open-emphasis: var(--borderColor-open-emphasis);
+  --border-color-open-muted: var(--borderColor-open-muted);
+
+  /* Closed */
+  --border-color-closed-emphasis: var(--borderColor-closed-emphasis);
+  --border-color-closed-muted: var(--borderColor-closed-muted);
+
+  /* Draft */
+  --border-color-draft-emphasis: var(--borderColor-draft-emphasis);
+  --border-color-draft-muted: var(--borderColor-draft-muted);
+
+  /* Neutral */
+  --border-color-neutral-emphasis: var(--borderColor-neutral-emphasis);
+  --border-color-neutral-muted: var(--borderColor-neutral-muted);
+
+  /* Upsell */
+  --border-color-upsell-emphasis: var(--borderColor-upsell-emphasis);
+  --border-color-upsell-muted: var(--borderColor-upsell-muted);
+
+  /* ===========================================
+   * LABEL BORDER COLORS
+   * =========================================== */
+  --border-color-label-auburn: var(--label-auburn-borderColor);
+  --border-color-label-blue: var(--label-blue-borderColor);
+  --border-color-label-brown: var(--label-brown-borderColor);
+  --border-color-label-coral: var(--label-coral-borderColor);
+  --border-color-label-cyan: var(--label-cyan-borderColor);
+  --border-color-label-gray: var(--label-gray-borderColor);
+  --border-color-label-green: var(--label-green-borderColor);
+  --border-color-label-indigo: var(--label-indigo-borderColor);
+  --border-color-label-lemon: var(--label-lemon-borderColor);
+  --border-color-label-lime: var(--label-lime-borderColor);
+  --border-color-label-olive: var(--label-olive-borderColor);
+  --border-color-label-orange: var(--label-orange-borderColor);
+  --border-color-label-pine: var(--label-pine-borderColor);
+  --border-color-label-pink: var(--label-pink-borderColor);
+  --border-color-label-plum: var(--label-plum-borderColor);
+  --border-color-label-purple: var(--label-purple-borderColor);
+  --border-color-label-red: var(--label-red-borderColor);
+  --border-color-label-teal: var(--label-teal-borderColor);
+  --border-color-label-yellow: var(--label-yellow-borderColor);
+
+  /* ===========================================
+   * TEXT/FOREGROUND COLORS
+   * =========================================== */
+  --text-color-default: var(--fgColor-default);
+  --text-color-muted: var(--fgColor-muted);
+  --text-color-disabled: var(--fgColor-disabled);
+  --text-color-on-emphasis: var(--fgColor-onEmphasis);
+  --text-color-on-inverse: var(--fgColor-onInverse);
+  --text-color-white: var(--fgColor-white);
+  --text-color-black: var(--fgColor-black);
+
+  /* Accent */
+  --text-color-accent: var(--fgColor-accent);
+
+  /* Attention */
+  --text-color-attention: var(--fgColor-attention);
+
+  /* Success */
+  --text-color-success: var(--fgColor-success);
+
+  /* Danger */
+  --text-color-danger: var(--fgColor-danger);
+
+  /* Severe */
+  --text-color-severe: var(--fgColor-severe);
+
+  /* Done */
+  --text-color-done: var(--fgColor-done);
+
+  /* Sponsors */
+  --text-color-sponsors: var(--fgColor-sponsors);
+
+  /* Open */
+  --text-color-open: var(--fgColor-open);
+
+  /* Closed */
+  --text-color-closed: var(--fgColor-closed);
+
+  /* Draft */
+  --text-color-draft: var(--fgColor-draft);
+
+  /* Neutral */
+  --text-color-neutral-emphasis: var(--fgColor-neutral-emphasis);
+
+  /* Upsell */
+  --text-color-upsell: var(--fgColor-upsell);
+
+  /* Link */
+  --text-color-link: var(--fgColor-link);
+
+  /* ===========================================
+   * LABEL TEXT COLORS
+   * =========================================== */
+  --text-color-label-auburn-rest: var(--label-auburn-fgColor-rest);
+  --text-color-label-auburn-hover: var(--label-auburn-fgColor-hover);
+  --text-color-label-auburn-active: var(--label-auburn-fgColor-active);
+  --text-color-label-blue-rest: var(--label-blue-fgColor-rest);
+  --text-color-label-blue-hover: var(--label-blue-fgColor-hover);
+  --text-color-label-blue-active: var(--label-blue-fgColor-active);
+  --text-color-label-brown-rest: var(--label-brown-fgColor-rest);
+  --text-color-label-brown-hover: var(--label-brown-fgColor-hover);
+  --text-color-label-brown-active: var(--label-brown-fgColor-active);
+  --text-color-label-coral-rest: var(--label-coral-fgColor-rest);
+  --text-color-label-coral-hover: var(--label-coral-fgColor-hover);
+  --text-color-label-coral-active: var(--label-coral-fgColor-active);
+  --text-color-label-cyan-rest: var(--label-cyan-fgColor-rest);
+  --text-color-label-cyan-hover: var(--label-cyan-fgColor-hover);
+  --text-color-label-cyan-active: var(--label-cyan-fgColor-active);
+  --text-color-label-gray-rest: var(--label-gray-fgColor-rest);
+  --text-color-label-gray-hover: var(--label-gray-fgColor-hover);
+  --text-color-label-gray-active: var(--label-gray-fgColor-active);
+  --text-color-label-green-rest: var(--label-green-fgColor-rest);
+  --text-color-label-green-hover: var(--label-green-fgColor-hover);
+  --text-color-label-green-active: var(--label-green-fgColor-active);
+  --text-color-label-indigo-rest: var(--label-indigo-fgColor-rest);
+  --text-color-label-indigo-hover: var(--label-indigo-fgColor-hover);
+  --text-color-label-indigo-active: var(--label-indigo-fgColor-active);
+  --text-color-label-lemon-rest: var(--label-lemon-fgColor-rest);
+  --text-color-label-lemon-hover: var(--label-lemon-fgColor-hover);
+  --text-color-label-lemon-active: var(--label-lemon-fgColor-active);
+  --text-color-label-lime-rest: var(--label-lime-fgColor-rest);
+  --text-color-label-lime-hover: var(--label-lime-fgColor-hover);
+  --text-color-label-lime-active: var(--label-lime-fgColor-active);
+  --text-color-label-olive-rest: var(--label-olive-fgColor-rest);
+  --text-color-label-olive-hover: var(--label-olive-fgColor-hover);
+  --text-color-label-olive-active: var(--label-olive-fgColor-active);
+  --text-color-label-orange-rest: var(--label-orange-fgColor-rest);
+  --text-color-label-orange-hover: var(--label-orange-fgColor-hover);
+  --text-color-label-orange-active: var(--label-orange-fgColor-active);
+  --text-color-label-pine-rest: var(--label-pine-fgColor-rest);
+  --text-color-label-pine-hover: var(--label-pine-fgColor-hover);
+  --text-color-label-pine-active: var(--label-pine-fgColor-active);
+  --text-color-label-pink-rest: var(--label-pink-fgColor-rest);
+  --text-color-label-pink-hover: var(--label-pink-fgColor-hover);
+  --text-color-label-pink-active: var(--label-pink-fgColor-active);
+  --text-color-label-plum-rest: var(--label-plum-fgColor-rest);
+  --text-color-label-plum-hover: var(--label-plum-fgColor-hover);
+  --text-color-label-plum-active: var(--label-plum-fgColor-active);
+  --text-color-label-purple-rest: var(--label-purple-fgColor-rest);
+  --text-color-label-purple-hover: var(--label-purple-fgColor-hover);
+  --text-color-label-purple-active: var(--label-purple-fgColor-active);
+  --text-color-label-red-rest: var(--label-red-fgColor-rest);
+  --text-color-label-red-hover: var(--label-red-fgColor-hover);
+  --text-color-label-red-active: var(--label-red-fgColor-active);
+  --text-color-label-teal-rest: var(--label-teal-fgColor-rest);
+  --text-color-label-teal-hover: var(--label-teal-fgColor-hover);
+  --text-color-label-teal-active: var(--label-teal-fgColor-active);
+  --text-color-label-yellow-rest: var(--label-yellow-fgColor-rest);
+  --text-color-label-yellow-hover: var(--label-yellow-fgColor-hover);
+  --text-color-label-yellow-active: var(--label-yellow-fgColor-active);
+}
+
+/*
  * Primer BaseStyles CSS is unlayered, so it overrides Tailwind's layered defaults and
  * utilities. Keep the pre-Primer text color, font stack, and link styling until the
  * token migration.
