@@ -108,7 +108,7 @@ export default function UserDetailsRoute() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Loading user details...</p>
+          <p className="text-gray-500">Loading user details...</p>
         </div>
       </div>
     );
@@ -118,10 +118,10 @@ export default function UserDetailsRoute() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-md">
-          <p className="text-red-600 dark:text-red-400 font-medium mb-2">
+          <p className="text-red-600 font-medium mb-2">
             Failed to load user details
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500">
             {routeState.message}
           </p>
           <div className="mt-4 flex items-center justify-center gap-3">

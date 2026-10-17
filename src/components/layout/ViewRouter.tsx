@@ -27,8 +27,8 @@ const ViewRouter: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center max-w-md">
-          <p className="text-red-600 dark:text-red-400 font-medium mb-2">Failed to process metrics</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
+          <p className="text-red-600 font-medium mb-2">Failed to process metrics</p>
+          <p className="text-sm text-gray-500">{error}</p>
           <button
             onClick={resetAppState}
             className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
@@ -57,7 +57,7 @@ const ViewRouter: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Processing metrics...</p>
+          <p className="text-gray-500">Processing metrics...</p>
         </div>
       </div>
     );
