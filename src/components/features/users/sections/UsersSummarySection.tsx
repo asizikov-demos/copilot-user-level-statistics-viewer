@@ -1,3 +1,4 @@
+import { ProgressBar } from '@primer/react';
 import type { UserSummary } from '../../../../types/metrics';
 
 interface UsersSummarySectionProps {
@@ -45,7 +46,7 @@ export default function UsersSummarySection({
     <div id={sectionId} className="mb-6 scroll-mt-28">
       <div className="grid gap-8 rounded-lg border border-default bg-default p-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)] md:gap-0">
         <div className="md:pr-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
             Total Users
           </p>
           <p className="mt-3 text-5xl font-bold tracking-tight text-default">
@@ -81,19 +82,11 @@ export default function UsersSummarySection({
                       users · {adoptionPercentage}%
                     </span>
                   </div>
-                  <div
-                    className="h-2 overflow-hidden rounded-full bg-muted"
-                    role="progressbar"
+                  <ProgressBar
+                    progress={adoptionPercentage}
+                    bg="accent.emphasis"
                     aria-label={`${feature.label} adoption`}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={adoptionPercentage}
-                  >
-                    <div
-                      className="h-full rounded-full bg-blue-600"
-                      style={{ width: `${adoptionPercentage}%` }}
-                    />
-                  </div>
+                  />
                 </div>
               );
             })}

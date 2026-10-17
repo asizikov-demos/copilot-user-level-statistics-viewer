@@ -14,6 +14,7 @@ import { formatIDEName } from '../../../../utils/ideNames';
 import { getIDEIcon } from '../../../icons/IDEIcons';
 import MetricsTable, { TableColumn } from '../../../ui/MetricsTable';
 import EmptyState from '../../../ui/EmptyState';
+import InitialAvatar from '../../../ui/InitialAvatar';
 import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
 import AiAdoptionPhaseLabel from '../../ai-adoption-phases/AiAdoptionPhaseLabel';
 
@@ -110,26 +111,20 @@ export default function UsersTableSection({
 
   const tableSortState = { field: sortField as string, direction: sortDirection };
 
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const headerBaseClass = 'px-6 py-3 text-left';
+  const headerRightClass = 'px-6 py-3 text-right';
   const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const columns: TableColumn<UserSummary>[] = [
     {
       id: 'user_login',
-      header: 'USER',
+      header: 'User',
       sortable: true,
       headerClassName: `${headerBaseClass} w-1/4`,
       className: 'px-6 py-4 whitespace-nowrap',
       renderCell: (user) => (
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10 relative">
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-sm font-medium text-blue-700">
-                {user.user_login.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          </div>
+          <InitialAvatar name={user.user_login} />
           <div className="ml-4">
             <div className="text-sm font-medium text-default">{user.user_login}</div>
             <div className="text-sm text-muted">ID: {user.user_id}</div>
@@ -139,7 +134,7 @@ export default function UsersTableSection({
     },
     {
       id: 'days_active',
-      header: 'DAYS ACTIVE',
+      header: 'Days Active',
       sortable: true,
       accessor: 'days_active',
       headerClassName: `${headerRightClass} w-1/8`,
@@ -147,7 +142,7 @@ export default function UsersTableSection({
     },
     {
       id: 'total_ai_credits_used',
-      header: 'AI COST',
+      header: 'AI Cost',
       sortable: true,
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
@@ -155,21 +150,21 @@ export default function UsersTableSection({
     },
     {
       id: 'net_loc_contribution',
-      header: 'LOC IMPACT',
+      header: 'LOC Impact',
       sortable: true,
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
       renderCell: (user) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{user.total_loc_added.toLocaleString()}</span>
+          <span className="text-success">+{user.total_loc_added.toLocaleString()}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{user.total_loc_deleted.toLocaleString()}</span>
+          <span className="text-danger">-{user.total_loc_deleted.toLocaleString()}</span>
         </span>
       ),
     },
     {
       id: 'cloud_agent_days',
-      header: 'CLOUD AGENT',
+      header: 'Cloud Agent',
       sortable: true,
       accessor: 'cloud_agent_days',
       headerClassName: `${headerRightClass} w-1/8`,
@@ -177,7 +172,7 @@ export default function UsersTableSection({
     },
     {
       id: 'code_review_days',
-      header: 'CODE REVIEW',
+      header: 'Code Review',
       sortable: true,
       accessor: 'code_review_days',
       headerClassName: `${headerRightClass} w-1/8`,
@@ -185,7 +180,7 @@ export default function UsersTableSection({
     },
     {
       id: 'top_client',
-      header: 'CLIENT',
+      header: 'Client',
       sortable: true,
       headerClassName: `${headerRightClass} w-1/8`,
       className: valueCellClass,
@@ -198,15 +193,15 @@ export default function UsersTableSection({
     },
     {
       id: 'ai_adoption_phase',
-      header: 'AI ADOPTION',
+      header: 'AI Adoption',
       headerClassName: `${headerRightClass} w-[15%] whitespace-nowrap`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
       renderCell: (user) => <AiAdoptionPhaseLabel phase={user.ai_adoption_phase} />,
     },
     {
       id: 'features_used',
-      header: 'FEATURES USED',
-      headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider w-1/4',
+      header: 'Features Used',
+      headerClassName: `${headerRightClass} w-1/4`,
       className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right',
       renderCell: (user) => (
         <div className="flex flex-wrap gap-1 justify-end">
