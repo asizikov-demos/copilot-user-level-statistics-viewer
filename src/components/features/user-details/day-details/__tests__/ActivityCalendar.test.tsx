@@ -23,6 +23,11 @@ function dayCellClass(markup: string, label: string): string {
   return cell?.[1] ?? '';
 }
 
+function idleDayCellClass(markup: string, label: string): string {
+  const cell = new RegExp(`<div class="([^"]*)"[^>]*title="${label} - No activity"`).exec(markup);
+  return cell?.[1] ?? '';
+}
+
 describe('ActivityCalendar', () => {
   it('colors active days with Primer contribution graph tokens', () => {
     const markup = renderCalendar();
@@ -40,5 +45,21 @@ describe('ActivityCalendar', () => {
     for (let level = 0; level <= 4; level += 1) {
       expect(markup).toContain(`bg-[var(--contribution-default-bgColor-${level})] border-[var(--contribution-default-borderColor-${level})]`);
     }
+  });
+
+  it('alternates neutral token tints for idle days across months', () => {
+    const markup = renderToStaticMarkup(
+      <ActivityCalendar
+        days={[makeUserDay({ day: '2024-02-15', user_initiated_interaction_count: 3 })]}
+        reportStartDay="2024-01-29"
+        reportEndDay="2024-03-03"
+        onDayClick={() => {}}
+      />,
+    );
+
+    expect(idleDayCellClass(markup, 'Jan 30')).toContain('bg-muted');
+    expect(idleDayCellClass(markup, 'Feb 2')).toContain('bg-default');
+    expect(idleDayCellClass(markup, 'Mar 2')).toContain('bg-muted');
+    expect(markup).not.toMatch(/bg-(slate|sky|amber|rose|emerald|violet)-\d+/);
   });
 });

@@ -98,14 +98,8 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   const monthKey = (date: Date) => `${date.getUTCFullYear()}-${date.getUTCMonth()}`;
   const orderedMonths = Array.from(new Set(allDates.map(monthKey)));
   const hasMultipleMonths = orderedMonths.length > 1;
-  const monthTints = [
-    'bg-slate-50',
-    'bg-sky-50',
-    'bg-amber-50',
-    'bg-rose-50',
-    'bg-emerald-50',
-    'bg-violet-50',
-  ];
+  // Neutral tones alternate so adjacent months stay distinct without decorative hues.
+  const monthTints = ['bg-muted', 'bg-default'];
   const getMonthTint = (date: Date) => {
     if (!hasMultipleMonths || date.getTime() === 0) return 'bg-transparent';
     const index = orderedMonths.indexOf(monthKey(date));
