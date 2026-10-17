@@ -35,9 +35,8 @@ import {
   getLanguageColor,
   getSequentialColor,
   hasIdeColor,
-  ideColors,
 } from '../../charts/utils/chartColors';
-import type { DistributionBarEntry } from '../../charts/utils/distributionBarChart';
+import type { CompositionEntry } from '../../charts/utils/compositionChart';
 import { sortBySelector } from '../../../utils/sorting';
 import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { isCliFeature } from '../../../domain/featureCategories';
@@ -190,28 +189,29 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     .reduce((sum, f) => sum + getTotalUserInitiatedInteractionCount(f), 0);
   const cliInteractions = totalCliPrompts;
 
-  const ideDistribution = useMemo<DistributionBarEntry[]>(() => {
-    let fallbackIndex = 0;
-    const entries = ideAggregates.map(ide => {
-      const color = getIdeColor(ide.ide, fallbackIndex);
-      if (!hasIdeColor(ide.ide)) {
-        fallbackIndex += 1;
-      }
-      return {
-        label: formatIDEName(ide.ide),
-        value: getTotalUserInitiatedInteractionCount(ide),
-        color,
-      };
-    });
+  // Distribution colors follow rank, so the largest slices get the first palette colors.
+  const ideDistribution = useMemo<CompositionEntry[]>(() => {
+    const clients = ideAggregates.map(ide => ({
+      ide: ide.ide,
+      label: formatIDEName(ide.ide),
+      value: getTotalUserInitiatedInteractionCount(ide),
+    }));
 
     if (totalCliPrompts > 0) {
-      entries.push({ label: 'Copilot CLI', value: totalCliPrompts, color: ideColors['copilot_cli'] });
+      clients.push({ ide: 'copilot_cli', label: 'Copilot CLI', value: totalCliPrompts });
     }
 
-    return sortBySelector(entries, entry => entry.value, 'desc');
+    let fallbackIndex = 0;
+    return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
+      const color = getIdeColor(ide, fallbackIndex);
+      if (!hasIdeColor(ide)) {
+        fallbackIndex += 1;
+      }
+      return { label, value, color };
+    });
   }, [ideAggregates, totalCliPrompts]);
 
-  const languageDistribution = useMemo<DistributionBarEntry[]>(() => {
+  const languageDistribution = useMemo<CompositionEntry[]>(() => {
     const generations = languageFeatureAggregates.reduce((acc, item) => {
       if (item.language && item.language !== '' && item.language !== 'unknown') {
         acc[item.language] = (acc[item.language] || 0) + item.code_generation_activity_count;
@@ -219,15 +219,14 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    const entries = Object.entries(generations).map(([language, value], index) => ({
+    return sortBySelector(Object.entries(generations), ([, value]) => value, 'desc').map(([language, value], rank) => ({
       label: language,
       value,
-      color: getLanguageColor(language, index),
+      color: getLanguageColor(language, rank),
     }));
-    return sortBySelector(entries, entry => entry.value, 'desc');
   }, [languageFeatureAggregates]);
 
-  const modelDistribution = useMemo<DistributionBarEntry[]>(() => {
+  const modelDistribution = useMemo<CompositionEntry[]>(() => {
     const interactions = modelFeatureAggregates.reduce((acc, item) => {
       if (item.model && item.model !== '') {
         acc[item.model] = (acc[item.model] || 0) + getTotalUserInitiatedInteractionCount(item);
@@ -235,12 +234,11 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    const entries = Object.entries(interactions).map(([model, value], index) => ({
+    return sortBySelector(Object.entries(interactions), ([, value]) => value, 'desc').map(([model, value], rank) => ({
       label: model,
       value,
-      color: getSequentialColor(index),
+      color: getSequentialColor(rank),
     }));
-    return sortBySelector(entries, entry => entry.value, 'desc');
   }, [modelFeatureAggregates]);
 
   const cliAndAppUsage = useMemo(
