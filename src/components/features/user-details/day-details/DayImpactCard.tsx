@@ -19,13 +19,13 @@ export default function DayImpactCard({ locAdded, locDeleted }: DayImpactCardPro
   const max = Math.max(locAdded, locDeleted, Math.abs(net), 1);
 
   const rows: ImpactRow[] = [
-    { label: 'LOC Added', value: locAdded, valueClassName: 'text-green-600', barClassName: 'bg-green-500' },
-    { label: 'LOC Deleted', value: locDeleted, valueClassName: 'text-red-600', barClassName: 'bg-red-500' },
+    { label: 'LOC Added', value: locAdded, valueClassName: 'text-success', barClassName: 'bg-success-emphasis' },
+    { label: 'LOC Deleted', value: locDeleted, valueClassName: 'text-danger', barClassName: 'bg-danger-emphasis' },
     {
       label: 'Net LOC',
       value: net,
-      valueClassName: net >= 0 ? 'text-blue-600' : 'text-orange-600',
-      barClassName: net >= 0 ? 'bg-blue-500' : 'bg-orange-500',
+      valueClassName: net >= 0 ? 'text-accent' : 'text-severe',
+      barClassName: net >= 0 ? 'bg-accent-emphasis' : 'bg-severe-emphasis',
     },
   ];
 

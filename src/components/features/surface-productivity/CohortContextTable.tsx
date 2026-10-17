@@ -29,16 +29,16 @@ export default function CohortContextTable({
         <table className="min-w-full divide-y divide-default">
           <thead className="bg-muted">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">
+              <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-muted">
                 Usage pattern
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+              <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-muted">
                 Users
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+              <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-muted">
                 Median active days
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">
+              <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-muted">
                 Median net LOC
               </th>
             </tr>

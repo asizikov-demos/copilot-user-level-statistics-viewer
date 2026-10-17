@@ -43,7 +43,7 @@ export default function AutoModeAdoptionTrendChart({ data }: AutoModeAdoptionTre
       emptyState="No Auto mode adoption data available"
       summaryStats={createAdoptionTrendSummaryStats(metrics, {
         totalUsersLabel: 'Total Auto Users',
-        newUsersColorClass: 'text-violet-600',
+        newUsersColorClass: 'text-done',
       })}
       footer={metrics.cumulativeTotal > 0 ? (
         <InsightsCard title="Auto Mode Adoption" variant={insightVariant}>

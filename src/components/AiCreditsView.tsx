@@ -5,6 +5,7 @@ import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import TopEntriesList from './ui/TopEntriesList';
+import InitialAvatar from './ui/InitialAvatar';
 import AiCreditsStatementCard from './AiCreditsStatementCard';
 import { buildAiCreditsStatement } from '../read-models/aiCreditsStatement';
 import type { AiCreditsReadModel } from '../read-models/aiCredits';
@@ -58,68 +59,64 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       }));
   }, [totalAiCreditsUsed, userSummaries]);
 
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const headerBaseClass = 'px-6 py-3 text-left';
+  const headerRightClass = 'px-6 py-3 text-right';
   const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const columns: TableColumn<TopAiCreditsUser>[] = [
     {
       id: 'user_login',
-      header: 'USERNAME',
+      header: 'Username',
       headerClassName: headerBaseClass,
       className: 'px-6 py-4 whitespace-nowrap',
       renderCell: (user) => (
         <button
           type="button"
           onClick={() => onUserClick(user.user_login, user.user_id)}
-          className="flex items-center text-left group"
+          className="group flex items-center rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
         >
-          <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-sm font-medium text-blue-700">
-              {user.user_login.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div className="ml-3 text-sm font-medium text-blue-600 group-hover:text-blue-800 group-hover:underline">{user.user_login}</div>
+          <InitialAvatar name={user.user_login} size="medium" />
+          <span className="ml-3 text-sm font-medium text-link group-hover:underline">{user.user_login}</span>
         </button>
       ),
     },
     {
       id: 'days_active',
-      header: 'DAYS ACTIVE',
+      header: 'Days Active',
       headerClassName: headerRightClass,
       className: valueCellClass,
       renderCell: (user) => formatNumber(user.days_active),
     },
     {
       id: 'total_ai_credits_used',
-      header: 'AI CREDITS',
+      header: 'AI Credits',
       headerClassName: headerRightClass,
       className: valueCellClass,
       renderCell: (user) => formatAiCreditCost(user.total_ai_credits_used),
     },
     {
       id: 'creditsShare',
-      header: 'SHARE',
+      header: 'Share',
       headerClassName: headerRightClass,
       className: valueCellClass,
       renderCell: (user) => formatPercentage(user.creditsShare),
     },
     {
       id: 'net_loc_contribution',
-      header: 'LOC IMPACT',
+      header: 'LOC Impact',
       headerClassName: headerRightClass,
       className: valueCellClass,
       renderCell: (user) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{user.total_loc_added.toLocaleString()}</span>
+          <span className="text-success">+{user.total_loc_added.toLocaleString()}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{user.total_loc_deleted.toLocaleString()}</span>
+          <span className="text-danger">-{user.total_loc_deleted.toLocaleString()}</span>
         </span>
       ),
     },
     {
       id: 'ai_adoption_phase',
-      header: 'AI ADOPTION',
+      header: 'AI Adoption',
       headerClassName: `${headerRightClass} whitespace-nowrap`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
       renderCell: (user) => (
@@ -132,7 +129,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     {
       id: 'bucket',
       header: 'Segment',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[200px]',
+      headerClassName: `${headerBaseClass} min-w-[200px]`,
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <div>
@@ -176,9 +173,9 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       className: `${valueCellClass} align-top`,
       renderCell: (bucket) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{bucket.totalLocAdded.toLocaleString()}</span>
+          <span className="text-success">+{bucket.totalLocAdded.toLocaleString()}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{bucket.totalLocDeleted.toLocaleString()}</span>
+          <span className="text-danger">-{bucket.totalLocDeleted.toLocaleString()}</span>
         </span>
       ),
     },
@@ -189,16 +186,16 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       className: `${valueCellClass} align-top`,
       renderCell: (bucket) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{formatAverage(bucket.avgLocAdded)}</span>
+          <span className="text-success">+{formatAverage(bucket.avgLocAdded)}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{formatAverage(bucket.avgLocDeleted)}</span>
+          <span className="text-danger">-{formatAverage(bucket.avgLocDeleted)}</span>
         </span>
       ),
     },
     {
       id: 'topModels',
       header: 'Top Models - interactions',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: `${headerBaseClass} min-w-[180px]`,
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <TopEntriesList
@@ -211,7 +208,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     {
       id: 'topClients',
       header: 'Top Clients - activity',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: `${headerBaseClass} min-w-[180px]`,
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <TopEntriesList
@@ -259,9 +256,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
             columns={columns}
             getRowKey={(user) => user.user_id}
             tableContainerClassName="overflow-x-auto border border-default rounded-lg"
-            tableClassName="min-w-full divide-y divide-default"
-            theadClassName="bg-muted"
-            tbodyClassName="bg-default divide-y divide-default"
+            tableClassName="min-w-full"
           />
         ) : (
           <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
@@ -281,9 +276,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
             columns={distributionColumns}
             getRowKey={(bucket) => bucket.id}
             tableContainerClassName="overflow-x-auto border border-default rounded-lg"
-            tableClassName="min-w-full divide-y divide-default"
-            theadClassName="bg-muted"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'}`}
+            tableClassName="min-w-full"
           />
         ) : (
           <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">

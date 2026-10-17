@@ -65,7 +65,7 @@ describe('Complete Languages Breakdown view toggle', () => {
         'Language', 'Total Engagements', 'Generations', 'Acceptances', 'Unique Users',
         'LOC Added', 'LOC Deleted', 'Suggested Add', 'Net LOC Impact', 'Acceptance Rate',
       ]);
-      expect(root.findAllByType('button').find(button => button.props.children === 'Totals')?.props['aria-pressed']).toBe(true);
+      expect(root.findAllByType('button').find(button => textContent(button) === 'Totals')?.props['aria-pressed']).toBe(true);
       expect(rows(root)[0].slice(0, 5)).toEqual(['typescript', '600', '600', '0', '150']);
       await click(root, 'Normalized');
       expect(root.findAllByType('th')).toHaveLength(5);

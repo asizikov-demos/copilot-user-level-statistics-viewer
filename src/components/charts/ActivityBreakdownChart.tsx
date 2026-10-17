@@ -79,12 +79,12 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
         <table className="w-full divide-y divide-default">
           <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider">
+              <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted">
                 {config.groupHeader}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider">Feature</th>
+              <th scope="col" className="px-4 py-2 text-left text-xs font-semibold text-muted">Feature</th>
               {config.columns.map((col, idx) => (
-                <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-muted uppercase tracking-wider">
+                <th key={idx} scope="col" className="px-4 py-2 text-right text-xs font-semibold text-muted">
                   {col.header}
                 </th>
               ))}

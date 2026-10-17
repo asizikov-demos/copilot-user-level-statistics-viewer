@@ -17,9 +17,9 @@ function LocImpact({
 }) {
   return (
     <>
-      <span className="text-green-600" data-tone="positive">+{locAdded.toLocaleString()}</span>
+      <span className="text-success" data-tone="positive">+{locAdded.toLocaleString()}</span>
       <span className="text-disabled"> / </span>
-      <span className="text-red-600" data-tone="negative">-{locDeleted.toLocaleString()}</span>
+      <span className="text-danger" data-tone="negative">-{locDeleted.toLocaleString()}</span>
     </>
   );
 }
@@ -66,7 +66,7 @@ export default function SurfaceComparisonTable({
                 <th
                   key={label}
                   scope="col"
-                  className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted ${
+                  className={`px-6 py-3 text-xs font-semibold text-muted ${
                     index === 0 ? 'text-left' : 'text-right'
                   }`}
                 >

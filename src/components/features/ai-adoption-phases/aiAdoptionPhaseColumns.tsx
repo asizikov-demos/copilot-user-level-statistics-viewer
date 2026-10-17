@@ -17,14 +17,15 @@ function formatAverage(value: number): string {
 }
 
 export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>[] {
-  const rightHeaderClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const leftHeaderClass = 'px-6 py-3 text-left min-w-[180px]';
+  const rightHeaderClass = 'px-6 py-3 text-right';
   const rightCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   return [
     {
       id: 'phase',
       header: 'Phase',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: leftHeaderClass,
       className: 'px-6 py-4 whitespace-nowrap',
       renderCell: (phase) => (
         <AiAdoptionPhaseLabel phase={phase.phase} />
@@ -51,9 +52,9 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
       className: rightCellClass,
       renderCell: (phase) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{formatAverage(phase.avgLocAdded)}</span>
+          <span className="text-success">+{formatAverage(phase.avgLocAdded)}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{formatAverage(phase.avgLocDeleted)}</span>
+          <span className="text-danger">-{formatAverage(phase.avgLocDeleted)}</span>
         </span>
       ),
     },
@@ -71,9 +72,9 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
       className: rightCellClass,
       renderCell: (phase) => (
         <span className="whitespace-nowrap tabular-nums">
-          <span className="text-green-600">+{phase.totalLocAdded.toLocaleString()}</span>
+          <span className="text-success">+{phase.totalLocAdded.toLocaleString()}</span>
           <span className="text-disabled">/</span>
-          <span className="text-red-600">-{phase.totalLocDeleted.toLocaleString()}</span>
+          <span className="text-danger">-{phase.totalLocDeleted.toLocaleString()}</span>
         </span>
       ),
     },
@@ -87,7 +88,7 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
     {
       id: 'topModels',
       header: 'Top Models - interactions',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: leftHeaderClass,
       className: 'px-6 py-4 align-top',
       renderCell: (phase) => (
         <TopEntriesList
@@ -100,7 +101,7 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
     {
       id: 'topClients',
       header: 'Top Clients - activity',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: leftHeaderClass,
       className: 'px-6 py-4 align-top',
       renderCell: (phase) => (
         <TopEntriesList
@@ -113,7 +114,7 @@ export function createAiAdoptionPhaseColumns(): TableColumn<AiAdoptionPhaseData>
     {
       id: 'topLanguages',
       header: 'Top Languages - generations + acceptances',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
+      headerClassName: leftHeaderClass,
       className: 'px-6 py-4 align-top',
       renderCell: (phase) => <TopEntriesList entries={phase.topLanguages} />,
     },

@@ -12,8 +12,8 @@ interface ModelCategoryBreakdownProps {
   categoryTables: ModelCategoryTable[];
 }
 
-const HEADER_CLASS = 'px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider';
-const NUMERIC_HEADER_CLASS = 'px-4 py-2 text-right text-xs font-medium text-muted uppercase tracking-wider';
+const HEADER_CLASS = 'px-4 py-2 text-left';
+const NUMERIC_HEADER_CLASS = 'px-4 py-2 text-right';
 const CELL_CLASS = 'px-4 py-2 whitespace-nowrap text-sm text-default';
 const NUMERIC_CELL_CLASS = `${CELL_CLASS} text-right tabular-nums`;
 

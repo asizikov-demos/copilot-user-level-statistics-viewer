@@ -60,12 +60,12 @@ export default function ModelVendorDistributionChart({
         {
           value: entries.filter(entry => entry.vendor !== 'Unattributed').length,
           label: 'Vendors Used',
-          colorClass: 'text-indigo-600',
+          colorClass: 'text-done',
         },
         {
           value: `${attributedPercentage}%`,
           label: 'Usage Attributed',
-          colorClass: 'text-purple-600',
+          colorClass: 'text-done',
         },
       ]}
       chartHeight="h-96"

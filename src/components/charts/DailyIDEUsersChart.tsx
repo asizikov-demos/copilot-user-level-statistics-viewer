@@ -121,7 +121,7 @@ export default function DailyIDEUsersChart({
         </FormControl>
       }
       summaryStats={[
-        { value: activeEntry?.totalUniqueUsers ?? 0, label: 'Unique Users', colorClass: 'text-indigo-600' },
+        { value: activeEntry?.totalUniqueUsers ?? 0, label: 'Unique Users', colorClass: 'text-done' },
         {
           value: avgDailyUsers.toLocaleString(undefined, {
             minimumFractionDigits: 1,

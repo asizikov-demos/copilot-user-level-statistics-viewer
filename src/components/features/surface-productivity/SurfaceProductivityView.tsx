@@ -1,5 +1,6 @@
 'use client';
 
+import { Banner } from '@primer/react';
 import type { SurfaceProductivityReadModel } from '../../../read-models/surfaceProductivity';
 import { ViewPanel } from '../../ui';
 import DisclosureSection from '../../ui/DisclosureSection';
@@ -22,14 +23,16 @@ export default function SurfaceProductivityView({
           'Compare how active work and LOC impact are distributed across IDE, CLI, and Copilot App activity.',
       }}
       afterHeader={
-        <div
-          className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950"
-          role="note"
-        >
-          <span className="font-semibold">Activity proxy, not causation.</span>{' '}
-          Active days and LOC impact describe where Copilot-assisted work was
-          observed. They do not measure code quality, engineering velocity, or
-          individual developer performance.
+        <div className="mt-4">
+          <Banner variant="info" aria-label="Surface productivity interpretation note">
+            {/* Banner requires a title element; a paragraph keeps this note out of the heading outline. */}
+            <p data-banner-title="" className="font-semibold">Activity proxy, not causation.</p>
+            <p>
+              Active days and LOC impact describe where Copilot-assisted work was
+              observed. They do not measure code quality, engineering velocity, or
+              individual developer performance.
+            </p>
+          </Banner>
         </div>
       }
       contentClassName="space-y-8"

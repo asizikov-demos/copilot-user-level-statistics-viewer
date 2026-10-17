@@ -106,15 +106,15 @@ export default function AiCreditsChart({
       footer={
         <div className={footerGridClassName}>
           <div>
-            <span className="font-medium text-violet-600">Active days:</span> {activeData.length}
+            <span className="font-medium text-done">Active days:</span> {activeData.length}
           </div>
           <div>
-            <span className="font-medium text-violet-600">Peak day:</span>{' '}
+            <span className="font-medium text-done">Peak day:</span>{' '}
             {peakEntry ? `${peakEntry.date} (${formatNumber(peakEntry.aiCreditsUsed, 2)} credits)` : 'N/A'}
           </div>
           {showUsers && (
             <div>
-              <span className="font-medium text-violet-600">{usageCountLabel}:</span> {creditUserDays}
+              <span className="font-medium text-done">{usageCountLabel}:</span> {creditUserDays}
             </div>
           )}
         </div>

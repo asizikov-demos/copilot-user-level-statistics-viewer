@@ -57,8 +57,8 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleEngagementsSort,
   } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
-  const headerClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const headerClass = 'px-6 py-3 text-left';
+  const headerRightClass = 'px-6 py-3 text-right';
   const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const renderIDEInfo = (ide: IDEStats) => {
@@ -90,7 +90,7 @@ export default function ClientsView({ model }: IDEViewProps) {
   const createColumns = (primary: { field: keyof IDEStats; label: string }): TableColumn<IDEStats>[] => [
     {
       id: 'ide',
-      header: 'CLIENT',
+      header: 'Client',
       sortable: true,
       headerClassName: headerClass,
       className: 'px-6 py-4 whitespace-nowrap',
@@ -106,7 +106,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'totalGenerations',
-      header: 'GENERATIONS',
+      header: 'Generations',
       sortable: true,
       accessor: 'totalGenerations',
       headerClassName: headerRightClass,
@@ -114,7 +114,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'totalAcceptances',
-      header: 'ACCEPTANCES',
+      header: 'Acceptances',
       sortable: true,
       accessor: 'totalAcceptances',
       headerClassName: headerRightClass,
@@ -122,7 +122,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'locAdded',
-      header: 'LOC ADDED',
+      header: 'LOC Added',
       sortable: true,
       accessor: 'locAdded',
       headerClassName: headerRightClass,
@@ -130,7 +130,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'locDeleted',
-      header: 'LOC DELETED',
+      header: 'LOC Deleted',
       sortable: true,
       accessor: 'locDeleted',
       headerClassName: headerRightClass,
@@ -138,7 +138,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'locSuggestedToAdd',
-      header: 'SUGGESTED ADD',
+      header: 'Suggested Add',
       sortable: true,
       accessor: 'locSuggestedToAdd',
       headerClassName: headerRightClass,
@@ -146,7 +146,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'locSuggestedToDelete',
-      header: 'SUGGESTED DELETE',
+      header: 'Suggested Delete',
       sortable: true,
       accessor: 'locSuggestedToDelete',
       headerClassName: headerRightClass,
@@ -154,15 +154,15 @@ export default function ClientsView({ model }: IDEViewProps) {
     },
     {
       id: 'acceptanceRate',
-      header: 'ACCEPTANCE RATE',
+      header: 'Acceptance Rate',
       headerClassName: headerRightClass,
       className: cellClass,
       renderCell: (ide) => renderAcceptanceRate(ide),
     },
   ];
 
-  const usersColumns = createColumns({ field: 'uniqueUsers', label: 'UNIQUE USERS' });
-  const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'ENGAGEMENTS' });
+  const usersColumns = createColumns({ field: 'uniqueUsers', label: 'Unique Users' });
+  const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'Engagements' });
   const [distributionSection, dailyIdeUsersSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
 
   return (
@@ -211,9 +211,8 @@ export default function ClientsView({ model }: IDEViewProps) {
             columns={usersColumns}
             sortState={{ field: usersSortField as string, direction: usersSortDirection }}
             onSortChange={({ field }) => handleUsersSort(field as keyof IDEStats)}
-            tableClassName="w-full divide-y divide-default"
-            theadClassName="bg-muted"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'} hover:bg-muted`}
+            rowClassName={() => 'hover:bg-muted'}
+            tableContainerClassName="overflow-x-auto"
           />
         </div>
 
@@ -226,9 +225,8 @@ export default function ClientsView({ model }: IDEViewProps) {
             columns={engagementsColumns}
             sortState={{ field: engagementsSortField as string, direction: engagementsSortDirection }}
             onSortChange={({ field }) => handleEngagementsSort(field as keyof IDEStats)}
-            tableClassName="w-full divide-y divide-default"
-            theadClassName="bg-muted"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'} hover:bg-muted`}
+            rowClassName={() => 'hover:bg-muted'}
+            tableContainerClassName="overflow-x-auto"
           />
         </div>
       </div>

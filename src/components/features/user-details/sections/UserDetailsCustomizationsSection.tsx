@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { ChevronRightIcon } from '@primer/octicons-react';
 import type { CliCustomizationCategory, CliCustomizationDaySummary, CliCustomizationItemSummary, CliCustomizationSummary } from '../../../../types/cliCustomizations';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 
@@ -22,7 +23,7 @@ function formatCount(value: number | null): string {
 }
 
 const numericColumnStyles = {
-  headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider',
+  headerClassName: 'px-6 py-3 text-right',
   className: 'px-6 py-4 text-right text-sm text-default tabular-nums',
 };
 
@@ -91,15 +92,12 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
             else next.add(summary.category);
             return next;
           })}
-          className="flex w-full items-center gap-2 rounded-sm text-left hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="flex w-full items-center gap-2 rounded-sm text-left hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
         >
-          <svg
+          <ChevronRightIcon
             aria-hidden="true"
-            className={`h-4 w-4 shrink-0${expandedCategories.has(summary.category) ? ' rotate-90' : ''}`}
-            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-          >
-            <path d="m9 5 7 7-7 7" />
-          </svg>
+            className={`shrink-0${expandedCategories.has(summary.category) ? ' rotate-90' : ''}`}
+          />
           {CATEGORY_LABELS[summary.category].title}
         </button>
       ),

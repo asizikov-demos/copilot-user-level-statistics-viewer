@@ -56,7 +56,7 @@ export default function UserSummaryChart({
     <ChartContainer title="Summary" chartHeight="h-auto">
       {/* Features Used */}
       <div className="mb-6">
-        <h4 className="text-md font-medium text-default mb-3">Features Used</h4>
+        <h4 className="text-sm font-medium text-default mb-3">Features Used</h4>
         <div className="flex flex-wrap gap-2">
           {usedChat && <Label size="large" variant={FEATURE_LABEL_VARIANT.chat}>Chat</Label>}
           {usedAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.ideAgent}>IDE Agent Mode</Label>}

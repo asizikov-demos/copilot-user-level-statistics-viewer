@@ -1,7 +1,7 @@
 .brief {
-  --brief-ink: #202c35;
-  --brief-muted: #566573;
-  --brief-line: #dce2e7;
+  --brief-ink: var(--fgColor-default);
+  --brief-muted: var(--fgColor-muted);
+  --brief-line: var(--borderColor-muted);
   --brief-accent: #146c70;
   color: var(--brief-ink);
   max-width: 900px;
@@ -12,7 +12,7 @@
 .toolbar h1 { font-size: 24px; font-weight: 650; letter-spacing: -.025em; }
 .toolbar p { font-size: 13px; color: var(--brief-muted); margin-top: 4px; }
 .controls { display: flex; align-items: flex-end; gap: 8px; }
-.report { background: white; border: 1px solid #d1d9e0; padding: 34px 38px 24px; font-size: 13px; line-height: 1.5; }
+.report { background: var(--bgColor-default); border: 1px solid var(--borderColor-default); padding: 34px 38px 24px; font-size: 13px; line-height: 1.5; }
 .identity { display: flex; justify-content: space-between; align-items: start; gap: 20px; border-bottom: 2px solid var(--brief-ink); padding-bottom: 16px; }
 .identity > div { min-width: 0; }
 .organization { font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
@@ -45,7 +45,7 @@
 .columns { display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; }
 .features { list-style: none; padding: 0; margin: 13px 0 0; }
 .features li { display: grid; grid-template-columns: 100px minmax(25px, 1fr) auto; gap: 8px; align-items: center; margin-block: 12px; font-size: 11px; }
-.track { height: 7px; background: #edf1f3; }
+.track { height: 7px; background: var(--bgColor-neutral-muted); }
 .track > span { display: block; background: var(--brief-accent); height: 100%; }
 .featureValue { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
 .featureValue small { display: block; color: var(--brief-muted); font-size: 9px; font-weight: 400; }

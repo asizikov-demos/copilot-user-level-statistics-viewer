@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@primer/react';
 import type { ModeImpactData } from '../../../../domain/calculators/metricCalculators';
 import ModeImpactChart from '../../../charts/ModeImpactChart';
 
@@ -31,12 +32,9 @@ export default function UserDetailsImpactBreakdownSection({
           <h3 className="text-lg font-semibold text-default">Impact Breakdown</h3>
           <p className="text-sm text-muted mt-1">View detailed impact by mode</p>
         </div>
-        <button
-          onClick={onToggle}
-          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-        >
+        <Button onClick={onToggle} aria-expanded={isExpanded}>
           {isExpanded ? 'Hide Breakdown' : 'Show Breakdown'}
-        </button>
+        </Button>
       </div>
 
       {isExpanded && (

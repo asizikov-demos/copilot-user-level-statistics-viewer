@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Banner, Button, ProgressBar, Spinner } from '@primer/react';
-import { FileIcon } from '@primer/octicons-react';
+import { FileIcon, UploadIcon } from '@primer/octicons-react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
 import { MultiFileProgress } from '../../../infra/metricsFileParser';
@@ -118,9 +118,9 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
               className="hidden"
               id="file-upload"
             />
-            <svg className="mx-auto mb-3 w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
+            <div className="mb-3 flex justify-center" aria-hidden="true">
+              <UploadIcon size={40} className="text-muted" />
+            </div>
             <p className="text-sm font-medium text-default">Drag &amp; drop files here, or click to browse</p>
             <p className="mt-1 text-xs text-muted">Accepts .ndjson and .json &mdash; multiple files supported</p>
           </div>

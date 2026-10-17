@@ -93,9 +93,11 @@ describe('Users feature sections', () => {
 
     expect(within(screen.getByLabelText('Feature used')).getByRole('option', { name: 'App' })).toBeTruthy();
     const table = screen.getByRole('table');
-    expect(within(table).queryByText('GENERATIONS')).toBeNull();
+    expect(within(table).getByRole('columnheader', { name: /days active/i })).toBeTruthy();
+    expect(within(table).queryByRole('columnheader', { name: /generations/i })).toBeNull();
+    const [, tableBody] = within(table).getAllByRole('rowgroup');
     for (const chip of ['Cloud Agent', 'Code Review', 'Auto Mode']) {
-      expect(within(table).getAllByText(chip).length).toBe(500);
+      expect(within(tableBody).getAllByText(chip).length).toBe(500);
     }
     expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
 
@@ -134,7 +136,7 @@ describe('Users feature sections', () => {
     const order = ['daily-regular', 'weekly-visitor', 'busy-chatter'].map(login => markup.indexOf(login));
     expect(order.every(index => index >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((a, b) => a - b));
-    expect(markup).not.toContain('INTERACTIONS');
+    expect(markup).not.toMatch(/interactions/i);
   });
 
   it('combines client and feature filters and clears them', async () => {

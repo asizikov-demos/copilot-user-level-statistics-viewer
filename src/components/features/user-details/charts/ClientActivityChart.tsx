@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
@@ -8,7 +8,11 @@ import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createBaseChartOptions } from '../../../charts/utils/chartOptions';
 import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
-import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
+import {
+  createCliClientActivityRow,
+  mapIdeClientActivityRows,
+  type ClientActivityMetricsRow,
+} from '../../../../domain/calculators/clientActivityRows';
 import { formatShortDate } from '../../../../utils/formatters';
 import { padReportRangeWithDefaults } from '../../../../utils/timeSeries';
 import ChartContainer from '../../../ui/ChartContainer';
@@ -51,10 +55,36 @@ interface ClientActivityChartProps {
 type VersionEntry = { name: string; version: string; sampled_at: string };
 type ClientChartDay = Pick<UserDayData, 'day' | 'totals_by_ide'>;
 
+const headerLeftClass = 'px-6 py-3 text-left';
+const headerRightClass = 'px-6 py-3 text-right';
+const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
+
 const versionColumns: TableColumn<VersionEntry>[] = [
-  { id: 'name', header: 'Client', headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default', renderCell: (r) => r.name },
-  { id: 'version', header: 'Version', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-default text-right', renderCell: (r) => r.version },
-  { id: 'sampled_at', header: 'Last Seen', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-default text-right', renderCell: (r) => formatShortDate(r.sampled_at) },
+  { id: 'name', header: 'Client', headerClassName: headerLeftClass, className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default', renderCell: (r) => r.name },
+  { id: 'version', header: 'Version', headerClassName: headerRightClass, className: valueCellClass, renderCell: (r) => r.version },
+  { id: 'sampled_at', header: 'Last Seen', headerClassName: headerRightClass, className: valueCellClass, renderCell: (r) => formatShortDate(r.sampled_at) },
+];
+
+function ClientName({ ide }: { ide: string }) {
+  const Icon = getIDEIcon(ide);
+
+  return (
+    <div className="flex items-center gap-2">
+      <Icon />
+      <span>{formatIDEName(ide)}</span>
+    </div>
+  );
+}
+
+const clientColumns: TableColumn<ClientActivityMetricsRow>[] = [
+  { id: 'ide', header: 'Client', headerClassName: headerLeftClass, className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default', renderCell: (client) => <ClientName ide={client.ide} /> },
+  { id: 'interactions', header: 'Interactions', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.user_initiated_interaction_count.toLocaleString() },
+  { id: 'generation', header: 'Generation', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.code_generation_activity_count.toLocaleString() },
+  { id: 'acceptance', header: 'Acceptance', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.code_acceptance_activity_count.toLocaleString() },
+  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.loc_added_sum.toLocaleString() },
+  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.loc_deleted_sum.toLocaleString() },
+  { id: 'suggestedAdd', header: 'Suggested Add', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.loc_suggested_to_add_sum.toLocaleString() },
+  { id: 'suggestedDelete', header: 'Suggested Delete', headerClassName: headerRightClass, className: valueCellClass, renderCell: (client) => client.loc_suggested_to_delete_sum.toLocaleString() },
 ];
 
 /**
@@ -188,41 +218,12 @@ export default function ClientActivityChart({
   const footer = (
     <>
       {clientRows.length > 0 && (
-      <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-default">
-          <thead className="bg-muted">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Client</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Interactions</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Generation</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Acceptance</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">LOC Added</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">LOC Deleted</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Suggested Add</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Suggested Delete</th>
-            </tr>
-          </thead>
-          <tbody className="bg-default divide-y divide-default">
-            {clientRows.map((client) => (
-              <tr key={client.ide}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-default">
-                  <div className="flex items-center gap-2">
-                    {React.createElement(getIDEIcon(client.ide))}
-                    <span>{formatIDEName(client.ide)}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.user_initiated_interaction_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.code_generation_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.code_acceptance_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_added_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_deleted_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_suggested_to_add_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_suggested_to_delete_sum.toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <MetricsTable
+          data={clientRows}
+          columns={clientColumns}
+          tableContainerClassName="overflow-x-auto"
+          getRowKey={(client) => client.ide}
+        />
       )}
 
       {allVersions.length > 0 && (
