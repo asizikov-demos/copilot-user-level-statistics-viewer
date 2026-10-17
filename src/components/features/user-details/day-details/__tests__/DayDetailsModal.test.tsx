@@ -1,5 +1,8 @@
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+import { useState } from 'react';
+import { BaseStyles, ThemeProvider } from '@primer/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import DayDetailsModal from '../DayDetailsModal';
 import {
@@ -35,8 +38,16 @@ function makeIdeTotal(ide: string, overrides: Partial<IdeTotal> = {}): IdeTotal 
   return { ...ZERO_TOTALS, ide, user_initiated_interaction_count: 0, ...overrides };
 }
 
+function withTheme(children: React.ReactNode) {
+  return (
+    <ThemeProvider colorMode="day">
+      <BaseStyles>{children}</BaseStyles>
+    </ThemeProvider>
+  );
+}
+
 function renderDay(dayMetrics?: UserDayData, extraProps: { userLogin?: string } = {}) {
-  return renderToStaticMarkup(
+  render(withTheme(
     <DayDetailsModal
       isOpen
       onClose={vi.fn()}
@@ -47,10 +58,129 @@ function renderDay(dayMetrics?: UserDayData, extraProps: { userLogin?: string } 
       canNavigatePrevDay
       {...extraProps}
     />,
+  ));
+  return document.body.innerHTML;
+}
+
+function formatDialogDate(day: string) {
+  return new Date(day).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function DialogHarness({ onNavigateDay = vi.fn() }: { onNavigateDay?: (direction: -1 | 1) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setIsOpen(true)}>Open day</button>
+      <DayDetailsModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        date="2024-01-15"
+        dayMetrics={makeUserDay({ day: '2024-01-15' })}
+        userLogin="octocat"
+        onNavigateDay={onNavigateDay}
+        canNavigatePrevDay={false}
+        canNavigateNextDay
+      />
+    </>
   );
 }
 
+function openHarnessDialog(onNavigateDay?: (direction: -1 | 1) => void) {
+  render(withTheme(<DialogHarness onNavigateDay={onNavigateDay} />));
+  const trigger = screen.getByRole('button', { name: 'Open day' });
+  trigger.focus();
+  fireEvent.click(trigger);
+  return { trigger, dialog: screen.getByRole('dialog') };
+}
+
 describe('DayDetailsModal', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })));
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  describe('dialog behavior', () => {
+    beforeEach(() => {
+      // JSDOM has no layout, so Primer's focus trap would treat every element as hidden.
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(24);
+      vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(24);
+      vi.spyOn(HTMLElement.prototype, 'offsetParent', 'get').mockImplementation(() => document.body);
+      vi.spyOn(Element.prototype, 'getClientRects').mockReturnValue([new DOMRect(0, 0, 24, 24)] as unknown as DOMRectList);
+    });
+
+    it('is a modal dialog named by the selected date and described by the user summary', () => {
+      const { dialog } = openHarnessDialog();
+
+      expect(dialog.getAttribute('aria-modal')).toBe('true');
+      expect(screen.getByRole('dialog', { name: formatDialogDate('2024-01-15') })).toBe(dialog);
+      const descriptionId = dialog.getAttribute('aria-describedby');
+      expect(descriptionId && document.getElementById(descriptionId)?.textContent).toMatch(/User: octocat.*AI cost:/);
+      expect(document.body.innerHTML).not.toContain('bg-black/50');
+    });
+
+    it('moves focus to the dialog title and restores it to the trigger when Escape closes it', () => {
+      const { trigger } = openHarnessDialog();
+
+      // Initial focus on an IconButton would open its tooltip, and the tooltip would consume the first Escape.
+      expect(document.activeElement).toBe(screen.getByRole('heading', { name: formatDialogDate('2024-01-15') }));
+
+      fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
+
+    it('keeps focus inside the dialog while it is open', () => {
+      const { trigger, dialog } = openHarnessDialog();
+
+      trigger.focus();
+
+      expect(dialog.contains(document.activeElement)).toBe(true);
+    });
+
+    it('closes from the labelled close button and restores focus', () => {
+      const { trigger } = openHarnessDialog();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
+
+    it('navigates days with the arrow keys and buttons only when navigation is allowed', () => {
+      const onNavigateDay = vi.fn();
+      openHarnessDialog(onNavigateDay);
+
+      fireEvent.keyDown(window, { key: 'ArrowLeft' });
+      fireEvent.keyDown(window, { key: 'ArrowRight' });
+      fireEvent.click(screen.getByRole('button', { name: /^Next day/ }));
+
+      expect(onNavigateDay.mock.calls).toEqual([[1], [1]]);
+      expect((screen.getByRole('button', { name: /^Previous day/ }) as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it('renders nothing while closed', () => {
+      render(withTheme(<DayDetailsModal isOpen={false} onClose={vi.fn()} date="2024-01-15" />));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+  });
+
   describe('selected day', () => {
     it('renders the given day with navigation controls', () => {
       const markup = renderDay(makeUserDay({

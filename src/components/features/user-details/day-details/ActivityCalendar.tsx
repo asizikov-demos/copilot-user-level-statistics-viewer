@@ -176,6 +176,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
                     key={`${weekIndex}-${dayIndex}`}
                     className={`
                       h-8 text-xs flex items-center justify-center border-r border-b border-default
+                      focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]
                       ${isMonthStart ? 'border-l-4 border-l-[var(--fgColor-default)] font-semibold' : ''}
                       ${isPlaceholder 
                         ? 'bg-default' 
@@ -185,6 +186,15 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
                       }
                     `}
                     onClick={() => !isPlaceholder && handleDayClick(date)}
+                    role={isPlaceholder ? undefined : 'button'}
+                    tabIndex={isPlaceholder ? undefined : 0}
+                    aria-label={isPlaceholder ? undefined : formatShortDate(dateKey)}
+                    onKeyDown={isPlaceholder ? undefined : (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        handleDayClick(date);
+                      }
+                    }}
                     title={
                       !isPlaceholder && hasData 
                         ? `${formatShortDate(formatDateKey(date))} - Click to view details`
