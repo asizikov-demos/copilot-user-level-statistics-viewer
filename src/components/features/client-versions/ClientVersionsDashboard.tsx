@@ -1,7 +1,7 @@
 'use client';
 
-import { Banner, Details, Label } from '@primer/react';
-import { ChevronRightIcon } from '@primer/octicons-react';
+import { Banner, Details, Label, Link } from '@primer/react';
+import { AlertIcon, CheckIcon, ChevronRightIcon, InfoIcon } from '@primer/octicons-react';
 import type { PluginVersion } from '../../../hooks/usePluginVersions';
 import { getIDEIcon } from '../../icons/IDEIcons';
 import EmptyState from '../../ui/EmptyState';
@@ -30,31 +30,19 @@ interface ClientVersionsDashboardProps {
   };
 }
 
-function StatusIcon({ kind }: { kind: 'attention' | 'healthy' | 'unknown' }) {
-  const styles = {
-    attention: 'border-amber-200 bg-amber-50 text-amber-700',
-    healthy: 'border-green-200 bg-green-50 text-green-700',
-    unknown: 'border-default bg-muted text-muted',
-  };
+const STATUS_ICON = {
+  attention: { Icon: AlertIcon, className: 'border-attention-muted bg-attention-muted text-attention', label: 'Needs attention' },
+  healthy: { Icon: CheckIcon, className: 'border-success-muted bg-success-muted text-success', label: 'Healthy' },
+  unknown: { Icon: InfoIcon, className: 'border-default bg-muted text-muted', label: 'Status unavailable' },
+} as const;
+
+function StatusIcon({ kind }: { kind: keyof typeof STATUS_ICON }) {
+  const { Icon, className, label } = STATUS_ICON[kind];
 
   return (
-    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${styles[kind]}`}>
-      {kind === 'attention' ? (
-        <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.3 3.8 2.4 17.5A2 2 0 0 0 4.1 20h15.8a2 2 0 0 0 1.7-2.5L13.7 3.8a2 2 0 0 0-3.4 0Z" />
-        </svg>
-      ) : kind === 'healthy' ? (
-        <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4 4L19 6" />
-        </svg>
-      ) : (
-        <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 17v-6m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
-        </svg>
-      )}
-      <span className="sr-only">
-        {kind === 'attention' ? 'Needs attention' : kind === 'healthy' ? 'Healthy' : 'Status unavailable'}
-      </span>
+    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${className}`}>
+      <Icon size={20} aria-hidden="true" />
+      <span className="sr-only">{label}</span>
     </span>
   );
 }
@@ -64,11 +52,7 @@ function PlatformMark({ scope }: { scope: ClientPlatformHealth['scope'] }) {
 
   return (
     <span
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
-        scope === 'vscode'
-          ? 'border-blue-200 bg-blue-50'
-          : 'border-default bg-muted'
-      }`}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-default bg-muted"
       aria-hidden="true"
     >
       <Icon />
@@ -156,7 +140,7 @@ function HealthSummary({
           kind === 'attention'
             ? 'bg-attention-muted'
             : kind === 'healthy'
-              ? 'bg-green-50'
+              ? 'bg-success-muted'
               : 'bg-muted'
         }`}
       >
@@ -245,21 +229,16 @@ function HealthSummary({
                 {platform.outdatedUsers === null ? (
                   <span className="text-muted">{platform.uniqueVersions} versions observed</span>
                 ) : platform.outdatedUsers > 0 ? (
-                  <a
-                    href={`#${sectionIds.drift}`}
-                    className="font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
-                  >
+                  <Link href={`#${sectionIds.drift}`} className="font-medium">
                     Review {platform.outdatedUsers.toLocaleString()} {platform.outdatedUsers === 1 ? 'user' : 'users'}
-                  </a>
+                  </Link>
                 ) : (platform.unclassifiedUsers ?? 0) > 0 ? (
                   <span className="text-muted">
                     {platform.unclassifiedUsers?.toLocaleString()} {platform.unclassifiedUsers === 1 ? 'user' : 'users'} unclassified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 font-medium text-green-700">
-                    <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m5 12 4 4L19 6" />
-                    </svg>
+                  <span className="inline-flex items-center gap-1.5 font-medium text-success">
+                    <CheckIcon aria-hidden="true" />
                     No outdated users
                   </span>
                 )}
