@@ -79,6 +79,8 @@ The [AggregatedMetrics contract](../src/types/aggregatedMetrics.ts) groups field
 
 Executive Summary composes `overview` and `adoption`. Shared charts stay outside feature folders when multiple features consume them.
 
+Copilot Impact and user-details views omit a standalone Edit Mode Impact chart. Edit Mode data remains included in combined impact totals.
+
 ## Metric Interpretation
 
 These contracts prevent plausible-looking but misleading analysis. Detailed calculations and edge cases belong with the linked implementations and tests.

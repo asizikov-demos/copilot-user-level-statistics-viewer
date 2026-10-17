@@ -16,7 +16,6 @@ export const COPILOT_IMPACT_SECTIONS: ContextSection[] = [
   { id: 'impact-code-completion', label: 'Code Completion' },
   { id: 'impact-ask', label: 'Ask Mode' },
   { id: 'impact-inline', label: 'Inline Mode' },
-  { id: 'impact-edit', label: 'Edit Mode' },
 ];
 
 export const CLI_ADOPTION_SECTIONS: ContextSection[] = [

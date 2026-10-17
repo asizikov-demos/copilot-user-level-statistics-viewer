@@ -20,7 +20,6 @@ export function ImpactModeSection({
         title={config.title}
         description={config.description}
         emptyStateMessage={config.emptyStateMessage}
-        footer={'footer' in config ? config.footer : undefined}
       />
     </div>
   );
