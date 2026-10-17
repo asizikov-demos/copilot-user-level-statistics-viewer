@@ -113,7 +113,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             <div className="flex-1 border-t border-default" />
           </div>
 
-          <div className="text-center">
+          <div className="flex justify-center">
             <Button variant="primary" leadingVisual={FileIcon} onClick={onSampleLoad} disabled={isLoading}>
               Try with sample data
             </Button>
