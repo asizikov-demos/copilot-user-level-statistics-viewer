@@ -52,7 +52,7 @@ export default function TopLanguageListsSection({
         return (
           <div className="flex items-center">
             <div className="flex-shrink-0 h-8 w-8 mr-3">
-              <div className="h-8 w-8 rounded bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="h-8 w-8 rounded bg-accent-emphasis flex items-center justify-center text-on-emphasis text-xs font-bold">
                 {rank}
               </div>
             </div>
@@ -92,7 +92,7 @@ export default function TopLanguageListsSection({
         return (
           <div className="flex items-center">
             <div className="flex-shrink-0 h-8 w-8 mr-3">
-              <div className="h-8 w-8 rounded bg-gradient-to-r from-green-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="h-8 w-8 rounded bg-success-emphasis flex items-center justify-center text-on-emphasis text-xs font-bold">
                 {rank}
               </div>
             </div>
