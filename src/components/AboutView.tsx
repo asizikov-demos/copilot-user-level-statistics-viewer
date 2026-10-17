@@ -1,7 +1,11 @@
 "use client";
 
 import React from 'react';
+import { LinkButton } from '@primer/react';
+import { MarkGithubIcon } from '@primer/octicons-react';
 import { ViewPanel } from './ui';
+
+const REPOSITORY_URL = 'https://github.com/asizikov-demos/copilot-user-level-statistics-viewer';
 
 export default function AboutView() {
   return (
@@ -42,6 +46,16 @@ export default function AboutView() {
             available, but following the blog ensures you receive the latest updates directly from
             GitHub.
           </p>
+        </div>
+        <div className="mt-6">
+          <LinkButton
+            href={REPOSITORY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            leadingVisual={MarkGithubIcon}
+          >
+            View source on GitHub
+          </LinkButton>
         </div>
       </section>
     </ViewPanel>
