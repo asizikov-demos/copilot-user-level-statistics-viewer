@@ -29,6 +29,32 @@ function idleDayCellClass(markup: string, label: string): string {
 }
 
 describe('ActivityCalendar', () => {
+  it('places UTC dates under the correct weekday in western timezones', () => {
+    const originalTimezone = process.env.TZ;
+    process.env.TZ = 'America/Los_Angeles';
+
+    try {
+      const markup = renderToStaticMarkup(
+        <ActivityCalendar
+          days={[]}
+          reportStartDay="2024-01-01"
+          reportEndDay="2024-01-07"
+          onDayClick={() => {}}
+        />,
+      );
+      const firstWeek = markup.split('<div class="grid grid-cols-7">')[2];
+      const firstDayCell = firstWeek?.split('>1</div>')[0] ?? '';
+
+      expect(firstDayCell.match(/h-8 text-xs flex/g) ?? []).toHaveLength(1);
+    } finally {
+      if (originalTimezone === undefined) {
+        delete process.env.TZ;
+      } else {
+        process.env.TZ = originalTimezone;
+      }
+    }
+  });
+
   it('colors active days with Primer contribution graph tokens', () => {
     const markup = renderCalendar();
 

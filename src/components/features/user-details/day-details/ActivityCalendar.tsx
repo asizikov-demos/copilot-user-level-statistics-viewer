@@ -64,7 +64,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   };
 
   const allDates = generateDateGrid();
-  const mondayIndex = (date: Date) => (date.getDay() + 6) % 7;
+  const mondayIndex = (date: Date) => (date.getUTCDay() + 6) % 7;
 
   const groupDatesByWeek = (dates: Date[]) => {
     const weeks: Date[][] = [];
