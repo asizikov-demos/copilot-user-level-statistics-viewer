@@ -1,7 +1,10 @@
 'use client';
 
+import { Banner, Details, Label } from '@primer/react';
+import { ChevronRightIcon } from '@primer/octicons-react';
 import type { PluginVersion } from '../../../hooks/usePluginVersions';
 import { getIDEIcon } from '../../icons/IDEIcons';
+import EmptyState from '../../ui/EmptyState';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
 import type {
   ClientPlatformHealth,
@@ -301,12 +304,7 @@ function VersionDriftTable({
       id: 'status',
       header: 'Status',
       className: 'px-4 py-3 whitespace-nowrap',
-      renderCell: () => (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
-          Outdated
-        </span>
-      ),
+      renderCell: () => <Label variant="danger">Outdated</Label>,
     },
     {
       id: 'users',
@@ -338,12 +336,11 @@ function VersionDriftTable({
         </p>
       </div>
       {!hasVersionData ? (
-        <div className="rounded-md border border-default bg-muted p-4">
-          <div className="font-medium text-default">No version cohorts available</div>
-          <p className="mt-1 text-sm text-muted">
-            This report does not include JetBrains or VS Code version data.
-          </p>
-        </div>
+        <EmptyState
+          border
+          heading="No version cohorts available"
+          description="This report does not include JetBrains or VS Code version data."
+        />
       ) : rows.length > 0 ? (
         <MetricsTable
           data={rows}
@@ -358,20 +355,23 @@ function VersionDriftTable({
           buttonExpandedLabel="Show fewer versions"
         />
       ) : unclassifiedPlatforms.length > 0 ? (
-        <div className="rounded-md border border-default bg-muted p-4">
-          <div className="font-medium text-default">No outdated versions identified</div>
-          <p className="mt-1 text-sm text-muted">
-            Classification is unavailable for {unclassifiedPlatforms.map(({ platform }) => platform).join(' and ')};
-            no healthy status is inferred without release metadata.
-          </p>
-        </div>
+        <EmptyState
+          border
+          heading="No outdated versions identified"
+          description={
+            <>
+              Classification is unavailable for {unclassifiedPlatforms.map(({ platform }) => platform).join(' and ')};
+              no healthy status is inferred without release metadata.
+            </>
+          }
+        />
       ) : (
-        <div className="rounded-md border border-green-200 bg-green-50 p-4">
-          <div className="font-medium text-green-800">No outdated versions detected</div>
-          <p className="mt-1 text-sm text-green-700">
+        <Banner variant="success">
+          <Banner.Title as="h3">No outdated versions detected</Banner.Title>
+          <Banner.Description>
             All clients with available release metadata are within their current version window.
-          </p>
-        </div>
+          </Banner.Description>
+        </Banner>
       )}
     </section>
   );
@@ -418,13 +418,14 @@ function ReleaseMethodology({
   sectionId: string;
 }) {
   return (
-    <details
+    <Details
       id={sectionId}
-      className="rounded-md border border-default bg-default scroll-mt-28"
+      className="group rounded-md border border-default bg-default scroll-mt-28"
     >
-      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]">
+      <Details.Summary className="flex cursor-pointer items-center gap-2 px-4 py-3 text-sm font-medium text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]">
+        <ChevronRightIcon className="text-muted transition-transform group-open:rotate-90" aria-hidden="true" />
         How version status is evaluated
-      </summary>
+      </Details.Summary>
       <div className="border-t border-default p-4">
         <p className="max-w-3xl text-sm leading-6 text-muted">
           VS Code is evaluated against the stable train available at the report start
@@ -459,7 +460,7 @@ function ReleaseMethodology({
           ))}
         </div>
       </div>
-    </details>
+    </Details>
   );
 }
 

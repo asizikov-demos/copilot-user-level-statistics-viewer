@@ -1,11 +1,15 @@
 'use client';
 
 import React from 'react';
+import { Dialog, IconButton, Label } from '@primer/react';
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
 import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
 import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
 import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import EmptyState from '../../../ui/EmptyState';
+import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
@@ -44,11 +48,9 @@ const cellRight = 'px-4 py-3 text-sm text-default text-right';
 const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
 const headerRight = 'px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
 
-const pillBase = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
-
 interface FeaturePill {
   label: string;
-  className: string;
+  feature: FeatureLabelKey;
 }
 
 function hasCopilotAppActivity(dayMetrics: UserDayData): boolean {
@@ -94,25 +96,25 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
 
   const pills: FeaturePill[] = [];
   if (dayMetrics.used_vscode_agent) {
-    pills.push({ label: 'VS Code Agents', className: `${pillBase} bg-blue-100 text-blue-800` });
+    pills.push({ label: 'VS Code Agents', feature: 'vscodeAgent' });
   }
   if (dayMetrics.used_copilot_coding_agent) {
-    pills.push({ label: 'Cloud Agent', className: `${pillBase} bg-purple-100 text-purple-800` });
+    pills.push({ label: 'Cloud Agent', feature: 'cloudAgent' });
   }
   if (reviewMode) {
-    pills.push({ label: `Code Review (${reviewMode})`, className: `${pillBase} bg-pink-100 text-pink-800` });
+    pills.push({ label: `Code Review (${reviewMode})`, feature: 'codeReview' });
   }
   if (hasCliActivity) {
-    pills.push({ label: 'CLI', className: `${pillBase} bg-teal-100 text-teal-800` });
+    pills.push({ label: 'CLI', feature: 'cli' });
   }
   if (hasCopilotAppActivity(dayMetrics)) {
-    pills.push({ label: 'Copilot App', className: `${pillBase} bg-muted text-default` });
+    pills.push({ label: 'Copilot App', feature: 'copilotApp' });
   }
   if (usedCompletions) {
-    pills.push({ label: 'Completions', className: `${pillBase} bg-blue-100 text-blue-800` });
+    pills.push({ label: 'Completions', feature: 'completions' });
   }
   if (usedIdeAgent) {
-    pills.push({ label: 'IDE Agent', className: `${pillBase} bg-cyan-100 text-cyan-800` });
+    pills.push({ label: 'IDE Agent', feature: 'ideAgent' });
   }
   return pills;
 }
@@ -156,6 +158,9 @@ const languageModelColumns: TableColumn<LanguageModelRow>[] = [
 ];
 
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {
+  // Focus the title on open: focusing an IconButton would open its tooltip, which swallows the first Escape.
+  const titleRef = React.useRef<HTMLHeadingElement>(null);
+
   React.useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -165,13 +170,11 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
       } else if (event.key === 'ArrowRight' && onNavigateDay && canNavigateNextDay) {
         event.preventDefault();
         onNavigateDay(1);
-      } else if (event.key === 'Escape') {
-        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, canNavigatePrevDay, canNavigateNextDay, onNavigateDay, onClose]);
+  }, [isOpen, canNavigatePrevDay, canNavigateNextDay, onNavigateDay]);
 
   if (!isOpen) return null;
 
@@ -252,206 +255,189 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-default rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-default flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <Dialog
+      width="72rem"
+      position={{ narrow: 'fullscreen', regular: 'center' }}
+      onClose={onClose}
+      initialFocusRef={titleRef}
+      renderHeader={({ dialogLabelId, dialogDescriptionId, onClose: closeDialog }) => (
+        <Dialog.Header>
+          <div className="flex items-start gap-2">
             {onNavigateDay && (
-              <button
-                type="button"
+              <IconButton
+                icon={ChevronLeftIcon}
+                aria-label="Previous day"
+                keybindingHint="ArrowLeft"
+                variant="invisible"
                 onClick={() => onNavigateDay(-1)}
                 disabled={!canNavigatePrevDay}
-                aria-label="Previous day"
-                title="Previous day (←)"
-                className="text-muted hover:text-default transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+              />
             )}
-            <div>
-              <h2 className="text-xl font-bold text-default">{formatDate(date)}</h2>
+            <div className="min-w-0 flex-1 self-center">
+              <Dialog.Title id={dialogLabelId} ref={titleRef} tabIndex={-1} className="focus:outline-none">
+                {formatDate(date)}
+              </Dialog.Title>
               {hasData && userLogin && (
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
-                  <span>User: {userLogin}</span>
-                  <span aria-hidden="true" className="text-disabled">•</span>
-                  <span>AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}</span>
-                </p>
+                <Dialog.Subtitle id={dialogDescriptionId}>
+                  User: {userLogin}
+                  <span aria-hidden="true"> • </span>
+                  AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}
+                </Dialog.Subtitle>
               )}
             </div>
             {onNavigateDay && (
-              <button
-                type="button"
+              <IconButton
+                icon={ChevronRightIcon}
+                aria-label="Next day"
+                keybindingHint="ArrowRight"
+                variant="invisible"
                 onClick={() => onNavigateDay(1)}
                 disabled={!canNavigateNextDay}
-                aria-label="Next day"
-                title="Next day (→)"
-                className="text-muted hover:text-default transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="text-muted hover:text-default transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          {!hasData ? (
-            <div className="text-center py-12">
-              <div className="text-disabled mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-default mb-2">No activity recorded</h3>
-              <p className="text-muted">There was no GitHub Copilot activity on this date.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {/* Features used pills */}
-              {featurePills.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Features used:</span>
-                  {featurePills.map((pill) => (
-                    <span key={pill.label} className={pill.className}>{pill.label}</span>
-                  ))}
-                </div>
-              )}
-
-              {/* Clients & Impact cards */}
-              <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions ? ' md:grid-cols-2' : ''}`}>
-                {hasClientInteractions && (
-                  <DayClientDistributionChart
-                    dayMetrics={dayMetrics}
-                    cliInteractionCount={cliInteractionCount}
-                  />
-                )}
-                <DayImpactCard
-                  locAdded={dayMetrics.loc_added_sum}
-                  locDeleted={dayMetrics.loc_deleted_sum}
-                />
-              </div>
-
-              <UserDetailsCustomizationsSection
-                key={`${userLogin}-${date}`}
-                sectionId="day-details-cli-customizations"
-                summaries={dayMetrics.cliCustomizations ?? []}
-                mode="day"
               />
+            )}
+            <Dialog.CloseButton onClose={() => closeDialog('close-button')} />
+          </div>
+        </Dialog.Header>
+      )}
+    >
+      {!hasData ? (
+        <EmptyState
+          icon={CalendarIcon}
+          heading="No activity recorded"
+          description="There was no GitHub Copilot activity on this date."
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* Features used pills */}
+          {featurePills.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-muted uppercase tracking-wider">Features used:</span>
+              {featurePills.map((pill) => (
+                <Label key={pill.label} variant={FEATURE_LABEL_VARIANT[pill.feature]}>{pill.label}</Label>
+              ))}
+            </div>
+          )}
 
-              {/* Features Section */}
-              {dayMetrics.totals_by_feature.length > 0 && (
-                <div className="bg-default rounded-md border border-default p-6">
-                  <h4 className="text-lg font-semibold text-default mb-1">Activity by Feature</h4>
-                  <p className="text-sm text-muted mb-4">Expand a feature to see the languages and models used.</p>
-                  <DayFeatureBreakdown
-                    totalsByFeature={dayMetrics.totals_by_feature}
-                    totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
-                    totalsByModelFeature={dayMetrics.totals_by_model_feature}
-                  />
-                </div>
-              )}
+          {/* Clients & Impact cards */}
+          <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions ? ' md:grid-cols-2' : ''}`}>
+            {hasClientInteractions && (
+              <DayClientDistributionChart
+                dayMetrics={dayMetrics}
+                cliInteractionCount={cliInteractionCount}
+              />
+            )}
+            <DayImpactCard
+              locAdded={dayMetrics.loc_added_sum}
+              locDeleted={dayMetrics.loc_deleted_sum}
+            />
+          </div>
 
-              {copilotAppUsage && (
-                <div className="bg-default rounded-md border border-default p-6">
-                  <h4 className="text-lg font-semibold text-default mb-1">Copilot App Usage</h4>
-                  <p className="text-sm text-muted mb-4">
-                    Session and token totals reported by totals_by_copilot_app for this day.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {renderCopilotAppUsageStat('Sessions', formatCount(copilotAppUsage.session_count))}
-                    {renderCopilotAppUsageStat('Requests', formatCount(copilotAppUsage.request_count))}
-                    {renderCopilotAppUsageStat('Prompts', formatCount(copilotAppUsage.prompt_count))}
-                    {renderCopilotAppUsageStat('Prompt tokens', formatCount(copilotAppUsage.token_usage.prompt_tokens_sum))}
-                    {renderCopilotAppUsageStat('Output tokens', formatCount(copilotAppUsage.token_usage.output_tokens_sum))}
-                    {renderCopilotAppUsageStat(
-                      'Avg tokens / request',
-                      formatAverageTokens(copilotAppUsage.token_usage.avg_tokens_per_request)
-                    )}
+          <UserDetailsCustomizationsSection
+            key={`${userLogin}-${date}`}
+            sectionId="day-details-cli-customizations"
+            summaries={dayMetrics.cliCustomizations ?? []}
+            mode="day"
+          />
+
+          {/* Features Section */}
+          {dayMetrics.totals_by_feature.length > 0 && (
+            <div className="bg-default rounded-md border border-default p-6">
+              <h4 className="text-lg font-semibold text-default mb-1">Activity by Feature</h4>
+              <p className="text-sm text-muted mb-4">Expand a feature to see the languages and models used.</p>
+              <DayFeatureBreakdown
+                totalsByFeature={dayMetrics.totals_by_feature}
+                totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
+                totalsByModelFeature={dayMetrics.totals_by_model_feature}
+              />
+            </div>
+          )}
+
+          {copilotAppUsage && (
+            <div className="bg-default rounded-md border border-default p-6">
+              <h4 className="text-lg font-semibold text-default mb-1">Copilot App Usage</h4>
+              <p className="text-sm text-muted mb-4">
+                Session and token totals reported by totals_by_copilot_app for this day.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {renderCopilotAppUsageStat('Sessions', formatCount(copilotAppUsage.session_count))}
+                {renderCopilotAppUsageStat('Requests', formatCount(copilotAppUsage.request_count))}
+                {renderCopilotAppUsageStat('Prompts', formatCount(copilotAppUsage.prompt_count))}
+                {renderCopilotAppUsageStat('Prompt tokens', formatCount(copilotAppUsage.token_usage.prompt_tokens_sum))}
+                {renderCopilotAppUsageStat('Output tokens', formatCount(copilotAppUsage.token_usage.output_tokens_sum))}
+                {renderCopilotAppUsageStat(
+                  'Avg tokens / request',
+                  formatAverageTokens(copilotAppUsage.token_usage.avg_tokens_per_request)
+                )}
+              </div>
+            </div>
+          )}
+
+          {hasVSCodeAgentData && (
+            <div className="bg-default rounded-md border border-default p-6">
+              <h4 className="text-lg font-semibold text-default mb-1">VS Code Agents</h4>
+              <p className="text-sm text-muted mb-4">
+                Dedicated Agents-window activity, separate from editor Agent Mode.
+              </p>
+              <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {dayMetrics.used_vscode_agent != null && (
+                  <div>
+                    <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
+                    <dd className={usageStatValueClass}>{dayMetrics.used_vscode_agent ? 'Yes' : 'No'}</dd>
                   </div>
-                </div>
-              )}
+                )}
+                {dayMetrics.totals_by_vscode_agent?.session_count != null && (
+                  <div>
+                    <dt className={usageStatLabelClass}>Sessions</dt>
+                    <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.session_count.toLocaleString()}</dd>
+                  </div>
+                )}
+                {dayMetrics.totals_by_vscode_agent?.total_user_messages != null && (
+                  <div>
+                    <dt className={usageStatLabelClass}>User messages</dt>
+                    <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.total_user_messages.toLocaleString()}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          )}
 
-              {hasVSCodeAgentData && (
-                <div className="bg-default rounded-md border border-default p-6">
-                  <h4 className="text-lg font-semibold text-default mb-1">VS Code Agents</h4>
-                  <p className="text-sm text-muted mb-4">
-                    Dedicated Agents-window activity, separate from editor Agent Mode.
-                  </p>
-                  <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {dayMetrics.used_vscode_agent != null && (
-                      <div>
-                        <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
-                        <dd className={usageStatValueClass}>{dayMetrics.used_vscode_agent ? 'Yes' : 'No'}</dd>
-                      </div>
-                    )}
-                    {dayMetrics.totals_by_vscode_agent?.session_count != null && (
-                      <div>
-                        <dt className={usageStatLabelClass}>Sessions</dt>
-                        <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.session_count.toLocaleString()}</dd>
-                      </div>
-                    )}
-                    {dayMetrics.totals_by_vscode_agent?.total_user_messages != null && (
-                      <div>
-                        <dt className={usageStatLabelClass}>User messages</dt>
-                        <dd className={usageStatValueClass}>{dayMetrics.totals_by_vscode_agent.total_user_messages.toLocaleString()}</dd>
-                      </div>
-                    )}
-                  </dl>
-                </div>
-              )}
+          {/* Activity by Client section (includes IDE & CLI clients) */}
+          {clientRows.length > 0 && (
+            <div className="bg-default rounded-md border border-default p-6">
+              <h4 className="text-lg font-semibold text-default mb-4">Activity by Client</h4>
+              <MetricsTable
+                data={clientRows}
+                columns={clientColumns}
+                tableClassName="w-full divide-y divide-default"
+                tableContainerClassName="overflow-x-auto"
+                theadClassName="bg-muted"
+                tbodyClassName="bg-default divide-y divide-default"
+                rowClassName={() => 'hover:bg-muted'}
+                getRowKey={(_, idx) => idx}
+                initialCount={5}
+              />
+            </div>
+          )}
 
-              {/* Activity by Client section (includes IDE & CLI clients) */}
-              {clientRows.length > 0 && (
-                <div className="bg-default rounded-md border border-default p-6">
-                  <h4 className="text-lg font-semibold text-default mb-4">Activity by Client</h4>
-                  <MetricsTable
-                    data={clientRows}
-                    columns={clientColumns}
-                    tableClassName="w-full divide-y divide-default"
-                    tableContainerClassName="overflow-x-auto"
-                    theadClassName="bg-muted"
-                    tbodyClassName="bg-default divide-y divide-default"
-                    rowClassName={() => 'hover:bg-muted'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={5}
-                  />
-                </div>
-              )}
-
-              {/* Language + Model Section */}
-              {dayMetrics.totals_by_language_model.length > 0 && (
-                <div className="bg-default rounded-md border border-default p-6">
-                  <h4 className="text-lg font-semibold text-default mb-4">Activity by Language &amp; Model</h4>
-                  <MetricsTable
-                    data={dayMetrics.totals_by_language_model}
-                    columns={languageModelColumns}
-                    tableClassName="w-full divide-y divide-default"
-                    tableContainerClassName="overflow-x-auto"
-                    theadClassName="bg-muted"
-                    tbodyClassName="bg-default divide-y divide-default"
-                    rowClassName={() => 'hover:bg-muted'}
-                    getRowKey={(_, idx) => idx}
-                    initialCount={10}
-                  />
-                </div>
-              )}
+          {/* Language + Model Section */}
+          {dayMetrics.totals_by_language_model.length > 0 && (
+            <div className="bg-default rounded-md border border-default p-6">
+              <h4 className="text-lg font-semibold text-default mb-4">Activity by Language &amp; Model</h4>
+              <MetricsTable
+                data={dayMetrics.totals_by_language_model}
+                columns={languageModelColumns}
+                tableClassName="w-full divide-y divide-default"
+                tableContainerClassName="overflow-x-auto"
+                theadClassName="bg-muted"
+                tbodyClassName="bg-default divide-y divide-default"
+                rowClassName={() => 'hover:bg-muted'}
+                getRowKey={(_, idx) => idx}
+                initialCount={10}
+              />
             </div>
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </Dialog>
   );
 }

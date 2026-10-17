@@ -150,7 +150,7 @@ describe('Complete Languages Breakdown view toggle', () => {
     await withTable([], async root => {
       await click(root, 'Normalized');
       expect(rows(root)).toEqual([]);
-      expect(root.findAllByType('p').some(node => node.children.join('') === 'No language data available')).toBe(true);
+      expect(root.findAllByType('h4').some(node => node.children.join('') === 'No language data available')).toBe(true);
     });
   });
 });

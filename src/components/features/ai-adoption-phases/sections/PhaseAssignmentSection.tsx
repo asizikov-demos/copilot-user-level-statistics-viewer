@@ -1,8 +1,7 @@
-import { formatAiAdoptionPhase } from '../../../../utils/formatters';
+import AiAdoptionPhaseLabel from '../AiAdoptionPhaseLabel';
 import {
   AI_ADOPTION_PHASE_BLOG_URL,
   PHASE_DEFINITIONS,
-  PHASE_PILL_CLASS,
 } from '../aiAdoptionPhaseMetadata';
 
 interface PhaseAssignmentSectionProps {
@@ -24,13 +23,13 @@ export function PhaseAssignmentSection({ sectionId }: PhaseAssignmentSectionProp
           {PHASE_DEFINITIONS.map((phaseDefinition) => (
             <div key={phaseDefinition.phaseNumber} className="rounded-lg border border-default bg-muted p-4">
               <dt>
-                <span className={PHASE_PILL_CLASS}>
-                  {formatAiAdoptionPhase({
+                <AiAdoptionPhaseLabel
+                  phase={{
                     phase_number: phaseDefinition.phaseNumber,
                     phase: phaseDefinition.phase,
                     version: 'v1',
-                  })}
-                </span>
+                  }}
+                />
               </dt>
               <dd className="mt-2 text-sm text-muted">{phaseDefinition.description}</dd>
             </div>

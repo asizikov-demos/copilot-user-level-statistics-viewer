@@ -4,6 +4,7 @@ import React from 'react';
 import { cn } from '../../utils/cn';
 import { resolveCardRole, type AccentColor } from './colorSchemes';
 import roleStyles from './semanticRoles.module.css';
+import SkeletonText from './SkeletonText';
 import styles from './DashboardStatsCard.module.css';
 
 export type DashboardStatsCardAccent = Exclude<AccentColor, 'red'>;
@@ -76,7 +77,7 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
         <div className={styles.body}>
           <div className={styles.value}>
             {isLoading ? (
-              <span className={cn(styles.skeleton, styles.valueSkeleton, 'animate-pulse')} />
+              <SkeletonText size={size === 'md' ? 'titleSmall' : 'titleMedium'} maxWidth="5rem" />
             ) : (
               formattedValue
             )}
@@ -87,7 +88,7 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
           )}
           {helperText && isLoading && (
             <div className={styles.helper}>
-              <span className={cn(styles.skeleton, styles.helperSkeleton, 'animate-pulse')} />
+              <SkeletonText size="bodySmall" maxWidth="6rem" />
             </div>
           )}
         </div>

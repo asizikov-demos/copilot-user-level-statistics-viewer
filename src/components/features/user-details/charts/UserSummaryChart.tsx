@@ -4,6 +4,8 @@ import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { createDistributionBarChartConfig, type DistributionBarEntry } from '../../../charts/utils/distributionBarChart';
 import ChartContainer from '../../../ui/ChartContainer';
+import { Label } from '@primer/react';
+import { FEATURE_LABEL_VARIANT } from '../../../ui/featureLabels';
 
 registerChartJS();
 
@@ -60,40 +62,14 @@ export default function UserSummaryChart({
       <div className="mb-6">
         <h4 className="text-md font-medium text-default mb-3">Features Used</h4>
         <div className="flex flex-wrap gap-2">
-          {usedChat && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-              Chat
-            </span>
-          )}
-          {usedAgent && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-              IDE Agent Mode
-            </span>
-          )}
-          {usedCli && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-800">
-              CLI
-            </span>
-          )}
-          {usedCodingAgent && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
-              Cloud Agent
-            </span>
-          )}
-          {usedCodeReview && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
-              Code Review
-            </span>
-          )}
-          {usedAutoMode && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-violet-100 text-violet-800">
-              Auto Mode
-            </span>
-          )}
+          {usedChat && <Label size="large" variant={FEATURE_LABEL_VARIANT.chat}>Chat</Label>}
+          {usedAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.ideAgent}>IDE Agent Mode</Label>}
+          {usedCli && <Label size="large" variant={FEATURE_LABEL_VARIANT.cli}>CLI</Label>}
+          {usedCodingAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.cloudAgent}>Cloud Agent</Label>}
+          {usedCodeReview && <Label size="large" variant={FEATURE_LABEL_VARIANT.codeReview}>Code Review</Label>}
+          {usedAutoMode && <Label size="large" variant={FEATURE_LABEL_VARIANT.autoMode}>Auto Mode</Label>}
           {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && !usedCodeReview && !usedAutoMode && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-muted text-default">
-              Completion Only
-            </span>
+            <Label size="large" variant={FEATURE_LABEL_VARIANT.completions}>Completion Only</Label>
           )}
         </div>
       </div>

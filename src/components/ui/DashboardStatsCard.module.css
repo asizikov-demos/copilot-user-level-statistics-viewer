@@ -60,19 +60,3 @@
   color: var(--fgColor-muted);
 }
 
-.skeleton {
-  display: inline-block;
-  vertical-align: middle;
-  background-color: var(--bgColor-neutral-muted);
-  border-radius: var(--borderRadius-small);
-}
-
-.valueSkeleton {
-  width: 5rem;
-  height: 1.5rem;
-}
-
-.helperSkeleton {
-  width: 6rem;
-  height: 0.75rem;
-}

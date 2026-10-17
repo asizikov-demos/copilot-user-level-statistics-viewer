@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { Heading } from '@primer/react';
+import { GraphIcon } from '@primer/octicons-react';
 import { cn } from '../../utils/cn';
+import EmptyState from './EmptyState';
 import styles from './ChartContainer.module.css';
 
 export interface ChartStat {
@@ -55,7 +57,7 @@ export default function ChartContainer({
         <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
           {title}
         </Heading>
-        <div className={styles.empty}>{emptyState}</div>
+        <EmptyState icon={GraphIcon} heading={emptyState} headingAs="h4" />
       </div>
     );
   }

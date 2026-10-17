@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { CodeIcon } from '@primer/octicons-react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { sortByField } from '../../../../utils/sorting';
+import EmptyState from '../../../ui/EmptyState';
 import MetricsTable, { type SortState as TableSortState, type TableColumn } from '../../../ui/MetricsTable';
 import {
   formatAcceptanceRate,
@@ -213,9 +215,7 @@ export default function CompleteLanguagesBreakdownSection({
       />
 
       {languages.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted">No language data available</p>
-        </div>
+        <EmptyState icon={CodeIcon} heading="No language data available" headingAs="h4" />
       )}
     </div>
   );

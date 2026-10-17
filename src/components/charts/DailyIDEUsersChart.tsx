@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { FormControl, Select } from '@primer/react';
 import { registerChartJS } from './utils/chartSetup';
 import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
@@ -108,23 +109,16 @@ export default function DailyIDEUsersChart({
       emptyState="No client usage data available"
       footer={<ClientTelemetryNotice key={activeIde} warnings={activeTelemetryWarnings} />}
       headerActions={
-        <div className="min-w-44">
-          <label htmlFor="daily-ide-users-filter" className="block text-xs font-medium text-muted mb-1">
-            Client
-          </label>
-          <select
-            id="daily-ide-users-filter"
-            value={activeIde}
-            onChange={event => setSelectedIde(event.target.value)}
-            className="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
-          >
+        <FormControl id="daily-ide-users-filter" className="min-w-44">
+          <FormControl.Label>Client</FormControl.Label>
+          <Select block value={activeIde} onChange={event => setSelectedIde(event.target.value)}>
             {data.map(entry => (
-              <option key={entry.ide} value={entry.ide}>
+              <Select.Option key={entry.ide} value={entry.ide}>
                 {formatIDEName(entry.ide)}
-              </option>
+              </Select.Option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormControl>
       }
       summaryStats={[
         { value: activeEntry?.totalUniqueUsers ?? 0, label: 'Unique Users', colorClass: 'text-indigo-600' },

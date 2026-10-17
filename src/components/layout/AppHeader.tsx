@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Banner } from '@primer/react';
 import { useMetrics } from '../MetricsContext';
 
 const AppHeader: React.FC = () => {
@@ -9,18 +10,14 @@ const AppHeader: React.FC = () => {
   if (!warning || isWarningDismissed) return null;
 
   return (
-    <div className="mb-4" data-upload-warning>
-      <div className="mx-auto max-w-3xl p-4 bg-amber-50 border border-amber-200 rounded-md text-left">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-amber-900 text-sm">{warning}</p>
-          <button
-            onClick={dismissWarning}
-            className="text-sm font-medium text-amber-800 hover:text-amber-900"
-          >
-            Dismiss
-          </button>
-        </div>
-      </div>
+    <div className="mx-auto mb-4 max-w-3xl text-left" data-upload-warning>
+      <Banner
+        variant="warning"
+        title="Upload warning"
+        hideTitle
+        description={warning}
+        onDismiss={dismissWarning}
+      />
     </div>
   );
 };
