@@ -21,7 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The focus-visible polyfill used by Primer adds attributes to <html> on the client.
+    <html lang="en" data-color-mode="light" data-light-theme="light" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
       </body>

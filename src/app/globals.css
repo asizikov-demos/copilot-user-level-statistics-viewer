@@ -1,4 +1,23 @@
 @import "tailwindcss";
+@import "@primer/primitives/dist/css/primitives.css";
+@import "@primer/primitives/dist/css/functional/themes/light.css";
+
+/*
+ * Primer BaseStyles CSS is unlayered, so it overrides Tailwind's layered defaults and
+ * utilities. Keep the pre-Primer text color, font stack, and link styling until the
+ * token migration.
+ */
+.app-base-styles {
+  --BaseStyles-fgColor: CanvasText;
+  --BaseStyles-fontFamily: var(--default-font-family);
+}
+
+/* Outranks BaseStyles' `:where(a:not([class*=prc-]))` rules, including :hover. */
+html .app-base-styles a:not([class*="prc-"]):not([class*="PRC-"]):not([class*="Primer_Brand__"]) {
+  color: revert-layer;
+  -webkit-text-decoration: revert-layer;
+  text-decoration: revert-layer;
+}
 
 /* Remove browser print headers/footers */
 @page {
