@@ -1,383 +1,115 @@
 # GitHub Copilot User Level Metrics Viewer
 
-Project overview: purpose, key design decisions, and data flow.
+Architecture, data ownership, and interpretation rules for the browser-only metrics viewer.
+See [PRODUCT.md](../PRODUCT.md) for product direction and [README.md](../README.md) for setup and commands.
 
----
+## Purpose and Supported Input
 
-## 1. Purpose
+Engineering leaders and Copilot administrators upload GitHub Copilot user-level `.ndjson` exports to explore adoption and usage by user, IDE, language, feature, and model. Files stay in the browser; there is no backend.
 
-A **client-side single-page analytics dashboard** for exploring **GitHub Copilot user-level metrics**. Designed for engineering leaders and admins who receive Copilot usage exports (NDJSON).
+- Each record represents one user's activity for one day. [CopilotMetrics](../src/types/metrics.ts) defines the input contract.
+- Only the new LOC schema (`loc_added_sum`, `loc_deleted_sum`, `loc_suggested_*`) is supported. Records with deprecated `generated_loc_sum` / `accepted_loc_sum` fields or missing required fields are skipped.
+- Broader input validation is external to the viewer. Aggregate enterprise/organization reports are not supported input.
+- `public/data/vscode.json` and `public/data/jetbrains.json` provide contextual plugin metadata, not primary metrics.
 
-The app runs entirely in the browser — uploaded metrics files are parsed client-side and never sent to a backend.
+## Architecture Invariants
 
-Key analysis dimensions: **user**, **IDE**, **language**, **feature**, and **model** usage.
+- **Static, client-side application.** Next.js App Router, TypeScript, Tailwind CSS, Primer, and Chart.js (`react-chartjs-2`). `output: 'export'` targets GitHub Pages; no SSR or API routes.
+- **Parsing and aggregation stay in a Web Worker.** The `parseAndAggregate` flow returns only compact, grouped aggregates. Raw `CopilotMetrics[]` never reaches view components or main-thread state.
+- **Worker bundling is explicit.** [build-worker.mjs](../scripts/build-worker.mjs) uses esbuild to produce the self-contained `public/workers/metricsWorker.js` IIFE before `next dev` and `next build`.
+- **User details are on demand.** The worker retains a compact user-detail accumulator, not raw records for the UI, and finalizes only the selected user's detail response.
+- **Each aggregate has one owner.** Metric-family accumulators own creation, record consumption, and finalization. The coordinator wires them together in one raw-record loop and assembles the grouped contract without duplicate aggregation.
+- **Read models are pure projections.** Selectors preserve nested references without copying, sorting, filtering, or mutation. Deterministic feature-specific scalar/date derivations are allowed; only the selected route computes its projection.
 
----
-
-## 2. Data Format
-
-The input is a GitHub Copilot **User Level Metrics** export in `.ndjson` (newline-delimited JSON) format. Each record is modeled by the `CopilotMetrics` type in `src/types/metrics.ts`.
-
-Key facts about the input format:
-- Each record represents one user's activity for one day
-- Records contain nested breakdowns: `totals_by_ide`, `totals_by_feature`, `totals_by_language_feature`, `totals_by_language_model`, `totals_by_model_feature`
-- Only the **new LOC schema** (`loc_added_sum`, `loc_deleted_sum`, `loc_suggested_*`) is supported — records with the deprecated `generated_loc_sum` / `accepted_loc_sum` fields are skipped
-- Optional VS Code Agents fields (`used_vscode_agent` and `totals_by_vscode_agent.session_count` / `total_user_messages`) retain absent/null values. They describe the dedicated Agents window, not editor-window Agent Mode.
-
-Static plugin version metadata (`public/data/vscode.json`, `public/data/jetbrains.json`) is used for contextual plugin version displays, not as primary input.
-
----
-
-## 3. Architecture
-
-Next.js App Router SPA, TypeScript, Tailwind CSS, with GitHub's Primer design system being adopted incrementally. All rendering is client-side.
-
-### 3.1. Key Design Decisions
-
-**Web Worker for parsing and aggregation.** All CPU-intensive work (file parsing, metrics aggregation) runs in a dedicated Web Worker (`src/workers/`). The worker is pre-bundled via esbuild into `public/workers/metricsWorker.js` as a self-contained IIFE — this is required for compatibility with Next.js static export (`output: 'export'`).
-
-**Raw metrics never leave the worker.** The `parseAndAggregate` flow parses files and aggregates them into a compact, grouped `AggregatedMetrics` object entirely within the worker. Only this pre-aggregated result is transferred to the main thread. This significantly reduces memory footprint for large datasets.
-
-**Three React contexts for main-thread state and worker access:**
-- `MetricsContext` (`src/components/MetricsContext.tsx`) — stores the `AggregatedMetrics` result, loading/error/warning state, and data actions
-- `NavigationContext` (`src/state/NavigationContext.tsx`) — manages current view and selected user
-- `MetricsWorkerContext` (`src/state/MetricsWorkerContext.tsx`) — owns the main-thread worker client lifecycle and exposes parse, user-detail, and reset operations
-
-**All view components consume pre-aggregated data.** No component accesses raw `CopilotMetrics[]` directly. The canonical `AggregatedMetrics` worker/UI contract is declared in `src/types/aggregatedMetrics.ts` and groups every aggregate under one owning domain slice. Feature read-model selectors in `src/read-models/` navigate only the slices they need; overview, executive summary, users, user details, Copilot adoption, AI adoption phases, Copilot impact, surface productivity, languages, clients, client versions, model details, CLI adoption, and AI credits retain their narrow runtime projections. Standard route adapters in `src/components/layout/routes/` own the selector and route each non-specialized view to the relevant presentation boundary, so only the selected route computes its projection. The feature-owned `UserDetailsRoute` in `src/components/features/user-details/` owns user selection, on-demand worker requests, stale-result protection, redirects, recovery, and delivery of the user-details view model. The worker retains a compact user-detail accumulator so it can serve those requests without moving raw records onto the main thread.
-
-### 3.2. Code Organization
-
-| Directory | Purpose |
-|---|---|
-| `src/app/` | Next.js App Router entry points and providers |
-| `src/components/` | View components, charts, layout, feature folders, UI primitives |
-| `src/components/features/` | Feature-owned view boundaries such as overview, file upload, adoption, AI adoption phases, impact, users, languages, client versions, and user details |
-| `src/components/layout/routes/` | Typed standard-route adapters/registry |
-| `src/components/charts/` | Shared Chart.js visualizations and chart utilities (via react-chartjs-2) |
-| `src/domain/` | Business logic: aggregator, model config, calculators |
-| `src/domain/aggregation/` | Concrete metric-family accumulator lifecycle orchestration |
-| `src/infra/` | Streaming metrics file parser |
-| `src/domain/calculators/` | Individual metric calculators (stats, engagement, model usage, impact, etc.) |
-| `src/hooks/` | Reusable React hooks (file upload, sorting, search) |
-| `src/workers/` | Framework-free Web Worker entry point, client API, message types |
-| `src/state/` | Navigation context and main-thread worker provider |
-| `src/read-models/` | Pure feature projections over the aggregate contract |
-| `src/types/` | TypeScript type definitions |
-| `src/utils/` | Formatting and utility helpers |
-
-### 3.3. Model Configuration
-
-`src/domain/modelConfig.ts` contains a curated catalog of known LLM models. Calculators use model helpers for normalization, known-model alias recognition, and explicit unknown/empty model detection.
-
-Both `claude-fable-5.1` and the report spelling `claude-fable-5-1` are recognized as Anthropic models in the Powerful category.
-`grok-4` is recognized as an xAI model in the Versatile category, alongside the other Grok 4 versions.
-
-### 3.4. Feature Read-Model Boundaries
-
-The successful worker payload is one grouped `AggregatedMetrics` object. Each aggregate field has exactly one owning slice:
-
-```text
-AggregatedMetrics
-├── overview  stats, engagementData, chatUsersData, chatRequestsData, executiveSummary
-├── users     userSummaries
-├── adoption  featureAdoptionData and adoption series
-├── impact    agent, completion, edit, inline, ask, CLI, and joined impact
-├── languages language stats, feature impact, generation and LOC series
-├── clients   IDE stats/counts and plugin versions
-├── models    daily model usage and model breakdown
-├── cli       session, token, and adoption series
-├── ai        adoption phases, usage distribution, and credits
-└── productivity surface reach, active user-days, attributed LOC, and overlap cohorts
-```
-
-`adoption.vscodeAgentUsage` owns VS Code Agents daily and period summaries. Active users
-are deduplicated by user ID using explicit `used_vscode_agent` flags; sessions and user
-messages are summed independently from reported totals. All three measures retain
-`null` when unreported and carry field-level reporting coverage against uploaded
-user-day records. Mixed-coverage totals include only reported values, not inferred
-zeros. These metrics are not added to generic interaction, client, LOC, or Agent Mode
-rollups. Aggregate enterprise/organization report files are not a new supported input.
-
-The Copilot Adoption view shows a dedicated VS Code Agents chart and expandable daily
-table. User profiles instead combine CLI, Copilot App, and VS Code Agents in an
-Agent-native activity section. Its Daily agent sessions chart uses grouped bars
-and offers a Prompts & messages selector (CLI/App prompts versus VS Code Agents
-user messages). Tooltips include requests for CLI/App only; their token chart
-remains separate. Worker-computed `agentActivity` daily counts and per-surface
-summaries use dedicated totals, never feature interaction counts or editor Agent
-Mode activity. Only reported counts are summed; missing values remain null and
-explicit zeros stay visible across the full report date range. Sessions are not
-deduplicated across surfaces, and prompts/messages may have different counting
-definitions. Surfaces without reported sessions or user inputs are omitted.
-VS Code Agents-only users see the combined section without an empty token chart.
-The standalone profile VS Code Agents chart is removed; the aggregate Adoption
-chart retains its active-user counts and line series. Day details preserve the original optional
-flag and totals; the Users feature filter selects users explicitly reported as having
-used VS Code Agents. Parsing and all new aggregation remain inside the worker.
-
-Customization entries may report a name without either interaction-count field.
-These entries are retained without rejecting the upload or assuming zero. Their
-interaction totals, days invoked, and averages are unavailable (displayed as a dash);
-period item totals and category interaction totals are also unavailable if any
-contributing entry omits its count. Reported distinct-use counts remain independent
-and unchanged. Missing counts do not count as legacy-alias usage, while supplied
-interaction and distinct counts must still be nonnegative safe integers.
-
-User profiles show a Customizations table with Skills, Custom agents, MCP servers,
-and Slash commands, independent of `used_cli` and CLI session totals. Each total
-sums the corresponding `distinct_*_use_count` across reported user-day records.
-An item used on multiple days is counted on each day, so these are not period-wide
-unique counts. The user-detail accumulator
-keeps compact per-category summaries and observed-item counts in the worker; only
-the selected user's finalized summaries are returned on demand. Each retained
-user-day also includes worker-normalized customization summaries. The calendar's
-day-details view uses the same expandable Customizations table with that day's
-exact distinct counts, not period totals. Expanded item details contain only
-that day's event counts; days invoked is zero or one, and the average equals
-the day's count when positive. Changing the selected day resets the disclosures.
-This works even when CLI session data is missing. Both
-`interaction_count` and the older `user_initiated_interaction_count` entry field are
-supported, with the modern value (including zero) taking precedence.
-Rows with reported items expand into a table of names, observed event
-totals, days invoked, and average events per invoked day. Invoked days are distinct
-dates with a positive reported count for that item; zero-count and missing days
-are excluded from the denominator. These statistics are computed in the worker,
-with only numeric summaries sent to the profile. A zero-only item's average is
-undefined and shown as a dash. MCP details use connection-attempt labels, and
-hidden-name buckets remain grouped. Item lists show five entries initially and
-can expand to show all reported entries. Rows without item details do not offer
-an empty disclosure.
-Activity-list and distinct-count coverage are tracked independently. Missing/null
-fields are unavailable, while empty arrays and explicit zeros are reported zeros.
-Observed item totals are limited to the API's per-record top-five lists; hidden
-`other`/`custom` names are not reconstructed. Profile totals use the distinct-count
-fields, not the truncated item lists or their interaction counts. Daily MCP event
-counts describe connection attempts, not tool calls. Plugins and global
-customization dashboards are not included in this profile feature.
-The profile and day-details tables omit categories without reported distinct counts;
-the section is hidden when none of those counts are reported.
-Explicit zero counts remain visible, without empty item lists. Copy stays concise,
-and profile totals include only reported daily counts. Empty
-feature/client/language/model breakdowns and wholly unavailable VS Code Agents
-sections are also omitted from these user views.
-The contextual navigation lists only sections currently rendered, so omitted
-breakdowns do not leave links to empty or missing sections.
-
-Pure selectors under `src/read-models/` project stable nested references from those slices into unchanged UI contracts without copying, sorting, filtering, or mutation. Selectors may contain only existing deterministic, feature-specific scalar or date derivations, such as client CLI totals, the model-details auto total, CLI model chart dates, and the AI credits user total. Executive summary composes across `overview` and `adoption`; user-details routing preserves the complete grouped aggregate object as its dataset identity.
-
-Client telemetry notices reference GitHub's [October 6, 2026 announcement](https://github.blog/changelog/2026-10-06-update-your-ide-to-restore-agent-activity-in-copilot-usage-metrics/).
-The worker groups observed IDE/plugin versions and deduplicates users per version,
-including server-side-only IDE rows with zero activity. It returns compact warnings
-in `clients.telemetryWarnings` and on-demand `UserDetailedMetrics.telemetryWarnings`.
-Client Versions shows the notice above its dashboard, Client Analysis below Daily
-IDE Users (filtered to the chart's selected client), and user profiles at the top.
-Selecting a client without warnings hides the chart notice; Client Versions and
-user profiles retain their full warning lists. VS Code's fixed baseline is IDE 1.139.0;
-Visual Studio's is IDE 18.12 (expected October 2026). Plugin versions are never
-compared to IDE baselines. JetBrains, Eclipse, and Xcode have pending plugin fixes
-without published version numbers, so their observed versions prompt verification,
-not a confirmed-fault claim. Missing or unparseable IDE versions also prompt
-verification when a version is observed. Earlier non-SDK releases are not necessarily
-affected: the announcement does not publish affected lower bounds. Historical
-observations remain flagged even after a later upgrade; missing activity cannot be
-backfilled. Billing is unaffected and CLI-only users are not flagged.
-
-The Executive Summary is a printable Leadership Brief. Its compact `overview.executiveSummary`
-payload is computed in the worker from finalized user summaries and daily engagement:
-observed users, mean/median recorded active days, daily participation, AI credits per
-recorded user-day, top-decile credit concentration, and signed root-level LOC totals.
-The activity window uses the earliest/latest observed dates across the upload, not the
-first file's report metadata. Gaps are left unreported, not filled with inferred inactivity;
-weekday means use only dates with records. Feature reach uses the observed-user denominator
-and explicitly allows overlapping populations. Unreported credit values retain the parser's
-existing zero normalization. Negative user credit totals suppress the concentration share
-without changing signed totals; zero/nonpositive totals have no concentration share.
-The view uses a static, print-stable SVG and named A4/Letter
-portrait print layouts. Print / Save PDF and browser printing use the same report;
-controls and application chrome are excluded. Report content has no expandable sections. The brief
-retains any upload warning as a limitation in its footer rather than printing a
-separate dismissible application banner. Dismissing the banner does not clear the report
-limitation; resetting metrics or starting a new upload clears the previous warning and
-its dismissal state. The brief
-describes activity, not license utilization, shipped code, financial ROI, or causal productivity.
-
-Established boundaries cover:
-- overview and executive summary
-- users and on-demand user details
-- Copilot adoption
-- AI adoption phases
-- Copilot impact
-- languages
-- clients and client versions
-- model details and CLI adoption
-- AI credits
-- surface productivity
-
-The Languages dashboard's Complete Languages Breakdown defaults to its existing Totals
-view and offers a Normalized view for the uploaded period. It retains observed language
-user counts and generation totals alongside generations per observed user and the share
-of language-attributed generations. The worker computes both ratios from finalized
-language accumulators; share uses the sum across **all** reported language rows, including
-unknown-language buckets and rows hidden by the top-ten disclosure. A zero denominator
-is undefined and displayed as a dash. Observed language users are distinct user IDs with
-a reported language-feature entry, including zero-activity entries, not an active-user
-cohort or all developers coding that language. Users can occur in multiple languages.
-Sortable columns operate on unrounded values; each view retains its own sort selection.
-These are uploaded-period activity measures, not weekly rates or productivity rankings.
-
-Phase 4 feature read-model boundaries, Phase 6 feature-oriented component organization, Phase 7 thin view routing, Phase 8 grouped aggregate contract migration, and Phase 10 boundary enforcement/cleanup are complete. The typed standard-route registry delegates all non-user-details routes, while the user-details feature owns the complete specialized lifecycle. `ViewRouter` retains only metrics-wide gates and top-level route selection. Phase 9 input-validation work was removed from scope because metrics inputs are validated upstream before they reach this viewer.
-
-### 3.5. Enforced Dependency Direction
-
-Phase 10 adds targeted ESLint import restrictions that make the current layering difficult to regress without introducing a new architecture framework:
-
-```text
-app/providers
-  -> state contexts + UI contexts
-state + hooks + layout routes
-  -> worker client, navigation, metrics context, read models
-read-models
-  -> grouped aggregate contract and pure domain helpers
-components/views
-  -> read models, shared UI, charts, contract types
-components/ui + components/charts
-  -> shared types/utilities only; no layout routes or feature modules
-workers
-  -> infra parser, domain aggregation, worker message contracts
-domain
-  -> contracts, calculators, and pure domain helpers only
-```
-
-The automated boundaries are intentionally focused:
-- UI components, layout routes, and read models cannot import `src/domain/metricsAggregator.ts` or `src/domain/aggregation/**`
-- production `src/domain/**` and `src/workers/**` modules cannot import React, Next.js, component, or state-context modules
-- shared UI primitives and shared charts cannot import feature modules or layout route modules
-
-Tests may import lower-level helpers to build fixtures and characterize behavior, but production code must follow the directions above.
-
----
-
-## 4. Data Flow
+## Data Flow
 
 ```mermaid
 flowchart LR
-  A[User uploads .ndjson file] --> B[useFileUpload hook]
-  B --> C[state/MetricsWorkerContext-owned client]
-  C -->|postMessage: parseAndAggregate| W[Web Worker: parse + aggregate]
-  W -->|parseAndAggregateResult: grouped slices| D[MetricsContext stores AggregatedMetrics + warnings]
-  D --> VR[ViewRouter resolves current route]
-  VR --> SR[Selected standard route adapter]
-  VR --> UR[Feature-owned UserDetailsRoute]
-  SR --> RM[Feature read-model selector]
-  RM --> E[Feature view]
-  UR -->|computeUserDetails| C
-  UR --> UDV[UserDetails feature view]
-  E --> F[Chart components]
+  U[Upload NDJSON] --> P[MetricsWorkerProvider / typed client]
+  P -->|parseAndAggregate| W[Worker: stream, parse, aggregate]
+  W -->|grouped aggregates + warnings| M[MetricsContext]
+  M --> R[ViewRouter]
+  R --> S[Selected standard route]
+  S --> RM[Read-model selector]
+  RM --> V[Feature view / charts]
+  R --> D[UserDetailsRoute]
+  D -->|computeUserDetails| P
+  P -->|selected user result| D
+  D --> DV[User details view]
 ```
 
-### 4.1. Upload and Parsing
+1. `useFileUpload` checks extensions and requests parsing through the typed worker client.
+2. [metricsFileParser.ts](../src/infra/metricsFileParser.ts) streams files with `File.stream()`, parses lines, and interns strings for memory efficiency.
+3. [metricsAggregator.ts](../src/domain/metricsAggregator.ts) coordinates the metric families, resolves shared signals once per record, and finalizes the grouped result. CLI sessions are accumulated once and shared through a narrow read-only dependency with engagement/adoption.
+4. The worker returns aggregates, enterprise name, record count, and per-file parse errors. Partial failures produce a non-fatal UI warning.
+5. `MetricsWorkerProvider` owns the lazy worker lifecycle, request/progress correlation, reusable reset cancellation, and permanent disposal on unmount.
+6. `ViewRouter` owns upload, fatal-error, and loading gates plus route selection. Standard adapters select narrow view models; `UserDetailsRoute` owns selection, request invalidation, stale-result rejection, retry, cleanup, and effect-only redirects. It preserves the grouped aggregate object as dataset identity.
 
-1. `useFileUpload` validates file extensions and requests parsing through the typed worker client exposed by `MetricsWorkerProvider`
-2. The worker streams each file through `src/infra/metricsFileParser.ts` using the `File.stream()` API, parses lines via `parseMetricsLine`, and applies string interning (`StringPool`) for memory efficiency
-3. Records using deprecated LOC fields or missing required fields are skipped; broader input validation is intentionally external to the app
-4. The worker runs `aggregateMetrics()` on the parsed data, retains the compact user-detail accumulator for on-demand requests, and returns the grouped `AggregatedMetrics` result, enterprise name, record count, and any per-file parse errors (surfaced as a non-fatal warning in the UI when partial failures occur). The request protocol and lifecycle are unchanged; raw records remain off the main thread.
-5. `MetricsWorkerProvider` in `src/state/` is the application-level lifecycle owner. Its client creates the browser Worker lazily, correlates requests and progress responses, cancels pending work on reusable resets, and permanently disposes the Worker when the provider unmounts.
+## Code Map and Ownership
 
-### 4.2. Aggregation
+| Location | Responsibility |
+|---|---|
+| `src/app/` | App Router entry points and providers |
+| `src/components/layout/` | App shell, navigation, router, and typed standard-route registry |
+| `src/components/features/` | Feature presentation, sections, feature-only charts, and focused tests |
+| `src/components/ui/`, `src/components/charts/` | Shared primitives, Chart.js visualizations, and chart utilities |
+| `src/state/`, `src/components/MetricsContext.tsx` | Navigation, worker access/lifecycle, aggregate/loading/error/warning state |
+| `src/hooks/` | Upload and reusable interaction hooks |
+| `src/read-models/` | Pure feature projections |
+| `src/workers/` | Framework-free worker entry point, typed client, and message contracts |
+| `src/infra/` | Streaming parser |
+| `src/domain/aggregation/`, `src/domain/calculators/` | Metric-family lifecycles and pure calculations |
+| `src/domain/modelConfig.ts` | Curated model catalog, normalization, aliases, and unknown/empty detection |
+| `src/types/`, `src/utils/` | Contracts and shared utilities |
 
-`metricsAggregator.ts` retains the single explicit pass over raw records and coordinates concrete metric-family lifecycles in `src/domain/aggregation/` with calculators in `src/domain/calculators/`. Core stats, user summaries, user detail, language, model, client, CLI, engagement/adoption, impact, and AI orchestration each own accumulator creation, per-record consumption, and narrow finalization. The core-stats lifecycle owns first-record report metadata, filtered-record counting, and per-user usage signals while exposing its stats accumulator explicitly to the language, model, and client families for their dimension-specific contributions. The user-detail lifecycle returns the same compact calculator accumulator retained by the worker for on-demand requests.
+The [AggregatedMetrics contract](../src/types/aggregatedMetrics.ts) groups fields by owning slice:
 
-The coordinator resolves the Copilot Cloud Agent compatibility signal exactly once per raw record and passes that boolean to core stats, user summaries, user detail, and engagement/adoption. CLI usage is accumulated once by the CLI family, including zero-filled dates. Its narrow, read-only daily-session dependency is consumed by engagement/adoption finalization so engagement, chat, and adoption retain CLI users and sessions without duplicating accumulation or exposing token internals. Model aggregation retains ownership of agent heatmap state through an explicit feature-signal entry point while the engagement/adoption and impact families independently consume the feature fields required by their calculators.
+| Slice | Owns |
+|---|---|
+| `overview` | Core stats, engagement, chat usage, executive summary |
+| `users` | User summaries |
+| `adoption` | Feature adoption and VS Code Agents usage |
+| `impact` | Agent, completion, edit, inline, ask, CLI, and joined impact |
+| `languages` | Language stats, feature impact, generation and LOC series |
+| `clients` | IDE stats/counts, plugin versions, telemetry warnings |
+| `models` | Daily model usage and model breakdown |
+| `cli` | Session, token, and adoption series |
+| `ai` | Adoption phases, usage distribution, and credits |
+| `productivity` | Surface reach, active user-days, attributed LOC, and overlap cohorts |
 
-Phase 5 modular aggregation orchestration and Phase 8 grouped contract assembly are complete. The top-level coordinator deliberately retains only accumulator wiring, one raw-record loop, shared-signal resolution, narrow cross-family dependencies, finalization, and grouped assembly. Concrete family results map directly into `overview`, `users`, `adoption`, `impact`, `languages`, `clients`, `models`, `cli`, and `ai` without recomputation, compatibility aliases, or duplicate ownership. The worker still returns the compact user-detail accumulator separately for retained on-demand use.
+Executive Summary composes `overview` and `adoption`. Shared charts stay outside feature folders when multiple features consume them.
 
-### 4.3. Views
+## Metric Interpretation
 
-`ViewRouter` (`src/components/layout/ViewRouter.tsx`) is the thin top-level coordinator for metrics-wide upload, fatal-error, and loading gates. It selects either the typed standard-route outlet or the feature-owned `UserDetailsRoute`. Each standard adapter invokes its feature selector lazily and renders the relevant presentation boundary with a narrow shared route context. `CopilotAdoptionView` presentation, adoption-only charts, visible sections, and focused tests are co-located under `src/components/features/adoption/`; shared adoption chart utilities remain in `src/components/charts/utils/` because CLI adoption and model details also consume them. `AiAdoptionPhaseView` presentation, table column metadata, phase definitions, visible sections, and focused tests are co-located under `src/components/features/ai-adoption-phases/`. `CopilotImpactView` presentation, impact mode metadata, visible sections, and focused tests are co-located under `src/components/features/impact/`; `ModeImpactChart` remains shared because executive summary and user details also render it. `UsersView` presentation, visible summary/table sections, feature constants, and focused tests are co-located under `src/components/features/users/`. `LanguagesView` presentation, feature-only daily chart, visible sections, and focused tests are co-located under `src/components/features/languages/`. `ClientVersionsView` presentation and its JetBrains/VS Code version sections are co-located under `src/components/features/client-versions/`. `UserDetailsRoute` consumes metrics, navigation, and worker contexts directly and owns selection/summary resolution, request invalidation and retry, effect-only redirects, stale-result rejection, cleanup, recoverable errors, and final `UserDetailsView` model delivery. User-details presentation, feature-only charts, day-details helpers, and route-focused tests are co-located under `src/components/features/user-details/`; pure read-model selectors remain in `src/read-models/` as the shared application projection layer. This completes Phase 6 feature organization while preserving Phase 7 routing and Phase 10 dependency enforcement.
+These contracts prevent plausible-looking but misleading analysis. Detailed calculations and edge cases belong with the linked implementations and tests.
 
-Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` component for consistent styling.
+- **Missing is not zero.** Optional VS Code Agents flags/counts retain null or absence; only reported values contribute to totals, with field-level coverage against uploaded user-day records. Active users use explicit flags and deduplicated user IDs; sessions/messages are independent totals. See [calculator](../src/domain/calculators/vscodeAgentUsageCalculator.ts).
+- **Agent surfaces are distinct.** VS Code Agents means the dedicated Agents window, not editor Agent Mode. Profile agent activity uses dedicated CLI/App/VS Code Agents totals, not feature interactions; sessions are not deduplicated across surfaces and prompts/messages may use different definitions. Unreported counts stay null, explicit zeros stay visible, and token data remains separate. These metrics do not enter generic client, interaction, LOC, or Agent Mode rollups. See [agent activity calculator](../src/domain/calculators/agentActivityCalculator.ts).
+- **Customizations have independent coverage.** Profile totals sum reported daily `distinct_*_use_count` values, not period-wide uniques or item-list counts. Missing/null fields are unavailable; empty lists and explicit zero counts are reported zeros. Item lists are per-record top-five observations; hidden `other`/`custom` names are not reconstructed. `interaction_count`, including zero, takes precedence over `user_initiated_interaction_count`; supplied counts must be nonnegative safe integers. Names without counts remain valid, but affected item/category interaction totals, invoked days, and averages are unavailable. Invoked days are distinct dates with positive counts; zero-only averages are undefined. MCP events mean connection attempts, not tool calls. Day details use that day's counts, independently of CLI sessions. See [calculator and contracts](../src/domain/calculators/cliCustomizationCalculator.ts) and [tests](../src/domain/calculators/__tests__/cliCustomizationCalculator.test.ts).
+- **Language normalization is uploaded-period activity.** Observed users are distinct IDs with language-feature entries, including zero activity, and may overlap across languages. Generation share includes all language rows, including unknown and disclosure-hidden rows; zero denominators are undefined. Sorting uses unrounded values. These are not weekly rates or productivity rankings. See [aggregation](../src/domain/aggregation/languageAggregation.ts) and [tests](../src/domain/aggregation/__tests__/languageAggregation.test.ts).
+- **Telemetry warnings describe observations, not proven faults.** The [October 6, 2026 announcement](https://github.blog/changelog/2026-10-06-update-your-ide-to-restore-agent-activity-in-copilot-usage-metrics/) supplies IDE baselines, not plugin baselines or affected lower bounds. Pending fixes and unknown/unparseable versions prompt verification. Historical observations remain flagged after upgrades; missing activity cannot be backfilled. Billing is unaffected and CLI-only users are excluded. The worker deduplicates users per observed version, including zero-activity server-side IDE rows; client-filtered notices use that client's warnings. See [calculator](../src/domain/calculators/clientTelemetryCalculator.ts) and [tests](../src/domain/calculators/__tests__/clientTelemetryCalculator.test.ts).
+- **Leadership Brief denominators are observational.** The worker computes it from finalized user summaries and daily engagement. Its window spans observed dates, not first-file report metadata; gaps are unreported, and weekday means use only recorded dates. Feature reach uses observed users and permits overlap. AI credits retain existing missing-to-zero normalization and signed totals; negative user totals or nonpositive overall totals suppress concentration shares. Root LOC totals stay signed. Upload warnings remain report limitations even when the application banner is dismissed, and clear on reset/new upload. The print-stable brief has no expandable content and excludes controls/chrome. It does not measure license utilization, shipped code, financial ROI, or causal productivity. See [calculator](../src/domain/calculators/executiveSummaryCalculator.ts), [tests](../src/domain/calculators/__tests__/executiveSummaryCalculator.test.ts), and [view](../src/components/ExecutiveSummaryView.tsx).
+- **Unavailable sections stay absent.** User profiles/day details omit unreported customizations, wholly unavailable VS Code Agents sections, and empty feature/client/language/model breakdowns. Explicit zeros remain visible; navigation links only to rendered sections.
 
-**Chart theme.** Chart.js draws on a canvas, so `src/components/charts/utils/chartTheme.ts` reads Primer tokens (`--data-*-color-emphasis/muted`, `--borderColor-muted`, `--fgColor-muted`, `--fontStack-system`) from the document root with `getComputedStyle` and falls back to static light-theme values during prerendering and Node tests. `registerChartJS()` applies the font stack, text color, and grid color to Chart.js defaults. `chartColors` keeps its `.solid`, `.alpha`, `.alpha60`, and `.muted` shape but resolves each named color from a Primer data-viz hue; `getSequentialColor` cycles through Primer's categorical hues and reserves gray for unknown or other series. IDE and language brand colors remain explicit exceptions. Primer's data-visualization guidance favors bar, line, and area charts; circular charts are documented exceptions. `src/components/charts/CompositionChart.tsx` renders the organization client distribution, a day's client mix, and the user Summary breakdowns as doughnuts or pies with at most five slices (the top four plus an expandable "Other") and an HTML legend that lists each value and share. The organization doughnut hides its center total because a user can appear under several clients. The user feature adoption profile keeps its radar chart. The user activity calendar uses Primer's `--contribution-default-*` tokens.
+## UI Conventions and Enforced Boundaries
 
-**Primer foundation.** `src/app/providers.tsx` wraps the app in Primer's `ThemeProvider` (pinned to `colorMode="day"` for deterministic static export) and `BaseStyles`; `src/app/globals.css` imports the `@primer/primitives` tokens and light theme. Tailwind remains in use for layout, spacing, and `print:` variants only; colors come from Primer tokens. Primer component CSS is unlayered and therefore outranks Tailwind's cascade layers, so style Primer components through props, wrappers, or CSS Modules rather than Tailwind utilities. `BaseStyles` owns the default text color, font, and unclassed link styling (use Primer `Link` for links). Tailwind's `--font-sans` and `--default-font-family` point at Primer's `--fontStack-system`, so Tailwind and Primer components share the system font stack. Vitest inlines `@primer/*` so its CSS imports work in tests; `src/__tests__/setup.ts` ports Primer's JSDOM polyfills, and tests that need a DOM (for portal components such as `Dialog`) opt in with `// @vitest-environment jsdom`.
+### UI foundation
 
-**Color tokens.** `globals.css` imports `@primer/tailwind-config/color` (pinned devDependency, `1.0.0`), which maps Primer tokens onto Tailwind's color theme so Tailwind generates Primer semantic utilities such as `text-default`, `text-muted`, `bg-muted`, `border-default`, `divide-muted`, `text-accent`, and `bg-danger-muted`. The import also resets Tailwind's default palette (`--color-*: initial`), so palette utilities such as `bg-blue-500` generate no CSS. Only the `/color` entry is imported; the package's other entries (`/size`, `/radius`, `/typography`, ...) are not, so Tailwind's spacing, radii, type scale, shadows, and `print:` behavior are unchanged. Utilities without a Tailwind theme mapping (`ring-*`, `outline-*`) use arbitrary token values, for example `ring-[var(--borderColor-default)]`.
+- Primer `ThemeProvider` uses `colorMode="day"` for deterministic static export; `BaseStyles`, light-theme primitives, and Tailwind share Primer's system font stack.
+- Use Primer semantic utilities (`text-default`, `text-muted`, `bg-muted`, `border-default`, etc.), not neutral hex/`gray-*` colors. Unmapped utilities such as rings/outlines use `var(--token)` arbitrary values. IDE/language brand colors are explicit exceptions.
+- Prefer Primer components and token-based CSS Modules; Tailwind handles layout, spacing, and print variants. Unlayered Primer/CSS Module styles outrank Tailwind layers, so style Primer through props, wrappers, or CSS Modules. `BaseStyles` owns default text/font/link styling; use Primer `Link` for links.
+- `globals.css` imports only `@primer/tailwind-config/color`, mapping semantic utilities and disabling Tailwind's default palette without resetting spacing, typography, or other theme settings. ESLint runs the Primer plugin and rejects palette/arbitrary-hex classes in production `src/app` and `src/components` strings.
+- Responsive prefixes use Primer breakpoints configured in `globals.css`, not Tailwind defaults. Form controls, navigation, dialogs, feedback, and labels use Primer; semantic metadata stores roles/variants, not Tailwind class strings.
+- Chart.js canvas styling reads Primer tokens through [chartTheme.ts](../src/components/charts/utils/chartTheme.ts), with static light fallbacks for prerender/tests. Composition charts limit slices to the top four plus expandable Other and expose values/shares in an HTML legend; overlapping client populations must not imply a unique-user sum. Circular/radar charts are exceptions to the preferred bar/line/area charts.
+- Experimental Primer components are imported only through local `EmptyState` and `SkeletonText` wrappers.
+- DOM tests opt into jsdom; `@primer/*` is inlined and shared setup supplies polyfills. Stub `matchMedia` where needed. Assert semantic roles/text/attributes rather than hashed CSS classes; Banner renders actions in both responsive layouts.
 
-**Styling guardrails.** `eslint.config.mjs` enforces two things in `src/`. First, `eslint-plugin-primer-react` runs `no-deprecated-entrypoints`, `no-deprecated-flash`, `no-deprecated-experimental-components`, and `new-color-css-vars` as errors. Second, a `no-restricted-syntax` guard fails on Tailwind palette color utilities (`bg-blue-500`, `text-gray-700`, ...) and arbitrary hex color classes (`bg-[#fff]`) in string literals and template strings under `src/app` and `src/components` (tests excluded). Use Primer token utilities or `[var(--token)]` values instead. Documented chart-type exceptions to Primer's chart guidance (Feature Adoption radar, day Clients doughnut, user Summary pies, organization Client Distribution donut) are described under chart theme above.
+### Dependency boundaries
 
-**Shared UI primitives.** Components in `src/components/ui/` are built on Primer components (`Heading`, `Button`, `Link`, `SegmentedControl`), Octicons, and co-located CSS Modules that use Primer primitives tokens; Tailwind utilities there are limited to layout. Because CSS Modules and Primer CSS are unlayered, Tailwind classes passed to these primitives should only control layout. `semanticRoles.ts` maps legacy `accent`/`variant` names to Primer semantic roles exposed as `data-role` (styled by `semanticRoles.module.css`): stat cards collapse decorative accents (blue, cyan, purple, violet, indigo, teal) to neutral and keep status roles (success, attention, severe, danger), while `InsightsCard` keeps every role. Tests should assert roles, text, and `data-*` attributes rather than hashed CSS Module class names.
+[ESLint restrictions](../eslint.config.mjs) enforce:
 
-**App shell.** `src/components/layout/` keeps the fixed three-column shell (header, `SideNav`, content, `ContextPanel`) laid out with Tailwind, but renders Primer components inside it. `StickyHeader` uses Primer `Header` with `MarkGithubIcon`, a default `Button` for uploads, and below `lg` an `ActionMenu` for view navigation; `StickyHeader.module.css` adapts the button variables to the dark header. `SideNav` renders `NavList` button items marked with `aria-current="page"`, and `ContextPanel` renders an "On this page" `NavList` group of section anchors marked with `aria-current="location"`. Navigation icons in `navigationItems.tsx` are `@primer/octicons-react` components; `isNavItemActive` keeps Users current on the user-details route. The page footer uses Primer `Link`.
+- UI, layout routes, and read models cannot import aggregation implementations.
+- Production domain and worker modules cannot import React, Next.js, components, or state contexts.
+- Shared UI and charts cannot import feature modules or layout routes.
 
-**Breakpoints.** A localized `@theme` block in `globals.css` overrides Tailwind's `--breakpoint-*` values with Primer's: `sm` 34rem (544px), `md` 48rem (768px), `lg` 63.25rem (1012px), `xl` 80rem (1280px), and `2xl` 87.5rem (1400px). Responsive Tailwind prefixes therefore follow Primer's viewport ranges; the rest of Tailwind's theme is not reset.
-
-**Forms, overlays, and feedback.** Form controls use Primer `FormControl` with `TextInput`, `Select`, and `Button` (Users filters, chart filters, Executive Summary paper size); Users pagination uses Primer `Pagination`, and collapsible sections use Primer `Details`. `DayDetailsModal` is a Primer `Dialog`, which provides the accessible name, focus trap, focus restore, and Escape handling; prev/next day navigation (including arrow keys) stays in the dialog. Loading uses `LoadingState` (`Spinner` with a `role="status"` message) and the `SkeletonText` wrapper; errors and warnings use `Banner`; empty states use the `EmptyState` wrapper. Experimental Primer components are imported only through one local wrapper each (`src/components/ui/EmptyState.tsx` for `Blankslate`, `src/components/ui/SkeletonText.tsx` for `SkeletonText`), so an upstream API change is a one-file fix. Badges render Primer `Label`: metadata such as `aiAdoptionPhaseMetadata.ts` and `featureLabels.ts` stores a semantic `LabelColorOptions` variant, never Tailwind class strings. `Banner` renders its actions twice (narrow and wide layouts), so tests should find action buttons by text rather than assume a single match. Tests rendering Primer components that read media queries (`Spinner`, `Banner`, `IconButton`) opt into jsdom and stub `window.matchMedia` per file with `vi.stubGlobal`.
-
----
-
-## 5. Architecture Diagram
-
-```mermaid
-flowchart TB
-	subgraph NextJSAppRouter
-		direction TB
-		L[layout.tsx] --> P[providers.tsx]
-		P --> H[page.tsx]
-		H --> VR[ViewRouter]
-		P --> MWP[MetricsWorkerProvider]
-	end
-
-	subgraph State
-		MC[MetricsContext]
-		NC[NavigationContext]
-		MWP[MetricsWorkerProvider]
-	end
-
-	subgraph WebWorker[Web Worker]
-		MFP[infra/metricsFileParser.ts]
-		MA[metricsAggregator.ts]
-		AGG[aggregation/]
-		CALC[calculators/]
-		MConf[modelConfig.ts]
-		GAM[Grouped AggregatedMetrics slices]
-	end
-
-	subgraph WorkerBridge
-		WC[metricsWorkerClient.ts]
-		WT[metricsWorker.ts]
-	end
-
-	subgraph Boundaries[ESLint boundaries]
-		BR1[UI/read-models cannot import aggregation implementation]
-		BR2[domain/workers stay framework-free]
-		BR3[shared UI/charts avoid layout and feature routes]
-	end
-
-	VR --> SR[Standard route outlet + registry]
-	SR --> Views[View Components + Charts]
-	SR --> RM[read-models/]
-	VR --> UD[UserDetailsRoute]
-	UD --> UDV[UserDetailsView]
-	UD --> RM
-
-	MWP --> WC
-	UFU[useFileUpload] --> MWP
-	UD -->|user detail requests| MWP
-	WC -->|postMessage| WT
-	WT --> MFP
-	WT --> MA
-	MA --> AGG
-	MA --> GAM
-	AGG --> CALC
-	CALC --> MConf
-	GAM -->|parseAndAggregateResult| WC
-	WC --> MC
-
-	MC --> VR
-	NC --> VR
-	BR1 -.enforces.-> SR
-	BR1 -.enforces.-> RM
-	BR2 -.enforces.-> WT
-	BR2 -.enforces.-> MA
-	BR3 -.enforces.-> Views
-```
+Read models depend on the grouped contract and pure domain helpers; workers depend on the parser, domain aggregation, and message contracts. Tests may import lower-level helpers for fixtures and characterization.
