@@ -22,8 +22,9 @@ Choose chart type based on data semantics:
 - **Grouped bars** — for comparing independent metrics side-by-side (e.g., sessions vs requests vs prompts)
 - **Line overlay on bars** — for cumulative or trend data alongside daily values
 - When data represents the same concept (e.g., CLI users are active users), merge into the existing series rather than adding a separate line
-- **Horizontal bars** — for part-to-whole distributions and per-category comparisons; use `createDistributionBarChartConfig` from `./utils/distributionBarChart`
-- Do **not** use doughnut, pie, polar area, or radar charts; Primer data-visualization guidance favors bar, line, and area charts
+- **Horizontal bars** — for per-category comparisons and rankings; use `createHorizontalBarChartOptions`
+- **Pie and doughnut** — documented exceptions to Primer's bar, line, and area guidance, used only for a single total's part-to-whole breakdown. Render them with `CompositionChart` from `./CompositionChart`, which draws at most five slices (the top four plus an expandable gray "Other") and lists each value and share in an HTML legend. Use `variant="pie"` for compact tiles and `variant="doughnut"` for standalone cards. When entries overlap (for example, users counted under several clients), their sum double-counts: say so in the description and pass `showTotal={false}`
+- **Radar** — reserved for the existing user feature adoption profile; do not add new radar or polar area charts
 
 ## Chart Options
 
