@@ -10,7 +10,7 @@ const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     // colorMode is pinned to day so the statically exported HTML is deterministic.
     <ThemeProvider colorMode="day">
-      <BaseStyles className="app-base-styles">
+      <BaseStyles>
         <MetricsWorkerProvider>
           <NavigationProvider>
             <MetricsContextProvider>

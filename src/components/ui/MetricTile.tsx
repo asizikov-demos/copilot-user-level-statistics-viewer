@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ChevronRightIcon } from '@primer/octicons-react';
 import type { VoidCallback } from '../../types/events';
 import { cn } from '../../utils/cn';
-import { resolveCardRole, type AccentColor } from './colorSchemes';
+import { resolveCardRole, type AccentColor } from './semanticRoles';
 import roleStyles from './semanticRoles.module.css';
 import SkeletonText from './SkeletonText';
 import styles from './MetricTile.module.css';

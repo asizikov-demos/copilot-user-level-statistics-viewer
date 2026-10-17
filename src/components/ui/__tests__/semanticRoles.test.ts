@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ACCENT_ROLE, resolveAccentRole, resolveCardRole, type AccentColor } from '../colorSchemes';
+import { ACCENT_ROLE, resolveAccentRole, resolveCardRole, type AccentColor } from '../semanticRoles';
 
-describe('colorSchemes', () => {
+describe('semanticRoles', () => {
   it('maps every legacy accent to a Primer semantic role', () => {
     expect(ACCENT_ROLE).toEqual({
       blue: 'accent',

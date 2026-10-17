@@ -16,6 +16,14 @@ Stop `npm run dev` before running `npm run build` because both use `.next`.
 
 - **Progressive disclosure** for data tables: show top N items by default, expand to see all
 
+## UI Conventions
+
+- **Primer components first** (`@primer/react`, `@primer/octicons-react`); reach for custom markup only when no Primer component fits. Experimental Primer components are imported only through one local wrapper each (`src/components/ui/EmptyState.tsx`, `SkeletonText.tsx`).
+- **Token-only colors.** Use Primer token utilities (`text-default`, `bg-muted`, `border-default`, ...) or `[var(--token)]` values. Tailwind stays for layout, spacing, and `print:`; no dark mode.
+- **Palette guard.** ESLint rejects Tailwind palette color utilities (`bg-blue-500`) and arbitrary hex classes (`bg-[#fff]`) in `src/app` and `src/components`; the Primer ESLint plugin also runs (see `eslint.config.mjs`).
+- **Primer overrides.** Primer CSS is unlayered and beats Tailwind utilities, so style Primer components via props, wrappers, or CSS Modules.
+- **Chart-type exceptions.** Pie/doughnut (via `CompositionChart`) and the Feature Adoption radar are documented exceptions to Primer chart guidance; do not add new ones. Chart colors come from `chartTheme`/`chartColors` (see `.github/instructions/charts.instructions.md`).
+
 ## Workflow Conventions
 
 - Scan/audit tasks are **read-only** — no surprise code changes

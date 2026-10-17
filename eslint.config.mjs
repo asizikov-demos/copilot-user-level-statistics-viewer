@@ -1,10 +1,23 @@
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
+import primerReact from 'eslint-plugin-primer-react'
 
 const productionSourceIgnores = [
   'src/**/*.test.{ts,tsx}',
   'src/**/__tests__/**',
 ]
+
+// Tailwind palette utilities and arbitrary hex colors bypass Primer tokens. The Tailwind
+// token bridge (@primer/tailwind-config/color) already removes the palette at build time.
+const paletteUtilityPattern = String.raw`\b(bg|text|border(-[trblxyse])?|divide|ring(-offset)?|inset-ring|outline|fill|stroke|from|via|to|decoration|accent|caret|shadow|placeholder)-(gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+`
+const arbitraryHexPattern = String.raw`\[#[0-9a-fA-F]{3,8}\]`
+const tokenOnlyColorSelectors = [
+  [paletteUtilityPattern, 'Tailwind palette color utilities are not allowed; use Primer token utilities (text-default, bg-muted, border-default, ...).'],
+  [arbitraryHexPattern, 'Arbitrary hex color classes are not allowed; use Primer tokens, for example bg-[var(--bgColor-muted)].'],
+].flatMap(([pattern, message]) => [
+  { selector: `Literal[value=/${pattern}/]`, message },
+  { selector: `TemplateElement[value.raw=/${pattern}/]`, message },
+])
 
 export default tseslint.config(
   {
@@ -20,6 +33,23 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { 'primer-react': primerReact },
+    rules: {
+      'primer-react/no-deprecated-entrypoints': 'error',
+      'primer-react/no-deprecated-flash': 'error',
+      'primer-react/no-deprecated-experimental-components': 'error',
+      'primer-react/new-color-css-vars': 'error',
+    },
+  },
+  {
+    files: ['src/app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}'],
+    ignores: productionSourceIgnores,
+    rules: {
+      'no-restricted-syntax': ['error', ...tokenOnlyColorSelectors],
+    },
+  },
   {
     files: [
       'src/components/**/*.{ts,tsx}',
