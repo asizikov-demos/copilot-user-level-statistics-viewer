@@ -212,6 +212,7 @@ export default function ClientsView({ model }: IDEViewProps) {
             sortState={{ field: usersSortField as string, direction: usersSortDirection }}
             onSortChange={({ field }) => handleUsersSort(field as keyof IDEStats)}
             rowClassName={() => 'hover:bg-muted'}
+            tableContainerClassName="overflow-x-auto"
           />
         </div>
 
@@ -225,6 +226,7 @@ export default function ClientsView({ model }: IDEViewProps) {
             sortState={{ field: engagementsSortField as string, direction: engagementsSortDirection }}
             onSortChange={({ field }) => handleEngagementsSort(field as keyof IDEStats)}
             rowClassName={() => 'hover:bg-muted'}
+            tableContainerClassName="overflow-x-auto"
           />
         </div>
       </div>
