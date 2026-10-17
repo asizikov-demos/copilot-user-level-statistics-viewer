@@ -1,6 +1,9 @@
+import type { LabelColorOptions } from '@primer/react';
+
 export const AI_ADOPTION_PHASE_BLOG_URL = 'https://github.blog/changelog/2026-05-29-copilot-usage-metrics-api-adds-cohorts-for-ai-adoption/#whats-new';
 
-export const PHASE_PILL_CLASS = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800';
+/** Primer `Label` variant used wherever an AI adoption phase is shown. */
+export const PHASE_LABEL_VARIANT: LabelColorOptions = 'done';
 
 export const PHASE_DEFINITIONS = [
   {

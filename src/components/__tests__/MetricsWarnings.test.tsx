@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import type { ChangeEvent } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

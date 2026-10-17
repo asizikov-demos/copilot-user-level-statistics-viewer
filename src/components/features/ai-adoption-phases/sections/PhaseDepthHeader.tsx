@@ -1,4 +1,6 @@
+import { PeopleIcon } from '@primer/octicons-react';
 import type { AiAdoptionPhaseReadModel } from '../../../../read-models/aiAdoptionPhases';
+import EmptyState from '../../../ui/EmptyState';
 import { formatNumber } from '../../../../utils/formatters';
 
 interface PhaseDepthHeaderProps {
@@ -52,7 +54,7 @@ export function PhaseDepthHeader({ aiAdoptionPhaseData }: PhaseDepthHeaderProps)
   return (
     <section aria-label="Adoption depth" className="mt-6 rounded-lg border border-default bg-default p-6">
       {totalUsers === 0 ? (
-        <p className="text-sm text-muted">No AI adoption phase data is available in this metrics upload.</p>
+        <EmptyState icon={PeopleIcon} heading="No AI adoption phase data is available in this metrics upload." />
       ) : (
         <>
           <p className="max-w-[32ch] text-balance text-2xl font-semibold leading-tight tracking-tight text-default sm:text-[28px]">

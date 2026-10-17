@@ -7,6 +7,7 @@ import type { VoidCallback } from '../../types/events';
 import { cn } from '../../utils/cn';
 import { resolveCardRole, type AccentColor } from './colorSchemes';
 import roleStyles from './semanticRoles.module.css';
+import SkeletonText from './SkeletonText';
 import styles from './MetricTile.module.css';
 
 export type { AccentColor };
@@ -89,7 +90,7 @@ export const MetricTile: React.FC<MetricTileProps> = ({
           <span className={styles.title}>{title}</span>
           <span className={styles.value}>
             {isLoading ? (
-              <span className={cn(styles.skeleton, styles.valueSkeleton, 'animate-pulse')} />
+              <SkeletonText size={size === 'md' ? 'titleSmall' : 'titleMedium'} maxWidth="5rem" />
             ) : (
               displayValue
             )}
@@ -99,7 +100,7 @@ export const MetricTile: React.FC<MetricTileProps> = ({
           )}
           {isLoading && (
             <span className={styles.subtitle}>
-              <span className={cn(styles.skeleton, styles.subtitleSkeleton, 'animate-pulse')} />
+              <SkeletonText size="bodySmall" maxWidth="7rem" />
             </span>
           )}
         </span>

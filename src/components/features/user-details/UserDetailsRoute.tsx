@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Banner } from '@primer/react';
 import { selectUserDetailsRouteReadModel } from '../../../read-models/userDetails';
 import { useNavigation } from '../../../state/NavigationContext';
 import { useMetricsWorker } from '../../../state/MetricsWorkerContext';
 import { VIEW_MODES } from '../../../types/navigation';
 import UserDetailsView from './UserDetailsView';
+import LoadingState from '../../ui/LoadingState';
 import { useMetrics } from '../../MetricsContext';
 import { runUserDetailsRequest } from './userDetailsRequest';
 import {
@@ -104,41 +106,23 @@ export default function UserDetailsRoute() {
   }
 
   if (routeState.status === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-muted">Loading user details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading user details..." />;
   }
 
   if (routeState.status === 'error') {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center max-w-md">
-          <p className="text-red-600 font-medium mb-2">
-            Failed to load user details
-          </p>
-          <p className="text-sm text-muted">
-            {routeState.message}
-          </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <button
-              onClick={() => setRetryKey((value) => value + 1)}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => navigateTo(VIEW_MODES.USERS)}
-              className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-            >
-              Back to Users
-            </button>
-          </div>
-        </div>
+      <div className="mx-auto max-w-xl py-16">
+        <Banner
+          variant="critical"
+          title="Failed to load user details"
+          description={routeState.message}
+          primaryAction={
+            <Banner.PrimaryAction onClick={() => setRetryKey((value) => value + 1)}>Retry</Banner.PrimaryAction>
+          }
+          secondaryAction={
+            <Banner.SecondaryAction onClick={() => navigateTo(VIEW_MODES.USERS)}>Back to Users</Banner.SecondaryAction>
+          }
+        />
       </div>
     );
   }

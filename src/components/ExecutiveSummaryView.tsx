@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Button, FormControl, Select } from '@primer/react';
 import type { ExecutiveSummaryReadModel } from '../read-models/overview';
 import { formatDate, formatNumber, formatSignedNumber } from '../utils/formatters';
 import ParticipationChart from './features/executive-summary/ParticipationChart';
@@ -56,16 +57,17 @@ export default function ExecutiveSummaryView({ model, enterpriseName, dataWarnin
           <p>A printable leadership brief from your uploaded metrics.</p>
         </div>
         <div className={styles.controls}>
-          <label htmlFor="summary-paper">Paper</label>
-          <select
-            id="summary-paper"
-            value={paper}
-            onChange={event => setPaper(event.target.value === 'letter' ? 'letter' : 'a4')}
-          >
-            <option value="a4">A4</option>
-            <option value="letter">Letter</option>
-          </select>
-          <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
+          <FormControl id="summary-paper">
+            <FormControl.Label>Paper</FormControl.Label>
+            <Select
+              value={paper}
+              onChange={event => setPaper(event.target.value === 'letter' ? 'letter' : 'a4')}
+            >
+              <Select.Option value="a4">A4</Select.Option>
+              <Select.Option value="letter">Letter</Select.Option>
+            </Select>
+          </FormControl>
+          <Button variant="primary" onClick={() => window.print()}>Print / Save PDF</Button>
         </div>
       </div>
 

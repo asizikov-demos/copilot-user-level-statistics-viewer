@@ -1,16 +1,21 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { Button, FormControl, Label, Pagination, Select, TextInput } from '@primer/react';
+import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
 import {
   USER_FEATURE_FILTERS,
   useUserFilters,
 } from '../../../../hooks/useUserFilters';
 import { useSortableTable } from '../../../../hooks/useSortableTable';
-import { formatAiAdoptionPhase, formatAiCreditCost } from '../../../../utils/formatters';
+import { formatAiCreditCost } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
 import { getIDEIcon } from '../../../icons/IDEIcons';
 import MetricsTable, { TableColumn } from '../../../ui/MetricsTable';
+import EmptyState from '../../../ui/EmptyState';
+import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
+import AiAdoptionPhaseLabel from '../../ai-adoption-phases/AiAdoptionPhaseLabel';
 
 interface UsersTableSectionProps {
   sectionId: string;
@@ -21,6 +26,26 @@ interface UsersTableSectionProps {
 type SortField = 'user_login' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 
 const USERS_PER_PAGE = 500;
+
+const USER_FEATURE_LABELS: ReadonlyArray<{
+  key: FeatureLabelKey;
+  label: string;
+  isUsed: (user: UserSummary) => boolean;
+}> = [
+  { key: 'chat', label: 'Chat', isUsed: (user) => user.used_chat },
+  { key: 'ideAgent', label: 'Agent', isUsed: (user) => user.used_agent },
+  { key: 'vscodeAgent', label: 'VS Code Agents', isUsed: (user) => Boolean(user.used_vscode_agent) },
+  { key: 'cli', label: 'CLI', isUsed: (user) => user.used_cli },
+  { key: 'copilotApp', label: 'App', isUsed: (user) => user.used_copilot_app },
+  { key: 'cloudAgent', label: 'Cloud Agent', isUsed: (user) => user.used_copilot_coding_agent },
+  {
+    key: 'codeReview',
+    label: 'Code Review',
+    isUsed: (user) => user.used_copilot_code_review_active || user.used_copilot_code_review_passive,
+  },
+  { key: 'autoMode', label: 'Auto Mode', isUsed: (user) => Boolean(user.used_auto_mode) },
+  { key: 'completions', label: 'Completions', isUsed: (user) => user.used_code_completion },
+];
 
 function ClientIcon({ client }: { client: string }) {
   const Icon = getIDEIcon(client);
@@ -176,11 +201,7 @@ export default function UsersTableSection({
       header: 'AI ADOPTION',
       headerClassName: `${headerRightClass} w-[15%] whitespace-nowrap`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
-      renderCell: (user) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          {formatAiAdoptionPhase(user.ai_adoption_phase)}
-        </span>
-      ),
+      renderCell: (user) => <AiAdoptionPhaseLabel phase={user.ai_adoption_phase} />,
     },
     {
       id: 'features_used',
@@ -189,51 +210,11 @@ export default function UsersTableSection({
       className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right',
       renderCell: (user) => (
         <div className="flex flex-wrap gap-1 justify-end">
-          {user.used_chat && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              Chat
-            </span>
-          )}
-          {user.used_agent && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Agent
-            </span>
-          )}
-          {user.used_vscode_agent && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              VS Code Agents
-            </span>
-          )}
-          {user.used_cli && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-              CLI
-            </span>
-          )}
-          {user.used_copilot_app && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-              App
-            </span>
-          )}
-          {user.used_copilot_coding_agent && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-              Cloud Agent
-            </span>
-          )}
-          {(user.used_copilot_code_review_active || user.used_copilot_code_review_passive) && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-              Code Review
-            </span>
-          )}
-          {user.used_auto_mode && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">
-              Auto Mode
-            </span>
-          )}
-          {user.used_code_completion && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-default">
-              Completions
-            </span>
-          )}
+          {USER_FEATURE_LABELS.filter(({ isUsed }) => isUsed(user)).map(({ key, label }) => (
+            <Label key={key} variant={FEATURE_LABEL_VARIANT[key]}>
+              {label}
+            </Label>
+          ))}
         </div>
       ),
     },
@@ -242,63 +223,42 @@ export default function UsersTableSection({
   return (
     <div id={sectionId} className="mt-6 pt-6 border-t border-default">
       <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
-        <div>
-          <label htmlFor="userSearch" className="block text-sm font-medium text-muted mb-2">
-            Search by user login
-          </label>
-          <input
-            id="userSearch"
-            type="text"
+        <FormControl id="userSearch">
+          <FormControl.Label>Search by user login</FormControl.Label>
+          <TextInput
+            block
+            type="search"
+            leadingVisual={SearchIcon}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Start typing a username..."
-            className="w-full px-4 py-2 border border-default rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
-        </div>
-        <div>
-          <label htmlFor="clientFilter" className="block text-sm font-medium text-muted mb-2">
-            IDE used
-          </label>
-          <select
-            id="clientFilter"
-            value={selectedClient}
-            onChange={(e) => setSelectedClient(e.target.value)}
-            className="w-full px-3 py-2 border border-default rounded-md bg-default focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">All IDEs</option>
+        </FormControl>
+        <FormControl id="clientFilter">
+          <FormControl.Label>IDE used</FormControl.Label>
+          <Select block value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)}>
+            <Select.Option value="">All IDEs</Select.Option>
             {clientOptions.map(option => (
-              <option key={option.value} value={option.value}>
+              <Select.Option key={option.value} value={option.value}>
                 {option.label}
-              </option>
+              </Select.Option>
             ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="featureFilter" className="block text-sm font-medium text-muted mb-2">
-            Feature used
-          </label>
-          <select
-            id="featureFilter"
-            value={selectedFeature}
-            onChange={(e) => setSelectedFeature(e.target.value)}
-            className="w-full px-3 py-2 border border-default rounded-md bg-default focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">All features</option>
+          </Select>
+        </FormControl>
+        <FormControl id="featureFilter">
+          <FormControl.Label>Feature used</FormControl.Label>
+          <Select block value={selectedFeature} onChange={(e) => setSelectedFeature(e.target.value)}>
+            <Select.Option value="">All features</Select.Option>
             {USER_FEATURE_FILTERS.map(option => (
-              <option key={option.value} value={option.value}>
+              <Select.Option key={option.value} value={option.value}>
                 {option.label}
-              </option>
+              </Select.Option>
             ))}
-          </select>
-        </div>
-        <button
-          type="button"
-          onClick={clearFilters}
-          disabled={!hasActiveFilters}
-          className="px-4 py-2 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
-        >
+          </Select>
+        </FormControl>
+        <Button onClick={clearFilters} disabled={!hasActiveFilters}>
           Clear
-        </button>
+        </Button>
       </div>
       <p className="mb-3 text-sm text-muted">
         Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
@@ -320,39 +280,26 @@ export default function UsersTableSection({
           <p className="text-sm text-muted">
             Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
           </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-muted">
-              Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
-            </span>
-            <button
-              type="button"
-              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination
+            pageCount={totalPages}
+            currentPage={currentPage}
+            onPageChange={(event, page) => {
+              event.preventDefault();
+              setCurrentPage(page);
+            }}
+          />
         </div>
       )}
 
       {users.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted">No user data available</p>
-        </div>
+        <EmptyState icon={PeopleIcon} heading="No user data available" />
       )}
       {users.length > 0 && sortedUsers.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted">No users match the selected filters</p>
-        </div>
+        <EmptyState
+          icon={FilterIcon}
+          heading="No users match the selected filters"
+          description="Try a different search or clear the filters."
+        />
       )}
     </div>
   );

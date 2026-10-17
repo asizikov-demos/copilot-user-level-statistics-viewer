@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { StrictMode, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
@@ -137,8 +138,27 @@ function textOf(nodes: ReactTestInstance[]): string[] {
   return nodes.map((node) => node.children.join(''));
 }
 
+function textContent(node: ReactTestInstance | string): string {
+  return typeof node === 'string' ? node : node.children.map(textContent).join('');
+}
+
+function renderedText(route: ReactTestRenderer | null): string {
+  return route ? textContent(route.root) : '';
+}
+
+function findButton(route: ReactTestRenderer, label: string): ReactTestInstance {
+  const [button] = route.root.findAll((node) => node.type === 'button' && textContent(node) === label);
+  return button;
+}
+
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  })));
   vi.clearAllMocks();
   mocks.currentView = VIEW_MODES.USER_DETAILS;
   mocks.selectedUser = { id: 1, login: 'testuser' };
@@ -152,6 +172,7 @@ afterEach(async () => {
     });
     renderer = null;
   }
+  vi.unstubAllGlobals();
 });
 
 describe('UserDetailsRoute', () => {
@@ -205,14 +226,11 @@ describe('UserDetailsRoute', () => {
     failedRequest.reject(new Error('Worker unavailable'));
     await settle();
 
-    expect(textOf(route.root.findAllByType('p'))).toEqual(
-      expect.arrayContaining([
-        'Failed to load user details',
-        'Worker unavailable',
-      ])
-    );
+    expect(renderedText(route)).toContain('Failed to load user details');
+    expect(renderedText(route)).toContain('Worker unavailable');
 
-    const [retryButton, backButton] = route.root.findAllByType('button');
+    const retryButton = findButton(route, 'Retry');
+    const backButton = findButton(route, 'Back to Users');
     await act(async () => {
       backButton.props.onClick();
     });
@@ -258,9 +276,7 @@ describe('UserDetailsRoute', () => {
 
     originalRequest.reject(new Error('Obsolete request'));
     await settle();
-    expect(textOf(renderer?.root.findAllByType('p') ?? [])).not.toContain(
-      'Obsolete request'
-    );
+    expect(renderedText(renderer)).not.toContain('Obsolete request');
     expect(mocks.userDetailsView).not.toHaveBeenCalled();
 
     replacementRequest.resolve(details);

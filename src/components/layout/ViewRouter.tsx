@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Banner } from '@primer/react';
 import { VIEW_MODES } from '../../types/navigation';
 import { useNavigation } from '../../state/NavigationContext';
 import { useMetrics } from '../MetricsContext';
@@ -9,6 +10,7 @@ import { useResetAppState } from '../../hooks/useResetAppState';
 import { FileUploadArea } from '../features/file-upload';
 import { UserDetailsRoute } from '../features/user-details';
 import { StandardRouteOutlet } from './routes';
+import LoadingState from '../ui/LoadingState';
 
 const ViewRouter: React.FC = () => {
   const { 
@@ -25,17 +27,13 @@ const ViewRouter: React.FC = () => {
 
   if (error && hasData) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center max-w-md">
-          <p className="text-red-600 font-medium mb-2">Failed to process metrics</p>
-          <p className="text-sm text-muted">{error}</p>
-          <button
-            onClick={resetAppState}
-            className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors"
-          >
-            Start Over
-          </button>
-        </div>
+      <div className="mx-auto max-w-xl py-16">
+        <Banner
+          variant="critical"
+          title="Failed to process metrics"
+          description={error}
+          primaryAction={<Banner.PrimaryAction onClick={resetAppState}>Start Over</Banner.PrimaryAction>}
+        />
       </div>
     );
   }
@@ -53,14 +51,7 @@ const ViewRouter: React.FC = () => {
   }
 
   if (isLoading || !aggregatedMetrics) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-muted">Processing metrics...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Processing metrics..." />;
   }
 
   return (

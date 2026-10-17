@@ -1,10 +1,7 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
-import {
-  act,
-  create,
-  type ReactTestRenderer,
-} from 'react-test-renderer';
-import { describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { UserSummary } from '../../../../types/metrics';
 import UsersSummarySection from '../sections/UsersSummarySection';
 import UsersTableSection from '../sections/UsersTableSection';
@@ -44,7 +41,19 @@ function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
   };
 }
 
+function renderTable(users: UserSummary[], onUserClick = vi.fn()) {
+  return render(<UsersTableSection sectionId="users-table" users={users} onUserClick={onUserClick} />);
+}
+
+function getResultCount() {
+  return screen.getByText(/^Showing [\d,]+ of [\d,]+ users$/).textContent;
+}
+
 describe('Users feature sections', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('renders the total population and feature adoption rails', () => {
     const users = [
       makeUser(),
@@ -80,21 +89,33 @@ describe('Users feature sections', () => {
       total_user_initiated_interactions: index + 1,
     }));
 
-    const populatedMarkup = renderToStaticMarkup(
-      <UsersTableSection sectionId="users-table" users={users} onUserClick={vi.fn()} />
-    );
-    const emptyMarkup = renderToStaticMarkup(
-      <UsersTableSection sectionId="users-table" users={[]} onUserClick={vi.fn()} />
-    );
+    renderTable(users);
 
-    expect(populatedMarkup).toContain('<option value="app">App</option>');
-    expect(populatedMarkup).not.toContain('GENERATIONS');
+    expect(within(screen.getByLabelText('Feature used')).getByRole('option', { name: 'App' })).toBeTruthy();
+    const table = screen.getByRole('table');
+    expect(within(table).queryByText('GENERATIONS')).toBeNull();
     for (const chip of ['Cloud Agent', 'Code Review', 'Auto Mode']) {
-      expect(populatedMarkup).toContain(chip);
+      expect(within(table).getAllByText(chip).length).toBe(500);
     }
-    expect(populatedMarkup).toContain('Showing 1-500 of 501 users');
-    expect(populatedMarkup).toContain('Page 1 of 2');
-    expect(emptyMarkup).toContain('No user data available');
+    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+
+    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+    expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('1');
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
+
+    expect(screen.getByText('Showing 501-501 of 501 users')).toBeTruthy();
+    expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('2');
+    expect(window.location.hash).toBe('');
+
+    cleanup();
+    renderTable([]);
+    expect(screen.getByText('No user data available')).toBeTruthy();
+  });
+
+  it('hides pagination when all users fit on one page', () => {
+    renderTable([makeUser()]);
+
+    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
   });
 
   it('orders users by days active descending and omits the interactions column', () => {
@@ -117,75 +138,55 @@ describe('Users feature sections', () => {
   });
 
   it('combines client and feature filters and clears them', async () => {
-    let renderer: ReactTestRenderer | undefined;
+    renderTable([
+      makeUser(),
+      makeUser({
+        user_login: 'hubot',
+        user_id: 2,
+        clients_used: ['jetbrains'],
+        top_client: 'jetbrains',
+        used_chat: false,
+        used_cli: false,
+      }),
+      makeUser({
+        user_login: 'monalisa',
+        user_id: 3,
+        clients_used: ['copilot_cli'],
+        top_client: 'copilot_cli',
+        used_chat: false,
+      }),
+    ]);
 
-    await act(async () => {
-      renderer = create(
-        <UsersTableSection
-          sectionId="users-table"
-          users={[
-            makeUser(),
-            makeUser({
-              user_login: 'hubot',
-              user_id: 2,
-              clients_used: ['jetbrains'],
-              top_client: 'jetbrains',
-              used_chat: false,
-              used_cli: false,
-            }),
-            makeUser({
-              user_login: 'monalisa',
-              user_id: 3,
-              clients_used: ['copilot_cli'],
-              top_client: 'copilot_cli',
-              used_chat: false,
-            }),
-          ]}
-          onUserClick={vi.fn()}
-        />
-      );
-    });
+    const clearButton = screen.getByRole('button', { name: 'Clear' }) as HTMLButtonElement;
+    expect(clearButton.disabled).toBe(true);
 
-    await act(async () => {
-      renderer?.root.findByProps({ id: 'userSearch' }).props.onChange({
-        target: { value: 'oct' },
-      });
-    });
+    fireEvent.change(screen.getByLabelText('Search by user login'), { target: { value: 'oct' } });
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 250));
     });
-    await act(async () => {
-      renderer?.root.findByProps({ id: 'clientFilter' }).props.onChange({
-        target: { value: 'copilot_cli' },
-      });
-      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({
-        target: { value: 'chat' },
-      });
-    });
+    fireEvent.change(screen.getByLabelText('IDE used'), { target: { value: 'copilot_cli' } });
+    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: 'chat' } });
 
-    const getResultCount = () => renderer?.root
-      .findAllByType('p')
-      .map(node => node.children.join(''))
-      .find(text => text.startsWith('Showing '));
-
-    let markup = JSON.stringify(renderer?.toJSON());
+    const table = screen.getByRole('table');
     expect(getResultCount()).toBe('Showing 1 of 3 users');
-    expect(markup).toContain('octocat');
-    expect(markup).not.toContain('hubot');
-    expect(markup).not.toContain('monalisa');
+    expect(within(table).getByText('octocat')).toBeTruthy();
+    expect(within(table).queryByText('hubot')).toBeNull();
+    expect(within(table).queryByText('monalisa')).toBeNull();
 
-    await act(async () => {
-      renderer?.root.findAllByType('button')[0].props.onClick();
-    });
+    fireEvent.click(clearButton);
 
-    markup = JSON.stringify(renderer?.toJSON());
     expect(getResultCount()).toBe('Showing 3 of 3 users');
-    expect(markup).toContain('hubot');
-    expect(markup).toContain('monalisa');
+    expect(within(screen.getByRole('table')).getByText('hubot')).toBeTruthy();
+    expect(within(screen.getByRole('table')).getByText('monalisa')).toBeTruthy();
+    expect((screen.getByLabelText('Search by user login') as HTMLInputElement).value).toBe('');
+  });
 
-    await act(async () => {
-      renderer?.unmount();
-    });
+  it('shows a filtered empty state when no users match', () => {
+    renderTable([makeUser()]);
+
+    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: 'vscode_agent' } });
+
+    expect(screen.getByText('No users match the selected filters')).toBeTruthy();
   });
 
   it.each([
@@ -202,63 +203,35 @@ describe('Users feature sections', () => {
         makeUser({ user_id: 3, user_login: 'unreported-user', used_vscode_agent: null }),
       ],
     },
-  ])('filters users by the $filter feature', async ({ filter, included, excluded }) => {
-    let renderer: ReactTestRenderer | undefined;
-    await act(async () => {
-      renderer = create(
-        <UsersTableSection sectionId="users-table" users={[included, ...excluded]} onUserClick={vi.fn()} />,
-      );
-    });
-    await act(async () => {
-      renderer?.root.findByProps({ id: 'featureFilter' }).props.onChange({ target: { value: filter } });
-    });
+  ])('filters users by the $filter feature', ({ filter, included, excluded }) => {
+    renderTable([included, ...excluded]);
 
-    const markup = JSON.stringify(renderer?.toJSON());
-    expect(markup).toContain(included.user_login);
-    for (const user of excluded) expect(markup).not.toContain(user.user_login);
-    await act(async () => { renderer?.unmount(); });
+    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: filter } });
+
+    const table = screen.getByRole('table');
+    expect(within(table).getByText(included.user_login)).toBeTruthy();
+    for (const user of excluded) expect(within(table).queryByText(user.user_login)).toBeNull();
   });
 
   it('labels explicit VS Code Agents usage with a feature chip', () => {
-    const markup = renderToStaticMarkup(
-      <UsersTableSection
-        sectionId="users-table"
-        users={[makeUser({ used_vscode_agent: true })]}
-        onUserClick={vi.fn()}
-      />,
-    );
+    renderTable([makeUser({ used_vscode_agent: true })]);
 
-    expect(markup).toContain('>VS Code Agents</span>');
+    expect(within(screen.getByRole('table')).getByText('VS Code Agents')).toBeTruthy();
   });
 
-  it('forwards row selection with the selected user login and id', async () => {
+  it('forwards row selection with the selected user login and id', () => {
     const onUserClick = vi.fn();
-    let renderer: ReactTestRenderer | undefined;
+    renderTable([
+      makeUser({ user_login: 'octocat', user_id: 42 }),
+      makeUser({
+        user_login: 'hubot',
+        user_id: 7,
+        total_user_initiated_interactions: 5,
+      }),
+    ], onUserClick);
 
-    await act(async () => {
-      renderer = create(
-        <UsersTableSection
-          sectionId="users-table"
-          users={[
-            makeUser({ user_login: 'octocat', user_id: 42 }),
-            makeUser({
-              user_login: 'hubot',
-              user_id: 7,
-              total_user_initiated_interactions: 5,
-            }),
-          ]}
-          onUserClick={onUserClick}
-        />
-      );
-    });
-
-    const rows = renderer?.root.findAllByType('tr') ?? [];
-    rows[1].props.onClick();
+    fireEvent.click(within(screen.getByRole('table')).getByText('octocat'));
 
     expect(onUserClick).toHaveBeenCalledWith('octocat', 42);
-
-    await act(async () => {
-      renderer?.unmount();
-    });
   });
 });

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { FormControl, Select } from '@primer/react';
 import type { AgentActivity, AgentSurface } from '../../types/agentActivity';
 import ChartContainer from '../ui/ChartContainer';
 import { registerChartJS } from './utils/chartSetup';
@@ -75,17 +76,16 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
       title={title}
       description="Copilot CLI, Copilot App, and the dedicated VS Code Agents window, separate from editor Agent Mode."
       headerActions={(
-        <label className="text-sm text-muted">
-          <span className="sr-only">Agent activity measure</span>
-          <select
+        <FormControl>
+          <FormControl.Label visuallyHidden>Agent activity measure</FormControl.Label>
+          <Select
             value={measure}
             onChange={event => setMeasure(event.target.value === 'sessions' ? 'sessions' : 'userInputs')}
-            className="rounded-md border border-default bg-default px-3 py-2 text-default"
           >
-            <option value="sessions">Sessions</option>
-            <option value="userInputs">Prompts &amp; messages</option>
-          </select>
-        </label>
+            <Select.Option value="sessions">Sessions</Select.Option>
+            <Select.Option value="userInputs">Prompts &amp; messages</Select.Option>
+          </Select>
+        </FormControl>
       )}
       summaryStats={reportedSurfaces.map(surface => ({
         label: `${surface.label} ${isSessions ? 'sessions' : surface.inputLabel.toLowerCase()}`,

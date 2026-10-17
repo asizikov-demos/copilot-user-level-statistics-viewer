@@ -8,8 +8,9 @@ import TopEntriesList from './ui/TopEntriesList';
 import AiCreditsStatementCard from './AiCreditsStatementCard';
 import { buildAiCreditsStatement } from '../read-models/aiCreditsStatement';
 import type { AiCreditsReadModel } from '../read-models/aiCredits';
-import { formatAiAdoptionPhase, formatAiCreditCost, formatModelDisplayName, formatNumber, formatPercentage } from '../utils/formatters';
+import { formatAiCreditCost, formatModelDisplayName, formatNumber, formatPercentage } from '../utils/formatters';
 import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
+import AiAdoptionPhaseLabel from './features/ai-adoption-phases/AiAdoptionPhaseLabel';
 import { getModelIcon } from './icons/ModelIcons';
 import type { UsageDistributionBucket } from '../domain/calculators/metricCalculators';
 import type { UserSummary } from '../types/metrics';
@@ -122,9 +123,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       headerClassName: `${headerRightClass} whitespace-nowrap`,
       className: 'px-6 py-4 whitespace-nowrap text-right',
       renderCell: (user) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          {formatAiAdoptionPhase(user.ai_adoption_phase)}
-        </span>
+        <AiAdoptionPhaseLabel phase={user.ai_adoption_phase} />
       ),
     },
   ];

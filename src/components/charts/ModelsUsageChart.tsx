@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { FormControl, Select } from '@primer/react';
 import {
   getModelVendor,
   MODEL_VENDOR_ORDER,
@@ -144,22 +145,19 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       isEmpty={dates.length === 0 || datasets.length === 0}
       emptyState={emptyState}
       headerActions={!isAuto && !isCli ? (
-        <div className="min-w-44">
-          <label htmlFor="models-usage-vendor-filter" className="block text-xs font-medium text-muted mb-1">
-            Model vendor
-          </label>
-          <select
-            id="models-usage-vendor-filter"
+        <FormControl id="models-usage-vendor-filter" className="min-w-44">
+          <FormControl.Label>Model vendor</FormControl.Label>
+          <Select
+            block
             value={activeVendor}
             onChange={event => setSelectedVendor(event.target.value as ModelVendorGroup | '')}
-            className="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="">All Vendors</option>
+            <Select.Option value="">All Vendors</Select.Option>
             {vendorOptions.map(vendor => (
-              <option key={vendor} value={vendor}>{vendor}</option>
+              <Select.Option key={vendor} value={vendor}>{vendor}</Select.Option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormControl>
       ) : undefined}
       summaryStats={[
         { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: primaryColorClass },

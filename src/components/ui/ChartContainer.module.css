@@ -101,11 +101,6 @@
   margin-top: var(--base-size-16);
 }
 
-.empty {
-  padding-block: var(--base-size-32);
-  text-align: center;
-  color: var(--fgColor-muted);
-}
 
 @media (min-width: 48rem) {
   .summary {
