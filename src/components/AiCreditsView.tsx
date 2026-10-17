@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
+import EmptyState from './ui/EmptyState';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
 import TopEntriesList from './ui/TopEntriesList';
 import InitialAvatar from './ui/InitialAvatar';
@@ -240,8 +241,11 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
           />
         </div>
       ) : (
-        <div id="ai-credits-daily-consumption" className="scroll-mt-28 rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
-          No AI credit consumption was recorded during the reporting period.
+        <div id="ai-credits-daily-consumption" className="scroll-mt-28">
+          <EmptyState
+            heading="No AI credit consumption was recorded during the reporting period."
+            border
+          />
         </div>
       )}
 
@@ -259,9 +263,11 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
             tableClassName="min-w-full"
           />
         ) : (
-          <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
-            No AI credit consumption was recorded during the reporting period.
-          </div>
+          <EmptyState
+            heading="No AI credit consumption was recorded during the reporting period."
+            headingAs="h4"
+            border
+          />
         )}
       </div>
 
@@ -279,9 +285,11 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
             tableClassName="min-w-full"
           />
         ) : (
-          <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
-            No AI credit consumption was recorded during the reporting period.
-          </div>
+          <EmptyState
+            heading="No AI credit consumption was recorded during the reporting period."
+            headingAs="h4"
+            border
+          />
         )}
       </div>
     </ViewPanel>
