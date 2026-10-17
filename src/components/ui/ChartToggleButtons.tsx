@@ -22,7 +22,7 @@ export default function ChartToggleButtons<T extends string>({
   ariaLabel = 'Chart view',
 }: ChartToggleButtonsProps<T>) {
   return (
-    <div className="whitespace-nowrap print:hidden" data-component="ChartToggleButtons">
+    <div className="max-w-full overflow-x-auto whitespace-nowrap print:hidden" data-component="ChartToggleButtons">
       <SegmentedControl
         size="small"
         aria-label={ariaLabel}
