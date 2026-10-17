@@ -1,0 +1,52 @@
+/*
+ * Exposes Primer semantic role colors as --role-* custom properties.
+ * Pair the .role class with a data-role attribute (see colorSchemes.ts).
+ */
+.role {
+  --role-fgColor: var(--fgColor-default);
+  --role-iconColor: var(--fgColor-muted);
+  --role-bgColor: var(--bgColor-muted);
+  --role-borderColor: var(--borderColor-default);
+}
+
+.role[data-role='accent'] {
+  --role-fgColor: var(--fgColor-accent);
+  --role-iconColor: var(--fgColor-accent);
+  --role-bgColor: var(--bgColor-accent-muted);
+  --role-borderColor: var(--borderColor-accent-muted);
+}
+
+.role[data-role='success'] {
+  --role-fgColor: var(--fgColor-success);
+  --role-iconColor: var(--fgColor-success);
+  --role-bgColor: var(--bgColor-success-muted);
+  --role-borderColor: var(--borderColor-success-muted);
+}
+
+.role[data-role='attention'] {
+  --role-fgColor: var(--fgColor-attention);
+  --role-iconColor: var(--fgColor-attention);
+  --role-bgColor: var(--bgColor-attention-muted);
+  --role-borderColor: var(--borderColor-attention-muted);
+}
+
+.role[data-role='severe'] {
+  --role-fgColor: var(--fgColor-severe);
+  --role-iconColor: var(--fgColor-severe);
+  --role-bgColor: var(--bgColor-severe-muted);
+  --role-borderColor: var(--borderColor-severe-muted);
+}
+
+.role[data-role='danger'] {
+  --role-fgColor: var(--fgColor-danger);
+  --role-iconColor: var(--fgColor-danger);
+  --role-bgColor: var(--bgColor-danger-muted);
+  --role-borderColor: var(--borderColor-danger-muted);
+}
+
+.role[data-role='done'] {
+  --role-fgColor: var(--fgColor-done);
+  --role-iconColor: var(--fgColor-done);
+  --role-bgColor: var(--bgColor-done-muted);
+  --role-borderColor: var(--borderColor-done-muted);
+}
