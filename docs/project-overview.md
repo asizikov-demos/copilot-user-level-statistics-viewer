@@ -301,6 +301,10 @@ Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` c
 
 **Color tokens.** An `@theme inline` block in `globals.css` vendors the `--background-color-*`, `--border-color-*`, and `--text-color-*` declarations from `@primer/tailwind-config@1.0.0`, so Tailwind generates Primer semantic utilities such as `text-default`, `text-muted`, `bg-muted`, `border-default`, `divide-muted`, `text-accent`, and `bg-danger-muted`. The package itself is not imported because it resets Tailwind's palette, type scale, radii, shadows, and breakpoints. Use these utilities for neutral and semantic colors instead of hex values or Tailwind `gray-*` classes. Utilities without a Tailwind theme mapping (`ring-*`, `outline-*`) and Primer tokens without a vendored utility use arbitrary values, for example `ring-[var(--borderColor-default)]`. Accent palette classes, chart colors, and brand colors are not yet migrated.
 
+**App shell.** `src/components/layout/` keeps the fixed three-column shell (header, `SideNav`, content, `ContextPanel`) laid out with Tailwind, but renders Primer components inside it. `StickyHeader` uses Primer `Header` with `MarkGithubIcon`, a default `Button` for uploads, and below `lg` an `ActionMenu` for view navigation; `StickyHeader.module.css` adapts the button variables to the dark header. `SideNav` renders `NavList` button items marked with `aria-current="page"`, and `ContextPanel` renders an "On this page" `NavList` group of section anchors marked with `aria-current="location"`. Navigation icons in `navigationItems.tsx` are `@primer/octicons-react` components; `isNavItemActive` keeps Users current on the user-details route. The page footer uses Primer `Link`.
+
+**Breakpoints.** A localized `@theme` block in `globals.css` overrides Tailwind's `--breakpoint-*` values with Primer's: `sm` 34rem (544px), `md` 48rem (768px), `lg` 63.25rem (1012px), `xl` 80rem (1280px), and `2xl` 87.5rem (1400px). Responsive Tailwind prefixes therefore follow Primer's viewport ranges; the rest of Tailwind's theme is not reset.
+
 ---
 
 ## 5. Architecture Diagram
