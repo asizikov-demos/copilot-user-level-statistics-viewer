@@ -25,6 +25,7 @@ Choose chart type based on data semantics:
 - **Horizontal bars** — for per-category comparisons and rankings; use `createHorizontalBarChartOptions`
 - **Pie and doughnut** — documented exceptions to Primer's bar, line, and area guidance, used only for a single total's part-to-whole breakdown. Render them with `CompositionChart` from `./CompositionChart`, which draws at most five slices (the top four plus an expandable gray "Other") and lists each value and share in an HTML legend. Use `variant="pie"` for compact tiles and `variant="doughnut"` for standalone cards. When entries overlap (for example, users counted under several clients), their sum double-counts: say so in the description and pass `showTotal={false}`
 - **Radar** — reserved for the existing user feature adoption profile; do not add new radar or polar area charts
+- Documented exceptions to Primer chart guidance: Feature Adoption radar, day Clients doughnut, the three User Summary pies, and the organization Client Distribution donut. Do not add others.
 
 ## Chart Options
 
@@ -60,6 +61,7 @@ Colors come from `chartColors` in `./utils/chartColors` — use the `.solid`, `.
 - Use `withAlpha(color, alpha)` from `./utils/chartTheme` for custom opacity instead of string replacement.
 - Grid, tick, and legend colors come from `resolveChartTheme()`; chart options factories already apply them.
 - Ordered three-step blue categories need `resolveChartTheme().sequentialBlue` (Primer `--display-blue-scale-1/4/9`) because data-viz tokens only provide two steps per hue.
+- ESLint rejects Tailwind palette utilities (`bg-blue-500`) and arbitrary hex classes (`bg-[#fff]`) in chart components; legends must use Primer tokens.
 - When chart series colors must match HTML legends, use the same Primer token in an arbitrary Tailwind value, for example `bg-[var(--data-blue-color-emphasis)]`.
 
 ## Container Pattern
