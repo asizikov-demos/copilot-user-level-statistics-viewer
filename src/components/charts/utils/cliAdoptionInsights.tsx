@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from '@primer/react';
 import type { DailyCliAdoptionTrend } from '../../../domain/calculators/metricCalculators';
 import type { MetricsStats } from '../../../types/metrics';
 
@@ -24,14 +25,15 @@ export function computeCliInsights(
         <>
           No users have adopted Copilot CLI yet. Copilot CLI is now generally available and can
           significantly boost developer productivity in the terminal.{" "}
-          <a
+          <Link
             href={CLI_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline font-medium"
+            inline
+            className="font-medium"
           >
             Enable it for your enterprise →
-          </a>
+          </Link>
         </>
       ),
     });
@@ -75,14 +77,15 @@ export function computeCliInsights(
         <>
           Only {adoptionPct.toFixed(1)}% of Copilot users have tried the CLI.
           Consider promoting it through internal demos, Slack channels, or developer onboarding.{" "}
-          <a
+          <Link
             href={CLI_DOCS_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline font-medium"
+            inline
+            className="font-medium"
           >
             Admin setup guide →
-          </a>
+          </Link>
         </>
       ),
     });

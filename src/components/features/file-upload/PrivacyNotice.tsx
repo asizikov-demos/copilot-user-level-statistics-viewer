@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Link } from '@primer/react';
 import { LockIcon } from '@primer/octicons-react';
 
 const PrivacyNotice: React.FC = () => {
@@ -12,14 +13,13 @@ const PrivacyNotice: React.FC = () => {
           <span className="font-semibold text-default">Your data stays in your browser.</span>
           {' '}No data is uploaded to any server — all processing happens locally on your device.
           {' '}The source code is{' '}
-          <a
+          <Link
             href="https://github.com/asizikov-demos/copilot-user-level-statistics-viewer"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent hover:underline"
           >
             open source
-          </a>
+          </Link>
           {' '}and can be audited for security and privacy compliance.
         </p>
       </div>

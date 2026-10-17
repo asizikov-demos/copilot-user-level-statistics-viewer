@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Link } from '@primer/react';
 import InsightsCard from './ui/InsightsCard';
 import { computeIDEInsights } from '../domain/ideInsights';
 import type { IDEStatsData } from '../types/metrics';
@@ -23,14 +24,15 @@ export default function IDEInsights({ ideStats, multiIDEUsersCount, totalUniqueI
         <InsightsCard key={insight.title} title={insight.title} variant={insight.variant}>
           <p>{insight.message}</p>
           {insight.ctaUrl && insight.ctaLabel && (
-            <a
+            <Link
               href={insight.ctaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-2 text-sm font-medium underline hover:no-underline"
+              inline
+              className="mt-2 inline-block text-sm font-medium"
             >
               {insight.ctaLabel} &rarr;
-            </a>
+            </Link>
           )}
         </InsightsCard>
       ))}
