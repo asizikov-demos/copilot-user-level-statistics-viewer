@@ -305,6 +305,10 @@ Charts use **Chart.js** via **react-chartjs-2**, wrapped in a `ChartContainer` c
 
 **Shared UI primitives.** Components in `src/components/ui/` are built on Primer components (`Heading`, `Button`, `Link`, `SegmentedControl`), Octicons, and co-located CSS Modules that use Primer primitives tokens; Tailwind utilities there are limited to layout. Because CSS Modules and Primer CSS are unlayered, Tailwind classes passed to these primitives should only control layout. `colorSchemes.ts` maps legacy `accent`/`variant` names to Primer semantic roles exposed as `data-role` (styled by `semanticRoles.module.css`): stat cards collapse decorative accents (blue, cyan, purple, violet, indigo, teal) to neutral and keep status roles (success, attention, severe, danger), while `InsightsCard` keeps every role. Tests should assert roles, text, and `data-*` attributes rather than hashed CSS Module class names.
 
+**App shell.** `src/components/layout/` keeps the fixed three-column shell (header, `SideNav`, content, `ContextPanel`) laid out with Tailwind, but renders Primer components inside it. `StickyHeader` uses Primer `Header` with `MarkGithubIcon`, a default `Button` for uploads, and below `lg` an `ActionMenu` for view navigation; `StickyHeader.module.css` adapts the button variables to the dark header. `SideNav` renders `NavList` button items marked with `aria-current="page"`, and `ContextPanel` renders an "On this page" `NavList` group of section anchors marked with `aria-current="location"`. Navigation icons in `navigationItems.tsx` are `@primer/octicons-react` components; `isNavItemActive` keeps Users current on the user-details route. The page footer uses Primer `Link`.
+
+**Breakpoints.** A localized `@theme` block in `globals.css` overrides Tailwind's `--breakpoint-*` values with Primer's: `sm` 34rem (544px), `md` 48rem (768px), `lg` 63.25rem (1012px), `xl` 80rem (1280px), and `2xl` 87.5rem (1400px). Responsive Tailwind prefixes therefore follow Primer's viewport ranges; the rest of Tailwind's theme is not reset.
+
 ---
 
 ## 5. Architecture Diagram

@@ -1,6 +1,7 @@
 'use client';
 
 import { AppHeader, ViewRouter, StickyHeader, SideNav, ContextPanel, DataInfoBar } from '../components/layout';
+import { Link } from '@primer/react';
 import { useMetrics } from '../components/MetricsContext';
 
 export default function Home() {
@@ -16,16 +17,14 @@ export default function Home() {
         <div className={`px-4 sm:px-6 lg:px-8 pb-6 print:px-0 print:py-0 print:mx-0 ${hasData ? 'py-6 lg:pt-12' : 'py-6'}`}>
           <AppHeader />
           <ViewRouter />
-          <footer className="mt-12 pb-4 text-center text-xs text-muted print:hidden">
+          <footer
+            className="mt-12 pb-4 text-center text-xs text-muted print:hidden"
+            data-a11y-link-underlines="true"
+          >
             &copy;{' '}
-            <a
-              href="https://github.com/asizikov"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-default underline underline-offset-2 transition-colors"
-            >
+            <Link href="https://github.com/asizikov" target="_blank" rel="noopener noreferrer" muted inline>
               Anton Sizikov
-            </a>
+            </Link>
             {' '}&mdash; Solutions Engineer @ GitHub
           </footer>
         </div>
