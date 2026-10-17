@@ -59,8 +59,9 @@ export default function NetProductivityImpactSection({
       renderCell: (lang) => {
         const netLocImpact = lang.locAdded - lang.locDeleted;
         const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-muted';
+        const impactTone = netLocImpact > 0 ? 'positive' : netLocImpact < 0 ? 'negative' : 'neutral';
         return (
-          <div className={`font-medium ${impactColor}`}>
+          <div className={`font-medium ${impactColor}`} data-tone={impactTone}>
             {netLocImpact.toLocaleString()}
           </div>
         );

@@ -100,8 +100,8 @@ describe('Languages feature sections', () => {
 
     expect(markup).toContain('40');
     expect(markup).toContain('-8');
-    expect(markup).toContain('text-green-600');
-    expect(markup).toContain('text-rose-600');
+    expect(markup).toContain('data-tone="positive">40');
+    expect(markup).toContain('data-tone="negative">-8');
   });
 
   it('renders the complete breakdown empty state only when no languages exist', () => {

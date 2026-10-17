@@ -80,12 +80,12 @@ describe('surface productivity tables', () => {
       expect(markup).toContain(surface);
     }
     expect(markup).toContain('(80%)');
-    expect(markup).toContain('text-green-600">+1,200');
-    expect(markup).toContain('text-red-600">-200');
-    expect(markup).toContain('text-green-600">+100');
-    expect(markup).toContain('text-red-600">-16.7');
-    expect(markup).toContain('text-green-600">+25');
-    expect(markup).toContain('text-red-600">-4.2');
+    expect(markup).toContain('data-tone="positive">+1,200');
+    expect(markup).toContain('data-tone="negative">-200');
+    expect(markup).toContain('data-tone="positive">+100');
+    expect(markup).toContain('data-tone="negative">-16.7');
+    expect(markup).toContain('data-tone="positive">+25');
+    expect(markup).toContain('data-tone="negative">-4.2');
   });
 
   it('keeps multi-surface users visible without attributing their outcome to one surface', () => {
