@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import { Heading } from '@primer/react';
+import { cn } from '../../utils/cn';
+import styles from './ChartContainer.module.css';
 
 export interface ChartStat {
   label: string;
@@ -43,33 +46,35 @@ export default function ChartContainer({
   emptyState = 'No data available',
   isEmpty = false,
   children,
-  className = '',
+  className,
   chartHeight = 'h-80',
 }: ChartContainerProps) {
   if (isEmpty) {
     return (
-      <div className={`bg-default rounded-md border border-default p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-default mb-4">{title}</h3>
-        <div className="text-center py-8 text-muted">{emptyState}</div>
+      <div className={cn(styles.root, className)} data-component="ChartContainer" data-empty="true">
+        <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
+          {title}
+        </Heading>
+        <div className={styles.empty}>{emptyState}</div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`bg-default rounded-md border border-default p-6 max-w-full overflow-hidden print:border-default print:break-inside-avoid print:p-3 ${className}`}
-    >
-      <div className="flex justify-between items-start mb-6 print:mb-3 print:flex-row print:items-start print:gap-4">
-        <div className="print:flex-1">
-          <h3 className="text-lg font-semibold text-default mb-2 print:text-sm print:mb-1">{title}</h3>
-          {description && <p className="text-sm text-muted print:text-xs">{description}</p>}
+    <div className={cn(styles.root, className)} data-component="ChartContainer">
+      <div className={styles.header}>
+        <div className={styles.headerText}>
+          <Heading as="h3" variant="small" className={styles.title}>
+            {title}
+          </Heading>
+          {description && <p className={styles.description}>{description}</p>}
         </div>
-        <div className="flex items-start gap-4 print:flex-shrink-0">
+        <div className={styles.aside}>
           {stats && stats.length > 0 && (
-            <div className="text-right space-y-1 print:space-y-0">
+            <div className={styles.stats}>
               {stats.map((stat, index) => (
-                <div key={index} className="text-sm text-muted print:text-[10px] print:leading-tight">
-                  <span className="font-medium">{stat.label}:</span>{' '}
+                <div key={index} className={styles.stat}>
+                  <span className={styles.statLabel}>{stat.label}:</span>{' '}
                   <span className={stat.color}>{formatStatValue(stat.value)}</span>
                 </div>
               ))}
@@ -80,22 +85,20 @@ export default function ChartContainer({
       </div>
 
       {summaryStats && summaryStats.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-6 print:gap-3 print:mb-3">
+        <div className={styles.summary}>
           {summaryStats.map((stat, index) => (
-            <div key={index} className="text-center min-w-[100px] print:min-w-[70px]">
-              <div className={`text-2xl font-bold print:text-base ${stat.colorClass || 'text-default'}`}>
-                {formatStatValue(stat.value)}
-              </div>
-              <div className="text-sm text-muted print:text-[10px]">{stat.label}</div>
-              {stat.sublabel && <div className="text-xs text-muted print:text-[9px]">{stat.sublabel}</div>}
+            <div key={index} className={styles.summaryItem}>
+              <div className={cn(styles.summaryValue, stat.colorClass)}>{formatStatValue(stat.value)}</div>
+              <div className={styles.summaryLabel}>{stat.label}</div>
+              {stat.sublabel && <div className={styles.summarySublabel}>{stat.sublabel}</div>}
             </div>
           ))}
         </div>
       )}
 
-      <div className={`${chartHeight} w-full overflow-hidden print:h-56 print:overflow-visible`}>{children}</div>
+      <div className={cn(styles.chart, chartHeight)}>{children}</div>
 
-      {footer && <div className="mt-4 print:mt-2 print:text-[10px]">{footer}</div>}
+      {footer && <div className={styles.footer}>{footer}</div>}
     </div>
   );
 }

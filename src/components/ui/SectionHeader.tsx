@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
+import { Button, Heading } from '@primer/react';
+import { ArrowLeftIcon } from '@primer/octicons-react';
 import { cn } from '../../utils/cn';
+import styles from './SectionHeader.module.css';
 
 type Description = string | React.ReactNode;
 
@@ -23,31 +26,30 @@ export default function SectionHeader({
   className,
   titleClassName,
   descriptionClassName,
-  backButtonLabel = '← Back to Overview',
+  backButtonLabel = 'Back to Overview',
   backButtonClassName
 }: SectionHeaderProps) {
-  const containerClassName = cn('flex items-center justify-between', className);
-  const headingClassName = cn('text-xl font-semibold text-default', titleClassName);
-  const paragraphClassName = cn('text-muted text-sm mt-1 max-w-2xl', descriptionClassName);
-  const buttonClassName = cn(
-    'px-4 py-2 text-sm font-medium text-muted bg-muted hover:bg-[var(--control-bgColor-hover)] border border-default rounded-md transition-colors',
-    backButtonClassName
-  );
-
   return (
-    <div className={containerClassName}>
+    <div className={cn(styles.header, className)} data-component="SectionHeader">
       <div>
-        <h2 className={headingClassName}>{title}</h2>
+        <Heading as="h2" variant="medium" className={cn(styles.title, titleClassName)}>
+          {title}
+        </Heading>
         {description && (typeof description === 'string' ? (
-          <p className={paragraphClassName}>{description}</p>
+          <p className={cn(styles.description, descriptionClassName)}>{description}</p>
         ) : (
           description
         ))}
       </div>
       {onBack && (
-        <button type="button" onClick={onBack} className={buttonClassName}>
+        <Button
+          type="button"
+          onClick={onBack}
+          leadingVisual={ArrowLeftIcon}
+          className={backButtonClassName}
+        >
           {backButtonLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

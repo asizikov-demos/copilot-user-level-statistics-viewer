@@ -1,11 +1,13 @@
 "use client";
 
 import { useId } from 'react';
+import { Link } from '@primer/react';
 import {
   useExpandableList,
   type ExpandableLabelResolver,
   resolveExpandableToggleLabel,
 } from '../../hooks/useExpandableList';
+import styles from './ExpandableInlineList.module.css';
 
 interface ExpandableInlineListProps {
   items: readonly string[];
@@ -28,9 +30,6 @@ export function formatExpandableInlineText(
   }
   return visibleItems.join(', ');
 }
-
-const DEFAULT_TEXT_CLASS = 'text-xs text-muted';
-const DEFAULT_BUTTON_CLASS = 'ml-2 text-xs text-blue-600 hover:text-blue-800 underline';
 
 export default function ExpandableInlineList({
   items,
@@ -63,19 +62,20 @@ export default function ExpandableInlineList({
 
   return (
     <div className={containerClassName}>
-      <span id={resolvedContentId} className={textClassName ?? DEFAULT_TEXT_CLASS}>
+      <span id={resolvedContentId} className={textClassName ?? styles.text}>
         {displayText}
       </span>
       {canExpand && (
-        <button
+        <Link
+          as="button"
           type="button"
           onClick={toggleExpanded}
-          className={buttonClassName ?? DEFAULT_BUTTON_CLASS}
+          className={buttonClassName ?? styles.toggle}
           aria-expanded={isExpanded}
           aria-controls={resolvedContentId}
         >
           {buttonLabel}
-        </button>
+        </Link>
       )}
     </div>
   );

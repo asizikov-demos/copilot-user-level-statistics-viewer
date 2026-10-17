@@ -1,0 +1,12 @@
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-left: var(--base-size-4);
+  color: currentColor;
+}
+
+/* Rotated ArrowSwitch reads as an up/down "sortable" affordance. */
+.icon[data-active='false'] {
+  color: var(--fgColor-disabled);
+  transform: rotate(90deg);
+}

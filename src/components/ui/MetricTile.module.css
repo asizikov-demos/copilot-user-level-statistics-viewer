@@ -1,0 +1,104 @@
+.tile {
+  position: relative;
+  display: block;
+  padding: var(--base-size-16);
+  font: inherit;
+  text-align: left;
+  color: var(--fgColor-default);
+  text-decoration: none;
+  background-color: var(--bgColor-default);
+  border: var(--borderWidth-thin) solid var(--borderColor-default);
+  border-radius: var(--borderRadius-medium);
+  transition: background-color 80ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.tile[data-interactive='true'] {
+  cursor: pointer;
+}
+
+.tile[data-interactive='true']:not([data-disabled='true']):hover {
+  background-color: var(--bgColor-muted);
+}
+
+.tile:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.tile[data-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base-size-16);
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: var(--base-size-16);
+  min-width: 0;
+}
+
+.icon {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--role-iconColor);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-body-size-medium);
+  font-weight: var(--base-text-weight-medium);
+  color: var(--fgColor-muted);
+}
+
+.value {
+  font: var(--text-title-shorthand-medium);
+  color: var(--role-fgColor);
+}
+
+.tile[data-size='md'] .value {
+  font: var(--text-title-shorthand-small);
+}
+
+.subtitle {
+  font-size: var(--text-body-size-small);
+  color: var(--fgColor-muted);
+}
+
+.arrow {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--fgColor-muted);
+}
+
+.tile[data-interactive='true']:not([data-disabled='true']):hover .arrow {
+  color: var(--fgColor-default);
+}
+
+.skeleton {
+  display: inline-block;
+  vertical-align: middle;
+  background-color: var(--bgColor-neutral-muted);
+  border-radius: var(--borderRadius-small);
+}
+
+.valueSkeleton {
+  width: 5rem;
+  height: 1.5rem;
+}
+
+.subtitleSkeleton {
+  width: 7rem;
+  height: 0.75rem;
+}
