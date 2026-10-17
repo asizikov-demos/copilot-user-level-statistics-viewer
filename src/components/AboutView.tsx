@@ -16,7 +16,7 @@ export default function AboutView() {
       }}
       contentClassName="space-y-6"
     >
-      <section className="rounded-lg border border-[#d1d9e0] bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-default bg-white p-6 shadow-sm">
         <div className="space-y-4 text-sm leading-6 text-gray-700">
           <p>
             This application is maintained by a GitHub Solutions Engineer from EMEA as a reference

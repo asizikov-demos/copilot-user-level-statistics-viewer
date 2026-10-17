@@ -115,7 +115,7 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
         ? <CustomizationItemDetails summary={summary} id={`${id}-${summary.category}`} />
         : null}
       tableClassName="w-full table-fixed divide-y divide-gray-200"
-      tableContainerClassName="mt-4 overflow-x-auto rounded-md border border-[#d1d9e0]"
+      tableContainerClassName="mt-4 overflow-x-auto rounded-md border border-default"
     />
   );
 }

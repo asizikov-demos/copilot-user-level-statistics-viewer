@@ -77,7 +77,7 @@ function FeatureCard({
   const contentId = useId();
 
   return (
-    <div className="border border-[#d1d9e0] rounded-md overflow-hidden">
+    <div className="border border-default rounded-md overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}

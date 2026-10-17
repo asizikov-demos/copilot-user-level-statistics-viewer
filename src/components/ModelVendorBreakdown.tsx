@@ -67,7 +67,7 @@ export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakd
   if (vendorTables.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-md border border-[#d1d9e0] print:border-gray-300 print:break-inside-avoid">
+    <div className="bg-white rounded-md border border-default print:border-gray-300 print:break-inside-avoid">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">Models by Vendor</h3>
         <p className="text-sm text-gray-600 mt-1">

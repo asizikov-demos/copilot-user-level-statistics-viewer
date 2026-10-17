@@ -146,21 +146,21 @@ function HealthSummary({
   return (
     <section
       id={sectionIds.health}
-      className="overflow-hidden rounded-lg border border-[#d1d9e0] bg-white scroll-mt-28"
+      className="overflow-hidden rounded-lg border border-default bg-white scroll-mt-28"
     >
       <div
-        className={`flex flex-col gap-5 border-b border-[#d1d9e0] p-5 sm:flex-row sm:items-center sm:justify-between ${
+        className={`flex flex-col gap-5 border-b border-default p-5 sm:flex-row sm:items-center sm:justify-between ${
           kind === 'attention'
-            ? 'bg-[#fff8c5]'
+            ? 'bg-attention-muted'
             : kind === 'healthy'
               ? 'bg-green-50'
-              : 'bg-[#f6f8fa]'
+              : 'bg-muted'
         }`}
       >
         <div className="flex gap-3">
           <StatusIcon kind={kind} />
           <div>
-            <h2 className="font-semibold text-[#1f2328]">
+            <h2 className="font-semibold text-default">
               {!hasData
                 ? 'No client version data available'
                 : hasUnclassifiedPlatform
@@ -169,7 +169,7 @@ function HealthSummary({
                     ? `${totalOutdatedUsers.toLocaleString()} ${totalOutdatedUsers === 1 ? 'user needs' : 'users need'} attention`
                     : 'All classified clients are current'}
             </h2>
-            <p className={`mt-1 text-sm ${kind === 'attention' ? 'text-[#6e4c00]' : 'text-[#57606a]'}`}>
+            <p className={`mt-1 text-sm ${kind === 'attention' ? 'text-attention' : 'text-muted'}`}>
               {!hasData
                 ? 'No JetBrains or VS Code users with version information were found in this report.'
                 : hasUnclassifiedPlatform
@@ -183,13 +183,13 @@ function HealthSummary({
           </div>
         </div>
         {coverage !== null && (
-          <div className={`text-sm ${kind === 'attention' ? 'text-[#6e4c00]' : 'text-[#57606a]'}`}>
+          <div className={`text-sm ${kind === 'attention' ? 'text-attention' : 'text-muted'}`}>
             <span className="font-semibold">{coverage}%</span> current-user coverage
           </div>
         )}
       </div>
 
-      <div className="divide-y divide-[#d1d9e0]">
+      <div className="divide-y divide-default">
         {platforms.map((platform) => {
           const currentPercentage =
             platform.currentUsers === null || platform.totalUsers === 0
@@ -209,47 +209,47 @@ function HealthSummary({
               <div className="flex items-center gap-3">
                 <PlatformMark scope={platform.scope} />
                 <div>
-                  <h3 className="font-semibold text-[#1f2328]">{platform.platform}</h3>
-                  <p className="text-xs text-[#636c76]">{getMetadataLabel(platform)}</p>
+                  <h3 className="font-semibold text-default">{platform.platform}</h3>
+                  <p className="text-xs text-muted">{getMetadataLabel(platform)}</p>
                 </div>
               </div>
               <div>
                 <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-                  <span className="font-medium text-[#1f2328]">
+                  <span className="font-medium text-default">
                     {platform.currentUsers === null
                       ? 'Classification unavailable'
                       : `${platform.currentUsers.toLocaleString()} current`}
                   </span>
-                  <span className="text-[#636c76]">{platform.totalUsers.toLocaleString()} users</span>
+                  <span className="text-muted">{platform.totalUsers.toLocaleString()} users</span>
                 </div>
                 {currentPercentage === null ? (
-                  <div className="h-2 overflow-hidden rounded-full bg-[#d8dee4]" aria-hidden="true" />
+                  <div className="h-2 overflow-hidden rounded-full bg-[var(--borderColor-default)]" aria-hidden="true" />
                 ) : (
                   <div
-                    className="flex h-2 overflow-hidden rounded-full bg-[#eaeef2]"
+                    className="flex h-2 overflow-hidden rounded-full bg-[var(--borderColor-muted)]"
                     role="img"
                     aria-label={`${Math.round(currentPercentage)}% of ${platform.platform} users are current${unclassifiedPercentage > 0 ? `; ${Math.round(unclassifiedPercentage)}% are unclassified` : ''}`}
                   >
-                    <div className="bg-[#1a7f37]" style={{ width: `${currentPercentage}%` }} />
+                    <div className="bg-success-emphasis" style={{ width: `${currentPercentage}%` }} />
                     {unclassifiedPercentage > 0 && (
-                      <div className="bg-[#8c959f]" style={{ width: `${unclassifiedPercentage}%` }} />
+                      <div className="bg-[var(--borderColor-emphasis)]" style={{ width: `${unclassifiedPercentage}%` }} />
                     )}
-                    <div className="flex-1 bg-[#bf8700]" />
+                    <div className="flex-1 bg-attention-emphasis" />
                   </div>
                 )}
               </div>
               <div className="text-sm md:text-right">
                 {platform.outdatedUsers === null ? (
-                  <span className="text-[#636c76]">{platform.uniqueVersions} versions observed</span>
+                  <span className="text-muted">{platform.uniqueVersions} versions observed</span>
                 ) : platform.outdatedUsers > 0 ? (
                   <a
                     href={`#${sectionIds.drift}`}
-                    className="font-medium text-[#0969da] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0969da]"
+                    className="font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
                   >
                     Review {platform.outdatedUsers.toLocaleString()} {platform.outdatedUsers === 1 ? 'user' : 'users'}
                   </a>
                 ) : (platform.unclassifiedUsers ?? 0) > 0 ? (
-                  <span className="text-[#636c76]">
+                  <span className="text-muted">
                     {platform.unclassifiedUsers?.toLocaleString()} {platform.unclassifiedUsers === 1 ? 'user' : 'users'} unclassified
                   </span>
                 ) : (
@@ -288,13 +288,13 @@ function VersionDriftTable({
     {
       id: 'platform',
       header: 'Client',
-      className: 'px-4 py-3 font-medium text-[#1f2328] whitespace-nowrap',
+      className: 'px-4 py-3 font-medium text-default whitespace-nowrap',
       renderCell: ({ platform }) => platform,
     },
     {
       id: 'version',
       header: 'Version',
-      className: 'px-4 py-3 font-mono text-[#1f2328] whitespace-nowrap',
+      className: 'px-4 py-3 font-mono text-default whitespace-nowrap',
       renderCell: ({ version }) => version,
     },
     {
@@ -311,19 +311,19 @@ function VersionDriftTable({
     {
       id: 'users',
       header: 'Users',
-      className: 'px-4 py-3 font-semibold tabular-nums text-[#1f2328] whitespace-nowrap',
+      className: 'px-4 py-3 font-semibold tabular-nums text-default whitespace-nowrap',
       renderCell: ({ userCount }) => userCount.toLocaleString(),
     },
     {
       id: 'reason',
       header: 'Why it matters',
-      className: 'px-4 py-3 text-[#636c76] whitespace-nowrap',
+      className: 'px-4 py-3 text-muted whitespace-nowrap',
       renderCell: ({ reason }) => reason,
     },
     {
       id: 'usernames',
       header: 'Affected users',
-      className: 'px-4 py-3 text-[#1f2328] min-w-64',
+      className: 'px-4 py-3 text-default min-w-64',
       renderCell: ({ scope, version, usernames }) =>
         renderVersionUsernames(scope, version, usernames),
     },
@@ -332,15 +332,15 @@ function VersionDriftTable({
   return (
     <section id={sectionId} className="scroll-mt-28">
       <div className="mb-3">
-        <h2 className="text-base font-semibold text-[#1f2328]">Version drift</h2>
-        <p className="mt-1 text-sm text-[#636c76]">
+        <h2 className="text-base font-semibold text-default">Version drift</h2>
+        <p className="mt-1 text-sm text-muted">
           Outdated version cohorts, ordered by the number of affected users.
         </p>
       </div>
       {!hasVersionData ? (
-        <div className="rounded-md border border-[#d1d9e0] bg-[#f6f8fa] p-4">
-          <div className="font-medium text-[#1f2328]">No version cohorts available</div>
-          <p className="mt-1 text-sm text-[#636c76]">
+        <div className="rounded-md border border-default bg-muted p-4">
+          <div className="font-medium text-default">No version cohorts available</div>
+          <p className="mt-1 text-sm text-muted">
             This report does not include JetBrains or VS Code version data.
           </p>
         </div>
@@ -349,18 +349,18 @@ function VersionDriftTable({
           data={rows}
           columns={columns}
           tableClassName="min-w-[900px] w-full text-left text-sm"
-          tableContainerClassName="overflow-x-auto rounded-md border border-[#d1d9e0] bg-white"
-          theadClassName="bg-[#f6f8fa] text-xs text-[#636c76]"
-          rowClassName={() => 'hover:bg-[#f6f8fa]'}
+          tableContainerClassName="overflow-x-auto rounded-md border border-default bg-white"
+          theadClassName="bg-muted text-xs text-muted"
+          rowClassName={() => 'hover:bg-muted'}
           getRowKey={(row) => `${row.scope}-${row.version}`}
           initialCount={6}
           buttonCollapsedLabel={(total) => `Show all ${total} outdated versions`}
           buttonExpandedLabel="Show fewer versions"
         />
       ) : unclassifiedPlatforms.length > 0 ? (
-        <div className="rounded-md border border-[#d1d9e0] bg-[#f6f8fa] p-4">
-          <div className="font-medium text-[#1f2328]">No outdated versions identified</div>
-          <p className="mt-1 text-sm text-[#636c76]">
+        <div className="rounded-md border border-default bg-muted p-4">
+          <div className="font-medium text-default">No outdated versions identified</div>
+          <p className="mt-1 text-sm text-muted">
             Classification is unavailable for {unclassifiedPlatforms.map(({ platform }) => platform).join(' and ')};
             no healthy status is inferred without release metadata.
           </p>
@@ -385,22 +385,22 @@ function ReleaseList({
   releases: PluginVersion[];
 }) {
   if (releases.length === 0) {
-    return <p className="text-sm text-[#636c76]">No release reference is available.</p>;
+    return <p className="text-sm text-muted">No release reference is available.</p>;
   }
 
   return (
     <div>
-      <h4 className="text-sm font-semibold text-[#1f2328]">{title}</h4>
-      <ul className="mt-2 divide-y divide-[#d1d9e0] rounded-md border border-[#d1d9e0] bg-white">
+      <h4 className="text-sm font-semibold text-default">{title}</h4>
+      <ul className="mt-2 divide-y divide-default rounded-md border border-default bg-white">
         {releases.slice(0, 5).map((release) => (
           <li key={`${release.version}-${release.releaseDate}`} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
-            <code className="text-[#1f2328]">{release.version}</code>
-            <span className="text-xs text-[#636c76]">{formatDate(release.releaseDate)}</span>
+            <code className="text-default">{release.version}</code>
+            <span className="text-xs text-muted">{formatDate(release.releaseDate)}</span>
           </li>
         ))}
       </ul>
       {releases.length > 5 && (
-        <p className="mt-2 text-xs text-[#636c76]">
+        <p className="mt-2 text-xs text-muted">
           Showing 5 of {releases.length} reference releases.
         </p>
       )}
@@ -420,13 +420,13 @@ function ReleaseMethodology({
   return (
     <details
       id={sectionId}
-      className="rounded-md border border-[#d1d9e0] bg-white scroll-mt-28"
+      className="rounded-md border border-default bg-white scroll-mt-28"
     >
-      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-[#1f2328] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0969da]">
+      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]">
         How version status is evaluated
       </summary>
-      <div className="border-t border-[#d1d9e0] p-4">
-        <p className="max-w-3xl text-sm leading-6 text-[#636c76]">
+      <div className="border-t border-default p-4">
+        <p className="max-w-3xl text-sm leading-6 text-muted">
           VS Code is evaluated against the stable train available at the report start
           ({formatReportDay(reportStartDay)}). JetBrains is evaluated against the latest 20 stable
           releases in the bundled marketplace metadata.
@@ -439,13 +439,13 @@ function ReleaseMethodology({
               <div className="flex items-center gap-3">
                 <PlatformMark scope={platform.scope} />
                 <div>
-                  <h3 className="font-semibold text-[#1f2328]">{platform.platform}</h3>
-                  <p className="text-xs text-[#636c76]">{getMetadataLabel(platform)}</p>
+                  <h3 className="font-semibold text-default">{platform.platform}</h3>
+                  <p className="text-xs text-muted">{getMetadataLabel(platform)}</p>
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[#636c76]">{platform.methodology}</p>
+              <p className="mt-3 text-sm leading-6 text-muted">{platform.methodology}</p>
               {platform.scope === 'vscode' && vsCodeUpdatedAt && (
-                <p className="mt-1 text-xs text-[#636c76]">
+                <p className="mt-1 text-xs text-muted">
                   Release metadata updated {formatDate(vsCodeUpdatedAt)}.
                 </p>
               )}

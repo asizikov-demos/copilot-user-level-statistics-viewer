@@ -54,7 +54,7 @@ export interface DashboardStatsCardProps {
   dataTestId?: string;
 }
 
-const DEFAULT_NEUTRAL_CONTAINER = 'bg-white border-[#d1d9e0]';
+const DEFAULT_NEUTRAL_CONTAINER = 'bg-white border-default';
 const DEFAULT_LABEL_CLASS = 'text-sm text-gray-600';
 const DEFAULT_HELPER_CLASS = 'text-xs text-gray-500';
 

@@ -353,7 +353,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Features Section */}
               {dayMetrics.totals_by_feature.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <div className="bg-white rounded-md border border-default p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-1">Activity by Feature</h4>
                   <p className="text-sm text-gray-600 mb-4">Expand a feature to see the languages and models used.</p>
                   <DayFeatureBreakdown
@@ -365,7 +365,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               )}
 
               {copilotAppUsage && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <div className="bg-white rounded-md border border-default p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-1">Copilot App Usage</h4>
                   <p className="text-sm text-gray-600 mb-4">
                     Session and token totals reported by totals_by_copilot_app for this day.
@@ -385,7 +385,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               )}
 
               {hasVSCodeAgentData && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <div className="bg-white rounded-md border border-default p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-1">VS Code Agents</h4>
                   <p className="text-sm text-gray-600 mb-4">
                     Dedicated Agents-window activity, separate from editor Agent Mode.
@@ -415,7 +415,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               {clientRows.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <div className="bg-white rounded-md border border-default p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
                   <MetricsTable
                     data={clientRows}
@@ -433,7 +433,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Language + Model Section */}
               {dayMetrics.totals_by_language_model.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+                <div className="bg-white rounded-md border border-default p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
                   <MetricsTable
                     data={dayMetrics.totals_by_language_model}

@@ -15,7 +15,7 @@ export default function CohortContextTable({
   return (
     <section
       id="surface-productivity-overlap"
-      className="scroll-mt-28 overflow-hidden rounded-md border border-[#d1d9e0] bg-white"
+      className="scroll-mt-28 overflow-hidden rounded-md border border-default bg-white"
     >
       <div className="border-b border-gray-200 px-6 py-4">
         <h2 className="text-lg font-semibold text-gray-900">Overlap context</h2>

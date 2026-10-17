@@ -139,7 +139,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   };
 
   return (
-    <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
+    <div className="bg-white rounded-md border border-default p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
         {title}
         <span className="ml-2">{monthLabel}</span>

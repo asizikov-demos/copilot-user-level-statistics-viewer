@@ -44,7 +44,7 @@ export default function SurfaceProductivityView({
 
       <section
         id="surface-productivity-method"
-        className="scroll-mt-28 rounded-md border border-[#d1d9e0] bg-white p-6"
+        className="scroll-mt-28 rounded-md border border-default bg-white p-6"
       >
         <DisclosureSection
           label="How to read this view"

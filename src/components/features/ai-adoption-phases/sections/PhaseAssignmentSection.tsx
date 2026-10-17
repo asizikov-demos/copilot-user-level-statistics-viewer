@@ -11,7 +11,7 @@ interface PhaseAssignmentSectionProps {
 
 export function PhaseAssignmentSection({ sectionId }: PhaseAssignmentSectionProps) {
   return (
-    <div id={sectionId} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
+    <div id={sectionId} className="bg-white rounded-md border border-default scroll-mt-28">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">How phases are assigned</h3>
         <p className="mt-1 text-sm text-gray-600">
@@ -40,7 +40,7 @@ export function PhaseAssignmentSection({ sectionId }: PhaseAssignmentSectionProp
           href={AI_ADOPTION_PHASE_BLOG_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-flex text-sm font-medium text-[#0969da] hover:underline"
+          className="mt-4 inline-flex text-sm font-medium text-accent hover:underline"
         >
           Learn More
         </a>

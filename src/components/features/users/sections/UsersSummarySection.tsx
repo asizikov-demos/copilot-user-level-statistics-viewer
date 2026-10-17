@@ -43,7 +43,7 @@ export default function UsersSummarySection({
 
   return (
     <div id={sectionId} className="mb-6 scroll-mt-28">
-      <div className="grid gap-8 rounded-lg border border-[#d1d9e0] bg-white p-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)] md:gap-0">
+      <div className="grid gap-8 rounded-lg border border-default bg-white p-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)] md:gap-0">
         <div className="md:pr-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
             Total Users

@@ -7,7 +7,7 @@ export default function Home() {
   const { hasData } = useMetrics();
 
   return (
-    <div className="min-h-screen bg-[#f6f8fa] print:bg-white print:min-h-0">
+    <div className="min-h-screen bg-muted print:bg-white print:min-h-0">
       <StickyHeader />
       {hasData && <SideNav />}
       {hasData && <ContextPanel />}

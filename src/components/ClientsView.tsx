@@ -188,7 +188,7 @@ export default function ClientsView({ model }: IDEViewProps) {
           />
         </div>
 
-        <div id={insightsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
+        <div id={insightsSection.id} className="bg-white rounded-md border border-default scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Insights</h3>
           </div>
@@ -202,7 +202,7 @@ export default function ClientsView({ model }: IDEViewProps) {
           </div>
         </div>
 
-        <div id={usersSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
+        <div id={usersSection.id} className="bg-white rounded-md border border-default scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Users</h3>
           </div>
@@ -217,7 +217,7 @@ export default function ClientsView({ model }: IDEViewProps) {
           />
         </div>
 
-        <div id={engagementsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
+        <div id={engagementsSection.id} className="bg-white rounded-md border border-default scroll-mt-28">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Engagements</h3>
           </div>

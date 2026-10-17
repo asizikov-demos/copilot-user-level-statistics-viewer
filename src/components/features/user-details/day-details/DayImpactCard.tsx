@@ -30,7 +30,7 @@ export default function DayImpactCard({ locAdded, locDeleted }: DayImpactCardPro
   ];
 
   return (
-    <div className="h-full bg-white rounded-md border border-[#d1d9e0] p-6 flex flex-col">
+    <div className="h-full bg-white rounded-md border border-default p-6 flex flex-col">
       <h3 className="text-lg font-semibold text-gray-900 mb-2">Impact</h3>
       <p className="text-sm text-gray-600 mb-6">Lines of code added and deleted from accepted suggestions.</p>
       <div className="flex flex-1 flex-col justify-center gap-6">
