@@ -1,6 +1,8 @@
 'use client';
 
 import { Fragment, Key, ReactNode } from 'react';
+import { Button } from '@primer/react';
+import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import type { SortDirection } from '../../types/sort';
 import type { ToggleCallback } from '../../types/events';
 import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
@@ -8,9 +10,10 @@ import {
   useExpandableList,
   type ExpandableLabelResolver,
   type ExpandButtonAlignment,
-  EXPAND_BUTTON_ALIGNMENT_CLASS,
   resolveExpandableToggleLabel,
 } from '../../hooks/useExpandableList';
+import { cn } from '../../utils/cn';
+import styles from './MetricsTable.module.css';
 
 export type { SortDirection };
 
@@ -57,9 +60,6 @@ export interface MetricsTableProps<T> {
   emptyState?: ReactNode;
 }
 
-const DEFAULT_EXPAND_BUTTON_CLASS =
-  'px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-400 rounded-md transition-colors';
-
 export function MetricsTable<T>({
   data,
   columns,
@@ -85,8 +85,8 @@ export function MetricsTable<T>({
   onToggle,
   emptyState,
 }: MetricsTableProps<T>) {
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
-  const cellBaseClass = 'px-6 py-4 whitespace-nowrap text-sm text-default';
+  const headerBaseClass = 'px-6 py-3 text-left';
+  const cellBaseClass = cn(styles.defaultCell, 'px-6 py-4 whitespace-nowrap');
 
   const resolvedInitialCount = initialCount ?? data.length;
   const {
@@ -104,15 +104,16 @@ export function MetricsTable<T>({
     buttonExpandedLabel,
   );
 
-  const expandButtonContainerClass = `${buttonContainerClassName ?? 'mt-4'} ${EXPAND_BUTTON_ALIGNMENT_CLASS[buttonAlignment]}`;
-
   if (data.length === 0 && emptyState) {
     return <>{emptyState}</>;
   }
 
   const table = (
-    <table className={tableClassName ?? 'w-full divide-y divide-default'}>
-        <thead className={theadClassName ?? 'bg-muted'}>
+    <table
+      className={cn(styles.table, tableClassName ?? styles.defaultTable)}
+      data-component="MetricsTable"
+    >
+        <thead className={theadClassName ?? styles.defaultHead}>
           <tr>
             {columns.map((column) => {
               const isSortable = Boolean(onSortChange && column.sortable);
@@ -133,16 +134,14 @@ export function MetricsTable<T>({
               const nextDirection: SortDirection = isActive && sortState?.direction === 'asc' ? 'desc' : 'asc';
 
               const isRightAligned = headerClassName.includes('text-right');
-              const sortButtonClassName = isRightAligned
-                ? 'flex items-center w-full justify-end hover:text-default focus:outline-none uppercase tracking-wider'
-                : 'flex items-center hover:text-default focus:outline-none uppercase tracking-wider';
 
               return (
                 <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
                   <button
                     type="button"
                     onClick={() => onSortChange?.({ field: column.id, direction: nextDirection })}
-                    className={sortButtonClassName}
+                    className={styles.sortButton}
+                    data-align={isRightAligned ? 'end' : 'start'}
                   >
                     {column.header}
                     <SortIndicator active={isActive} direction={sortState?.direction ?? 'asc'} />
@@ -152,7 +151,7 @@ export function MetricsTable<T>({
             })}
           </tr>
         </thead>
-        <tbody className={tbodyClassName ?? 'bg-default divide-y divide-default'}>
+        <tbody className={tbodyClassName ?? styles.defaultBody}>
           {visibleItems.map((item, index) => {
             const rowClass = rowClassName?.(item, index) ?? '';
             const rowKey = getRowKey?.(item, index) ?? index;
@@ -211,17 +210,21 @@ export function MetricsTable<T>({
         </div>
       ) : table}
       {canExpand && (
-        <div className={expandButtonContainerClass}>
-          <button
+        <div
+          className={cn(styles.expandContainer, buttonContainerClassName ?? 'mt-4')}
+          data-align={buttonAlignment}
+        >
+          <Button
             type="button"
             onClick={toggleExpanded}
-            className={buttonClassName ?? DEFAULT_EXPAND_BUTTON_CLASS}
+            className={buttonClassName}
+            trailingVisual={isExpanded ? ChevronUpIcon : ChevronDownIcon}
             aria-expanded={isExpanded}
             aria-label={buttonAriaLabel ?? toggleLabel}
             data-testid={buttonTestId}
           >
             {toggleLabel}
-          </button>
+          </Button>
         </div>
       )}
     </>

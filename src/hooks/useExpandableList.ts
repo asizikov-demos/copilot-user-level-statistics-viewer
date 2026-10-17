@@ -6,12 +6,6 @@ import type { ToggleCallback } from '../types/events';
 export type ExpandableLabelResolver = string | ((totalItems: number) => string);
 export type ExpandButtonAlignment = 'left' | 'center' | 'right';
 
-export const EXPAND_BUTTON_ALIGNMENT_CLASS: Record<ExpandButtonAlignment, string> = {
-  left: 'text-left',
-  center: 'text-center',
-  right: 'text-right',
-};
-
 export function resolveExpandableLabel(
   label: ExpandableLabelResolver | undefined,
   total: number,

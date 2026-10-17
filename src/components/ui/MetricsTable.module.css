@@ -1,0 +1,76 @@
+/* Header typography mirrors Primer DataTable and applies to every MetricsTable; layout stays with caller classes. */
+.table thead th {
+  font-size: var(--text-body-size-small);
+  font-weight: var(--base-text-weight-semibold);
+  line-height: var(--base-text-lineHeight-normal);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--fgColor-muted);
+}
+
+.table thead th[aria-sort='ascending'],
+.table thead th[aria-sort='descending'] {
+  color: var(--fgColor-default);
+}
+
+.defaultTable {
+  width: 100%;
+}
+
+.defaultHead {
+  background-color: var(--bgColor-muted);
+  border-bottom: var(--borderWidth-thin) solid var(--borderColor-default);
+}
+
+.defaultBody {
+  background-color: var(--bgColor-default);
+}
+
+.defaultBody > tr + tr {
+  border-top: var(--borderWidth-thin) solid var(--borderColor-default);
+}
+
+.defaultCell {
+  font-size: var(--text-body-size-medium);
+  color: var(--fgColor-default);
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--borderRadius-small);
+}
+
+.sortButton[data-align='end'] {
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.sortButton:hover {
+  color: var(--fgColor-default);
+}
+
+.sortButton:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--base-size-2);
+}
+
+.expandContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.expandContainer[data-align='left'] {
+  justify-content: flex-start;
+}
+
+.expandContainer[data-align='right'] {
+  justify-content: flex-end;
+}

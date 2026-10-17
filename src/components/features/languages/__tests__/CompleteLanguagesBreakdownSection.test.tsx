@@ -39,10 +39,12 @@ async function withTable(languages: LanguageStats[], test: (root: ReactTestInsta
   }
 }
 
+function textContent(node: ReactTestInstance | string): string {
+  return typeof node === 'string' ? node : node.children.map(textContent).join('');
+}
+
 async function click(root: ReactTestInstance, label: string) {
-  const button = root.findAllByType('button').find(node =>
-    node.props.children === label || node.props.children[0] === label
-  );
+  const button = root.findAllByType('button').find(node => textContent(node) === label);
   expect(button, `button ${label}`).toBeDefined();
   await act(async () => { button!.props.onClick(); });
 }
