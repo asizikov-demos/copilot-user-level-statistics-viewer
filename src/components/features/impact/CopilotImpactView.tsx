@@ -15,7 +15,6 @@ export default function CopilotImpactView({ model }: CopilotImpactViewProps) {
   const {
     agentImpactData,
     codeCompletionImpactData,
-    editModeImpactData,
     inlineModeImpactData,
     askModeImpactData,
     copilotAppImpactData,
@@ -30,7 +29,6 @@ export default function CopilotImpactView({ model }: CopilotImpactViewProps) {
     codeCompletion: codeCompletionImpactData,
     ask: askModeImpactData,
     inline: inlineModeImpactData,
-    edit: editModeImpactData,
   } as const;
 
   return (
@@ -38,7 +36,7 @@ export default function CopilotImpactView({ model }: CopilotImpactViewProps) {
       headerProps={{
         title: 'Copilot Impact Analysis',
         description:
-          'Analyze the impact and productivity gains from Copilot features, including code completion, agent mode, edit mode, and inline mode contributions to your codebase.',
+          'Analyze the impact and productivity gains from Copilot features, including code completion, agent mode, and inline mode contributions to your codebase.',
       }}
       contentClassName="space-y-8"
     >
