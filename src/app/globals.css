@@ -327,11 +327,10 @@
 
 /*
  * Primer BaseStyles CSS is unlayered, so it overrides Tailwind's layered defaults and
- * utilities. Keep the pre-Primer text color, font stack, and link styling until the
- * token migration.
+ * utilities. Keep the pre-Primer font stack and link styling until later migration phases.
  */
 .app-base-styles {
-  --BaseStyles-fgColor: CanvasText;
+  --BaseStyles-fgColor: var(--fgColor-default);
   --BaseStyles-fontFamily: var(--default-font-family);
 }
 
