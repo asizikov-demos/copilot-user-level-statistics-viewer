@@ -145,7 +145,7 @@ export default function OverviewHeader({ model, enterpriseName }: OverviewHeader
             {hoveredDay && hoveredIndex !== null && (
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-emphasis px-2.5 py-1.5 text-xs leading-snug text-white shadow-lg"
+                className="pointer-events-none absolute bottom-full z-10 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-emphasis px-2.5 py-1.5 text-xs leading-snug text-on-emphasis shadow-lg"
                 style={{ left: `clamp(80px, ${((hoveredIndex + 0.5) / dayCount) * 100}%, calc(100% - 80px))` }}
               >
                 <div className="font-semibold">{formatDay(hoveredDay.date, { weekday: 'short', month: 'short', day: 'numeric' })}</div>

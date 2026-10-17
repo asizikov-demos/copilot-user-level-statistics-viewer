@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { LinkButton } from '@primer/react';
+import { Link, LinkButton } from '@primer/react';
 import { MarkGithubIcon } from '@primer/octicons-react';
 import { ViewPanel } from './ui';
 
@@ -34,14 +34,15 @@ export default function AboutView() {
           <p>
             Because GitHub Copilot Metrics are under active development, new features and data
             points are introduced frequently. Keep an eye on{' '}
-            <a
+            <Link
               href="https://github.blog/?s=metrics"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-blue-600 underline underline-offset-2 hover:text-blue-800"
+              inline
+              className="font-medium"
             >
               GitHub Blog posts about metrics
-            </a>{' '}
+            </Link>{' '}
             to stay current. We strive to update this reference application as new data becomes
             available, but following the blog ensures you receive the latest updates directly from
             GitHub.
