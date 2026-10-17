@@ -103,9 +103,9 @@ export default function ModeImpactChart({
       isEmpty={data.length === 0}
       emptyState={emptyStateMessage}
       stats={[
-        { label: '+ Total Added', value: totalAdded.toLocaleString(), color: 'text-green-600' },
-        { label: '- Total Deleted', value: totalDeleted.toLocaleString(), color: 'text-red-600' },
-        { label: 'Net Change', value: `${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()}`, color: netChange >= 0 ? 'text-green-600' : 'text-red-600' },
+        { label: '+ Total Added', value: totalAdded.toLocaleString(), color: 'text-success' },
+        { label: '- Total Deleted', value: totalDeleted.toLocaleString(), color: 'text-danger' },
+        { label: 'Net Change', value: `${netChange >= 0 ? '+' : ''}${netChange.toLocaleString()}`, color: netChange >= 0 ? 'text-success' : 'text-danger' },
       ]}
       footer={
         <div className="space-y-4">

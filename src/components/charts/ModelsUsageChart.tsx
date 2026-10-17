@@ -105,8 +105,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       ? 'Daily interactions routed through Copilot Auto mode.'
       : 'Daily user-initiated interactions grouped by model.';
   const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : 'Tracked';
-  const primaryColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-violet-600' : 'text-indigo-600';
-  const totalColorClass = isCli ? 'text-pink-600' : isAuto ? 'text-purple-600' : 'text-indigo-600';
+  const summaryColorClass = isCli ? 'text-sponsors' : 'text-done';
   const emptyState = isCli
     ? 'No CLI model usage data available'
     : isAuto
@@ -152,8 +151,8 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         </FormControl>
       ) : undefined}
       summaryStats={[
-        { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: primaryColorClass },
-        { value: displayedTotalInteractions, label: 'Total Interactions', colorClass: totalColorClass },
+        { value: datasets.length, label: isAuto ? 'Auto Models' : `${variantLabel} Models`, colorClass: summaryColorClass },
+        { value: displayedTotalInteractions, label: 'Total Interactions', colorClass: summaryColorClass },
       ]}
       chartHeight="h-96"
       footer={

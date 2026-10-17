@@ -76,11 +76,11 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
       isEmpty={chartData.dates.length === 0 || datasets.length === 0}
       emptyState={emptyMessage}
       summaryStats={[
-        { value: datasets.length, label: 'Languages', colorClass: 'text-blue-600' },
+        { value: datasets.length, label: 'Languages', colorClass: 'text-accent' },
         {
           value: total.toLocaleString(),
           label: isGenerations ? 'Total Generations' : 'Total LOC',
-          colorClass: 'text-green-600',
+          colorClass: 'text-success',
         },
       ]}
       chartHeight="h-80"
