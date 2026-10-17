@@ -78,14 +78,14 @@ export function createAdoptionTrendSummaryStats(
   metrics: AdoptionTrendMetrics,
   config: AdoptionTrendSummaryConfig
 ): SummaryStatItem[] {
-  const { totalUsersLabel, newUsersColorClass = 'text-blue-600' } = config;
+  const { totalUsersLabel, newUsersColorClass = 'text-accent' } = config;
 
   return [
-    { value: metrics.cumulativeTotal, label: totalUsersLabel, colorClass: 'text-purple-600' },
+    { value: metrics.cumulativeTotal, label: totalUsersLabel, colorClass: 'text-done' },
     { value: metrics.totalNewUsers, label: 'New Users (period)', colorClass: newUsersColorClass },
-    { value: metrics.avgDailyActive.toFixed(1), label: 'Avg Daily Active', colorClass: 'text-green-600' },
-    { value: metrics.peakUsers, label: 'Peak Daily Users', colorClass: 'text-indigo-600' },
-    { value: `${metrics.avgRetention}%`, label: 'Avg Retention', colorClass: 'text-amber-600' },
+    { value: metrics.avgDailyActive.toFixed(1), label: 'Avg Daily Active', colorClass: 'text-success' },
+    { value: metrics.peakUsers, label: 'Peak Daily Users', colorClass: 'text-done' },
+    { value: `${metrics.avgRetention}%`, label: 'Avg Retention', colorClass: 'text-attention' },
   ];
 }
 

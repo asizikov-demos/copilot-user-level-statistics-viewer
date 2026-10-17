@@ -158,15 +158,15 @@ describe('createAdoptionTrendSummaryStats', () => {
         cumulativeTotal: 8,
         avgRetention: 62.5,
       },
-      { totalUsersLabel: 'Total Auto Users', newUsersColorClass: 'text-violet-600' }
+      { totalUsersLabel: 'Total Auto Users', newUsersColorClass: 'text-done' }
     );
 
     expect(summary).toEqual([
-      { value: 8, label: 'Total Auto Users', colorClass: 'text-purple-600' },
-      { value: 5, label: 'New Users (period)', colorClass: 'text-violet-600' },
-      { value: '2.5', label: 'Avg Daily Active', colorClass: 'text-green-600' },
-      { value: 4, label: 'Peak Daily Users', colorClass: 'text-indigo-600' },
-      { value: '62.5%', label: 'Avg Retention', colorClass: 'text-amber-600' },
+      { value: 8, label: 'Total Auto Users', colorClass: 'text-done' },
+      { value: 5, label: 'New Users (period)', colorClass: 'text-done' },
+      { value: '2.5', label: 'Avg Daily Active', colorClass: 'text-success' },
+      { value: 4, label: 'Peak Daily Users', colorClass: 'text-done' },
+      { value: '62.5%', label: 'Avg Retention', colorClass: 'text-attention' },
     ]);
   });
 });

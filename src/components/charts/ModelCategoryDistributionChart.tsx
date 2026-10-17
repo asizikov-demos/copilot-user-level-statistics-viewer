@@ -60,12 +60,12 @@ export default function ModelCategoryDistributionChart({
         {
           value: entries.filter(entry => entry.category !== 'Uncategorized').length,
           label: 'Categories Used',
-          colorClass: 'text-indigo-600',
+          colorClass: 'text-done',
         },
         {
           value: `${categorizedPercentage}%`,
           label: 'Usage Categorized',
-          colorClass: 'text-purple-600',
+          colorClass: 'text-done',
         },
       ]}
       chartHeight="h-96"

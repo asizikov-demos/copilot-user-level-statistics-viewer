@@ -105,12 +105,12 @@ describe('chatModeChart', () => {
       total,
       max,
     }))).toEqual([
-      { key: 'ask', footerLabel: 'Ask Mode', colorClass: 'text-green-600', total: 6, max: 5 },
-      { key: 'agent', footerLabel: 'Agent Mode', colorClass: 'text-blue-600', total: 8, max: 6 },
+      { key: 'ask', footerLabel: 'Ask Mode', colorClass: 'text-success', total: 6, max: 5 },
+      { key: 'agent', footerLabel: 'Agent Mode', colorClass: 'text-accent', total: 8, max: 6 },
       { key: 'edit', footerLabel: 'Edit Mode', colorClass: 'text-default', total: 2, max: 2 },
-      { key: 'inline', footerLabel: 'Inline Mode', colorClass: 'text-amber-600', total: 4, max: 4 },
-      { key: 'plan', footerLabel: 'Plan Mode', colorClass: 'text-purple-600', total: 4, max: 3 },
-      { key: 'cli', footerLabel: 'CLI', colorClass: 'text-rose-600', total: 4, max: 3 },
+      { key: 'inline', footerLabel: 'Inline Mode', colorClass: 'text-attention', total: 4, max: 4 },
+      { key: 'plan', footerLabel: 'Plan Mode', colorClass: 'text-done', total: 4, max: 3 },
+      { key: 'cli', footerLabel: 'CLI', colorClass: 'text-danger', total: 4, max: 3 },
     ]);
   });
 });

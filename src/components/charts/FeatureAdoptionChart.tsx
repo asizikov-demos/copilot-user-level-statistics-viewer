@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { Link } from '@primer/react';
 import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
@@ -116,15 +117,15 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         <ChartToggleButtons options={VIEW_TYPE_OPTIONS} value={viewType} onChange={setViewType} />
       }
       summaryStats={[
-        { value: `${Math.round(completionRate)}%`, label: 'Completion', sublabel: `${data?.completionUsers || 0} users`, colorClass: 'text-green-600' },
-        { value: `${Math.round(chatRate)}%`, label: 'Chat', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-blue-600' },
-        { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
-        { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
-        { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-blue-600' },
+        { value: `${Math.round(completionRate)}%`, label: 'Completion', sublabel: `${data?.completionUsers || 0} users`, colorClass: 'text-success' },
+        { value: `${Math.round(chatRate)}%`, label: 'Chat', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-accent' },
+        { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-danger' },
+        { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-sponsors' },
+        { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-accent' },
         { value: `${Math.round(appRate)}%`, label: 'Copilot App', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-default' },
-        { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
-        { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-cyan-600' },
-        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents + CLI + Cloud Agent)`, colorClass: 'text-purple-600' },
+        { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-default' },
+        { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-accent' },
+        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents + CLI + Cloud Agent)`, colorClass: 'text-done' },
       ]}
       chartHeight="h-96"
       footer={
@@ -150,14 +151,15 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
                 <InsightsCard key={insight.title} title={insight.title} variant={insight.variant}>
                   <p>{insight.message}</p>
                   {insight.ctaHref && insight.ctaLabel && (
-                    <a
+                    <Link
                       href={insight.ctaHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-flex text-sm font-medium text-blue-700 underline hover:text-blue-900"
+                      inline
+                      className="mt-2 inline-flex text-sm font-medium"
                     >
                       {insight.ctaLabel}
-                    </a>
+                    </Link>
                   )}
                 </InsightsCard>
               ))}
