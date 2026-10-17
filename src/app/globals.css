@@ -65,15 +65,4 @@
     max-height: 220px !important;
     height: auto !important;
   }
-
-  .chartjs-size-monitor,
-  .chartjs-size-monitor-expand,
-  .chartjs-size-monitor-shrink {
-    display: none !important;
-  }
-
-  /* Ensure chart legend is readable */
-  .chartjs-legend {
-    font-size: 9px !important;
-  }
 }
