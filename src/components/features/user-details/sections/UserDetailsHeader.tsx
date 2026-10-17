@@ -33,9 +33,9 @@ function formatSignedCompact(value: number): string {
 function HeaderStat({ label, value, sub, title }: { label: string; value: ReactNode; sub: ReactNode; title?: string }) {
   return (
     <div className="min-w-0" title={title}>
-      <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{label}</dt>
-      <dd className="mt-0.5 text-xl font-semibold tabular-nums text-[#1f2328]">{value}</dd>
-      <dd className="mt-0.5 truncate text-xs text-gray-500">{sub}</dd>
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</dt>
+      <dd className="mt-0.5 text-xl font-semibold tabular-nums text-default">{value}</dd>
+      <dd className="mt-0.5 truncate text-xs text-muted">{sub}</dd>
     </div>
   );
 }
@@ -66,23 +66,23 @@ export default function UserDetailsHeader({
             <button
               type="button"
               onClick={onBackToUsers}
-              className="text-2xl font-semibold tracking-tight text-[#0969da] hover:underline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm"
+              className="text-2xl font-semibold tracking-tight text-accent hover:underline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm"
             >
               users
             </button>
           </li>
-          <li aria-hidden="true" className="text-2xl font-semibold tracking-tight text-[#8c959f]">/</li>
+          <li aria-hidden="true" className="text-2xl font-semibold tracking-tight text-muted">/</li>
           <li aria-current="page">
             <button
               type="button"
               onClick={onCopyUserLogin}
               title="Click to copy username"
               aria-label={`Copy username ${userLogin}`}
-              className="group inline-flex items-center gap-2 rounded-sm text-2xl font-semibold tracking-tight text-[#1f2328] transition-colors duration-150 hover:text-indigo-600 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              className="group inline-flex items-center gap-2 rounded-sm text-2xl font-semibold tracking-tight text-default transition-colors duration-150 hover:text-indigo-600 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
               <span>{userLogin}</span>
               <svg
-                className="h-5 w-5 text-[#636c76] transition-colors duration-150 group-hover:text-indigo-600"
+                className="h-5 w-5 text-muted transition-colors duration-150 group-hover:text-indigo-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -99,17 +99,17 @@ export default function UserDetailsHeader({
           </li>
         </ol>
       </nav>
-      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+      <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
         <span>User ID: {userId}</span>
-        <span aria-hidden="true" className="text-gray-300">•</span>
+        <span aria-hidden="true" className="text-disabled">•</span>
         <PhaseLabel phase={aiAdoptionPhase} />
-        <span aria-hidden="true" className="text-gray-300">•</span>
+        <span aria-hidden="true" className="text-disabled">•</span>
         <span>{formatLastActive(summary.daysSinceLastActive)}</span>
       </p>
-      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg border border-gray-200 bg-white px-5 py-4 sm:grid-cols-3 lg:grid-cols-5">
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg border border-default bg-default px-5 py-4 sm:grid-cols-3 lg:grid-cols-5">
         <HeaderStat
           label="Active days"
-          value={<>{summary.daysActive}<span className="text-sm font-normal text-gray-400">/{summary.reportDays}</span></>}
+          value={<>{summary.daysActive}<span className="text-sm font-normal text-muted">/{summary.reportDays}</span></>}
           sub={`${summary.activeDaysPercent}% of report window`}
         />
         <HeaderStat

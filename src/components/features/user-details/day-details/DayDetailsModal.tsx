@@ -39,10 +39,10 @@ interface ClientRow {
   plugin_version: string;
 }
 
-const cellLeft = 'px-4 py-3 text-sm font-medium text-gray-900';
-const cellRight = 'px-4 py-3 text-sm text-gray-900 text-right';
-const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-const headerRight = 'px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
+const cellLeft = 'px-4 py-3 text-sm font-medium text-default';
+const cellRight = 'px-4 py-3 text-sm text-default text-right';
+const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
+const headerRight = 'px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
 
 const pillBase = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium';
 
@@ -106,7 +106,7 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
     pills.push({ label: 'CLI', className: `${pillBase} bg-teal-100 text-teal-800` });
   }
   if (hasCopilotAppActivity(dayMetrics)) {
-    pills.push({ label: 'Copilot App', className: `${pillBase} bg-gray-100 text-gray-800` });
+    pills.push({ label: 'Copilot App', className: `${pillBase} bg-muted text-default` });
   }
   if (usedCompletions) {
     pills.push({ label: 'Completions', className: `${pillBase} bg-blue-100 text-blue-800` });
@@ -143,12 +143,12 @@ const clientColumns: TableColumn<ClientRow>[] = [
   { id: 'pluginVersion', header: 'Plugin Version', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.plugin_version },
 ];
 
-const usageStatLabelClass = 'text-xs font-medium text-gray-500 uppercase tracking-wider';
-const usageStatValueClass = 'mt-1 text-2xl font-semibold text-gray-900';
+const usageStatLabelClass = 'text-xs font-medium text-muted uppercase tracking-wider';
+const usageStatValueClass = 'mt-1 text-2xl font-semibold text-default';
 
 const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
-  { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-gray-900', renderCell: (r) => r.model || 'Unknown' },
+  { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-default', renderCell: (r) => r.model || 'Unknown' },
   { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
   { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
   { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
@@ -245,17 +245,17 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   });
 
   const renderCopilotAppUsageStat = (label: string, value: string) => (
-    <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+    <div className="rounded-md border border-default bg-muted p-4">
       <div className={usageStatLabelClass}>{label}</div>
       <div className={usageStatValueClass}>{value}</div>
     </div>
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-default rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-default flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onNavigateDay && (
               <button
@@ -264,7 +264,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                 disabled={!canNavigatePrevDay}
                 aria-label="Previous day"
                 title="Previous day (←)"
-                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-muted hover:text-default transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -272,11 +272,11 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               </button>
             )}
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{formatDate(date)}</h2>
+              <h2 className="text-xl font-bold text-default">{formatDate(date)}</h2>
               {hasData && userLogin && (
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
                   <span>User: {userLogin}</span>
-                  <span aria-hidden="true" className="text-gray-300">•</span>
+                  <span aria-hidden="true" className="text-disabled">•</span>
                   <span>AI cost: {formatAiCreditCost(dayMetrics?.ai_credits_used ?? 0)}</span>
                 </p>
               )}
@@ -288,7 +288,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
                 disabled={!canNavigateNextDay}
                 aria-label="Next day"
                 title="Next day (→)"
-                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="text-muted hover:text-default transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -298,7 +298,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted hover:text-default transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -310,20 +310,20 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
           {!hasData ? (
             <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
+              <div className="text-disabled mb-4">
                 <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No activity recorded</h3>
-              <p className="text-gray-600">There was no GitHub Copilot activity on this date.</p>
+              <h3 className="text-lg font-medium text-default mb-2">No activity recorded</h3>
+              <p className="text-muted">There was no GitHub Copilot activity on this date.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Features used pills */}
               {featurePills.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Features used:</span>
+                  <span className="text-xs font-medium text-muted uppercase tracking-wider">Features used:</span>
                   {featurePills.map((pill) => (
                     <span key={pill.label} className={pill.className}>{pill.label}</span>
                   ))}
@@ -353,9 +353,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Features Section */}
               {dayMetrics.totals_by_feature.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Activity by Feature</h4>
-                  <p className="text-sm text-gray-600 mb-4">Expand a feature to see the languages and models used.</p>
+                <div className="bg-default rounded-md border border-default p-6">
+                  <h4 className="text-lg font-semibold text-default mb-1">Activity by Feature</h4>
+                  <p className="text-sm text-muted mb-4">Expand a feature to see the languages and models used.</p>
                   <DayFeatureBreakdown
                     totalsByFeature={dayMetrics.totals_by_feature}
                     totalsByLanguageFeature={dayMetrics.totals_by_language_feature}
@@ -365,9 +365,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               )}
 
               {copilotAppUsage && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-1">Copilot App Usage</h4>
-                  <p className="text-sm text-gray-600 mb-4">
+                <div className="bg-default rounded-md border border-default p-6">
+                  <h4 className="text-lg font-semibold text-default mb-1">Copilot App Usage</h4>
+                  <p className="text-sm text-muted mb-4">
                     Session and token totals reported by totals_by_copilot_app for this day.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -385,9 +385,9 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
               )}
 
               {hasVSCodeAgentData && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-1">VS Code Agents</h4>
-                  <p className="text-sm text-gray-600 mb-4">
+                <div className="bg-default rounded-md border border-default p-6">
+                  <h4 className="text-lg font-semibold text-default mb-1">VS Code Agents</h4>
+                  <p className="text-sm text-muted mb-4">
                     Dedicated Agents-window activity, separate from editor Agent Mode.
                   </p>
                   <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -415,16 +415,16 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Activity by Client section (includes IDE & CLI clients) */}
               {clientRows.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Client</h4>
+                <div className="bg-default rounded-md border border-default p-6">
+                  <h4 className="text-lg font-semibold text-default mb-4">Activity by Client</h4>
                   <MetricsTable
                     data={clientRows}
                     columns={clientColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
+                    tableClassName="w-full divide-y divide-default"
                     tableContainerClassName="overflow-x-auto"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
+                    theadClassName="bg-muted"
+                    tbodyClassName="bg-default divide-y divide-default"
+                    rowClassName={() => 'hover:bg-muted'}
                     getRowKey={(_, idx) => idx}
                     initialCount={5}
                   />
@@ -433,16 +433,16 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
               {/* Language + Model Section */}
               {dayMetrics.totals_by_language_model.length > 0 && (
-                <div className="bg-white rounded-md border border-[#d1d9e0] p-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Activity by Language &amp; Model</h4>
+                <div className="bg-default rounded-md border border-default p-6">
+                  <h4 className="text-lg font-semibold text-default mb-4">Activity by Language &amp; Model</h4>
                   <MetricsTable
                     data={dayMetrics.totals_by_language_model}
                     columns={languageModelColumns}
-                    tableClassName="w-full divide-y divide-gray-200"
+                    tableClassName="w-full divide-y divide-default"
                     tableContainerClassName="overflow-x-auto"
-                    theadClassName="bg-gray-50"
-                    tbodyClassName="bg-white divide-y divide-gray-200"
-                    rowClassName={() => 'hover:bg-gray-50'}
+                    theadClassName="bg-muted"
+                    tbodyClassName="bg-default divide-y divide-default"
+                    rowClassName={() => 'hover:bg-muted'}
                     getRowKey={(_, idx) => idx}
                     initialCount={10}
                   />

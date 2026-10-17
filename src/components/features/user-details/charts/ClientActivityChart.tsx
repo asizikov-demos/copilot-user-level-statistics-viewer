@@ -52,9 +52,9 @@ type VersionEntry = { name: string; version: string; sampled_at: string };
 type ClientChartDay = Pick<UserDayData, 'day' | 'totals_by_ide'>;
 
 const versionColumns: TableColumn<VersionEntry>[] = [
-  { id: 'name', header: 'Client', headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900', renderCell: (r) => r.name },
-  { id: 'version', header: 'Version', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right', renderCell: (r) => r.version },
-  { id: 'sampled_at', header: 'Last Seen', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right', renderCell: (r) => formatShortDate(r.sampled_at) },
+  { id: 'name', header: 'Client', headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default', renderCell: (r) => r.name },
+  { id: 'version', header: 'Version', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-default text-right', renderCell: (r) => r.version },
+  { id: 'sampled_at', header: 'Last Seen', headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider', className: 'px-6 py-4 whitespace-nowrap text-sm text-default text-right', renderCell: (r) => formatShortDate(r.sampled_at) },
 ];
 
 /**
@@ -189,35 +189,35 @@ export default function ClientActivityChart({
     <>
       {clientRows.length > 0 && (
       <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="w-full divide-y divide-default">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Interactions</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Generation</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acceptance</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Added</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">LOC Deleted</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Add</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Suggested Delete</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">Client</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Interactions</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Generation</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Acceptance</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">LOC Added</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">LOC Deleted</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Suggested Add</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">Suggested Delete</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-default divide-y divide-default">
             {clientRows.map((client) => (
               <tr key={client.ide}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-default">
                   <div className="flex items-center gap-2">
                     {React.createElement(getIDEIcon(client.ide))}
                     <span>{formatIDEName(client.ide)}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.user_initiated_interaction_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_generation_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.code_acceptance_activity_count.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_added_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_deleted_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_add_sum.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{client.loc_suggested_to_delete_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.user_initiated_interaction_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.code_generation_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.code_acceptance_activity_count.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_added_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_deleted_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_suggested_to_add_sum.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-default text-right">{client.loc_suggested_to_delete_sum.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
@@ -227,11 +227,11 @@ export default function ClientActivityChart({
 
       {allVersions.length > 0 && (
         <div className="mt-8">
-          <h4 className="text-md font-semibold text-gray-900 mb-4">Client Versions</h4>
+          <h4 className="text-md font-semibold text-default mb-4">Client Versions</h4>
           <MetricsTable
             data={allVersions}
             columns={versionColumns}
-            tableContainerClassName="overflow-x-auto border border-gray-200"
+            tableContainerClassName="overflow-x-auto border border-default"
             getRowKey={(_, i) => i}
             initialCount={1}
             buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
@@ -252,8 +252,8 @@ export default function ClientActivityChart({
     >
       {barChartData.datasets && barChartData.datasets.length > 0 && (
         <div className="mb-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-4 text-center">Daily Client Interactions</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-default mb-4 text-center">Daily Client Interactions</h4>
             <div className="h-64">
               <Bar data={barChartData} options={barChartOptions} />
             </div>

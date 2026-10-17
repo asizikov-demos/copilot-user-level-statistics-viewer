@@ -121,7 +121,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-red-600' },
         { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-pink-600' },
         { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-blue-600' },
-        { value: `${Math.round(appRate)}%`, label: 'Copilot App', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-gray-900' },
+        { value: `${Math.round(appRate)}%`, label: 'Copilot App', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-default' },
         { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-teal-600' },
         { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-cyan-600' },
         { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents + CLI + Cloud Agent)`, colorClass: 'text-purple-600' },

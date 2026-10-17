@@ -34,7 +34,7 @@ export default function LanguagesView({ model }: LanguagesViewProps) {
       headerProps={{
         title: 'Programming Languages Analysis',
         description: 'Detailed breakdown of language usage patterns',
-        descriptionClassName: 'text-gray-600 mt-1',
+        descriptionClassName: 'text-muted mt-1',
       }}
       contentClassName="space-y-6"
     >

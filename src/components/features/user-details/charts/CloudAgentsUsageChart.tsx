@@ -55,7 +55,7 @@ export default function CloudAgentsUsageChart({ data }: CloudAgentsUsageChartPro
           <div key={lane.key} className="flex items-center gap-3">
             <div className="flex items-center gap-2 w-48 shrink-0">
               <span className={`inline-block h-3 w-3 rounded-sm ${lane.swatchClass}`} aria-hidden="true" />
-              <span className="text-sm text-gray-700">{lane.label}</span>
+              <span className="text-sm text-muted">{lane.label}</span>
             </div>
             <div className="flex flex-1 gap-[2px]">
               {data.map((d) => {
@@ -64,7 +64,7 @@ export default function CloudAgentsUsageChart({ data }: CloudAgentsUsageChartPro
                   <div
                     key={d.date}
                     title={`${formatShortDate(d.date)} — ${lane.label}: ${used ? 'Used' : 'Not used'}`}
-                    className={`flex-1 min-w-[3px] h-7 rounded-[2px] ${used ? lane.activeClass : 'bg-gray-100'}`}
+                    className={`flex-1 min-w-[3px] h-7 rounded-[2px] ${used ? lane.activeClass : 'bg-muted'}`}
                   />
                 );
               })}
@@ -77,7 +77,7 @@ export default function CloudAgentsUsageChart({ data }: CloudAgentsUsageChartPro
             <div className="flex flex-1 gap-[2px] h-12 pt-1">
               {data.map((d) => (
                 <div key={d.date} className="flex-1 min-w-[3px] flex justify-center">
-                  <span className="origin-center -rotate-45 whitespace-nowrap text-[10px] leading-none text-gray-500 mt-2">
+                  <span className="origin-center -rotate-45 whitespace-nowrap text-[10px] leading-none text-muted mt-2">
                     {formatShortDate(d.date)}
                   </span>
                 </div>

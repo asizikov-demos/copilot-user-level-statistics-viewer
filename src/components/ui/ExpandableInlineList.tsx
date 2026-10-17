@@ -29,7 +29,7 @@ export function formatExpandableInlineText(
   return visibleItems.join(', ');
 }
 
-const DEFAULT_TEXT_CLASS = 'text-xs text-gray-600';
+const DEFAULT_TEXT_CLASS = 'text-xs text-muted';
 const DEFAULT_BUTTON_CLASS = 'ml-2 text-xs text-blue-600 hover:text-blue-800 underline';
 
 export default function ExpandableInlineList({

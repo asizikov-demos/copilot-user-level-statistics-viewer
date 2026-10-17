@@ -109,14 +109,14 @@ export default function DailyIDEUsersChart({
       footer={<ClientTelemetryNotice key={activeIde} warnings={activeTelemetryWarnings} />}
       headerActions={
         <div className="min-w-44">
-          <label htmlFor="daily-ide-users-filter" className="block text-xs font-medium text-gray-700 mb-1">
+          <label htmlFor="daily-ide-users-filter" className="block text-xs font-medium text-muted mb-1">
             Client
           </label>
           <select
             id="daily-ide-users-filter"
             value={activeIde}
             onChange={event => setSelectedIde(event.target.value)}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
           >
             {data.map(entry => (
               <option key={entry.ide} value={entry.ide}>
@@ -146,7 +146,7 @@ export default function DailyIDEUsersChart({
             aria-hidden="true"
           />
           <IDEIcon />
-          <span className="text-sm font-medium text-gray-900">{ideLabel}</span>
+          <span className="text-sm font-medium text-default">{ideLabel}</span>
         </div>
         <div className="min-h-0 flex-1">
           <Bar

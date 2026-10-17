@@ -18,7 +18,7 @@ export default function TopEntriesList<Entry extends TopEntriesListEntry>({
   getIcon,
 }: TopEntriesListProps<Entry>) {
   if (entries.length === 0) {
-    return <span className="text-sm text-gray-400">No data</span>;
+    return <span className="text-sm text-muted">No data</span>;
   }
 
   return (
@@ -35,11 +35,11 @@ export default function TopEntriesList<Entry extends TopEntriesListEntry>({
                   <Icon />
                 </div>
               ) : null}
-              <span className="truncate text-gray-900" title={entry.name}>
+              <span className="truncate text-default" title={entry.name}>
                 {formatName(entry.name)}
               </span>
             </div>
-            <span className="whitespace-nowrap text-xs text-gray-500" title={uniqueUsersLabel}>
+            <span className="whitespace-nowrap text-xs text-muted" title={uniqueUsersLabel}>
               {entry.total.toLocaleString()}
             </span>
           </div>

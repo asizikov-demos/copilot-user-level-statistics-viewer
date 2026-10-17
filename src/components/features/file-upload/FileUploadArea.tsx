@@ -56,20 +56,20 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
   return (
     <div className="max-w-2xl mx-auto space-y-4 py-8">
       <div className="text-center mb-6">
-        <h1 className="text-xl font-semibold text-[#24292f] mb-1">GitHub Copilot Usage Metrics</h1>
-        <p className="text-sm text-[#57606a]">Upload your User Level metrics export to explore usage statistics</p>
+        <h1 className="text-xl font-semibold text-default mb-1">GitHub Copilot Usage Metrics</h1>
+        <p className="text-sm text-muted">Upload your User Level metrics export to explore usage statistics</p>
       </div>
 
-      <div className="rounded-lg border border-[#d0d7de] bg-white">
-        <div className="px-5 py-4 border-b border-[#d0d7de]">
-          <h2 className="text-sm font-semibold text-[#24292f]">Upload metrics file</h2>
+      <div className="rounded-lg border border-default bg-default">
+        <div className="px-5 py-4 border-b border-default">
+          <h2 className="text-sm font-semibold text-default">Upload metrics file</h2>
         </div>
         <div className="p-5 space-y-4">
           <div
             className={`border-2 border-dashed rounded-md p-8 text-center transition-colors cursor-pointer ${
               isDragActive
-                ? 'border-[#0969da] bg-[#ddf4ff]'
-                : 'border-[#d0d7de] hover:border-[#0969da] hover:bg-[#f6f8fa]'
+                ? 'border-accent-emphasis bg-accent-muted'
+                : 'border-default hover:border-accent-emphasis hover:bg-muted'
             }`}
             role="button"
             tabIndex={0}
@@ -98,17 +98,17 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
               className="hidden"
               id="file-upload"
             />
-            <svg className="mx-auto mb-3 w-10 h-10 text-[#57606a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto mb-3 w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <p className="text-sm font-medium text-[#24292f]">Drag &amp; drop files here, or click to browse</p>
-            <p className="mt-1 text-xs text-[#57606a]">Accepts .ndjson and .json &mdash; multiple files supported</p>
+            <p className="text-sm font-medium text-default">Drag &amp; drop files here, or click to browse</p>
+            <p className="mt-1 text-xs text-muted">Accepts .ndjson and .json &mdash; multiple files supported</p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 border-t border-[#d0d7de]" />
-            <span className="text-xs text-[#57606a]">or</span>
-            <div className="flex-1 border-t border-[#d0d7de]" />
+            <div className="flex-1 border-t border-default" />
+            <span className="text-xs text-muted">or</span>
+            <div className="flex-1 border-t border-default" />
           </div>
 
           <div className="text-center">
@@ -126,8 +126,8 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
 
           {isLoading && (
             <div className="flex flex-col items-center gap-2 py-2">
-              <div className="flex items-center gap-2 text-sm text-[#57606a]">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#d0d7de] border-t-[#0969da]" />
+              <div className="flex items-center gap-2 text-sm text-muted">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-default border-t-accent-emphasis" />
                 <span>
                   {uploadProgress && uploadProgress.totalFiles > 1
                     ? `Processing file ${uploadProgress.currentFile} of ${uploadProgress.totalFiles}\u2026`
@@ -135,9 +135,9 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
                 </span>
               </div>
               {uploadProgress && (
-                <p className="text-xs text-[#57606a]">
-                  <span className="font-medium text-[#24292f]">{uploadProgress.fileName}</span>
-                  <span className="mx-1.5 text-[#d0d7de]">·</span>
+                <p className="text-xs text-muted">
+                  <span className="font-medium text-default">{uploadProgress.fileName}</span>
+                  <span className="mx-1.5 text-[var(--borderColor-default)]">·</span>
                   <span>{uploadProgress.recordsProcessed.toLocaleString()} records processed</span>
                 </p>
               )}
@@ -145,11 +145,11 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
           )}
 
           {error && (
-            <div className="flex items-start gap-2 rounded-md border border-[#ff818266] bg-[#ffebe9] px-3 py-2">
-              <svg className="w-4 h-4 text-[#cf222e] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-start gap-2 rounded-md border border-danger-muted bg-danger-muted px-3 py-2">
+              <svg className="w-4 h-4 text-danger flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p className="text-sm text-[#cf222e]">{error}</p>
+              <p className="text-sm text-danger">{error}</p>
             </div>
           )}
         </div>

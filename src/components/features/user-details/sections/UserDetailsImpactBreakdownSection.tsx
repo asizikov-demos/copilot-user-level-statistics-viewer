@@ -25,11 +25,11 @@ export default function UserDetailsImpactBreakdownSection({
   cliImpact,
 }: UserDetailsImpactBreakdownSectionProps) {
   return (
-    <div id={sectionId} className="border-t border-gray-200 pt-6 scroll-mt-28">
+    <div id={sectionId} className="border-t border-default pt-6 scroll-mt-28">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Impact Breakdown</h3>
-          <p className="text-sm text-gray-600 mt-1">View detailed impact by mode</p>
+          <h3 className="text-lg font-semibold text-default">Impact Breakdown</h3>
+          <p className="text-sm text-muted mt-1">View detailed impact by mode</p>
         </div>
         <button
           onClick={onToggle}

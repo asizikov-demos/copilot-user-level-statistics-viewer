@@ -57,9 +57,9 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleEngagementsSort,
   } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
-  const headerClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const headerClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
+  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const renderIDEInfo = (ide: IDEStats) => {
     const IDEIcon = getIDEIcon(ide.ide);
@@ -69,10 +69,10 @@ export default function ClientsView({ model }: IDEViewProps) {
           <IDEIcon />
         </div>
         <div>
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-sm font-medium text-default">
             {formatIDEName(ide.ide)}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted">
             {ide.ide}
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function ClientsView({ model }: IDEViewProps) {
     const acceptanceRate = ide.totalGenerations > 0
       ? (ide.totalAcceptances / ide.totalGenerations * 100).toFixed(1)
       : '0.0';
-    return <div className="text-sm text-gray-900 text-right">{acceptanceRate}%</div>;
+    return <div className="text-sm text-default text-right">{acceptanceRate}%</div>;
   };
 
   const createColumns = (primary: { field: keyof IDEStats; label: string }): TableColumn<IDEStats>[] => [
@@ -188,9 +188,9 @@ export default function ClientsView({ model }: IDEViewProps) {
           />
         </div>
 
-        <div id={insightsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Insights</h3>
+        <div id={insightsSection.id} className="bg-default rounded-md border border-default scroll-mt-28">
+          <div className="px-6 py-4 border-b border-default">
+            <h3 className="text-lg font-semibold text-default">Insights</h3>
           </div>
           <div className="px-6 py-4">
             <IDEInsights
@@ -202,33 +202,33 @@ export default function ClientsView({ model }: IDEViewProps) {
           </div>
         </div>
 
-        <div id={usersSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Users</h3>
+        <div id={usersSection.id} className="bg-default rounded-md border border-default scroll-mt-28">
+          <div className="px-6 py-4 border-b border-default">
+            <h3 className="text-lg font-semibold text-default">Clients Ordered by Number of Users</h3>
           </div>
           <MetricsTable<IDEStats>
             data={sortedIdesByUsers}
             columns={usersColumns}
             sortState={{ field: usersSortField as string, direction: usersSortDirection }}
             onSortChange={({ field }) => handleUsersSort(field as keyof IDEStats)}
-            tableClassName="w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+            tableClassName="w-full divide-y divide-default"
+            theadClassName="bg-muted"
+            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'} hover:bg-muted`}
           />
         </div>
 
-        <div id={engagementsSection.id} className="bg-white rounded-md border border-[#d1d9e0] scroll-mt-28">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Clients Ordered by Number of Engagements</h3>
+        <div id={engagementsSection.id} className="bg-default rounded-md border border-default scroll-mt-28">
+          <div className="px-6 py-4 border-b border-default">
+            <h3 className="text-lg font-semibold text-default">Clients Ordered by Number of Engagements</h3>
           </div>
           <MetricsTable<IDEStats>
             data={sortedIdesByEngagements}
             columns={engagementsColumns}
             sortState={{ field: engagementsSortField as string, direction: engagementsSortDirection }}
             onSortChange={({ field }) => handleEngagementsSort(field as keyof IDEStats)}
-            tableClassName="w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-50`}
+            tableClassName="w-full divide-y divide-default"
+            theadClassName="bg-muted"
+            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'} hover:bg-muted`}
           />
         </div>
       </div>

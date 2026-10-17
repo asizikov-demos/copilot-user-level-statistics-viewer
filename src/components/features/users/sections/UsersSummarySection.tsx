@@ -43,24 +43,24 @@ export default function UsersSummarySection({
 
   return (
     <div id={sectionId} className="mb-6 scroll-mt-28">
-      <div className="grid gap-8 rounded-lg border border-[#d1d9e0] bg-white p-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)] md:gap-0">
+      <div className="grid gap-8 rounded-lg border border-default bg-default p-6 md:grid-cols-[minmax(220px,0.8fr)_minmax(0,1.7fr)] md:gap-0">
         <div className="md:pr-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
             Total Users
           </p>
-          <p className="mt-3 text-5xl font-bold tracking-tight text-gray-900">
+          <p className="mt-3 text-5xl font-bold tracking-tight text-default">
             {totalUsers.toLocaleString()}
           </p>
-          <h2 className="mt-2 text-xl font-semibold text-gray-900">
+          <h2 className="mt-2 text-xl font-semibold text-default">
             unique users
           </h2>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-gray-600">
+          <p className="mt-3 max-w-sm text-sm leading-6 text-muted">
             Users with Copilot activity in the selected report period. Feature
             adoption shows how many of them used each experience.
           </p>
         </div>
 
-        <div className="border-t border-gray-200 pt-8 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+        <div className="border-t border-default pt-8 md:border-l md:border-t-0 md:pl-8 md:pt-0">
           <div className="space-y-4">
             {featureAdoption.map(feature => {
               const adoptionPercentage = totalUsers === 0
@@ -70,11 +70,11 @@ export default function UsersSummarySection({
               return (
                 <div key={feature.label}>
                   <div className="mb-1.5 flex items-baseline justify-between gap-4">
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-sm font-medium text-default">
                       {feature.label}
                     </span>
-                    <span className="text-sm tabular-nums text-gray-600">
-                      <strong className="font-semibold text-gray-900">
+                    <span className="text-sm tabular-nums text-muted">
+                      <strong className="font-semibold text-default">
                         {feature.users.toLocaleString()}
                       </strong>
                       {' '}
@@ -82,7 +82,7 @@ export default function UsersSummarySection({
                     </span>
                   </div>
                   <div
-                    className="h-2 overflow-hidden rounded-full bg-gray-100"
+                    className="h-2 overflow-hidden rounded-full bg-muted"
                     role="progressbar"
                     aria-label={`${feature.label} adoption`}
                     aria-valuemin={0}

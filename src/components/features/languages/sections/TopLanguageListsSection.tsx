@@ -56,7 +56,7 @@ export default function TopLanguageListsSection({
                 {rank}
               </div>
             </div>
-            <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+            <div className="text-sm font-medium text-default">{lang.language}</div>
           </div>
         );
       },
@@ -96,7 +96,7 @@ export default function TopLanguageListsSection({
                 {rank}
               </div>
             </div>
-            <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+            <div className="text-sm font-medium text-default">{lang.language}</div>
           </div>
         );
       },
@@ -125,16 +125,16 @@ export default function TopLanguageListsSection({
   ];
 
   return (
-    <div id={sectionId} className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
+    <div id={sectionId} className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-default scroll-mt-28">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Code Generations</h3>
+        <h3 className="text-lg font-semibold text-default mb-4">Languages by Code Generations</h3>
         <MetricsTable
           data={languagesByGenerations}
           columns={languagesByGenerationsColumns}
           rowClassName={tableRowClassName}
-          tableClassName="w-full divide-y divide-gray-200"
-          tableContainerClassName="overflow-x-auto border border-gray-200"
-          theadClassName="bg-gray-50"
+          tableClassName="w-full divide-y divide-default"
+          tableContainerClassName="overflow-x-auto border border-default"
+          theadClassName="bg-muted"
           initialCount={MAX_LANGUAGES_TO_SHOW}
           buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
           buttonExpandedLabel="Show Less"
@@ -142,14 +142,14 @@ export default function TopLanguageListsSection({
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Languages by Number of Users</h3>
+        <h3 className="text-lg font-semibold text-default mb-4">Languages by Number of Users</h3>
         <MetricsTable
           data={languagesByUsers}
           columns={languagesByUsersColumns}
           rowClassName={tableRowClassName}
-          tableClassName="w-full divide-y divide-gray-200"
-          tableContainerClassName="overflow-x-auto border border-gray-200"
-          theadClassName="bg-gray-50"
+          tableClassName="w-full divide-y divide-default"
+          tableContainerClassName="overflow-x-auto border border-default"
+          theadClassName="bg-muted"
           initialCount={MAX_LANGUAGES_TO_SHOW}
           buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
           buttonExpandedLabel="Show Less"

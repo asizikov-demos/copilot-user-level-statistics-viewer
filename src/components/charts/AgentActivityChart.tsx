@@ -75,12 +75,12 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
       title={title}
       description="Copilot CLI, Copilot App, and the dedicated VS Code Agents window, separate from editor Agent Mode."
       headerActions={(
-        <label className="text-sm text-gray-600">
+        <label className="text-sm text-muted">
           <span className="sr-only">Agent activity measure</span>
           <select
             value={measure}
             onChange={event => setMeasure(event.target.value === 'sessions' ? 'sessions' : 'userInputs')}
-            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900"
+            className="rounded-md border border-default bg-default px-3 py-2 text-default"
           >
             <option value="sessions">Sessions</option>
             <option value="userInputs">Prompts &amp; messages</option>
@@ -92,7 +92,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
         value: formatCount(data.summary[surface.key][measure]),
       }))}
       footer={(
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted">
           Only reported counts are included. Missing values are not zero.
           {' '}{isSessions
             ? 'Sessions are counted per surface, not deduplicated across surfaces.'
@@ -108,7 +108,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
           aria-label={`${title}: ${visibleSurfaces.map(surface => surface.label).join(', ')}.`}
         />
       ) : (
-        <p className="py-8 text-center text-gray-500">
+        <p className="py-8 text-center text-muted">
           {isSessions ? 'Session counts are not reported. Select Prompts & messages to view available activity.' : 'Prompts and user messages are not reported.'}
         </p>
       )}

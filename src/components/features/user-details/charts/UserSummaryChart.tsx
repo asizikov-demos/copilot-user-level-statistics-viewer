@@ -40,7 +40,7 @@ export default function UserSummaryChart({
     <ChartContainer title="Summary">
       {/* Features Used */}
       <div className="mb-6">
-        <h4 className="text-md font-medium text-gray-800 mb-3">Features Used</h4>
+        <h4 className="text-md font-medium text-default mb-3">Features Used</h4>
         <div className="flex flex-wrap gap-2">
           {usedChat && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
@@ -73,7 +73,7 @@ export default function UserSummaryChart({
             </span>
           )}
           {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && !usedCodeReview && !usedAutoMode && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-muted text-default">
               Completion Only
             </span>
           )}
@@ -84,8 +84,8 @@ export default function UserSummaryChart({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* IDEs Chart */}
         {ideChartData && ideChartData.labels && ideChartData.labels.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">Client Interactions</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-default mb-3 text-center">Client Interactions</h4>
             <div className="h-48">
               <Pie data={ideChartData} options={chartOptions} />
             </div>
@@ -94,8 +94,8 @@ export default function UserSummaryChart({
 
         {/* Languages Chart */}
         {languageChartData && languageChartData.labels && languageChartData.labels.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">Languages (Generations)</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-default mb-3 text-center">Languages (Generations)</h4>
             <div className="h-48">
               <Pie data={languageChartData} options={chartOptions} />
             </div>
@@ -104,8 +104,8 @@ export default function UserSummaryChart({
 
         {/* Models Chart */}
         {modelChartData && modelChartData.labels && modelChartData.labels.length > 0 && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">Models (Interactions)</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-default mb-3 text-center">Models (Interactions)</h4>
             <div className="h-48">
               <Pie data={modelChartData} options={chartOptions} />
             </div>

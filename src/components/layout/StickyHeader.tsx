@@ -29,7 +29,7 @@ const StickyHeader: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#24292f] flex items-center justify-between px-4 sm:px-6 lg:px-8 print:hidden">
+    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-[var(--header-bgColor)] flex items-center justify-between px-4 sm:px-6 lg:px-8 print:hidden">
       <div className="min-w-0 flex items-center gap-3">
         <GitHubMark />
         <span className="hidden text-white font-semibold text-lg tracking-tight sm:inline">
@@ -47,7 +47,7 @@ const StickyHeader: React.FC = () => {
               id="mobile-view-select"
               value={activeNavItem.view}
               onChange={handleMobileNavigation}
-              className="w-40 max-w-[42vw] rounded-md border border-[#57606a] bg-[#24292f] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#2f81f7] lg:hidden"
+              className="w-40 max-w-[42vw] rounded-md border border-neutral-emphasis bg-[var(--header-bgColor)] px-3 py-2 text-sm text-white outline-none transition-colors focus:border-accent-emphasis lg:hidden"
             >
               {NAV_ITEMS.map(({ label, view }) => (
                 <option key={view} value={view}>
@@ -62,7 +62,7 @@ const StickyHeader: React.FC = () => {
           <button
             type="button"
             onClick={resetAppState}
-            className="px-4 py-2 text-sm font-medium text-white bg-transparent hover:bg-white/[0.08] rounded-md transition-all duration-150 border border-[#57606a]"
+            className="px-4 py-2 text-sm font-medium text-white bg-transparent hover:bg-white/[0.08] rounded-md transition-all duration-150 border border-neutral-emphasis"
           >
             <span className="hidden sm:inline">Upload new file</span>
             <span className="sm:hidden">Upload</span>

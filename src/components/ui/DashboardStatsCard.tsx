@@ -54,9 +54,9 @@ export interface DashboardStatsCardProps {
   dataTestId?: string;
 }
 
-const DEFAULT_NEUTRAL_CONTAINER = 'bg-white border-[#d1d9e0]';
-const DEFAULT_LABEL_CLASS = 'text-sm text-gray-600';
-const DEFAULT_HELPER_CLASS = 'text-xs text-gray-500';
+const DEFAULT_NEUTRAL_CONTAINER = 'bg-default border-default';
+const DEFAULT_LABEL_CLASS = 'text-sm text-muted';
+const DEFAULT_HELPER_CLASS = 'text-xs text-muted';
 
 const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
   label,
@@ -124,7 +124,7 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
         <div className={cn('space-y-1', !icon && alignment === 'center' ? 'text-center' : '')}>
           <div className={cn('font-bold leading-tight', SIZE_CLASSES[size], valueColor)}>
             {isLoading ? (
-              <span className="inline-block h-6 w-20 rounded bg-gray-200 animate-pulse" />
+              <span className="inline-block h-6 w-20 rounded bg-neutral-muted animate-pulse" />
             ) : (
               formattedValue
             )}
@@ -134,8 +134,8 @@ const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
             <div className={helperClasses}>{helperText}</div>
           )}
           {helperText && isLoading && (
-            <div className="text-xs text-gray-400">
-              <span className="inline-block h-3 w-24 rounded bg-gray-200 animate-pulse" />
+            <div className="text-xs text-muted">
+              <span className="inline-block h-3 w-24 rounded bg-neutral-muted animate-pulse" />
             </div>
           )}
         </div>

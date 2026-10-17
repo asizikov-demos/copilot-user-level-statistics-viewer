@@ -18,7 +18,7 @@ function LocImpact({
   return (
     <>
       <span className="text-green-600">+{locAdded.toLocaleString()}</span>
-      <span className="text-gray-400"> / </span>
+      <span className="text-disabled"> / </span>
       <span className="text-red-600">-{locDeleted.toLocaleString()}</span>
     </>
   );
@@ -39,20 +39,20 @@ export default function SurfaceComparisonTable({
   return (
     <section
       id="surface-productivity-comparison"
-      className="scroll-mt-28 overflow-hidden rounded-md border border-[#d1d9e0] bg-white"
+      className="scroll-mt-28 overflow-hidden rounded-md border border-default bg-default"
     >
-      <div className="border-b border-gray-200 px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="border-b border-default px-6 py-4">
+        <h2 className="text-lg font-semibold text-default">
           Surface comparison
         </h2>
-        <p className="mt-1 max-w-3xl text-sm text-gray-600">
+        <p className="mt-1 max-w-3xl text-sm text-muted">
           Compare reach and active user-days separately from LOC impact. Rates
           use each surface&apos;s own active days as the denominator.
         </p>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-default">
+          <thead className="bg-muted">
             <tr>
               {[
                 'Surface',
@@ -66,7 +66,7 @@ export default function SurfaceComparisonTable({
                 <th
                   key={label}
                   scope="col"
-                  className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${
+                  className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted ${
                     index === 0 ? 'text-left' : 'text-right'
                   }`}
                 >
@@ -75,7 +75,7 @@ export default function SurfaceComparisonTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-default">
             {SURFACE_ORDER.map(surface => {
               const summary = summariesBySurface.get(surface);
               const metadata = SURFACE_METADATA[surface];
@@ -91,34 +91,34 @@ export default function SurfaceComparisonTable({
                         aria-hidden="true"
                       />
                       <span>
-                        <span className="block text-sm font-semibold text-gray-900">
+                        <span className="block text-sm font-semibold text-default">
                           {metadata.label}
                         </span>
-                        <span className="mt-0.5 block text-xs text-gray-500">
+                        <span className="mt-0.5 block text-xs text-muted">
                           {metadata.shortDescription}
                         </span>
                       </span>
                     </div>
                   </th>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-default">
                     {summary?.uniqueUsers.toLocaleString() ?? '0'}
-                    <span className="ml-1 text-gray-500">
+                    <span className="ml-1 text-muted">
                       ({summary?.reachPercentage ?? 0}%)
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-default">
                     {summary?.activeUserDays.toLocaleString() ?? '0'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-default">
                     {summary?.activeDaysPerUser.toLocaleString() ?? '0'}
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-default">
                     <LocImpact
                       locAdded={summary?.locAdded ?? 0}
                       locDeleted={summary?.locDeleted ?? 0}
                     />
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-default">
                     <LocImpact
                       locAdded={getAverage(
                         summary?.locAdded ?? 0,
@@ -130,7 +130,7 @@ export default function SurfaceComparisonTable({
                       )}
                     />
                   </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-default">
                     <LocImpact
                       locAdded={getAverage(
                         summary?.locAdded ?? 0,

@@ -85,8 +85,8 @@ export function MetricsTable<T>({
   onToggle,
   emptyState,
 }: MetricsTableProps<T>) {
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const cellBaseClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
+  const cellBaseClass = 'px-6 py-4 whitespace-nowrap text-sm text-default';
 
   const resolvedInitialCount = initialCount ?? data.length;
   const {
@@ -111,8 +111,8 @@ export function MetricsTable<T>({
   }
 
   const table = (
-    <table className={tableClassName ?? 'w-full divide-y divide-gray-200'}>
-        <thead className={theadClassName ?? 'bg-gray-50'}>
+    <table className={tableClassName ?? 'w-full divide-y divide-default'}>
+        <thead className={theadClassName ?? 'bg-muted'}>
           <tr>
             {columns.map((column) => {
               const isSortable = Boolean(onSortChange && column.sortable);
@@ -134,8 +134,8 @@ export function MetricsTable<T>({
 
               const isRightAligned = headerClassName.includes('text-right');
               const sortButtonClassName = isRightAligned
-                ? 'flex items-center w-full justify-end hover:text-gray-700 focus:outline-none uppercase tracking-wider'
-                : 'flex items-center hover:text-gray-700 focus:outline-none uppercase tracking-wider';
+                ? 'flex items-center w-full justify-end hover:text-default focus:outline-none uppercase tracking-wider'
+                : 'flex items-center hover:text-default focus:outline-none uppercase tracking-wider';
 
               return (
                 <th key={column.id} scope="col" className={headerClassName} aria-sort={ariaSortValue}>
@@ -152,7 +152,7 @@ export function MetricsTable<T>({
             })}
           </tr>
         </thead>
-        <tbody className={tbodyClassName ?? 'bg-white divide-y divide-gray-200'}>
+        <tbody className={tbodyClassName ?? 'bg-default divide-y divide-default'}>
           {visibleItems.map((item, index) => {
             const rowClass = rowClassName?.(item, index) ?? '';
             const rowKey = getRowKey?.(item, index) ?? index;

@@ -65,7 +65,7 @@ export default function ChatUsersChart({ data }: ChatUsersChartProps) {
       isEmpty={data.length === 0}
       emptyState="No chat user data available"
       footer={
-        <div className="grid grid-cols-6 gap-4 text-xs text-gray-500">
+        <div className="grid grid-cols-6 gap-4 text-xs text-muted">
           {modeSummaries.map(({ mode, max }) => (
             <div key={mode.key}>
               <span className={`font-medium ${mode.colorClass}`}>{mode.footerLabel}:</span> Max {max} users

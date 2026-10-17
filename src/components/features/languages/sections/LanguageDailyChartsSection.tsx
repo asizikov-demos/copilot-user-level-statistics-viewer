@@ -13,7 +13,7 @@ export default function LanguageDailyChartsSection({
   dailyLanguageLocData,
 }: LanguageDailyChartsSectionProps) {
   return (
-    <div id={sectionId} className="space-y-6 mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
+    <div id={sectionId} className="space-y-6 mt-6 pt-6 border-t border-default scroll-mt-28">
       <LanguageDailyChart chartData={dailyLanguageGenerationsData} variant="generations" />
       <LanguageDailyChart chartData={dailyLanguageLocData} variant="loc" />
     </div>

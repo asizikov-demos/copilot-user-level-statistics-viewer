@@ -165,8 +165,8 @@ describe('Users feature sections', () => {
 
     const getResultCount = () => renderer?.root
       .findAllByType('p')
-      .find(node => node.props.className === 'mb-3 text-sm text-gray-600')
-      ?.children.join('');
+      .map(node => node.children.join(''))
+      .find(text => text.startsWith('Showing '));
 
     let markup = JSON.stringify(renderer?.toJSON());
     expect(getResultCount()).toBe('Showing 1 of 3 users');

@@ -6,18 +6,18 @@ interface PhaseDepthHeaderProps {
 }
 
 const PHASE_SEGMENTS = [
-  { phaseNumber: 0, label: 'No cohort', summary: 'Below engagement criteria', fill: 'bg-[#d8dee4]', text: 'text-[#424a53]' },
-  { phaseNumber: 1, label: 'Phase 1', summary: 'Completions or IDE agent mode', fill: 'bg-[#9ecbff]', text: 'text-[#0a3069]' },
-  { phaseNumber: 2, label: 'Phase 2', summary: 'One GitHub agent surface', fill: 'bg-[#218bff]', text: 'text-white' },
-  { phaseNumber: 3, label: 'Phase 3', summary: 'Two or more agent surfaces, or Copilot app', fill: 'bg-[#0a3069]', text: 'text-white' },
+  { phaseNumber: 0, label: 'No cohort', summary: 'Below engagement criteria', fill: 'bg-[var(--borderColor-default)]', text: 'text-default' },
+  { phaseNumber: 1, label: 'Phase 1', summary: 'Completions or IDE agent mode', fill: 'bg-[var(--display-blue-scale-1)]', text: 'text-[var(--display-blue-scale-9)]' },
+  { phaseNumber: 2, label: 'Phase 2', summary: 'One GitHub agent surface', fill: 'bg-[var(--display-blue-scale-4)]', text: 'text-white' },
+  { phaseNumber: 3, label: 'Phase 3', summary: 'Two or more agent surfaces, or Copilot app', fill: 'bg-[var(--display-blue-scale-9)]', text: 'text-white' },
 ] as const;
 
 const UNREPORTED_SEGMENT = {
   phaseNumber: -1,
   label: 'Not reported',
   summary: 'No phase in the export',
-  fill: 'bg-[#f6f8fa] ring-1 ring-inset ring-[#d1d9e0]',
-  text: 'text-[#59636e]',
+  fill: 'bg-muted ring-1 ring-inset ring-[var(--borderColor-default)]',
+  text: 'text-muted',
 } as const;
 
 const MIN_LABELLED_SHARE = 5;
@@ -50,16 +50,16 @@ export function PhaseDepthHeader({ aiAdoptionPhaseData }: PhaseDepthHeaderProps)
     .join(', ');
 
   return (
-    <section aria-label="Adoption depth" className="mt-6 rounded-lg border border-[#d1d9e0] bg-white p-6">
+    <section aria-label="Adoption depth" className="mt-6 rounded-lg border border-default bg-default p-6">
       {totalUsers === 0 ? (
-        <p className="text-sm text-[#59636e]">No AI adoption phase data is available in this metrics upload.</p>
+        <p className="text-sm text-muted">No AI adoption phase data is available in this metrics upload.</p>
       ) : (
         <>
-          <p className="max-w-[32ch] text-balance text-2xl font-semibold leading-tight tracking-tight text-[#1f2328] sm:text-[28px]">
+          <p className="max-w-[32ch] text-balance text-2xl font-semibold leading-tight tracking-tight text-default sm:text-[28px]">
             <span className="tabular-nums">{formatNumber(totalUsers)}</span> {totalUsers === 1 ? 'person' : 'people'} used Copilot.{' '}
             {agentReach > 0 ? (
               <>
-                <span className="tabular-nums text-[#0969da]">{formatNumber(agentReach)}</span> reached GitHub agent surfaces.
+                <span className="tabular-nums text-accent">{formatNumber(agentReach)}</span> reached GitHub agent surfaces.
               </>
             ) : (
               <>None reached GitHub agent surfaces yet.</>
@@ -89,8 +89,8 @@ export function PhaseDepthHeader({ aiAdoptionPhaseData }: PhaseDepthHeaderProps)
 
           <dl className={`mt-3 grid grid-cols-2 gap-x-5 gap-y-3 ${segments.length > 4 ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
             {segments.map(segment => (
-              <div key={segment.phaseNumber} className="min-w-0 text-xs leading-snug text-[#59636e]">
-                <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-[#1f2328]">
+              <div key={segment.phaseNumber} className="min-w-0 text-xs leading-snug text-muted">
+                <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-default">
                   <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-sm ${segment.fill}`} />
                   <span>
                     {segment.label} · <span className="tabular-nums">{formatNumber(segment.userCount)}</span>

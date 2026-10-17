@@ -70,7 +70,7 @@ export default function FeatureAdoptionRadarChart({
       className="h-full flex flex-col"
       chartHeight="flex-1 min-h-0"
       footer={
-        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-gray-600">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted">
           {radarItems.map((item) => (
             <span key={item.key}>{item.summaryLabel}: <strong>{item.value.toLocaleString()}</strong></span>
           ))}

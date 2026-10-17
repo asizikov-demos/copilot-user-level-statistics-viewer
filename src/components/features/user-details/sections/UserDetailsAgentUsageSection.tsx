@@ -26,8 +26,8 @@ export default function UserDetailsAgentUsageSection({
   if (!hasActivity && !tokenUsage.hasActivity) return null;
 
   return (
-    <div id={sectionId} className="scroll-mt-28 border-t border-gray-200 pt-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div id={sectionId} className="scroll-mt-28 border-t border-default pt-6">
+      <h3 className="text-lg font-semibold text-default mb-4">
         Agent-native activity
       </h3>
       <div className="space-y-8">

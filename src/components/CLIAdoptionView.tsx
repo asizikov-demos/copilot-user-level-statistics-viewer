@@ -32,7 +32,7 @@ export default function CLIAdoptionView({ model }: CLIAdoptionViewProps) {
       headerProps={{
         title: 'CLI Adoption',
         description: (
-          <p className="text-gray-600 text-sm mt-1">
+          <p className="text-muted text-sm mt-1">
             This report contains <strong>{stats.cliUsers.toLocaleString()}</strong> GitHub Copilot CLI users out of <strong>{stats.uniqueUsers.toLocaleString()}</strong> (<strong>{cliShare}%</strong>)
           </p>
         ),

@@ -30,8 +30,8 @@ function fmt(value: number): string {
 function MetricChip({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
     <span className="inline-flex items-baseline gap-1 whitespace-nowrap text-xs">
-      <span className="text-gray-500">{label}</span>
-      <span className={`font-semibold ${valueClassName ?? 'text-gray-900'}`}>{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className={`font-semibold ${valueClassName ?? 'text-default'}`}>{value}</span>
     </span>
   );
 }
@@ -39,15 +39,15 @@ function MetricChip({ label, value, valueClassName }: { label: string; value: st
 function BreakdownList({ title, items }: { title: string; items: BreakdownItem[] }) {
   return (
     <div>
-      <h5 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">{title}</h5>
+      <h5 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">{title}</h5>
       {items.length === 0 ? (
-        <p className="text-sm text-gray-400">No data</p>
+        <p className="text-sm text-muted">No data</p>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
             <li key={item.name} className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-gray-900 truncate">{item.name}</span>
-              <span className="flex items-center gap-3 whitespace-nowrap text-xs text-gray-600">
+              <span className="text-sm font-medium text-default truncate">{item.name}</span>
+              <span className="flex items-center gap-3 whitespace-nowrap text-xs text-muted">
                 <span>Gen {fmt(item.generation)}</span>
                 <span>Acc {fmt(item.acceptance)}</span>
                 <span>
@@ -77,17 +77,17 @@ function FeatureCard({
   const contentId = useId();
 
   return (
-    <div className="border border-[#d1d9e0] rounded-md overflow-hidden">
+    <div className="border border-default rounded-md overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
-        className="flex items-center justify-between w-full gap-4 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="flex items-center justify-between w-full gap-4 px-4 py-3 bg-muted hover:bg-[var(--control-bgColor-hover)] transition-colors"
         aria-expanded={isExpanded}
         aria-controls={contentId}
       >
         <span className="flex items-center gap-2 min-w-0">
           <svg
-            className={`w-4 h-4 flex-shrink-0 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+            className={`w-4 h-4 flex-shrink-0 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -96,7 +96,7 @@ function FeatureCard({
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-sm font-semibold text-gray-900 truncate">{translateFeature(feature.feature)}</span>
+          <span className="text-sm font-semibold text-default truncate">{translateFeature(feature.feature)}</span>
         </span>
         <span className="flex items-center gap-4">
           <MetricChip label="Interactions" value={fmt(getTotalUserInitiatedInteractionCount(feature))} />
@@ -107,7 +107,7 @@ function FeatureCard({
       </button>
 
       {isExpanded && (
-        <div id={contentId} className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 py-4 bg-white">
+        <div id={contentId} className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 py-4 bg-default">
           <BreakdownList title="Languages" items={languages} />
           <BreakdownList title="Models" items={models} />
         </div>
@@ -171,7 +171,7 @@ export default function DayFeatureBreakdown({
   }, [totalsByModelFeature]);
 
   if (features.length === 0) {
-    return <p className="text-sm text-gray-400">No feature activity recorded</p>;
+    return <p className="text-sm text-muted">No feature activity recorded</p>;
   }
 
   return (

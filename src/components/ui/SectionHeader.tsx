@@ -27,10 +27,10 @@ export default function SectionHeader({
   backButtonClassName
 }: SectionHeaderProps) {
   const containerClassName = cn('flex items-center justify-between', className);
-  const headingClassName = cn('text-xl font-semibold text-gray-900', titleClassName);
-  const paragraphClassName = cn('text-gray-600 text-sm mt-1 max-w-2xl', descriptionClassName);
+  const headingClassName = cn('text-xl font-semibold text-default', titleClassName);
+  const paragraphClassName = cn('text-muted text-sm mt-1 max-w-2xl', descriptionClassName);
   const buttonClassName = cn(
-    'px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md transition-colors',
+    'px-4 py-2 text-sm font-medium text-muted bg-muted hover:bg-[var(--control-bgColor-hover)] border border-default rounded-md transition-colors',
     backButtonClassName
   );
 

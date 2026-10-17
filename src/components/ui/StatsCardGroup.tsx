@@ -42,10 +42,10 @@ export default function StatsCardGroup<T>({
       {(title || description || actions) && (
         <div className={cn("flex flex-wrap items-start justify-between gap-3", headerClassName)}>
           <div className="space-y-1">
-            {title && <Heading className="text-lg font-medium text-gray-900">{title}</Heading>}
+            {title && <Heading className="text-lg font-medium text-default">{title}</Heading>}
             {description && (
               typeof description === "string" ? (
-                <p className="text-sm text-gray-600 max-w-2xl">{description}</p>
+                <p className="text-sm text-muted max-w-2xl">{description}</p>
               ) : (
                 description
               )

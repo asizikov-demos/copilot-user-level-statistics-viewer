@@ -70,7 +70,7 @@ export default function ModelVendorDistributionChart({
       ]}
       chartHeight="h-96"
       footer={
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-muted">
           Vendor attribution follows the configured Copilot model catalog. Models without a known
           vendor appear as Unattributed.
         </p>

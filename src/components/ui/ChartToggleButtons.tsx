@@ -27,7 +27,7 @@ export default function ChartToggleButtons<T extends string>({
           className={`px-3 py-1 text-sm rounded ${
             value === option.value
               ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              : 'bg-neutral-muted text-muted hover:bg-[var(--control-bgColor-active)]'
           }`}
         >
           {option.label}

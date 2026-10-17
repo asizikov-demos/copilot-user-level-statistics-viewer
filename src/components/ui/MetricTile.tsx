@@ -112,7 +112,7 @@ export const MetricTile: React.FC<MetricTileProps> = ({
           <p className={cn('text-sm font-medium', variant.title)}>{title}</p>
           <p className={cn('font-bold', size === 'lg' ? 'text-2xl' : 'text-lg', variant.value)}>
             {isLoading ? (
-              <span className="inline-block h-6 w-20 bg-white/50 rounded animate-pulse" />
+              <span className="inline-block h-6 w-20 bg-default/50 rounded animate-pulse" />
             ) : (
               displayValue
             )}
@@ -121,8 +121,8 @@ export const MetricTile: React.FC<MetricTileProps> = ({
             <p className={cn('text-xs', variant.subtitle)}>{subtitle}</p>
           )}
           {isLoading && (
-            <p className="text-xs text-gray-400">
-              <span className="inline-block h-3 w-28 bg-white/40 rounded animate-pulse" />
+            <p className="text-xs text-muted">
+              <span className="inline-block h-3 w-28 bg-default/40 rounded animate-pulse" />
             </p>
           )}
         </div>

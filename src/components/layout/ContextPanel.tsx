@@ -51,8 +51,8 @@ const ContextPanel: React.FC = () => {
       className="fixed bottom-0 right-0 top-[100px] z-40 hidden w-64 overflow-y-auto py-3 pl-3 pr-4 print:hidden xl:block xl:pr-8"
       aria-label="On this page"
     >
-      <div className="bg-white border border-[#d1d9e0] rounded-md">
-        <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-[#636c76]">
+      <div className="bg-default border border-default rounded-md">
+        <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">
           On this page
         </p>
         <ul className="p-2 pt-1 space-y-0.5">
@@ -66,8 +66,8 @@ const ContextPanel: React.FC = () => {
                   aria-current={isActive ? 'location' : undefined}
                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 ${
                     isActive
-                      ? 'bg-[#f6f8fa] text-[#1f2328] font-semibold'
-                      : 'text-[#636c76] hover:bg-[#f6f8fa] hover:text-[#1f2328] cursor-pointer'
+                      ? 'bg-muted text-default font-semibold'
+                      : 'text-muted hover:bg-muted hover:text-default cursor-pointer'
                   }`}
                 >
                   {label}

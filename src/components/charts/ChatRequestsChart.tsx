@@ -66,7 +66,7 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
       isEmpty={data.length === 0}
       emptyState="No chat request data available"
       footer={
-        <div className="grid grid-cols-7 gap-4 text-xs text-gray-500">
+        <div className="grid grid-cols-7 gap-4 text-xs text-muted">
           {modeSummaries.map(({ mode, total, max }) => (
             <div key={mode.key}>
               <span className={`font-medium ${mode.colorClass}`}>{mode.footerLabel}:</span>{' '}
@@ -74,7 +74,7 @@ export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
             </div>
           ))}
           <div>
-            <span className="font-medium text-gray-600">All Modes:</span> {grandTotal} total requests
+            <span className="font-medium text-muted">All Modes:</span> {grandTotal} total requests
           </div>
         </div>
       }

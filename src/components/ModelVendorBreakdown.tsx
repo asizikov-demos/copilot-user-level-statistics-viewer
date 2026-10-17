@@ -12,9 +12,9 @@ interface ModelVendorBreakdownProps {
   vendorTables: ModelVendorTable[];
 }
 
-const HEADER_CLASS = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-const NUMERIC_HEADER_CLASS = 'px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
-const CELL_CLASS = 'px-4 py-2 whitespace-nowrap text-sm text-gray-900';
+const HEADER_CLASS = 'px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider';
+const NUMERIC_HEADER_CLASS = 'px-4 py-2 text-right text-xs font-medium text-muted uppercase tracking-wider';
+const CELL_CLASS = 'px-4 py-2 whitespace-nowrap text-sm text-default';
 const NUMERIC_CELL_CLASS = `${CELL_CLASS} text-right tabular-nums`;
 
 function formatShare(share: number): string {
@@ -67,10 +67,10 @@ export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakd
   if (vendorTables.length === 0) return null;
 
   return (
-    <div className="bg-white rounded-md border border-[#d1d9e0] print:border-gray-300 print:break-inside-avoid">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Models by Vendor</h3>
-        <p className="text-sm text-gray-600 mt-1">
+    <div className="bg-default rounded-md border border-default print:border-default print:break-inside-avoid">
+      <div className="px-6 py-4 border-b border-default">
+        <h3 className="text-lg font-semibold text-default">Models by Vendor</h3>
+        <p className="text-sm text-muted mt-1">
           Expand a vendor to see its models. Share is the model&apos;s portion of all user-initiated
           interactions in the report.
         </p>
@@ -82,9 +82,9 @@ export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakd
             <DisclosureSection
               key={table.vendor}
               defaultExpanded={false}
-              containerClassName="border border-gray-200 rounded-md overflow-hidden"
-              buttonClassName="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-              contentClassName="border-t border-gray-200"
+              containerClassName="border border-default rounded-md overflow-hidden"
+              buttonClassName="flex items-center justify-between w-full px-4 py-3 bg-muted hover:bg-[var(--control-bgColor-hover)] transition-colors"
+              contentClassName="border-t border-default"
               labelClassName="flex flex-1 items-center justify-between gap-4 pr-3 min-w-0"
               label={
                 <>
@@ -97,16 +97,16 @@ export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakd
                       style={{ backgroundColor: modelVendorColors[table.vendor].solid }}
                       aria-hidden="true"
                     />
-                    <span className="text-sm font-semibold text-gray-900 truncate">{table.vendor}</span>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
+                    <span className="text-sm font-semibold text-default truncate">{table.vendor}</span>
+                    <span className="text-xs text-muted flex-shrink-0">
                       {table.rows.length} {table.rows.length === 1 ? 'model' : 'models'}
                     </span>
                   </span>
-                  <span className="text-xs text-gray-600 tabular-nums flex-shrink-0">
+                  <span className="text-xs text-muted tabular-nums flex-shrink-0">
                     {formatNumber(table.interactions)} interactions
-                    <span className="text-gray-400"> · </span>
+                    <span className="text-disabled"> · </span>
                     {formatShare(table.sharePercentage)}
-                    <span className="text-gray-400"> · </span>
+                    <span className="text-disabled"> · </span>
                     {formatNumber(table.users)} unique users
                   </span>
                 </>
@@ -118,9 +118,9 @@ export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakd
                 getRowKey={(row) => row.model}
                 tableClassName="w-full"
                 tableContainerClassName="overflow-x-auto"
-                theadClassName="bg-gray-50 border-b border-gray-200"
-                tbodyClassName="divide-y divide-gray-100"
-                rowClassName={() => 'hover:bg-gray-50'}
+                theadClassName="bg-muted border-b border-default"
+                tbodyClassName="divide-y divide-muted"
+                rowClassName={() => 'hover:bg-muted'}
               />
             </DisclosureSection>
           );
