@@ -137,8 +137,8 @@ export default function UsersTableSection({
       header: 'Days Active',
       sortable: true,
       accessor: 'days_active',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
+      headerClassName: `${headerRightClass} w-1/8 hidden @min-[100rem]/users:table-cell`,
+      className: `${valueCellClass} hidden @min-[100rem]/users:table-cell`,
     },
     {
       id: 'total_ai_credits_used',
@@ -167,16 +167,16 @@ export default function UsersTableSection({
       header: 'Cloud Agent',
       sortable: true,
       accessor: 'cloud_agent_days',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
+      headerClassName: `${headerRightClass} w-1/8 hidden @min-[100rem]/users:table-cell`,
+      className: `${valueCellClass} hidden @min-[100rem]/users:table-cell`,
     },
     {
       id: 'code_review_days',
       header: 'Code Review',
       sortable: true,
       accessor: 'code_review_days',
-      headerClassName: `${headerRightClass} w-1/8`,
-      className: valueCellClass,
+      headerClassName: `${headerRightClass} w-1/8 hidden @min-[100rem]/users:table-cell`,
+      className: `${valueCellClass} hidden @min-[100rem]/users:table-cell`,
     },
     {
       id: 'top_client',
@@ -201,8 +201,8 @@ export default function UsersTableSection({
     {
       id: 'features_used',
       header: 'Features Used',
-      headerClassName: `${headerRightClass} w-1/4`,
-      className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right',
+      headerClassName: `${headerRightClass} w-1/4 hidden @min-[80rem]/users:table-cell`,
+      className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right hidden @min-[80rem]/users:table-cell',
       renderCell: (user) => (
         <div className="flex flex-wrap gap-1 justify-end">
           {USER_FEATURE_LABELS.filter(({ isUsed }) => isUsed(user)).map(({ key, label }) => (
@@ -216,7 +216,7 @@ export default function UsersTableSection({
   ];
 
   return (
-    <div id={sectionId} className="mt-6 pt-6 border-t border-default">
+    <div id={sectionId} className="@container/users mt-6 pt-6 border-t border-default">
       <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
         <FormControl id="userSearch">
           <FormControl.Label>Search by user login</FormControl.Label>

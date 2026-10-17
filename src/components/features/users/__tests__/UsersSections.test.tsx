@@ -120,6 +120,27 @@ describe('Users feature sections', () => {
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
   });
 
+  it('uses table container width for secondary activity and feature columns', () => {
+    const { container } = renderTable([makeUser()]);
+
+    expect(container.querySelector('#users-table')?.classList.contains('@container/users')).toBe(true);
+    const table = screen.getByRole('table');
+    const headers = within(table).getAllByRole('columnheader');
+    const cells = within(table).getAllByRole('cell');
+    const secondaryHeaders = ['Days Active', 'Cloud Agent', 'Code Review', 'Features Used'];
+
+    headers.forEach((header, index) => {
+      const isSecondary = secondaryHeaders.some(label => header.textContent?.includes(label));
+      for (const element of [header, cells[index]]) {
+        expect(element.classList.contains('hidden')).toBe(isSecondary);
+        expect(element.classList.contains('@min-[100rem]/users:table-cell'))
+          .toBe(isSecondary && !header.textContent?.includes('Features Used'));
+        expect(element.classList.contains('@min-[80rem]/users:table-cell'))
+          .toBe(header.textContent?.includes('Features Used'));
+      }
+    });
+  });
+
   it('orders users by days active descending and omits the interactions column', () => {
     const markup = renderToStaticMarkup(
       <UsersTableSection
