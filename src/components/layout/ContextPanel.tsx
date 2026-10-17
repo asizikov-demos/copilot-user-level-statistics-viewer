@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { NavList } from '@primer/react';
 import { useNavigation } from '../../state/NavigationContext';
 import { useActiveSection } from '../../hooks/useActiveSection';
 import { CONTEXT_SECTIONS } from './contextSections';
@@ -47,37 +48,27 @@ const ContextPanel: React.FC = () => {
   };
 
   return (
-    <aside
-      className="fixed bottom-0 right-0 top-[100px] z-40 hidden w-64 overflow-y-auto py-3 pl-3 pr-4 print:hidden xl:block xl:pr-8"
-      aria-label="On this page"
-    >
-      <div className="bg-default border border-default rounded-md">
-        <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">
-          On this page
-        </p>
-        <ul className="p-2 pt-1 space-y-0.5">
-          {visibleSections.map(({ id, label }) => {
-            const isActive = activeId === id;
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  onClick={() => handleNavigate(id)}
-                  aria-current={isActive ? 'location' : undefined}
-                  className={`w-full text-left px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-150 ${
-                    isActive
-                      ? 'bg-muted text-default font-semibold'
-                      : 'text-muted hover:bg-muted hover:text-default cursor-pointer'
-                  }`}
-                >
-                  {label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+    <div className="fixed bottom-0 right-0 top-[100px] z-40 hidden w-64 overflow-y-auto py-3 pl-3 pr-4 print:hidden xl:block xl:pr-8">
+      <div className="bg-default border border-default rounded-md p-2">
+        <NavList aria-label="On this page">
+          <NavList.Group title="On this page" hideDivider>
+            {visibleSections.map(({ id, label }) => (
+              <NavList.Item
+                key={id}
+                href={`#${id}`}
+                onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+                  event.preventDefault();
+                  handleNavigate(id);
+                }}
+                aria-current={activeId === id ? 'location' : undefined}
+              >
+                {label}
+              </NavList.Item>
+            ))}
+          </NavList.Group>
+        </NavList>
       </div>
-    </aside>
+    </div>
   );
 };
 

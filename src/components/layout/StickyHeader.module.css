@@ -1,0 +1,38 @@
+/*
+ * Primer component CSS is unlayered, so Tailwind utilities cannot override properties it sets.
+ * `header.header` outranks Primer's single-class Header selector.
+ */
+header.header {
+  height: 4rem;
+  padding: 0;
+}
+
+/* Header buttons on the dark `--header-bgColor` surface. */
+.actions {
+  --button-default-bgColor-rest: transparent;
+  --button-default-bgColor-hover: rgb(255 255 255 / 8%);
+  --button-default-bgColor-active: rgb(255 255 255 / 12%);
+  --button-default-borderColor-rest: var(--borderColor-neutral-emphasis);
+  --button-default-borderColor-hover: var(--borderColor-neutral-emphasis);
+  --button-default-borderColor-active: var(--borderColor-neutral-emphasis);
+  --button-default-fgColor-rest: var(--fgColor-onEmphasis);
+  --button-default-shadow-resting: none;
+  --fgColor-muted: var(--header-fgColor-default);
+  --focus-outline-color: var(--fgColor-onEmphasis);
+}
+
+.actions .menuButton {
+  min-width: 0;
+  max-width: min(12rem, 42vw);
+}
+
+/* Let long view names truncate instead of pushing the caret over the label. */
+.actions .menuButton [data-component='buttonContent'] {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.actions .menuButton [data-component='text'] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

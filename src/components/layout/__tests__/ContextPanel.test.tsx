@@ -1,4 +1,6 @@
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+// @vitest-environment jsdom
+import { BaseStyles, ThemeProvider } from '@primer/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ContextPanel from '../ContextPanel';
 
@@ -18,70 +20,134 @@ vi.mock('../../../hooks/useActiveSection', () => ({
   },
 }));
 
-describe('ContextPanel rendered sections', () => {
-  let renderer: ReactTestRenderer | undefined;
-  let notifyMutation: () => void;
-  let ids: Set<string>;
-  const disconnect = vi.fn();
+function stubMatchMedia(prefersReducedMotion: boolean) {
+  vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)' && prefersReducedMotion,
+    media: query,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  })));
+}
+
+function renderPanel() {
+  return render(
+    <ThemeProvider colorMode="day">
+      <BaseStyles>
+        <ContextPanel />
+      </BaseStyles>
+    </ThemeProvider>,
+  );
+}
+
+function addSection(id: string) {
+  const section = document.createElement('section');
+  section.id = id;
+  document.body.appendChild(section);
+  return section;
+}
+
+function linkLabels() {
+  const nav = screen.queryByRole('navigation', { name: 'On this page' });
+  return nav ? within(nav).queryAllByRole('link').map(link => link.textContent) : [];
+}
+
+describe('ContextPanel', () => {
+  let sections: HTMLElement[];
 
   beforeEach(() => {
     mocks.view = 'userDetails';
     mocks.activeSection.mockClear();
-    disconnect.mockClear();
-    ids = new Set(['user-details-overview', 'user-details-cli-customizations']);
-    vi.stubGlobal('document', {
-      body: {},
-      getElementById: (id: string) => ids.has(id) ? { id } : null,
-    });
-    vi.stubGlobal('MutationObserver', class {
-      constructor(callback: () => void) { notifyMutation = callback; }
-      observe() {}
-      disconnect() { disconnect(); }
-    });
+    sections = [addSection('user-details-overview'), addSection('user-details-cli-customizations')];
+    stubMatchMedia(false);
   });
 
-  afterEach(async () => {
-    await act(async () => { renderer?.unmount(); });
-    renderer = undefined;
+  afterEach(() => {
+    cleanup();
+    document.body.innerHTML = '';
+    window.history.replaceState(null, '', '/');
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('lists only rendered sections and updates when profile data changes', async () => {
-    await act(async () => { renderer = create(<ContextPanel />); });
-    expect(renderer!.root.findAllByType('button').map(button => button.children.join(''))).toEqual([
-      'Activity Overview', 'Customizations',
-    ]);
+    renderPanel();
+    expect(linkLabels()).toEqual(['Activity Overview', 'Customizations']);
 
-    ids.delete('user-details-cli-customizations');
-    ids.add('user-details-agent-activity');
-    await act(async () => { notifyMutation(); });
-    expect(renderer!.root.findAllByType('button').map(button => button.children.join(''))).toEqual([
-      'Activity Overview', 'Agent-native activity',
-    ]);
+    sections[1].remove();
+    addSection('user-details-agent-activity');
+    await waitFor(() => expect(linkLabels()).toEqual(['Activity Overview', 'Agent-native activity']));
     expect(mocks.activeSection).toHaveBeenLastCalledWith(['user-details-overview', 'user-details-agent-activity']);
   });
 
   it('waits for sections to mount and hides the panel if all sections disappear', async () => {
-    ids.clear();
-    await act(async () => { renderer = create(<ContextPanel />); });
-    expect(renderer!.toJSON()).toBeNull();
-    ids.add('user-details-overview');
-    await act(async () => { notifyMutation(); });
-    expect(renderer!.root.findAllByType('button')).toHaveLength(1);
-    ids.clear();
-    await act(async () => { notifyMutation(); });
-    expect(renderer!.toJSON()).toBeNull();
+    sections.forEach(section => section.remove());
+    const { container } = renderPanel();
+    expect(screen.queryByRole('navigation')).toBeNull();
+
+    const overview = addSection('user-details-overview');
+    await waitFor(() => expect(linkLabels()).toEqual(['Activity Overview']));
+
+    overview.remove();
+    await waitFor(() => expect(screen.queryByRole('navigation')).toBeNull());
+    expect(container.textContent).toBe('');
   });
 
   it('replaces observed section IDs on route changes and disconnects on unmount', async () => {
-    await act(async () => { renderer = create(<ContextPanel />); });
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const { rerender, unmount } = renderPanel();
+
     mocks.view = 'cliAdoption';
-    ids = new Set(['cli-daily-users']);
-    await act(async () => { renderer!.update(<ContextPanel />); });
-    expect(renderer!.root.findAllByType('button').map(button => button.children.join(''))).toEqual(['Daily CLI Users']);
+    addSection('cli-daily-users');
+    rerender(
+      <ThemeProvider colorMode="day">
+        <BaseStyles>
+          <ContextPanel />
+        </BaseStyles>
+      </ThemeProvider>,
+    );
+    expect(linkLabels()).toEqual(['Daily CLI Users']);
     expect(disconnect).toHaveBeenCalledTimes(1);
-    await act(async () => { renderer!.unmount(); });
-    renderer = undefined;
+
+    unmount();
     expect(disconnect).toHaveBeenCalledTimes(2);
+  });
+
+  it('marks the active section with aria-current="location"', () => {
+    renderPanel();
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const [active, inactive] = within(nav).getAllByRole('link');
+
+    expect(active.getAttribute('aria-current')).toBe('location');
+    expect(inactive.hasAttribute('aria-current')).toBe(false);
+    expect(within(nav).getByRole('heading', { name: 'On this page' })).toBeTruthy();
+  });
+
+  it('scrolls to the section and updates the hash without default navigation', () => {
+    const scrollIntoView = vi.fn();
+    sections[1].scrollIntoView = scrollIntoView;
+    renderPanel();
+
+    const link = screen.getByRole('link', { name: 'Customizations' });
+    expect(link.getAttribute('href')).toBe('#user-details-cli-customizations');
+
+    let defaultPrevented = false;
+    act(() => {
+      defaultPrevented = !fireEvent.click(link);
+    });
+
+    expect(defaultPrevented).toBe(true);
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(window.location.hash).toBe('#user-details-cli-customizations');
+  });
+
+  it('jumps without smooth scrolling when reduced motion is preferred', () => {
+    stubMatchMedia(true);
+    const scrollIntoView = vi.fn();
+    sections[0].scrollIntoView = scrollIntoView;
+    renderPanel();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Activity Overview' }));
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
   });
 });

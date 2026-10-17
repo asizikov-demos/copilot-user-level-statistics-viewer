@@ -347,6 +347,29 @@ html .app-base-styles a:not([class*="prc-"]):not([class*="PRC-"]):not([class*="P
   text-decoration: revert-layer;
 }
 
+/*
+ * Primer viewport breakpoints (values from @primer/tailwind-config@1.0.0 / @primer/primitives),
+ * overriding only Tailwind's breakpoint tokens. CSS Module media queries must repeat these rem values.
+ */
+@theme {
+  --breakpoint-sm: 34rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 63.25rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 87.5rem;
+}
+
+/* Primer overlays (e.g. the header ActionMenu) must stack above the fixed z-50 app shell. */
+#__primerPortalRoot__ {
+  z-index: 60;
+}
+
+@media print {
+  #__primerPortalRoot__ {
+    display: none;
+  }
+}
+
 /* Remove browser print headers/footers */
 @page {
   margin: 0.5in;
