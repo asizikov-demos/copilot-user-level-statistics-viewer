@@ -1,6 +1,7 @@
 'use client';
 
 import type { TooltipItem } from 'chart.js';
+import { resolveChartTheme } from './chartTheme';
 
 /**
  * Configuration for creating base chart options
@@ -50,11 +51,6 @@ export interface DualAxisExtraAxisConfig {
 }
 
 /**
- * Default grid color used across charts
- */
-const DEFAULT_GRID_COLOR = 'rgba(0, 0, 0, 0.1)';
-
-/**
  * Creates base chart options with common configuration.
  * Reduces duplication across chart components.
  */
@@ -81,6 +77,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
     xMaxRotation,
     xAutoSkip,
   } = config;
+  const { gridColor } = resolveChartTheme();
 
   return {
     responsive: true,
@@ -112,6 +109,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
         },
         grid: {
           display: showGridX,
+          color: gridColor,
         },
         ...(xMaxRotation !== undefined || xAutoSkip !== undefined ? {
           ticks: {
@@ -130,7 +128,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
         ...(yMax !== undefined && { max: yMax }),
         grid: {
           display: showGridY,
-          color: DEFAULT_GRID_COLOR,
+          color: gridColor,
         },
         ticks: {
           ...(yStepSize !== undefined && { stepSize: yStepSize }),
@@ -141,6 +139,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
     interaction: {
       intersect: false,
       mode: 'index' as const,
+      axis: indexAxis,
     },
   };
 }
@@ -331,17 +330,19 @@ export interface RadarChartConfig {
 }
 
 /**
- * Creates chart options for radar charts.
+ * Creates chart options for radar charts. Grid, angle line and point label colors
+ * default to the Primer chart theme.
  */
 export function createRadarChartOptions(config: RadarChartConfig = {}) {
+  const theme = resolveChartTheme();
   const {
     showLegend = false,
     tooltipLabelCallback,
-    gridColor = 'rgba(0, 0, 0, 0.08)',
-    angleLineColor = 'rgba(0, 0, 0, 0.08)',
+    gridColor = theme.gridColor,
+    angleLineColor = theme.gridColor,
     pointLabelFontSize = 13,
     pointLabelFontWeight = 'bold',
-    pointLabelColor = '#374151',
+    pointLabelColor = theme.textColor,
   } = config;
 
   return {
@@ -377,18 +378,23 @@ export function createRadarChartOptions(config: RadarChartConfig = {}) {
  * Configuration for doughnut chart options
  */
 export interface DoughnutChartConfig {
-  cutout?: string;
+  /** Inner radius; use 0 to draw a pie */
+  cutout?: string | number;
+  showLegend?: boolean;
   legendPosition?: 'top' | 'bottom' | 'left' | 'right';
+  tooltipTitleCallback?: (context: TooltipItem<'doughnut'>[]) => string;
   tooltipLabelCallback?: (context: TooltipItem<'doughnut'>) => string | string[];
 }
 
 /**
- * Creates chart options for doughnut charts.
+ * Creates chart options for doughnut charts, or pies when `cutout` is 0.
  */
 export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
   const {
     cutout = '55%',
+    showLegend = true,
     legendPosition = 'right',
+    tooltipTitleCallback,
     tooltipLabelCallback,
   } = config;
 
@@ -398,10 +404,12 @@ export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
     cutout,
     plugins: {
       legend: {
+        display: showLegend,
         position: legendPosition,
       },
       tooltip: {
         callbacks: {
+          ...(tooltipTitleCallback && { title: tooltipTitleCallback }),
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
         },
       },

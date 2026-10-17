@@ -3,8 +3,9 @@ import {
   computeRetentionRates,
   computeAverageRetention,
   createBarDataset,
-  createRadarDataset,
   createDoughnutDataset,
+  createLineDataset,
+  createRadarDataset,
 } from './chartStyles';
 
 describe('computeRetentionRates', () => {
@@ -93,21 +94,32 @@ describe('dataset factories', () => {
     });
   });
 
-  it('createRadarDataset derives a translucent fill from an rgb color unless overridden', () => {
+  it('createLineDataset derives a 10% fill from rgb or hex colors', () => {
+    expect(createLineDataset('rgb(34, 197, 94)', 'Users', [1])).toMatchObject({
+      borderColor: 'rgb(34, 197, 94)',
+      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    });
+    expect(createLineDataset('#006edb', 'Users', [1]).backgroundColor).toBe('rgba(0, 110, 219, 0.1)');
+  });
+
+  it('createRadarDataset derives a translucent fill from rgb or hex colors unless overridden', () => {
     expect(createRadarDataset('rgb(99, 102, 241)', 'Interactions', [1])).toMatchObject({
       backgroundColor: 'rgba(99, 102, 241, 0.2)',
       borderColor: 'rgb(99, 102, 241)',
       pointBackgroundColor: 'rgb(99, 102, 241)',
+      pointBorderColor: 'rgb(255, 255, 255)',
     });
+    expect(createRadarDataset('#a830e8', 'L', []).backgroundColor).toBe('rgba(168, 48, 232, 0.2)');
     expect(createRadarDataset('rgb(0, 0, 0)', 'L', [], { backgroundColor: 'transparent' }).backgroundColor).toBe('transparent');
   });
 
-  it('createDoughnutDataset applies segment colors with overridable border defaults', () => {
-    expect(createDoughnutDataset([1, 2], ['#f00', '#0f0'], { borderColor: 'transparent' })).toMatchObject({
+  it('createDoughnutDataset separates segments with the default background unless overridden', () => {
+    expect(createDoughnutDataset([1, 2], ['#f00', '#0f0'])).toMatchObject({
       data: [1, 2],
       backgroundColor: ['#f00', '#0f0'],
-      borderColor: 'transparent',
+      borderColor: 'rgb(255, 255, 255)',
       borderWidth: 1,
     });
+    expect(createDoughnutDataset([1], ['#f00'], { borderColor: 'transparent' }).borderColor).toBe('transparent');
   });
 });

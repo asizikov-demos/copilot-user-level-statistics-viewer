@@ -6,6 +6,8 @@ import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
+import { chartColors } from './utils/chartColors';
+import { withAlpha } from './utils/chartTheme';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import { sortBySelector } from '../../utils/sorting';
@@ -35,8 +37,8 @@ export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
   const data = {
     labels,
     datasets: [
-      createBarDataset('rgb(16, 185, 129)', 'Also uses CLI', cliOverlap, { backgroundColor: 'rgba(16, 185, 129, 0.8)' }),
-      createBarDataset('rgb(156, 163, 175)', 'IDE only', ideOnly, { backgroundColor: 'rgba(209, 213, 219, 0.8)' }),
+      createBarDataset(chartColors.green.solid, 'Also uses CLI', cliOverlap, { backgroundColor: withAlpha(chartColors.green.solid, 0.8) }),
+      createBarDataset(chartColors.gray.solid, 'IDE only', ideOnly, { backgroundColor: chartColors.gray.muted }),
     ],
   };
 

@@ -7,6 +7,7 @@ import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createStackedTotalFooter } from '../../../charts/utils/tooltipFooters';
+import { getSequentialColor } from '../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../utils/formatters';
 import { takeTopBySelector } from '../../../../utils/sorting';
 import type { DailyLanguageChartData } from '../../../../types/metrics';
@@ -19,19 +20,6 @@ interface LanguageDailyChartProps {
   variant: 'generations' | 'loc';
 }
 
-const LANGUAGE_COLORS = [
-  'hsl(210, 70%, 55%)',
-  'hsl(160, 70%, 45%)',
-  'hsl(280, 70%, 55%)',
-  'hsl(30, 80%, 55%)',
-  'hsl(340, 70%, 55%)',
-  'hsl(190, 70%, 50%)',
-  'hsl(50, 80%, 50%)',
-  'hsl(120, 60%, 45%)',
-  'hsl(260, 60%, 60%)',
-  'hsl(0, 70%, 55%)',
-];
-
 export default function LanguageDailyChart({ chartData, variant }: LanguageDailyChartProps) {
   const isGenerations = variant === 'generations';
 
@@ -43,7 +31,7 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
     );
 
     const datasets = sortedLanguages.map((language, index) => {
-      const color = LANGUAGE_COLORS[index % LANGUAGE_COLORS.length];
+      const color = getSequentialColor(index);
       return createBarDataset(color, language, chartData.dates.map(d => chartData.data[d]?.[language] || 0), { stack: 'languages' });
     });
 

@@ -9,6 +9,8 @@ import { formatShortDate } from '../../utils/formatters';
 import { calculateTotal, calculateAverage } from '../../domain/calculators/statsCalculators';
 import type { ModeImpactData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
+import { chartColors } from './utils/chartColors';
+import { withAlpha } from './utils/chartTheme';
 
 registerChartJS();
 
@@ -24,17 +26,14 @@ interface ModeImpactChartProps {
   footer?: ReactNode;
 }
 
-const DEFAULT_DELETED_COLOR = 'rgba(248, 113, 113, 0.85)';
-const DEFAULT_DELETED_BORDER_COLOR = 'rgb(239, 68, 68)';
-
 export default function ModeImpactChart({
   data,
   title,
   description,
-  addedColor = 'rgba(34, 197, 94, 0.85)',
-  addedBorderColor = 'rgb(34, 197, 94)',
-  deletedColor = DEFAULT_DELETED_COLOR,
-  deletedBorderColor = DEFAULT_DELETED_BORDER_COLOR,
+  addedColor = withAlpha(chartColors.green.solid, 0.85),
+  addedBorderColor = chartColors.green.solid,
+  deletedColor = withAlpha(chartColors.red.solid, 0.85),
+  deletedBorderColor = chartColors.red.solid,
   emptyStateMessage = 'No impact data available for this mode',
   footer,
 }: ModeImpactChartProps) {

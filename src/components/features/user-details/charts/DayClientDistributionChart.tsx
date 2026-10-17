@@ -1,11 +1,8 @@
 'use client';
 
-import React from 'react';
-import { Doughnut } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
-import { registerChartJS } from '../../../charts/utils/chartSetup';
-import { createDoughnutChartOptions } from '../../../charts/utils/chartOptions';
-import { createDoughnutDataset } from '../../../charts/utils/chartStyles';
+import { useMemo } from 'react';
+import CompositionChart from '../../../charts/CompositionChart';
+import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
 import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
 import ChartContainer from '../../../ui/ChartContainer';
 import { formatIDEName } from '../../../icons/IDEIcons';
@@ -13,73 +10,49 @@ import { sortBySelector } from '../../../../utils/sorting';
 import type { UserDayData } from '../../../../types/metrics';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
-registerChartJS();
-
 interface DayClientDistributionChartProps {
   dayMetrics: UserDayData;
   cliInteractionCount: number;
 }
 
 export default function DayClientDistributionChart({ dayMetrics, cliInteractionCount }: DayClientDistributionChartProps) {
-  const sorted = sortBySelector(
-    dayMetrics.totals_by_ide.filter((ide) => getTotalUserInitiatedInteractionCount(ide) > 0),
-    getTotalUserInitiatedInteractionCount,
-    'desc'
-  );
-  const hasCliActivity = cliInteractionCount > 0;
-  const hasData = sorted.length > 0 || hasCliActivity;
+  const entries = useMemo<CompositionEntry[]>(() => {
+    const sorted = sortBySelector(
+      dayMetrics.totals_by_ide.filter((ide) => getTotalUserInitiatedInteractionCount(ide) > 0),
+      getTotalUserInitiatedInteractionCount,
+      'desc'
+    );
 
-  const labels = [
-    ...sorted.map((ide) => formatIDEName(ide.ide)),
-    ...(hasCliActivity ? ['Copilot CLI'] : []),
-  ];
-
-  const dataValues = [
-    ...sorted.map(getTotalUserInitiatedInteractionCount),
-    ...(hasCliActivity ? [cliInteractionCount] : []),
-  ];
-
-  let fallbackIndex = 0;
-  const backgroundColors = [
-    ...sorted.map((ide) => {
+    let fallbackIndex = 0;
+    const clients = sorted.map((ide) => {
       const color = getIdeColor(ide.ide, fallbackIndex);
       if (!hasIdeColor(ide.ide)) {
         fallbackIndex += 1;
       }
-      return color;
-    }),
-    ...(hasCliActivity ? [ideColors['copilot_cli']] : []),
-  ];
-
-  const totalInteractions = dataValues.reduce((sum, v) => sum + v, 0);
-
-  const chartData = {
-    labels,
-    datasets: [
-      createDoughnutDataset(dataValues, backgroundColors),
-    ],
-  };
-
-  const options = createDoughnutChartOptions({
-    tooltipLabelCallback: (context: TooltipItem<'doughnut'>) => {
-      const value = context.parsed;
-      const percentage = totalInteractions > 0
-        ? ((value / totalInteractions) * 100).toFixed(1)
-        : '0.0';
-      return `${context.label}: ${value.toLocaleString()} interactions (${percentage}%)`;
-    },
-  });
+      return { label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color };
+    });
+    if (cliInteractionCount > 0) {
+      clients.push({ label: 'Copilot CLI', value: cliInteractionCount, color: ideColors['copilot_cli'] });
+    }
+    return clients;
+  }, [dayMetrics.totals_by_ide, cliInteractionCount]);
 
   return (
     <ChartContainer
       title="Clients"
       description="Share of recorded and assumed interactions across clients on this day."
-      chartHeight="h-64"
+      chartHeight="h-auto"
       className="h-full"
-      isEmpty={!hasData}
+      isEmpty={!hasCompositionData(entries)}
       emptyState="No client activity recorded"
     >
-      <Doughnut data={chartData} options={options} />
+      <CompositionChart
+        variant="doughnut"
+        entries={entries}
+        unit="interactions"
+        label="Interactions by client"
+        legendPlacement="right"
+      />
     </ChartContainer>
   );
 }

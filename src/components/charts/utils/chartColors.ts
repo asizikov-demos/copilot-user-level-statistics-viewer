@@ -1,84 +1,58 @@
 /**
- * Centralized color palette for Chart.js charts.
- * Provides consistent colors across all chart components.
+ * Centralized color palette for Chart.js charts, backed by Primer data-visualization tokens.
+ * Values are resolved from CSS custom properties on access (see `chartTheme.ts`), with a static
+ * light-theme fallback for prerendering and tests.
  */
 import { getIDEMetadata, IDE_METADATA_BY_KEY } from '../../../utils/ideMetadata';
+import { readChartToken, toRgbColor, withAlpha, type ChartThemeToken } from './chartTheme';
+
+export interface ChartColor {
+  /** Opaque emphasis color for lines, borders and bars */
+  readonly solid: string;
+  /** Emphasis color at 10% opacity, for area fills */
+  readonly alpha: string;
+  /** Emphasis color at 60% opacity, for translucent bars */
+  readonly alpha60: string;
+  /** Opaque muted tint of the same hue */
+  readonly muted: string;
+}
+
+function createTokenColor(emphasis: ChartThemeToken, muted: ChartThemeToken): ChartColor {
+  return {
+    get solid() {
+      return toRgbColor(readChartToken(emphasis));
+    },
+    get alpha() {
+      return withAlpha(readChartToken(emphasis), 0.1);
+    },
+    get alpha60() {
+      return withAlpha(readChartToken(emphasis), 0.6);
+    },
+    get muted() {
+      return toRgbColor(readChartToken(muted));
+    },
+  };
+}
 
 /**
- * Base chart colors with solid and alpha variants
+ * Base chart colors. Names are kept from the pre-Primer palette; each maps to a Primer data-viz hue.
  */
 export const chartColors = {
-  red: {
-    solid: 'rgb(239, 68, 68)',
-    alpha: 'rgba(239, 68, 68, 0.1)',
-    alpha60: 'rgba(239, 68, 68, 0.6)',
-  },
-  green: {
-    solid: 'rgb(34, 197, 94)',
-    alpha: 'rgba(34, 197, 94, 0.1)',
-    alpha60: 'rgba(34, 197, 94, 0.6)',
-  },
-  blue: {
-    solid: 'rgb(59, 130, 246)',
-    alpha: 'rgba(59, 130, 246, 0.1)',
-    alpha60: 'rgba(59, 130, 246, 0.6)',
-  },
-  purple: {
-    solid: 'rgb(147, 51, 234)',
-    alpha: 'rgba(147, 51, 234, 0.1)',
-    alpha60: 'rgba(147, 51, 234, 0.6)',
-  },
-  amber: {
-    solid: 'rgb(245, 158, 11)',
-    alpha: 'rgba(245, 158, 11, 0.1)',
-    alpha60: 'rgba(245, 158, 11, 0.6)',
-  },
-  teal: {
-    solid: 'rgb(20, 184, 166)',
-    alpha: 'rgba(20, 184, 166, 0.1)',
-    alpha60: 'rgba(20, 184, 166, 0.6)',
-  },
-  indigo: {
-    solid: 'rgb(99, 102, 241)',
-    alpha: 'rgba(99, 102, 241, 0.1)',
-    alpha60: 'rgba(99, 102, 241, 0.6)',
-  },
-  pink: {
-    solid: 'rgb(236, 72, 153)',
-    alpha: 'rgba(236, 72, 153, 0.1)',
-    alpha60: 'rgba(236, 72, 153, 0.6)',
-  },
-  gray: {
-    solid: 'rgb(156, 163, 175)',
-    alpha: 'rgba(156, 163, 175, 0.1)',
-    alpha60: 'rgba(156, 163, 175, 0.6)',
-  },
-  violet: {
-    solid: 'rgb(168, 85, 247)',
-    alpha: 'rgba(168, 85, 247, 0.1)',
-    alpha60: 'rgba(168, 85, 247, 0.6)',
-  },
-  cyan: {
-    solid: 'rgb(6, 182, 212)',
-    alpha: 'rgba(6, 182, 212, 0.1)',
-    alpha60: 'rgba(6, 182, 212, 0.6)',
-  },
-  rose: {
-    solid: 'rgb(244, 63, 94)',
-    alpha: 'rgba(244, 63, 94, 0.1)',
-    alpha60: 'rgba(244, 63, 94, 0.6)',
-  },
-  orange: {
-    solid: 'rgb(249, 115, 22)',
-    alpha: 'rgba(249, 115, 22, 0.1)',
-    alpha60: 'rgba(249, 115, 22, 0.6)',
-  },
-  black: {
-    solid: 'rgb(23, 23, 23)',
-    alpha: 'rgba(23, 23, 23, 0.1)',
-    alpha60: 'rgba(23, 23, 23, 0.6)',
-  },
-} as const;
+  red: createTokenColor('data-red-color-emphasis', 'data-red-color-muted'),
+  green: createTokenColor('data-green-color-emphasis', 'data-green-color-muted'),
+  blue: createTokenColor('data-blue-color-emphasis', 'data-blue-color-muted'),
+  purple: createTokenColor('data-purple-color-emphasis', 'data-purple-color-muted'),
+  amber: createTokenColor('data-yellow-color-emphasis', 'data-yellow-color-muted'),
+  teal: createTokenColor('data-teal-color-emphasis', 'data-teal-color-muted'),
+  indigo: createTokenColor('data-plum-color-emphasis', 'data-plum-color-muted'),
+  pink: createTokenColor('data-pink-color-emphasis', 'data-pink-color-muted'),
+  gray: createTokenColor('data-gray-color-emphasis', 'data-gray-color-muted'),
+  violet: createTokenColor('display-indigo-scale-5', 'display-indigo-scale-0'),
+  cyan: createTokenColor('display-cyan-scale-3', 'display-cyan-scale-0'),
+  rose: createTokenColor('data-coral-color-emphasis', 'data-coral-color-muted'),
+  orange: createTokenColor('data-orange-color-emphasis', 'data-orange-color-muted'),
+  black: createTokenColor('fgColor-default', 'bgColor-muted'),
+} as const satisfies Record<string, ChartColor>;
 
 /**
  * Feature-specific colors for consistent representation
@@ -140,14 +114,6 @@ export const ideColors: Record<string, string> = Object.entries(IDE_METADATA_BY_
 );
 
 /**
- * Fallback colors used sequentially for IDEs not present in `ideColors`.
- */
-export const ideFallbackColors: readonly string[] = [
-  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-  '#F97316', '#06B6D4', '#84CC16', '#EC4899', '#14B8A6',
-];
-
-/**
  * Check whether the given IDE key has a configured brand color.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains')
  */
@@ -156,34 +122,44 @@ export function hasIdeColor(ideKey: string): boolean {
 }
 
 /**
- * Get a color for the given IDE key, falling back to an indexed palette for unknown IDEs.
+ * Get a color for the given IDE key, falling back to the categorical palette for unknown IDEs.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains')
- * @param fallbackIndex - Index into `ideFallbackColors` for unknown IDEs (wraps around)
+ * @param fallbackIndex - Index into the categorical palette for unknown IDEs (wraps around)
  */
 export function getIdeColor(ideKey: string, fallbackIndex: number): string {
-  return getIDEMetadata(ideKey)?.color ?? ideFallbackColors[fallbackIndex % ideFallbackColors.length];
+  return getIDEMetadata(ideKey)?.color ?? getSequentialColor(fallbackIndex);
 }
 
 /**
- * Default color sequence for datasets with dynamic/unknown categories
+ * Categorical palette for datasets with dynamic/unknown categories. Gray is excluded so it stays
+ * available for "other" and "unknown" series.
  */
-export const defaultColorSequence = [
-  chartColors.blue.solid,
-  chartColors.green.solid,
-  chartColors.amber.solid,
-  chartColors.red.solid,
-  chartColors.purple.solid,
-  chartColors.teal.solid,
-  chartColors.indigo.solid,
-  chartColors.pink.solid,
-] as const;
+export const categoricalColors: readonly ChartColor[] = [
+  chartColors.blue,
+  chartColors.green,
+  chartColors.amber,
+  chartColors.red,
+  chartColors.purple,
+  chartColors.teal,
+  chartColors.indigo,
+  chartColors.pink,
+  chartColors.orange,
+  createTokenColor('data-pine-color-emphasis', 'data-pine-color-muted'),
+  chartColors.rose,
+  createTokenColor('data-lime-color-emphasis', 'data-lime-color-muted'),
+  createTokenColor('data-auburn-color-emphasis', 'data-auburn-color-muted'),
+  createTokenColor('data-olive-color-emphasis', 'data-olive-color-muted'),
+  createTokenColor('data-brown-color-emphasis', 'data-brown-color-muted'),
+  createTokenColor('data-lemon-color-emphasis', 'data-lemon-color-muted'),
+];
 
 /**
- * Get a color from the sequence by index (wraps around)
+ * Get a solid color from the categorical palette by index (wraps around)
  * @param index - Index in the color sequence
  */
 export function getSequentialColor(index: number): string {
-  return defaultColorSequence[index % defaultColorSequence.length];
+  const length = categoricalColors.length;
+  return categoricalColors[((index % length) + length) % length].solid;
 }
 
 /**
@@ -255,10 +231,10 @@ export function generateHslColor(
 }
 
 /**
- * Convert RGB to RGBA with specified alpha
- * @param rgb - RGB color string (e.g., 'rgb(34, 197, 94)')
+ * Convert an RGB or hex color to RGBA with the specified alpha
+ * @param rgb - Color string (e.g., 'rgb(34, 197, 94)' or '#22c55e')
  * @param alpha - Alpha value (0-1)
  */
 export function rgbToRgba(rgb: string, alpha: number): string {
-  return rgb.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+  return withAlpha(rgb, alpha);
 }
