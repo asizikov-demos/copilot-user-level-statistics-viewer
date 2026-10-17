@@ -1,33 +1,14 @@
 # Product
 
-## Register
-
-product
-
-## Users
-
-Engineering leaders and GitHub Copilot administrators reviewing organization-level usage exports in a focused analytics workflow. They need to understand adoption, compare how Copilot surfaces are used, identify meaningful patterns, and decide where enablement or deeper investigation is warranted.
-
-## Product Purpose
-
-Provide a private, client-side workspace for turning GitHub Copilot user-level metrics exports into trustworthy, actionable analysis. Success means users can move from a broad organizational signal to the relevant feature, client, language, model, or user detail without mistaking activity metrics for proven causal outcomes.
-
-## Brand Personality
-
-Analytical, trustworthy, decision-oriented. The product should communicate evidence clearly, explain metric limitations, and help users reach a defensible interpretation without overstating certainty.
-
-## Anti-references
-
-Avoid dense BI-style dashboards dominated by filters, controls, and undifferentiated charts. Avoid decorative analytics, unexplained composite scores, and visual hierarchy that makes every metric appear equally important.
+A private, client-side analytics workspace for engineering leaders and GitHub Copilot administrators reviewing user-level metrics exports. Help them understand adoption, compare Copilot usage, and identify opportunities for enablement or deeper investigation.
 
 ## Design Principles
 
-- Lead with the decision the evidence can support, then make the underlying measures inspectable.
-- Distinguish observed activity from interpretation and avoid implying causation.
-- Prefer a focused analytical narrative over a wall of interchangeable charts.
-- Preserve context while moving from organization-level patterns to detailed evidence.
-- Keep sensitive metrics local and make the client-side data boundary clear.
+- Lead with decisions the evidence supports; make underlying measures and limitations inspectable. Distinguish activity from interpretation without implying causation or overstating certainty.
+- Prefer focused analysis over chart walls or filter-heavy dashboards. Avoid decorative analytics and unexplained composite scores; give metrics a clear hierarchy.
+- Preserve context when drilling from organizational patterns into feature, client, language, model, or user detail.
+- Keep sensitive metrics local and clearly communicate that boundary.
 
 ## Accessibility & Inclusion
 
-Match the existing application accessibility baseline and component behavior. Continue to use text labels alongside color, preserve keyboard-accessible controls, and follow the existing responsive and reduced-motion conventions where present.
+Pair color with text labels, keep controls keyboard-accessible, and preserve existing component, responsive, and reduced-motion behavior.
