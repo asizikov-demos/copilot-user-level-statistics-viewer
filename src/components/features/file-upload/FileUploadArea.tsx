@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { Banner, Button, Spinner } from '@primer/react';
+import { Banner, Button, ProgressBar, Spinner } from '@primer/react';
 import { FileIcon } from '@primer/octicons-react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
@@ -28,6 +28,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isLoading) return;
     if (e.type === 'dragenter' || e.type === 'dragover') {
       setIsDragActive(true);
     } else if (e.type === 'dragleave') {
@@ -39,6 +40,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
+    if (isLoading) return;
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
@@ -55,6 +57,11 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
     }
   };
 
+  const showDeterminate = !!uploadProgress && uploadProgress.totalFiles > 1;
+  const progressPercent = uploadProgress
+    ? Math.round(((uploadProgress.currentFile - 1) / uploadProgress.totalFiles) * 100)
+    : 0;
+
   return (
     <div className="max-w-2xl mx-auto space-y-4 py-8">
       <div className="text-center mb-6">
@@ -68,20 +75,30 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
         </div>
         <div className="p-5 space-y-4">
           <div
-            className={`border-2 border-dashed rounded-md p-8 text-center transition-colors cursor-pointer ${
-              isDragActive
+            className={`border-2 border-dashed rounded-md p-8 text-center transition-colors ${
+              isLoading
+                ? 'border-default opacity-50 cursor-not-allowed'
+                : 'cursor-pointer'
+            } ${
+              isLoading
+                ? ''
+                : isDragActive
                 ? 'border-accent-emphasis bg-accent-muted'
                 : 'border-default hover:border-accent-emphasis hover:bg-muted'
             }`}
             role="button"
-            tabIndex={0}
+            tabIndex={isLoading ? -1 : 0}
+            aria-disabled={isLoading}
             aria-label="Upload metrics files by dragging and dropping or browsing your device"
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (!isLoading) fileInputRef.current?.click();
+            }}
             onKeyDown={(e) => {
+              if (isLoading) return;
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 fileInputRef.current?.click();
@@ -97,6 +114,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
               accept=".ndjson,.json"
               multiple
               onChange={onFileUpload}
+              disabled={isLoading}
               className="hidden"
               id="file-upload"
             />
@@ -119,25 +137,35 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             </Button>
           </div>
 
-          {isLoading && (
-            <div role="status" className="flex flex-col items-center gap-2 py-2">
-              <div className="flex items-center gap-2 text-sm text-muted">
-                <Spinner size="small" srText={null} />
-                <span>
-                  {uploadProgress && uploadProgress.totalFiles > 1
-                    ? `Processing file ${uploadProgress.currentFile} of ${uploadProgress.totalFiles}\u2026`
-                    : 'Processing file\u2026'}
-                </span>
+          <div role="status">
+            {isLoading && (
+              <div className="flex flex-col items-center gap-2 py-2">
+                <div className="flex items-center gap-2 text-sm text-muted">
+                  <Spinner size="small" srText={null} />
+                  <span>
+                    {uploadProgress && uploadProgress.totalFiles > 1
+                      ? `Processing file ${uploadProgress.currentFile} of ${uploadProgress.totalFiles}\u2026`
+                      : 'Processing file\u2026'}
+                  </span>
+                </div>
+                {showDeterminate && (
+                  <div className="w-full max-w-sm">
+                    <ProgressBar
+                      progress={progressPercent}
+                      aria-label={`Upload progress: ${progressPercent}% of files processed`}
+                    />
+                  </div>
+                )}
+                {uploadProgress && (
+                  <p className="text-xs text-muted">
+                    <span className="font-medium text-default">{uploadProgress.fileName}</span>
+                    <span className="mx-1.5 text-[var(--borderColor-default)]">·</span>
+                    <span>{uploadProgress.recordsProcessed.toLocaleString()} records processed</span>
+                  </p>
+                )}
               </div>
-              {uploadProgress && (
-                <p className="text-xs text-muted">
-                  <span className="font-medium text-default">{uploadProgress.fileName}</span>
-                  <span className="mx-1.5 text-[var(--borderColor-default)]">·</span>
-                  <span>{uploadProgress.recordsProcessed.toLocaleString()} records processed</span>
-                </p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           {error && (
             <Banner variant="critical" layout="compact" title="Upload failed" hideTitle description={error} />
