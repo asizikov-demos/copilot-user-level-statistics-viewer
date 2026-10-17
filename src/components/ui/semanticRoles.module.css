@@ -1,6 +1,6 @@
 /*
  * Exposes Primer semantic role colors as --role-* custom properties.
- * Pair the .role class with a data-role attribute (see colorSchemes.ts).
+ * Pair the .role class with a data-role attribute (see semanticRoles.ts).
  */
 .role {
   --role-fgColor: var(--fgColor-default);

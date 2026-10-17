@@ -2,7 +2,7 @@ import React from 'react';
 import { Heading } from '@primer/react';
 import { LightBulbIcon } from '@primer/octicons-react';
 import { cn } from '../../utils/cn';
-import { resolveAccentRole, type AccentColor } from './colorSchemes';
+import { resolveAccentRole, type AccentColor } from './semanticRoles';
 import roleStyles from './semanticRoles.module.css';
 import styles from './InsightsCard.module.css';
 
