@@ -358,6 +358,12 @@ html .app-base-styles a:not([class*="prc-"]):not([class*="PRC-"]):not([class*="P
   z-index: 60;
 }
 
+@media print {
+  #__primerPortalRoot__ {
+    display: none;
+  }
+}
+
 /* Remove browser print headers/footers */
 @page {
   margin: 0.5in;
