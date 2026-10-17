@@ -12,6 +12,25 @@ interface ActivityCalendarProps {
   onDayClick: (date: string, dayData?: UserDayData) => void;
 }
 
+const ACTIVITY_HOVER_CLASS = 'hover:ring-2 hover:ring-inset hover:ring-[var(--borderColor-emphasis)]';
+
+/** Primer contribution graph tokens for activity levels 0-4. */
+const ACTIVITY_LEVEL_CLASSES: readonly string[] = [
+  `bg-[var(--contribution-default-bgColor-0)] ${ACTIVITY_HOVER_CLASS}`,
+  `bg-[var(--contribution-default-bgColor-1)] ${ACTIVITY_HOVER_CLASS}`,
+  `bg-[var(--contribution-default-bgColor-2)] ${ACTIVITY_HOVER_CLASS}`,
+  `bg-[var(--contribution-default-bgColor-3)] ${ACTIVITY_HOVER_CLASS}`,
+  `bg-[var(--contribution-default-bgColor-4)] text-[var(--fgColor-onEmphasis)] ${ACTIVITY_HOVER_CLASS}`,
+];
+
+const ACTIVITY_LEGEND_CLASSES: readonly string[] = [
+  'bg-[var(--contribution-default-bgColor-0)] border-[var(--contribution-default-borderColor-0)]',
+  'bg-[var(--contribution-default-bgColor-1)] border-[var(--contribution-default-borderColor-1)]',
+  'bg-[var(--contribution-default-bgColor-2)] border-[var(--contribution-default-borderColor-2)]',
+  'bg-[var(--contribution-default-bgColor-3)] border-[var(--contribution-default-borderColor-3)]',
+  'bg-[var(--contribution-default-bgColor-4)] border-[var(--contribution-default-borderColor-4)]',
+];
+
 export default function ActivityCalendar({ days, reportStartDay, reportEndDay, title = 'Activity Calendar', activeDaysCount, onDayClick }: ActivityCalendarProps) {
   const startDate = new Date(reportStartDay);
   const endDate = new Date(reportEndDay);
@@ -119,16 +138,8 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
     return Math.min(4, Math.max(1, Math.ceil(ratio * 4)));
   };
 
-  const getActivityColor = (level: number) => {
-    switch (level) {
-      case 0: return 'bg-green-100 hover:bg-green-200';
-      case 1: return 'bg-green-200 hover:bg-green-300';
-      case 2: return 'bg-green-400 hover:bg-green-500';
-      case 3: return 'bg-green-600 hover:bg-green-700';
-      case 4: return 'bg-green-800 hover:bg-green-900';
-      default: return 'bg-green-100 hover:bg-green-200';
-    }
-  };
+  const getActivityColor = (level: number) =>
+    ACTIVITY_LEVEL_CLASSES[level] ?? ACTIVITY_LEVEL_CLASSES[0];
 
   const handleDayClick = (date: Date) => {
     if (date.getTime() === 0) return; // Don't handle placeholder dates
@@ -207,11 +218,9 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
         <div className="flex items-center justify-end space-x-1 text-xs text-muted mt-2">
           <span>Less activity</span>
           <div className="flex space-x-1 mx-2">
-            <div className="w-3 h-3 bg-green-100 rounded-sm border border-green-200"></div>
-            <div className="w-3 h-3 bg-green-200 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-600 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-800 rounded-sm"></div>
+            {ACTIVITY_LEGEND_CLASSES.map((legendClass, level) => (
+              <div key={level} className={`w-3 h-3 rounded-sm border ${legendClass}`}></div>
+            ))}
           </div>
           <span>More activity</span>
         </div>
