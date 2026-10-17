@@ -17,9 +17,9 @@ function LocImpact({
 }) {
   return (
     <>
-      <span className="text-green-600">+{locAdded.toLocaleString()}</span>
+      <span className="text-green-600" data-tone="positive">+{locAdded.toLocaleString()}</span>
       <span className="text-disabled"> / </span>
-      <span className="text-red-600">-{locDeleted.toLocaleString()}</span>
+      <span className="text-red-600" data-tone="negative">-{locDeleted.toLocaleString()}</span>
     </>
   );
 }
