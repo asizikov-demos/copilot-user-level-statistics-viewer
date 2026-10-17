@@ -60,7 +60,6 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     const sortedModels = sortBySelector(filteredEntries, e => e.total, 'desc');
     const modelOrder = sortedModels.map(e => e.model);
 
-    const UNKNOWN_COLOR = 'hsl(0, 70%, 50%)';
     const modelsWithoutUnknown = modelOrder.filter(m => m !== 'unknown');
     const modelIndexMap = new Map(modelsWithoutUnknown.map((m, i) => [m, i]));
 
@@ -73,16 +72,9 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
         return getSequentialColor(adjustedIndex + 7);
       }
       if (model === 'unknown') {
-        return UNKNOWN_COLOR;
+        return chartColors.gray.solid;
       }
-      const adjustedIndex = modelIndexMap.get(model) ?? 0;
-      const startHue = 30;
-      const hueStep = 55;
-      const hue = (startHue + adjustedIndex * hueStep) % 360;
-      if (hue >= 350 || hue <= 10) {
-        return `hsl(${(hue + 50) % 360}, 70%, 55%)`;
-      }
-      return `hsl(${hue}, 70%, 55%)`;
+      return getSequentialColor(modelIndexMap.get(model) ?? 0);
     };
 
     const datasets = sortedModels.map((entry) => {

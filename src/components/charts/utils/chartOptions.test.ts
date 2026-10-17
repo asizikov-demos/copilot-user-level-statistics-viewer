@@ -2,8 +2,10 @@ import type { TooltipItem } from 'chart.js';
 import { describe, expect, it } from 'vitest';
 import {
   createBaseChartOptions,
+  createDoughnutChartOptions,
   createDualAxisChartOptions,
   createHorizontalBarChartOptions,
+  createRadarChartOptions,
   createStackedBarChartOptions,
 } from './chartOptions';
 
@@ -76,5 +78,62 @@ describe('createDualAxisChartOptions', () => {
       min: 0,
       max: 100,
     });
+  });
+});
+
+describe('grid colors', () => {
+  it('uses the Primer muted border token for both axes', () => {
+    const options = createBaseChartOptions({ showGridX: true });
+
+    expect(options.scales.x.grid.color).toBe('rgba(209, 217, 224, 0.7)');
+    expect(options.scales.y.grid.color).toBe('rgba(209, 217, 224, 0.7)');
+  });
+});
+
+describe('tooltip interaction axis', () => {
+  it('hit-tests along the index axis so horizontal bars match the hovered category', () => {
+    expect(createBaseChartOptions().interaction.axis).toBe('x');
+    expect(createHorizontalBarChartOptions().interaction.axis).toBe('y');
+  });
+});
+
+describe('createRadarChartOptions', () => {
+  it('themes the radial grid and point labels with Primer tokens', () => {
+    const label = (item: TooltipItem<'radar'>) => `${item.parsed.r} interactions`;
+    const options = createRadarChartOptions({ tooltipLabelCallback: label });
+
+    expect(options.plugins.legend.display).toBe(false);
+    expect(options.plugins.tooltip.callbacks.label).toBe(label);
+    expect(options.scales.r).toMatchObject({
+      beginAtZero: true,
+      grid: { color: 'rgba(209, 217, 224, 0.7)' },
+      angleLines: { color: 'rgba(209, 217, 224, 0.7)' },
+      pointLabels: { color: 'rgb(89, 99, 110)', font: { size: 13, weight: 'bold' } },
+    });
+  });
+});
+
+describe('createDoughnutChartOptions', () => {
+  it('defaults to a doughnut with a right-hand canvas legend', () => {
+    const options = createDoughnutChartOptions();
+
+    expect(options.cutout).toBe('55%');
+    expect(options.plugins.legend).toEqual({ display: true, position: 'right' });
+    expect(options.plugins.tooltip.callbacks).toEqual({});
+  });
+
+  it('draws a pie without a canvas legend when configured', () => {
+    const title = (items: TooltipItem<'doughnut'>[]) => items[0]?.label ?? '';
+    const label = (item: TooltipItem<'doughnut'>) => `${item.parsed} interactions`;
+    const options = createDoughnutChartOptions({
+      cutout: 0,
+      showLegend: false,
+      tooltipTitleCallback: title,
+      tooltipLabelCallback: label,
+    });
+
+    expect(options.cutout).toBe(0);
+    expect(options.plugins.legend.display).toBe(false);
+    expect(options.plugins.tooltip.callbacks).toEqual({ title, label });
   });
 });

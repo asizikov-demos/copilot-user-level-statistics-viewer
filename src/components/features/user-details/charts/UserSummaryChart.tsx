@@ -1,13 +1,10 @@
 'use client';
 
-import { Pie } from 'react-chartjs-2';
-import { ChartData, ChartOptions } from 'chart.js';
-import { registerChartJS } from '../../../charts/utils/chartSetup';
+import CompositionChart from '../../../charts/CompositionChart';
+import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
 import ChartContainer from '../../../ui/ChartContainer';
 import { Label } from '@primer/react';
 import { FEATURE_LABEL_VARIANT } from '../../../ui/featureLabels';
-
-registerChartJS();
 
 interface UserSummaryChartProps {
   usedChat: boolean;
@@ -16,15 +13,33 @@ interface UserSummaryChartProps {
   usedCodingAgent: boolean;
   usedCodeReview: boolean;
   usedAutoMode: boolean;
-  ideChartData?: ChartData<'pie'>;
-  languageChartData?: ChartData<'pie'>;
-  modelChartData?: ChartData<'pie'>;
-  chartOptions?: ChartOptions<'pie'>;
+  ideDistribution?: CompositionEntry[];
+  languageDistribution?: CompositionEntry[];
+  modelDistribution?: CompositionEntry[];
+}
+
+interface CompositionTileProps {
+  title: string;
+  entries?: CompositionEntry[];
+  unit: string;
+  /** Accessible name for the tile's breakdown list */
+  label: string;
+}
+
+function CompositionTile({ title, entries, unit, label }: CompositionTileProps) {
+  if (!entries || !hasCompositionData(entries)) return null;
+
+  return (
+    <div className="bg-muted rounded-lg p-4">
+      <h4 className="text-sm font-medium text-default mb-3 text-center">{title}</h4>
+      <CompositionChart variant="pie" entries={entries} unit={unit} label={label} surface="muted" />
+    </div>
+  );
 }
 
 /**
  * Displays a summary of a user's usage across features, IDEs, languages, and models.
- * Expects pre-built Chart.js data objects for each pie chart. Each chart is optional.
+ * Each distribution renders as an optional pie chart with a legend of values and shares.
  */
 export default function UserSummaryChart({
   usedChat,
@@ -33,13 +48,12 @@ export default function UserSummaryChart({
   usedCodingAgent,
   usedCodeReview,
   usedAutoMode,
-  ideChartData,
-  languageChartData,
-  modelChartData,
-  chartOptions
+  ideDistribution,
+  languageDistribution,
+  modelDistribution,
 }: UserSummaryChartProps) {
   return (
-    <ChartContainer title="Summary">
+    <ChartContainer title="Summary" chartHeight="h-auto">
       {/* Features Used */}
       <div className="mb-6">
         <h4 className="text-md font-medium text-default mb-3">Features Used</h4>
@@ -58,35 +72,24 @@ export default function UserSummaryChart({
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* IDEs Chart */}
-        {ideChartData && ideChartData.labels && ideChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Client Interactions</h4>
-            <div className="h-48">
-              <Pie data={ideChartData} options={chartOptions} />
-            </div>
-          </div>
-        )}
-
-        {/* Languages Chart */}
-        {languageChartData && languageChartData.labels && languageChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Languages (Generations)</h4>
-            <div className="h-48">
-              <Pie data={languageChartData} options={chartOptions} />
-            </div>
-          </div>
-        )}
-
-        {/* Models Chart */}
-        {modelChartData && modelChartData.labels && modelChartData.labels.length > 0 && (
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-3 text-center">Models (Interactions)</h4>
-            <div className="h-48">
-              <Pie data={modelChartData} options={chartOptions} />
-            </div>
-          </div>
-        )}
+        <CompositionTile
+          title="Client Interactions"
+          entries={ideDistribution}
+          unit="interactions"
+          label="Interactions by client"
+        />
+        <CompositionTile
+          title="Languages (Generations)"
+          entries={languageDistribution}
+          unit="generations"
+          label="Generations by language"
+        />
+        <CompositionTile
+          title="Models (Interactions)"
+          entries={modelDistribution}
+          unit="interactions"
+          label="Interactions by model"
+        />
       </div>
     </ChartContainer>
   );

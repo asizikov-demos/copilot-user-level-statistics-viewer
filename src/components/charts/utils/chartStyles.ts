@@ -1,6 +1,7 @@
 'use client';
 
 import type { ChartDataset } from 'chart.js';
+import { readChartToken, toRgbColor, withAlpha } from './chartTheme';
 
 type LineDataset = Omit<ChartDataset<'line', (number | null)[]>, 'tooltip'>;
 
@@ -39,7 +40,7 @@ export const barDatasetDefaults = {
 
 /**
  * Creates a line dataset with consistent styling
- * @param color - RGB color string (e.g., 'rgb(34, 197, 94)')
+ * @param color - RGB or hex color string (e.g., `chartColors.green.solid`)
  * @param label - Dataset label
  * @param data - Array of data points
  * @param options - Additional options to override defaults
@@ -50,8 +51,8 @@ export function createLineDataset(
   data: (number | null)[],
   options: Partial<LineDataset> = {}
 ): LineDataset {
-  const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.1)');
-  
+  const alphaColor = withAlpha(color, 0.1);
+
   return {
     ...lineDatasetDefaults,
     label,
@@ -65,7 +66,7 @@ export function createLineDataset(
 
 /**
  * Creates a filled area line dataset with consistent styling
- * @param color - RGB color string (e.g., 'rgb(59, 130, 246)')
+ * @param color - RGB or hex color string (e.g., `chartColors.blue.solid`)
  * @param label - Dataset label
  * @param data - Array of data points
  * @param options - Additional options to override defaults
@@ -107,15 +108,15 @@ export function createBarDataset<T extends number | null>(
  */
 export const radarDatasetDefaults = {
   borderWidth: 2,
-  pointBorderColor: '#fff',
   pointBorderWidth: 2,
   pointRadius: 5,
 };
 
 /**
  * Creates a radar chart dataset with consistent styling.
- * Background fill is derived from the border color at 0.2 opacity.
- * @param color - RGB color string (e.g., 'rgb(99, 102, 241)')
+ * Background fill is derived from the border color at 0.2 opacity; points are outlined
+ * with the Primer default background color.
+ * @param color - RGB or hex color string (e.g., `chartColors.indigo.solid`)
  * @param label - Dataset label
  * @param data - Array of data points
  * @param options - Additional options to override defaults
@@ -126,14 +127,14 @@ export function createRadarDataset(
   data: number[],
   options: Record<string, unknown> = {}
 ) {
-  const alphaColor = color.replace('rgb', 'rgba').replace(')', ', 0.2)');
   return {
     ...radarDatasetDefaults,
     label,
     data,
-    backgroundColor: alphaColor,
+    backgroundColor: withAlpha(color, 0.2),
     borderColor: color,
     pointBackgroundColor: color,
+    pointBorderColor: toRgbColor(readChartToken('bgColor-default')),
     ...options,
   };
 }
@@ -143,11 +144,11 @@ export function createRadarDataset(
  */
 export const doughnutDatasetDefaults = {
   borderWidth: 1,
-  borderColor: '#ffffff',
 };
 
 /**
- * Creates a doughnut (or pie) chart dataset with consistent styling.
+ * Creates a doughnut (or pie) chart dataset with consistent styling. Segments are separated
+ * with the Primer default background color; pass `borderColor` to match another surface.
  * @param dataValues - Array of numeric values for each segment
  * @param backgroundColors - Array of colors for each segment (one per data value)
  * @param options - Additional options to override defaults
@@ -159,6 +160,7 @@ export function createDoughnutDataset(
 ) {
   return {
     ...doughnutDatasetDefaults,
+    borderColor: toRgbColor(readChartToken('bgColor-default')),
     data: dataValues,
     backgroundColor: backgroundColors,
     ...options,
