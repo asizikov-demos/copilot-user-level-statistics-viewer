@@ -110,7 +110,7 @@ export default function ModeImpactChart({
       ]}
       footer={
         <div className="space-y-4">
-          <div className="text-xs text-gray-500 print:text-[10px] print:text-gray-700">
+          <div className="text-xs text-muted print:text-[10px] print:text-muted">
             Average daily users: {averageDailyUsers}
           </div>
           {footer}

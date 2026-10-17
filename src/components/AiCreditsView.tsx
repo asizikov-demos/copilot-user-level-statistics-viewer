@@ -57,9 +57,9 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       }));
   }, [totalAiCreditsUsed, userSummaries]);
 
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
+  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const columns: TableColumn<TopAiCreditsUser>[] = [
     {
@@ -111,7 +111,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       renderCell: (user) => (
         <span className="whitespace-nowrap tabular-nums">
           <span className="text-green-600">+{user.total_loc_added.toLocaleString()}</span>
-          <span className="text-gray-400">/</span>
+          <span className="text-disabled">/</span>
           <span className="text-red-600">-{user.total_loc_deleted.toLocaleString()}</span>
         </span>
       ),
@@ -133,12 +133,12 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     {
       id: 'bucket',
       header: 'Segment',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]',
+      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[200px]',
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <div>
-          <div className="text-sm font-semibold text-gray-900">{bucket.label}</div>
-          <div className="text-xs text-gray-500">{bucket.description}</div>
+          <div className="text-sm font-semibold text-default">{bucket.label}</div>
+          <div className="text-xs text-muted">{bucket.description}</div>
         </div>
       ),
     },
@@ -178,7 +178,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       renderCell: (bucket) => (
         <span className="whitespace-nowrap tabular-nums">
           <span className="text-green-600">+{bucket.totalLocAdded.toLocaleString()}</span>
-          <span className="text-gray-400">/</span>
+          <span className="text-disabled">/</span>
           <span className="text-red-600">-{bucket.totalLocDeleted.toLocaleString()}</span>
         </span>
       ),
@@ -191,7 +191,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
       renderCell: (bucket) => (
         <span className="whitespace-nowrap tabular-nums">
           <span className="text-green-600">+{formatAverage(bucket.avgLocAdded)}</span>
-          <span className="text-gray-400">/</span>
+          <span className="text-disabled">/</span>
           <span className="text-red-600">-{formatAverage(bucket.avgLocDeleted)}</span>
         </span>
       ),
@@ -199,7 +199,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     {
       id: 'topModels',
       header: 'Top Models - interactions',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
+      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <TopEntriesList
@@ -212,7 +212,7 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
     {
       id: 'topClients',
       header: 'Top Clients - activity',
-      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[180px]',
+      headerClassName: 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider min-w-[180px]',
       className: 'px-6 py-4 align-top',
       renderCell: (bucket) => (
         <TopEntriesList
@@ -244,28 +244,28 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
           />
         </div>
       ) : (
-        <div id="ai-credits-daily-consumption" className="scroll-mt-28 rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+        <div id="ai-credits-daily-consumption" className="scroll-mt-28 rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
           No AI credit consumption was recorded during the reporting period.
         </div>
       )}
 
       <div id="ai-credits-top-users" className="space-y-3 scroll-mt-28">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Top 5 Users by AI Credits Consumption</h3>
-          <p className="text-sm text-gray-600">Users with the highest AI credit usage and their share of total credits consumed.</p>
+          <h3 className="text-base font-semibold text-default">Top 5 Users by AI Credits Consumption</h3>
+          <p className="text-sm text-muted">Users with the highest AI credit usage and their share of total credits consumed.</p>
         </div>
         {topUsers.length > 0 ? (
           <MetricsTable
             data={topUsers}
             columns={columns}
             getRowKey={(user) => user.user_id}
-            tableContainerClassName="overflow-x-auto border border-gray-200 rounded-lg"
-            tableClassName="min-w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            tbodyClassName="bg-white divide-y divide-gray-200"
+            tableContainerClassName="overflow-x-auto border border-default rounded-lg"
+            tableClassName="min-w-full divide-y divide-default"
+            theadClassName="bg-muted"
+            tbodyClassName="bg-default divide-y divide-default"
           />
         ) : (
-          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+          <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
             No AI credit consumption was recorded during the reporting period.
           </div>
         )}
@@ -273,21 +273,21 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
 
       <div id="ai-credits-usage-distribution" className="space-y-3 scroll-mt-28">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Usage Distribution</h3>
-          <p className="text-sm text-gray-600">Users segmented by AI credit consumption. Averages are calculated per user within each segment.</p>
+          <h3 className="text-base font-semibold text-default">Usage Distribution</h3>
+          <p className="text-sm text-muted">Users segmented by AI credit consumption. Averages are calculated per user within each segment.</p>
         </div>
         {hasDistributionData ? (
           <MetricsTable<UsageDistributionBucket>
             data={usageDistributionData}
             columns={distributionColumns}
             getRowKey={(bucket) => bucket.id}
-            tableContainerClassName="overflow-x-auto border border-gray-200 rounded-lg"
-            tableClassName="min-w-full divide-y divide-gray-200"
-            theadClassName="bg-gray-50"
-            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+            tableContainerClassName="overflow-x-auto border border-default rounded-lg"
+            tableClassName="min-w-full divide-y divide-default"
+            theadClassName="bg-muted"
+            rowClassName={(_, index) => `${index % 2 === 0 ? 'bg-default' : 'bg-muted'}`}
           />
         ) : (
-          <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-6 text-sm text-gray-600">
+          <div className="rounded-md border border-default bg-muted px-4 py-6 text-sm text-muted">
             No AI credit consumption was recorded during the reporting period.
           </div>
         )}

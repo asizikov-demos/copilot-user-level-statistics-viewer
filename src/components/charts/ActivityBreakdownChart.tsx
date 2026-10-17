@@ -76,32 +76,32 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
   const footer = (
     <DisclosureSection label={config.detailsLabel}>
       <div className="overflow-x-auto">
-        <table className="w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="w-full divide-y divide-default">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider">
                 {config.groupHeader}
               </th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider">Feature</th>
               {config.columns.map((col, idx) => (
-                <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th key={idx} className="px-4 py-2 text-right text-xs font-medium text-muted uppercase tracking-wider">
                   {col.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-default divide-y divide-default">
             {groupedAndSorted.sortedKeys.map(key => {
               const items = groupedAndSorted.grouped[key];
               const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
               const groupLabel = key === 'unknown' || key === '' ? config.unknownLabel : key;
               const GroupIcon = config.groupIcon?.(key);
               return items.map((item, idx) => (
-                <tr key={`${key}-${item.feature}`} className={idx === 0 ? 'border-t-2 border-gray-200' : undefined}>
+                <tr key={`${key}-${item.feature}`} className={idx === 0 ? 'border-t-2 border-default' : undefined}>
                   {idx === 0 && (
                     <td
                       rowSpan={items.length}
-                      className="px-4 py-2 align-top text-sm font-semibold text-gray-900 capitalize"
+                      className="px-4 py-2 align-top text-sm font-semibold text-default capitalize"
                     >
                       <div className="flex items-center gap-2">
                         {GroupIcon && (
@@ -111,18 +111,18 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
                         )}
                         <span>
                           {groupLabel}
-                          <span className="block text-xs font-normal text-gray-500">
+                          <span className="block text-xs font-normal text-muted">
                             {total.toLocaleString()} {config.totalLabel}
                           </span>
                         </span>
                       </div>
                     </td>
                   )}
-                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-default">
                     {translateFeature(item.feature)}
                   </td>
                   {config.columns.map((col, colIdx) => (
-                    <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-right">
+                    <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-default text-right">
                       {col.accessor(item).toLocaleString()}
                     </td>
                   ))}
@@ -139,8 +139,8 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
     <ChartContainer title={config.title} footer={footer}>
       {hasBarChart && (
         <div className="mb-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-800 mb-4 text-center">{config.chartSubtitle}</h4>
+          <div className="bg-muted rounded-lg p-4">
+            <h4 className="text-sm font-medium text-default mb-4 text-center">{config.chartSubtitle}</h4>
             <div className="h-64">
               <Bar data={barChartData} options={barChartOptions} />
             </div>

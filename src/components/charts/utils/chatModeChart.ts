@@ -53,7 +53,7 @@ export const chatModeChartModes: readonly ChatModeChartMode[] = [
     shortLabel: 'Edit',
     footerLabel: 'Edit Mode',
     color: chatModeColors.edit.solid,
-    colorClass: 'text-gray-900',
+    colorClass: 'text-default',
     userDatasetLabel: 'Chat: Edit Mode',
     requestDatasetLabel: 'Edit Mode Requests',
     getUsersValue: day => day.editModeUsers,

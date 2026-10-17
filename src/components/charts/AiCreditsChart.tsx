@@ -55,8 +55,8 @@ export default function AiCreditsChart({
 
   const creditUserDays = data.reduce((total, entry) => total + entry.users, 0);
   const footerGridClassName = showUsers
-    ? 'grid grid-cols-1 gap-4 text-xs text-gray-500 sm:grid-cols-3'
-    : 'grid grid-cols-1 gap-4 text-xs text-gray-500 sm:grid-cols-2';
+    ? 'grid grid-cols-1 gap-4 text-xs text-muted sm:grid-cols-3'
+    : 'grid grid-cols-1 gap-4 text-xs text-muted sm:grid-cols-2';
   const peakEntry = activeData.reduce<DailyAiCreditsData | undefined>(
     (peak, entry) => !peak || entry.aiCreditsUsed > peak.aiCreditsUsed ? entry : peak,
     undefined

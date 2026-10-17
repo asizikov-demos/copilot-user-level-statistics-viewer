@@ -51,7 +51,7 @@ const ContextPanel: React.FC = () => {
       className="fixed bottom-0 right-0 top-[100px] z-40 hidden w-64 overflow-y-auto py-3 pl-3 pr-4 print:hidden xl:block xl:pr-8"
       aria-label="On this page"
     >
-      <div className="bg-white border border-default rounded-md">
+      <div className="bg-default border border-default rounded-md">
         <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted">
           On this page
         </p>

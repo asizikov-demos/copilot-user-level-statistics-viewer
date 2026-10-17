@@ -139,12 +139,12 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
   };
 
   return (
-    <div className="bg-white rounded-md border border-default p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="bg-default rounded-md border border-default p-6">
+      <h3 className="text-lg font-semibold text-default mb-4">
         {title}
         <span className="ml-2">{monthLabel}</span>
         {activeDaysCount !== undefined && (
-          <span className="ml-2 text-sm font-normal text-gray-500">
+          <span className="ml-2 text-sm font-normal text-muted">
             · {activeDaysCount} active {activeDaysCount === 1 ? 'day' : 'days'}
           </span>
         )}
@@ -154,14 +154,14 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
         {/* Day headers */}
         <div className="grid grid-cols-7">
           {dayNames.map(day => (
-            <div key={day} className="text-xs font-medium text-gray-500 text-center p-1">
+            <div key={day} className="text-xs font-medium text-muted text-center p-1">
               {day}
             </div>
           ))}
         </div>
         
         {/* Calendar grid */}
-        <div className="border-l border-t border-gray-300">
+        <div className="border-l border-t border-default">
           {weeks.map((week, weekIndex) => (
             <div key={weekIndex} className="grid grid-cols-7">
               {week.map((date, dayIndex) => {
@@ -175,10 +175,10 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
                   <div
                     key={`${weekIndex}-${dayIndex}`}
                     className={`
-                      h-8 text-xs flex items-center justify-center border-r border-b border-gray-300
-                      ${isMonthStart ? 'border-l-4 border-l-gray-800 font-semibold' : ''}
+                      h-8 text-xs flex items-center justify-center border-r border-b border-default
+                      ${isMonthStart ? 'border-l-4 border-l-[var(--fgColor-default)] font-semibold' : ''}
                       ${isPlaceholder 
-                        ? 'bg-white' 
+                        ? 'bg-default' 
                         : hasData 
                           ? `${getActivityColor(activityLevel)} cursor-pointer transition-colors`
                           : `${getMonthTint(date)} cursor-default`
@@ -204,7 +204,7 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
         </div>
         
         {/* Legend */}
-        <div className="flex items-center justify-end space-x-1 text-xs text-gray-500 mt-2">
+        <div className="flex items-center justify-end space-x-1 text-xs text-muted mt-2">
           <span>Less activity</span>
           <div className="flex space-x-1 mx-2">
             <div className="w-3 h-3 bg-green-100 rounded-sm border border-green-200"></div>

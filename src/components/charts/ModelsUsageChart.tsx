@@ -145,14 +145,14 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       emptyState={emptyState}
       headerActions={!isAuto && !isCli ? (
         <div className="min-w-44">
-          <label htmlFor="models-usage-vendor-filter" className="block text-xs font-medium text-gray-700 mb-1">
+          <label htmlFor="models-usage-vendor-filter" className="block text-xs font-medium text-muted mb-1">
             Model vendor
           </label>
           <select
             id="models-usage-vendor-filter"
             value={activeVendor}
             onChange={event => setSelectedVendor(event.target.value as ModelVendorGroup | '')}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-md border border-default bg-default px-3 py-2 text-sm text-default focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">All Vendors</option>
             {vendorOptions.map(vendor => (
@@ -168,7 +168,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       chartHeight="h-96"
       footer={
         <>
-          <p className="text-xs text-gray-600 mb-4">
+          <p className="text-xs text-muted mb-4">
             {footerDescription}
           </p>
         </>

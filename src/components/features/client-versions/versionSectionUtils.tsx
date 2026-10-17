@@ -1,9 +1,9 @@
 import ExpandableInlineList from '../../ui/ExpandableInlineList';
 import { parseReportDayInclusiveEnd } from '../../../domain/vscodeVersionClassifier';
 
-export const tableHeaderClass = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-export const narrowCellClass = 'px-4 py-2 text-sm text-gray-900 whitespace-nowrap';
-export const usernameCellClass = 'px-4 py-2 text-sm text-gray-900';
+export const tableHeaderClass = 'px-4 py-2 text-left text-xs font-medium text-muted uppercase tracking-wider';
+export const narrowCellClass = 'px-4 py-2 text-sm text-default whitespace-nowrap';
+export const usernameCellClass = 'px-4 py-2 text-sm text-default';
 
 export type ClientVersionScope = 'jetbrains' | 'vscode';
 

@@ -51,9 +51,9 @@ export default function CompleteLanguagesBreakdownSection({
       id: 'language',
       header: 'Language',
       sortable: true,
-      className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900',
+      className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default',
       renderCell: (lang) => (
-        <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+        <div className="text-sm font-medium text-default">{lang.language}</div>
       ),
     },
     {
@@ -119,7 +119,7 @@ export default function CompleteLanguagesBreakdownSection({
       className: wideCellRightClassName,
       renderCell: (lang) => {
         const netLocImpact = lang.locAdded - lang.locDeleted;
-        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
+        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-muted';
         return (
           <div className={`text-sm font-medium ${impactColor}`}>
             {netLocImpact.toLocaleString()}
@@ -133,7 +133,7 @@ export default function CompleteLanguagesBreakdownSection({
       headerClassName: wideHeaderRightClassName,
       className: wideCellRightClassName,
       renderCell: (lang) => (
-        <div className="text-sm text-gray-900">{formatAcceptanceRate(lang)}%</div>
+        <div className="text-sm text-default">{formatAcceptanceRate(lang)}%</div>
       ),
     },
   ];
@@ -172,9 +172,9 @@ export default function CompleteLanguagesBreakdownSection({
   ];
 
   return (
-    <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Complete Languages Breakdown</h3>
-      <div role="group" aria-label="Language breakdown view" className="inline-flex rounded-md border border-gray-300 mb-4">
+    <div id={sectionId} className="mt-6 pt-6 border-t border-default scroll-mt-28">
+      <h3 className="text-lg font-semibold text-default mb-4">Complete Languages Breakdown</h3>
+      <div role="group" aria-label="Language breakdown view" className="inline-flex rounded-md border border-default mb-4">
         {(['totals', 'normalized'] as const).map((view) => (
           <button
             key={view}
@@ -182,7 +182,7 @@ export default function CompleteLanguagesBreakdownSection({
             aria-pressed={mode === view}
             onClick={() => setMode(view)}
             className={`px-4 py-2 text-sm font-medium first:rounded-l-md last:rounded-r-md focus-visible:outline-2 focus-visible:outline-blue-600 ${
-              mode === view ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+              mode === view ? 'bg-blue-600 text-white' : 'bg-default text-muted hover:bg-muted'
             }`}
           >
             {view === 'totals' ? 'Totals' : 'Normalized'}
@@ -190,7 +190,7 @@ export default function CompleteLanguagesBreakdownSection({
         ))}
       </div>
       {mode === 'normalized' && (
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-muted mb-4">
           Across the uploaded period, generations are divided by distinct users with a reported
           language-feature entry, including zero-activity entries. Users can appear in multiple languages;
           these are not all developers coding that language. Share uses generations across all reported
@@ -204,9 +204,9 @@ export default function CompleteLanguagesBreakdownSection({
         sortState={tableSortState}
         onSortChange={handleTableSortChange}
         rowClassName={tableRowClassName}
-        tableClassName="w-full divide-y divide-gray-200"
-        tableContainerClassName="overflow-x-auto border border-gray-200"
-        theadClassName="bg-gray-50"
+        tableClassName="w-full divide-y divide-default"
+        tableContainerClassName="overflow-x-auto border border-default"
+        theadClassName="bg-muted"
         initialCount={MAX_LANGUAGES_TO_SHOW}
         buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
         buttonExpandedLabel="Show Less"
@@ -214,7 +214,7 @@ export default function CompleteLanguagesBreakdownSection({
 
       {languages.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No language data available</p>
+          <p className="text-muted">No language data available</p>
         </div>
       )}
     </div>

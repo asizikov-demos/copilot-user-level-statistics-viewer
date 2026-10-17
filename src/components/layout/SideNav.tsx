@@ -12,7 +12,7 @@ const SideNav: React.FC = () => {
       className="fixed bottom-0 left-0 top-[100px] z-40 hidden w-64 overflow-y-auto py-3 pl-4 pr-3 print:hidden lg:block lg:pl-8"
       aria-label="Main navigation"
     >
-      <div className="bg-white border border-default rounded-md">
+      <div className="bg-default border border-default rounded-md">
         <ul className="p-2 space-y-0.5">
           {NAV_ITEMS.map(({ label, view, activeViews, icon }) => {
             const isActive = (activeViews ?? [view]).includes(currentView);

@@ -85,9 +85,9 @@ export default function UsersTableSection({
 
   const tableSortState = { field: sortField as string, direction: sortDirection };
 
-  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider';
-  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right';
+  const headerBaseClass = 'px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
+  const headerRightClass = 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+  const valueCellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
 
   const columns: TableColumn<UserSummary>[] = [
     {
@@ -106,8 +106,8 @@ export default function UsersTableSection({
             </div>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{user.user_login}</div>
-            <div className="text-sm text-gray-500">ID: {user.user_id}</div>
+            <div className="text-sm font-medium text-default">{user.user_login}</div>
+            <div className="text-sm text-muted">ID: {user.user_id}</div>
           </div>
         </div>
       ),
@@ -137,7 +137,7 @@ export default function UsersTableSection({
       renderCell: (user) => (
         <span className="whitespace-nowrap tabular-nums">
           <span className="text-green-600">+{user.total_loc_added.toLocaleString()}</span>
-          <span className="text-gray-400">/</span>
+          <span className="text-disabled">/</span>
           <span className="text-red-600">-{user.total_loc_deleted.toLocaleString()}</span>
         </span>
       ),
@@ -185,7 +185,7 @@ export default function UsersTableSection({
     {
       id: 'features_used',
       header: 'FEATURES USED',
-      headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4',
+      headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider w-1/4',
       className: 'px-6 py-4 whitespace-nowrap min-w-[280px] text-right',
       renderCell: (user) => (
         <div className="flex flex-wrap gap-1 justify-end">
@@ -230,7 +230,7 @@ export default function UsersTableSection({
             </span>
           )}
           {user.used_code_completion && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-default">
               Completions
             </span>
           )}
@@ -240,10 +240,10 @@ export default function UsersTableSection({
   ];
 
   return (
-    <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200">
+    <div id={sectionId} className="mt-6 pt-6 border-t border-default">
       <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
         <div>
-          <label htmlFor="userSearch" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="userSearch" className="block text-sm font-medium text-muted mb-2">
             Search by user login
           </label>
           <input
@@ -252,18 +252,18 @@ export default function UsersTableSection({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Start typing a username..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-4 py-2 border border-default rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
         <div>
-          <label htmlFor="clientFilter" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="clientFilter" className="block text-sm font-medium text-muted mb-2">
             IDE used
           </label>
           <select
             id="clientFilter"
             value={selectedClient}
             onChange={(e) => setSelectedClient(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-default rounded-md bg-default focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">All IDEs</option>
             {clientOptions.map(option => (
@@ -274,14 +274,14 @@ export default function UsersTableSection({
           </select>
         </div>
         <div>
-          <label htmlFor="featureFilter" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="featureFilter" className="block text-sm font-medium text-muted mb-2">
             Feature used
           </label>
           <select
             id="featureFilter"
             value={selectedFeature}
             onChange={(e) => setSelectedFeature(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full px-3 py-2 border border-default rounded-md bg-default focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">All features</option>
             {USER_FEATURE_FILTERS.map(option => (
@@ -295,29 +295,29 @@ export default function UsersTableSection({
           type="button"
           onClick={clearFilters}
           disabled={!hasActiveFilters}
-          className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+          className="px-4 py-2 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
         >
           Clear
         </button>
       </div>
-      <p className="mb-3 text-sm text-gray-600">
+      <p className="mb-3 text-sm text-muted">
         Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
       </p>
-      <div className="overflow-x-auto border border-gray-200">
+      <div className="overflow-x-auto border border-default">
         <MetricsTable<UserSummary>
           data={pagedUsers}
           columns={columns}
           sortState={tableSortState}
           onSortChange={({ field }) => handleSort(field as SortField)}
-          rowClassName={() => 'hover:bg-gray-50 cursor-pointer transition-colors'}
-          tableClassName="w-full divide-y divide-gray-200"
-          theadClassName="bg-gray-50"
+          rowClassName={() => 'hover:bg-muted cursor-pointer transition-colors'}
+          tableClassName="w-full divide-y divide-default"
+          theadClassName="bg-muted"
           onRowClick={(user) => handleUserClick(user)}
         />
       </div>
       {sortedUsers.length > USERS_PER_PAGE && (
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
           </p>
           <div className="flex items-center gap-2">
@@ -325,18 +325,18 @@ export default function UsersTableSection({
               type="button"
               onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+              className="px-3 py-1.5 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
             >
               Previous
             </button>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted">
               Page {currentPage.toLocaleString()} of {totalPages.toLocaleString()}
             </span>
             <button
               type="button"
               onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-50 disabled:hover:bg-white"
+              className="px-3 py-1.5 text-sm font-medium text-muted border border-default rounded-md disabled:cursor-not-allowed disabled:opacity-50 hover:bg-muted disabled:hover:bg-default"
             >
               Next
             </button>
@@ -346,12 +346,12 @@ export default function UsersTableSection({
 
       {users.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No user data available</p>
+          <p className="text-muted">No user data available</p>
         </div>
       )}
       {users.length > 0 && sortedUsers.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No users match the selected filters</p>
+          <p className="text-muted">No users match the selected filters</p>
         </div>
       )}
     </div>

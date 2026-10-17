@@ -11,7 +11,7 @@ const step = (n: number, text: React.ReactNode) => (
 
 const HowToGetData: React.FC = () => {
   return (
-    <div className="rounded-lg border border-default bg-white">
+    <div className="rounded-lg border border-default bg-default">
       <div className="px-5 py-4 border-b border-default">
         <h3 className="text-sm font-semibold text-default">How to export your data</h3>
       </div>

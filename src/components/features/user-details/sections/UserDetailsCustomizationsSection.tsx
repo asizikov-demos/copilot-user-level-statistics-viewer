@@ -22,8 +22,8 @@ function formatCount(value: number | null): string {
 }
 
 const numericColumnStyles = {
-  headerClassName: 'px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider',
-  className: 'px-6 py-4 text-right text-sm text-gray-900 tabular-nums',
+  headerClassName: 'px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider',
+  className: 'px-6 py-4 text-right text-sm text-default tabular-nums',
 };
 
 function CustomizationItemDetails({ summary, id }: { summary: CustomizationSummary; id: string }) {
@@ -31,12 +31,12 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
     {
       id: 'name',
       header: 'Name',
-      className: 'px-6 py-4 text-sm text-gray-900 break-words',
+      className: 'px-6 py-4 text-sm text-default break-words',
       renderCell: item => (
         <>
           {item.name}
           {(item.name === 'other' || item.name === 'custom') && (
-            <span className="text-gray-500">{item.name === 'other' ? ' (custom)' : ' (names hidden)'}</span>
+            <span className="text-muted">{item.name === 'other' ? ' (custom)' : ' (names hidden)'}</span>
           )}
         </>
       ),
@@ -52,7 +52,7 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
   ];
   return (
     <div id={id} role="region" aria-label={`${CATEGORY_LABELS[summary.category].title} reported items`} className="space-y-3">
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted">
         {'distinctItems' in summary
           ? 'Reported top items for this day.'
           : 'Reported top items only. Averages use days with reported activity.'}
@@ -79,7 +79,7 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
     {
       id: 'category',
       header: 'Customization',
-      className: 'px-6 py-4 text-sm text-gray-900',
+      className: 'px-6 py-4 text-sm text-default',
       renderCell: summary => summary.items.length === 0 ? CATEGORY_LABELS[summary.category].title : (
         <button
           type="button"
@@ -114,7 +114,7 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
       renderExpandedRow={summary => expandedCategories.has(summary.category) && summary.items.length > 0
         ? <CustomizationItemDetails summary={summary} id={`${id}-${summary.category}`} />
         : null}
-      tableClassName="w-full table-fixed divide-y divide-gray-200"
+      tableClassName="w-full table-fixed divide-y divide-default"
       tableContainerClassName="mt-4 overflow-x-auto rounded-md border border-default"
     />
   );
@@ -134,8 +134,8 @@ export default function UserDetailsCustomizationsSection(props: UserDetailsCusto
 
   return (
     <section id={sectionId} aria-labelledby={`${sectionId}-title`} className="scroll-mt-28">
-      <h2 id={`${sectionId}-title`} className="text-xl font-semibold text-gray-900">Customizations</h2>
-      <p className="mt-1 text-sm text-gray-600">
+      <h2 id={`${sectionId}-title`} className="text-xl font-semibold text-default">Customizations</h2>
+      <p className="mt-1 text-sm text-muted">
         {props.mode === 'day'
           ? 'Distinct items used on this day.'
           : 'Sum of reported daily distinct counts, not unique items across the period.'}

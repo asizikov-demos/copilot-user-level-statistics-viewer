@@ -13,11 +13,11 @@ interface DisclosureSectionProps {
   labelClassName?: string;
 }
 
-const DEFAULT_LABEL_CLASS = 'text-sm font-medium text-gray-700';
+const DEFAULT_LABEL_CLASS = 'text-sm font-medium text-muted';
 
-const DEFAULT_CONTAINER_CLASS = 'border-t border-gray-200 pt-4';
+const DEFAULT_CONTAINER_CLASS = 'border-t border-default pt-4';
 const DEFAULT_BUTTON_CLASS =
-  'flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors';
+  'flex items-center justify-between w-full px-4 py-3 bg-muted hover:bg-[var(--control-bgColor-hover)] rounded-lg transition-colors';
 const DEFAULT_CONTENT_CLASS = 'mt-4';
 
 export default function DisclosureSection({
@@ -43,7 +43,7 @@ export default function DisclosureSection({
       >
         <span className={labelClassName ?? DEFAULT_LABEL_CLASS}>{label}</span>
         <svg
-          className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

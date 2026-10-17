@@ -58,7 +58,7 @@ export default function AiCreditsStatementCard({ statement }: AiCreditsStatement
   return (
     <section
       aria-label="AI credits statement"
-      className="mt-6 grid overflow-hidden rounded-lg border border-default bg-white lg:grid-cols-[minmax(0,1fr)_300px]"
+      className="mt-6 grid overflow-hidden rounded-lg border border-default bg-default lg:grid-cols-[minmax(0,1fr)_300px]"
     >
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">AI credits statement for the reporting period</caption>

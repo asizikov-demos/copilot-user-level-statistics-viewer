@@ -71,7 +71,7 @@ export default function OverviewHeader({ model, enterpriseName }: OverviewHeader
     : 'No daily activity in the report window.';
 
   return (
-    <header className="rounded-lg border border-default bg-white p-6">
+    <header className="rounded-lg border border-default bg-default p-6">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           <h2 className="text-2xl font-semibold tracking-tight text-default">{title}</h2>
@@ -136,7 +136,7 @@ export default function OverviewHeader({ model, enterpriseName }: OverviewHeader
                 className="pointer-events-none absolute -top-2 -bottom-5 border-l-[1.5px] border-dashed border-neutral-emphasis"
                 style={{ left: `${(boundary.index / dayCount) * 100}%` }}
               >
-                <span className={`absolute -top-0.5 ${boundary.index / dayCount > 0.5 ? 'right-1.5' : 'left-1.5'} hidden whitespace-nowrap bg-white px-1 text-[11px] text-muted sm:inline`}>
+                <span className={`absolute -top-0.5 ${boundary.index / dayCount > 0.5 ? 'right-1.5' : 'left-1.5'} hidden whitespace-nowrap bg-default px-1 text-[11px] text-muted sm:inline`}>
                   {boundary.label} billing starts
                 </span>
               </div>
@@ -188,7 +188,7 @@ export default function OverviewHeader({ model, enterpriseName }: OverviewHeader
             className={`mt-4 grid grid-cols-1 overflow-hidden rounded-lg border border-default divide-y divide-default ${MONTH_GRID_CLASS[Math.min(billingMonths.length, 3)] ?? ''}`}
           >
             {billingMonths.map(month => (
-              <section key={month.key} className="min-w-0 bg-white px-4 py-3" aria-label={`${month.label} billing month`}>
+              <section key={month.key} className="min-w-0 bg-default px-4 py-3" aria-label={`${month.label} billing month`}>
                 <h3 className="flex flex-wrap justify-between gap-2 text-[13px] font-semibold text-default">
                   {month.label}
                   <span className="font-normal text-muted">

@@ -44,28 +44,28 @@ export default function SurfaceProductivityView({
 
       <section
         id="surface-productivity-method"
-        className="scroll-mt-28 rounded-md border border-default bg-white p-6"
+        className="scroll-mt-28 rounded-md border border-default bg-default p-6"
       >
         <DisclosureSection
           label="How to read this view"
           containerClassName=""
-          buttonClassName="flex w-full items-center justify-between rounded-md bg-gray-50 px-4 py-3 text-left transition-colors hover:bg-gray-100"
-          contentClassName="mt-4 space-y-3 text-sm text-gray-600"
+          buttonClassName="flex w-full items-center justify-between rounded-md bg-muted px-4 py-3 text-left transition-colors hover:bg-[var(--control-bgColor-hover)]"
+          contentClassName="mt-4 space-y-3 text-sm text-muted"
         >
           <p>
-            <span className="font-medium text-gray-900">IDE activity</span> is
+            <span className="font-medium text-default">IDE activity</span> is
             detected from IDE-attributed interactions or LOC. CLI and Copilot
             App activity use their client totals, usage flags, and
             feature-attributed activity.
           </p>
           <p>
-            <span className="font-medium text-gray-900">Active user-days</span>{' '}
+            <span className="font-medium text-default">Active user-days</span>{' '}
             count one person once per day within each surface. A person using
             multiple surfaces on the same day contributes to each relevant
             surface.
           </p>
           <p>
-            <span className="font-medium text-gray-900">Net LOC impact</span> is
+            <span className="font-medium text-default">Net LOC impact</span> is
             lines added minus lines deleted. IDE LOC comes from IDE-attributed
             totals; CLI and Copilot App LOC come from their feature-attributed
             totals.

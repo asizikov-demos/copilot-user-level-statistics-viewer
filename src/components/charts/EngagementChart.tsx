@@ -56,7 +56,7 @@ export default function EngagementChart({ data }: EngagementChartProps) {
       isEmpty={data.length === 0}
       emptyState="No engagement data available"
       footer={
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-muted">
           Total unique users in reporting period: {data[0]?.totalUsers || 0}
         </div>
       }

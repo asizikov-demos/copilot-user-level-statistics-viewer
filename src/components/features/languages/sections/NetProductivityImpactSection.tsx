@@ -39,7 +39,7 @@ export default function NetProductivityImpactSection({
       className: narrowCellClassName,
       renderCell: (lang) => {
         const rank = netImpactRankMap.get(lang.language);
-        return <div className="text-sm font-medium text-gray-900">{rank ?? '–'}</div>;
+        return <div className="text-sm font-medium text-default">{rank ?? '–'}</div>;
       },
     },
     {
@@ -48,7 +48,7 @@ export default function NetProductivityImpactSection({
       headerClassName: narrowHeaderClassName,
       className: narrowCellClassName,
       renderCell: (lang) => (
-        <div className="text-sm font-medium text-gray-900">{lang.language}</div>
+        <div className="text-sm font-medium text-default">{lang.language}</div>
       ),
     },
     {
@@ -58,7 +58,7 @@ export default function NetProductivityImpactSection({
       className: narrowCellRightClassName,
       renderCell: (lang) => {
         const netLocImpact = lang.locAdded - lang.locDeleted;
-        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-gray-500';
+        const impactColor = netLocImpact > 0 ? 'text-green-600' : netLocImpact < 0 ? 'text-rose-600' : 'text-muted';
         return (
           <div className={`font-medium ${impactColor}`}>
             {netLocImpact.toLocaleString()}
@@ -87,18 +87,18 @@ export default function NetProductivityImpactSection({
   ];
 
   return (
-    <div id={sectionId} className="mt-6 pt-6 border-t border-gray-200 scroll-mt-28">
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">Net Productivity Impact by Language</h3>
-      <p className="text-sm text-gray-500 mb-4">
+    <div id={sectionId} className="mt-6 pt-6 border-t border-default scroll-mt-28">
+      <h3 className="text-lg font-semibold text-default mb-2">Net Productivity Impact by Language</h3>
+      <p className="text-sm text-muted mb-4">
         Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
       </p>
       <MetricsTable
         data={languagesByNetLocImpact}
         columns={languagesByNetImpactColumns}
         rowClassName={tableRowClassName}
-        tableClassName="w-full divide-y divide-gray-200"
-        tableContainerClassName="overflow-x-auto border border-gray-200"
-        theadClassName="bg-gray-50"
+        tableClassName="w-full divide-y divide-default"
+        tableContainerClassName="overflow-x-auto border border-default"
+        theadClassName="bg-muted"
         initialCount={MAX_LANGUAGES_TO_SHOW}
         buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
         buttonExpandedLabel="Show Less"

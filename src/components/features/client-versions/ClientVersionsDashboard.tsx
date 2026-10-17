@@ -31,7 +31,7 @@ function StatusIcon({ kind }: { kind: 'attention' | 'healthy' | 'unknown' }) {
   const styles = {
     attention: 'border-amber-200 bg-amber-50 text-amber-700',
     healthy: 'border-green-200 bg-green-50 text-green-700',
-    unknown: 'border-gray-200 bg-gray-50 text-gray-600',
+    unknown: 'border-default bg-muted text-muted',
   };
 
   return (
@@ -64,7 +64,7 @@ function PlatformMark({ scope }: { scope: ClientPlatformHealth['scope'] }) {
       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${
         scope === 'vscode'
           ? 'border-blue-200 bg-blue-50'
-          : 'border-gray-200 bg-gray-50'
+          : 'border-default bg-muted'
       }`}
       aria-hidden="true"
     >
@@ -146,7 +146,7 @@ function HealthSummary({
   return (
     <section
       id={sectionIds.health}
-      className="overflow-hidden rounded-lg border border-default bg-white scroll-mt-28"
+      className="overflow-hidden rounded-lg border border-default bg-default scroll-mt-28"
     >
       <div
         className={`flex flex-col gap-5 border-b border-default p-5 sm:flex-row sm:items-center sm:justify-between ${
@@ -349,7 +349,7 @@ function VersionDriftTable({
           data={rows}
           columns={columns}
           tableClassName="min-w-[900px] w-full text-left text-sm"
-          tableContainerClassName="overflow-x-auto rounded-md border border-default bg-white"
+          tableContainerClassName="overflow-x-auto rounded-md border border-default bg-default"
           theadClassName="bg-muted text-xs text-muted"
           rowClassName={() => 'hover:bg-muted'}
           getRowKey={(row) => `${row.scope}-${row.version}`}
@@ -391,7 +391,7 @@ function ReleaseList({
   return (
     <div>
       <h4 className="text-sm font-semibold text-default">{title}</h4>
-      <ul className="mt-2 divide-y divide-default rounded-md border border-default bg-white">
+      <ul className="mt-2 divide-y divide-default rounded-md border border-default bg-default">
         {releases.slice(0, 5).map((release) => (
           <li key={`${release.version}-${release.releaseDate}`} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
             <code className="text-default">{release.version}</code>
@@ -420,7 +420,7 @@ function ReleaseMethodology({
   return (
     <details
       id={sectionId}
-      className="rounded-md border border-default bg-white scroll-mt-28"
+      className="rounded-md border border-default bg-default scroll-mt-28"
     >
       <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-default focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]">
         How version status is evaluated

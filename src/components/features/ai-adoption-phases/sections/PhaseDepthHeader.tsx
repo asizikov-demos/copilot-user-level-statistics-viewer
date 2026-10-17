@@ -50,7 +50,7 @@ export function PhaseDepthHeader({ aiAdoptionPhaseData }: PhaseDepthHeaderProps)
     .join(', ');
 
   return (
-    <section aria-label="Adoption depth" className="mt-6 rounded-lg border border-default bg-white p-6">
+    <section aria-label="Adoption depth" className="mt-6 rounded-lg border border-default bg-default p-6">
       {totalUsers === 0 ? (
         <p className="text-sm text-muted">No AI adoption phase data is available in this metrics upload.</p>
       ) : (

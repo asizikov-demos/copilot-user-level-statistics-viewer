@@ -60,7 +60,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
         <p className="text-sm text-muted">Upload your User Level metrics export to explore usage statistics</p>
       </div>
 
-      <div className="rounded-lg border border-default bg-white">
+      <div className="rounded-lg border border-default bg-default">
         <div className="px-5 py-4 border-b border-default">
           <h2 className="text-sm font-semibold text-default">Upload metrics file</h2>
         </div>
