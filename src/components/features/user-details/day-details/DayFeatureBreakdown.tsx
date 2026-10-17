@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useId, useMemo, useState } from 'react';
+import { ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
 import { translateFeature } from '../../../../domain/featureTranslations';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
@@ -51,9 +52,9 @@ function BreakdownList({ title, items }: { title: string; items: BreakdownItem[]
                 <span>Gen {fmt(item.generation)}</span>
                 <span>Acc {fmt(item.acceptance)}</span>
                 <span>
-                  <span className="text-green-600">+{fmt(item.locAdded)}</span>
+                  <span className="text-success">+{fmt(item.locAdded)}</span>
                   {' / '}
-                  <span className="text-red-600">-{fmt(item.locDeleted)}</span>
+                  <span className="text-danger">-{fmt(item.locDeleted)}</span>
                 </span>
               </span>
             </li>
@@ -86,16 +87,10 @@ function FeatureCard({
         aria-controls={contentId}
       >
         <span className="flex items-center gap-2 min-w-0">
-          <svg
-            className={`w-4 h-4 flex-shrink-0 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <ChevronRightIcon
+            className={`flex-shrink-0 text-muted transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
             aria-hidden="true"
-            focusable="false"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          />
           <span className="text-sm font-semibold text-default truncate">{translateFeature(feature.feature)}</span>
         </span>
         <span className="flex items-center gap-4">

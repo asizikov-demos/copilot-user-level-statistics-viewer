@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { CopyIcon } from '@primer/octicons-react';
 import type { UserDetailsHeaderReadModel } from '../../../../read-models/userDetails';
 import type { AIAdoptionPhase } from '../../../../types/metrics';
 import {
@@ -66,7 +67,7 @@ export default function UserDetailsHeader({
             <button
               type="button"
               onClick={onBackToUsers}
-              className="text-2xl font-semibold tracking-tight text-accent hover:underline focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded-sm"
+              className="rounded-sm text-2xl font-semibold tracking-tight text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
             >
               users
             </button>
@@ -78,23 +79,14 @@ export default function UserDetailsHeader({
               onClick={onCopyUserLogin}
               title="Click to copy username"
               aria-label={`Copy username ${userLogin}`}
-              className="group inline-flex items-center gap-2 rounded-sm text-2xl font-semibold tracking-tight text-default transition-colors duration-150 hover:text-indigo-600 focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              className="group inline-flex items-center gap-2 rounded-sm text-2xl font-semibold tracking-tight text-default transition-colors duration-150 hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
             >
               <span>{userLogin}</span>
-              <svg
-                className="h-5 w-5 text-muted transition-colors duration-150 group-hover:text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <CopyIcon
+                size={20}
+                className="text-muted transition-colors duration-150 group-hover:text-accent"
                 aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                />
-              </svg>
+              />
             </button>
           </li>
         </ol>
@@ -122,8 +114,8 @@ export default function UserDetailsHeader({
           label="Lines changed"
           value={(
             <>
-              <span className="text-emerald-600">+{formatCompactNumber(summary.locAdded)}</span>{' '}
-              <span className="text-red-600">−{formatCompactNumber(summary.locDeleted)}</span>
+              <span className="text-success">+{formatCompactNumber(summary.locAdded)}</span>{' '}
+              <span className="text-danger">−{formatCompactNumber(summary.locDeleted)}</span>
             </>
           )}
           sub={`Net ${formatSignedCompact(summary.netLoc)}`}

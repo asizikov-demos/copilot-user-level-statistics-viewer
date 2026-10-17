@@ -45,8 +45,8 @@ interface ClientRow {
 
 const cellLeft = 'px-4 py-3 text-sm font-medium text-default';
 const cellRight = 'px-4 py-3 text-sm text-default text-right';
-const headerLeft = 'px-4 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider';
-const headerRight = 'px-4 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider';
+const headerLeft = 'px-4 py-3 text-left';
+const headerRight = 'px-4 py-3 text-right';
 
 interface FeaturePill {
   label: string;

@@ -17,14 +17,13 @@ interface CloudAgentsUsageChartProps {
 interface UsageLane {
   key: keyof Omit<CloudAgentsUsageDatum, 'date'>;
   label: string;
-  swatchClass: string;
-  activeClass: string;
+  colorClass: string;
 }
 
 const LANES: UsageLane[] = [
-  { key: 'cloudAgent', label: 'Cloud Agent', swatchClass: 'bg-teal-500', activeClass: 'bg-teal-500' },
-  { key: 'codeReviewActive', label: 'Code Review (active)', swatchClass: 'bg-cyan-500', activeClass: 'bg-cyan-500' },
-  { key: 'codeReviewPassive', label: 'Code Review (passive)', swatchClass: 'bg-indigo-500', activeClass: 'bg-indigo-500' },
+  { key: 'cloudAgent', label: 'Cloud Agent', colorClass: 'bg-[var(--data-teal-color-emphasis)]' },
+  { key: 'codeReviewActive', label: 'Code Review (active)', colorClass: 'bg-[var(--data-blue-color-emphasis)]' },
+  { key: 'codeReviewPassive', label: 'Code Review (passive)', colorClass: 'bg-[var(--data-plum-color-emphasis)]' },
 ];
 
 /**
@@ -54,7 +53,7 @@ export default function CloudAgentsUsageChart({ data }: CloudAgentsUsageChartPro
         {LANES.map((lane) => (
           <div key={lane.key} className="flex items-center gap-3">
             <div className="flex items-center gap-2 w-48 shrink-0">
-              <span className={`inline-block h-3 w-3 rounded-sm ${lane.swatchClass}`} aria-hidden="true" />
+              <span className={`inline-block h-3 w-3 rounded-sm ${lane.colorClass}`} aria-hidden="true" />
               <span className="text-sm text-muted">{lane.label}</span>
             </div>
             <div className="flex flex-1 gap-[2px]">
@@ -64,7 +63,7 @@ export default function CloudAgentsUsageChart({ data }: CloudAgentsUsageChartPro
                   <div
                     key={d.date}
                     title={`${formatShortDate(d.date)} — ${lane.label}: ${used ? 'Used' : 'Not used'}`}
-                    className={`flex-1 min-w-[3px] h-7 rounded-[2px] ${used ? lane.activeClass : 'bg-muted'}`}
+                    className={`flex-1 min-w-[3px] h-7 rounded-[2px] ${used ? lane.colorClass : 'bg-muted'}`}
                   />
                 );
               })}
