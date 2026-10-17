@@ -1,7 +1,7 @@
 'use client';
 
 import type { ChartDataset } from 'chart.js';
-import { withAlpha } from './chartTheme';
+import { readChartToken, toRgbColor, withAlpha } from './chartTheme';
 
 type LineDataset = Omit<ChartDataset<'line', (number | null)[]>, 'tooltip'>;
 
@@ -99,6 +99,70 @@ export function createBarDataset<T extends number | null>(
     data,
     backgroundColor: color,
     borderColor: color,
+    ...options,
+  };
+}
+
+/**
+ * Default styling for radar chart datasets
+ */
+export const radarDatasetDefaults = {
+  borderWidth: 2,
+  pointBorderWidth: 2,
+  pointRadius: 5,
+};
+
+/**
+ * Creates a radar chart dataset with consistent styling.
+ * Background fill is derived from the border color at 0.2 opacity; points are outlined
+ * with the Primer default background color.
+ * @param color - RGB or hex color string (e.g., `chartColors.indigo.solid`)
+ * @param label - Dataset label
+ * @param data - Array of data points
+ * @param options - Additional options to override defaults
+ */
+export function createRadarDataset(
+  color: string,
+  label: string,
+  data: number[],
+  options: Record<string, unknown> = {}
+) {
+  return {
+    ...radarDatasetDefaults,
+    label,
+    data,
+    backgroundColor: withAlpha(color, 0.2),
+    borderColor: color,
+    pointBackgroundColor: color,
+    pointBorderColor: toRgbColor(readChartToken('bgColor-default')),
+    ...options,
+  };
+}
+
+/**
+ * Default styling for doughnut/pie chart datasets
+ */
+export const doughnutDatasetDefaults = {
+  borderWidth: 1,
+};
+
+/**
+ * Creates a doughnut (or pie) chart dataset with consistent styling. Segments are separated
+ * with the Primer default background color; pass `borderColor` to match another surface.
+ * @param dataValues - Array of numeric values for each segment
+ * @param backgroundColors - Array of colors for each segment (one per data value)
+ * @param options - Additional options to override defaults
+ */
+export function createDoughnutDataset(
+  dataValues: number[],
+  backgroundColors: string[],
+  options: Record<string, unknown> = {}
+) {
+  return {
+    ...doughnutDatasetDefaults,
+    borderColor: toRgbColor(readChartToken('bgColor-default')),
+    data: dataValues,
+    backgroundColor: backgroundColors,
     ...options,
   };
 }

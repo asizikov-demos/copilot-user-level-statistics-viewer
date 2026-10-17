@@ -315,3 +315,104 @@ export const yAxisFormatters = {
     return numeric.toLocaleString();
   },
 };
+
+/**
+ * Configuration for radar chart options
+ */
+export interface RadarChartConfig {
+  showLegend?: boolean;
+  tooltipLabelCallback?: (context: TooltipItem<'radar'>) => string | string[];
+  gridColor?: string;
+  angleLineColor?: string;
+  pointLabelFontSize?: number;
+  pointLabelFontWeight?: 'normal' | 'bold' | 'lighter' | 'bolder' | number;
+  pointLabelColor?: string;
+}
+
+/**
+ * Creates chart options for radar charts. Grid, angle line and point label colors
+ * default to the Primer chart theme.
+ */
+export function createRadarChartOptions(config: RadarChartConfig = {}) {
+  const theme = resolveChartTheme();
+  const {
+    showLegend = false,
+    tooltipLabelCallback,
+    gridColor = theme.gridColor,
+    angleLineColor = theme.gridColor,
+    pointLabelFontSize = 13,
+    pointLabelFontWeight = 'bold',
+    pointLabelColor = theme.textColor,
+  } = config;
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: showLegend },
+      tooltip: {
+        callbacks: {
+          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
+        },
+      },
+    },
+    scales: {
+      r: {
+        beginAtZero: true,
+        ticks: {
+          display: true,
+          backdropColor: 'transparent',
+        },
+        pointLabels: {
+          font: { size: pointLabelFontSize, weight: pointLabelFontWeight },
+          color: pointLabelColor,
+        },
+        grid: { color: gridColor },
+        angleLines: { color: angleLineColor },
+      },
+    },
+  };
+}
+
+/**
+ * Configuration for doughnut chart options
+ */
+export interface DoughnutChartConfig {
+  /** Inner radius; use 0 to draw a pie */
+  cutout?: string | number;
+  showLegend?: boolean;
+  legendPosition?: 'top' | 'bottom' | 'left' | 'right';
+  tooltipTitleCallback?: (context: TooltipItem<'doughnut'>[]) => string;
+  tooltipLabelCallback?: (context: TooltipItem<'doughnut'>) => string | string[];
+}
+
+/**
+ * Creates chart options for doughnut charts, or pies when `cutout` is 0.
+ */
+export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
+  const {
+    cutout = '55%',
+    showLegend = true,
+    legendPosition = 'right',
+    tooltipTitleCallback,
+    tooltipLabelCallback,
+  } = config;
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout,
+    plugins: {
+      legend: {
+        display: showLegend,
+        position: legendPosition,
+      },
+      tooltip: {
+        callbacks: {
+          ...(tooltipTitleCallback && { title: tooltipTitleCallback }),
+          ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
+        },
+      },
+    },
+  };
+}

@@ -52,6 +52,7 @@ export const LIGHT_THEME_TOKEN_FALLBACKS = {
   'display-blue-scale-9': '#002b75',
   'fgColor-default': '#1f2328',
   'fgColor-muted': '#59636e',
+  'bgColor-default': '#ffffff',
   'bgColor-muted': '#f6f8fa',
   'borderColor-muted': '#d1d9e0b3',
   'fontStack-system':
