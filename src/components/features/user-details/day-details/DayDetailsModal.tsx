@@ -180,6 +180,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
+      timeZone: 'UTC',
       weekday: 'long',
       year: 'numeric',
       month: 'long',

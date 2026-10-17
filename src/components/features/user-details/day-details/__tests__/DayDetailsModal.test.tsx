@@ -64,6 +64,7 @@ function renderDay(dayMetrics?: UserDayData, extraProps: { userLogin?: string } 
 
 function formatDialogDate(day: string) {
   return new Date(day).toLocaleDateString('en-US', {
+    timeZone: 'UTC',
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -170,6 +171,23 @@ describe('DayDetailsModal', () => {
   });
 
   describe('selected day', () => {
+    it('formats the selected report date in UTC for viewers west of UTC', () => {
+      const originalTimeZone = process.env.TZ;
+      process.env.TZ = 'America/Los_Angeles';
+
+      try {
+        renderDay(makeUserDay({ day: '2024-01-15' }));
+
+        expect(screen.getByRole('heading', { name: 'Monday, January 15, 2024' })).toBeDefined();
+      } finally {
+        if (originalTimeZone === undefined) {
+          delete process.env.TZ;
+        } else {
+          process.env.TZ = originalTimeZone;
+        }
+      }
+    });
+
     it('renders the given day with navigation controls', () => {
       const markup = renderDay(makeUserDay({
         day: '2024-01-16',
