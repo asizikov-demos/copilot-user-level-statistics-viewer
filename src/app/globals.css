@@ -325,13 +325,19 @@
   --text-color-label-yellow-active: var(--label-yellow-fgColor-active);
 }
 
+/* Primer system font stack for Tailwind's font-sans and preflight defaults. */
+@theme inline {
+  --font-sans: var(--fontStack-system);
+  --default-font-family: var(--fontStack-system);
+}
+
 /*
  * Primer BaseStyles CSS is unlayered, so it overrides Tailwind's layered defaults and
- * utilities. Keep the pre-Primer font stack and link styling until later migration phases.
+ * utilities. BaseStyles uses Primer's --fontStack-system; keep the pre-Primer link styling
+ * until later migration phases.
  */
 .app-base-styles {
   --BaseStyles-fgColor: var(--fgColor-default);
-  --BaseStyles-fontFamily: var(--default-font-family);
 }
 
 /* Outranks BaseStyles' `:where(a:not([class*=prc-]))` rules, including :hover. */
