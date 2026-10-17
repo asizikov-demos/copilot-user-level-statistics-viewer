@@ -137,7 +137,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             </Button>
           </div>
 
-          <div role="status" aria-busy={isLoading}>
+          <div role="status">
             {isLoading && (
               <div className="flex flex-col items-center gap-2 py-2">
                 <div className="flex items-center gap-2 text-sm text-muted">
