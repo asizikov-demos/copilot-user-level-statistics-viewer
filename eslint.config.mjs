@@ -9,7 +9,7 @@ const productionSourceIgnores = [
 
 // Tailwind palette utilities and arbitrary hex colors bypass Primer tokens. The Tailwind
 // token bridge (@primer/tailwind-config/color) already removes the palette at build time.
-const paletteUtilityPattern = String.raw`\b(bg|text|border|divide|ring|outline|fill|stroke|from|via|to)-(gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+`
+const paletteUtilityPattern = String.raw`\b(bg|text|border(-[trblxyse])?|divide|ring(-offset)?|inset-ring|outline|fill|stroke|from|via|to|decoration|accent|caret|shadow|placeholder)-(gray|slate|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+`
 const arbitraryHexPattern = String.raw`\[#[0-9a-fA-F]{3,8}\]`
 const tokenOnlyColorSelectors = [
   [paletteUtilityPattern, 'Tailwind palette color utilities are not allowed; use Primer token utilities (text-default, bg-muted, border-default, ...).'],
