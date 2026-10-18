@@ -138,15 +138,32 @@ describe('Users feature sections', () => {
     expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('2');
     expect(window.location.hash).toBe('');
 
+    cleanup();
+    renderTable([]);
+    expect(screen.getByText('No user data available')).toBeTruthy();
+  });
+
+  it('resets pagination when selecting additional feature filters', () => {
+    const users = Array.from({ length: 501 }, (_, index) => makeUser({
+      user_login: `user-${index}`,
+      user_id: index + 1,
+      used_chat: false,
+      used_code_completion: false,
+      used_agent: false,
+      used_copilot_app: false,
+      used_copilot_coding_agent: false,
+      used_copilot_code_review_active: false,
+      used_auto_mode: false,
+    }));
+    renderTable(users);
+    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['CLI']);
     expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['Chat']);
     expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
-
-    cleanup();
-    renderTable([]);
-    expect(screen.getByText('No user data available')).toBeTruthy();
   });
 
   it('hides pagination when all users fit on one page', () => {
