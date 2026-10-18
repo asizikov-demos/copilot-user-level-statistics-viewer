@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormControl, Label, Pagination, Select, TextInput } from '@primer/react';
+import { Button, FormControl, Label, Pagination, TextInput } from '@primer/react';
 import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
 import {
@@ -17,6 +17,7 @@ import EmptyState from '../../../ui/EmptyState';
 import InitialAvatar from '../../../ui/InitialAvatar';
 import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
 import AiAdoptionPhaseLabel from '../../ai-adoption-phases/AiAdoptionPhaseLabel';
+import UserFilterSelectPanel from '../UserFilterSelectPanel';
 
 interface UsersTableSectionProps {
   sectionId: string;
@@ -66,15 +67,19 @@ export default function UsersTableSection({
   const {
     searchQuery,
     setSearchQuery,
-    selectedClient,
-    setSelectedClient,
-    selectedFeature,
-    setSelectedFeature,
+    selectedClients,
+    setSelectedClients,
+    selectedFeatures,
+    setSelectedFeatures,
     clientOptions,
     hasActiveFilters,
     clearFilters,
     filteredUsers,
   } = useUserFilters(users);
+  const clientFilterOptions = useMemo(
+    () => clientOptions.map(option => ({ ...option, leadingVisual: getIDEIcon(option.value) })),
+    [clientOptions]
+  );
   const { sortField, sortDirection, sortedItems: sortedUsers, handleSort } = useSortableTable<UserSummary, SortField>(
     filteredUsers,
     'days_active',
@@ -98,8 +103,8 @@ export default function UsersTableSection({
     setCurrentPage(1);
   }, [
     searchQuery,
-    selectedClient,
-    selectedFeature,
+    selectedClients,
+    selectedFeatures,
     sortField,
     sortDirection,
     users,
@@ -229,28 +234,22 @@ export default function UsersTableSection({
             placeholder="Start typing a username..."
           />
         </FormControl>
-        <FormControl id="clientFilter">
-          <FormControl.Label>IDE used</FormControl.Label>
-          <Select block value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)}>
-            <Select.Option value="">All IDEs</Select.Option>
-            {clientOptions.map(option => (
-              <Select.Option key={option.value} value={option.value}>
-                {option.label}
-              </Select.Option>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl id="featureFilter">
-          <FormControl.Label>Feature used</FormControl.Label>
-          <Select block value={selectedFeature} onChange={(e) => setSelectedFeature(e.target.value)}>
-            <Select.Option value="">All features</Select.Option>
-            {USER_FEATURE_FILTERS.map(option => (
-              <Select.Option key={option.value} value={option.value}>
-                {option.label}
-              </Select.Option>
-            ))}
-          </Select>
-        </FormControl>
+        <UserFilterSelectPanel
+          id="clientFilter"
+          label="IDE used"
+          placeholder="All IDEs"
+          options={clientFilterOptions}
+          selectedValues={selectedClients}
+          onSelectionChange={setSelectedClients}
+        />
+        <UserFilterSelectPanel
+          id="featureFilter"
+          label="Feature used"
+          placeholder="All features"
+          options={USER_FEATURE_FILTERS}
+          selectedValues={selectedFeatures}
+          onSelectionChange={setSelectedFeatures}
+        />
         <Button onClick={clearFilters} disabled={!hasActiveFilters}>
           Clear
         </Button>

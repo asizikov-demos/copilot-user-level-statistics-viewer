@@ -1,10 +1,16 @@
 // @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserSummary } from '../../../../types/metrics';
 import UsersSummarySection from '../sections/UsersSummarySection';
 import UsersTableSection from '../sections/UsersTableSection';
+
+// The package's Node export uses an SSR shim instead of registering the custom element in jsdom.
+vi.mock('@primer/live-region-element', () => ({
+  announce: vi.fn(() => Promise.resolve()),
+  announceFromElement: vi.fn(() => Promise.resolve()),
+}));
 
 function makeUser(overrides: Partial<UserSummary> = {}): UserSummary {
   return {
@@ -49,9 +55,32 @@ function getResultCount() {
   return screen.getByText(/^Showing [\d,]+ of [\d,]+ users$/).textContent;
 }
 
+function toggleFilterOptions(label: string, options: string[]) {
+  const anchor = screen.getByRole('button', { name: new RegExp(`^${label}`) });
+  fireEvent.click(anchor);
+  for (const name of options) {
+    fireEvent.click(screen.getByRole('option', { name }));
+  }
+  fireEvent.click(anchor);
+}
+
 describe('Users feature sections', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
+  });
+
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
   });
 
   it('renders the total population and feature adoption rails', () => {
@@ -91,7 +120,7 @@ describe('Users feature sections', () => {
 
     renderTable(users);
 
-    expect(within(screen.getByLabelText('Feature used')).getByRole('option', { name: 'App' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
     const table = screen.getByRole('table');
     expect(within(table).getByRole('columnheader', { name: /days active/i })).toBeTruthy();
     expect(within(table).queryByRole('columnheader', { name: /generations/i })).toBeNull();
@@ -112,6 +141,29 @@ describe('Users feature sections', () => {
     cleanup();
     renderTable([]);
     expect(screen.getByText('No user data available')).toBeTruthy();
+  });
+
+  it('resets pagination when selecting additional feature filters', () => {
+    const users = Array.from({ length: 501 }, (_, index) => makeUser({
+      user_login: `user-${index}`,
+      user_id: index + 1,
+      used_chat: false,
+      used_code_completion: false,
+      used_agent: false,
+      used_copilot_app: false,
+      used_copilot_coding_agent: false,
+      used_copilot_code_review_active: false,
+      used_auto_mode: false,
+    }));
+    renderTable(users);
+    const pagination = screen.getByRole('navigation', { name: 'Pagination' });
+
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
+    toggleFilterOptions('Feature used', ['CLI']);
+    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
+    toggleFilterOptions('Feature used', ['Chat']);
+    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
   });
 
   it('hides pagination when all users fit on one page', () => {
@@ -187,8 +239,8 @@ describe('Users feature sections', () => {
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 250));
     });
-    fireEvent.change(screen.getByLabelText('IDE used'), { target: { value: 'copilot_cli' } });
-    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: 'chat' } });
+    toggleFilterOptions('IDE used', ['Copilot CLI']);
+    toggleFilterOptions('Feature used', ['Chat']);
 
     const table = screen.getByRole('table');
     expect(getResultCount()).toBe('Showing 1 of 3 users');
@@ -202,12 +254,108 @@ describe('Users feature sections', () => {
     expect(within(screen.getByRole('table')).getByText('hubot')).toBeTruthy();
     expect(within(screen.getByRole('table')).getByText('monalisa')).toBeTruthy();
     expect((screen.getByLabelText('Search by user login') as HTMLInputElement).value).toBe('');
+    expect(screen.getByRole('button', { name: 'IDE used All IDEs' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
+    expect(clearButton.disabled).toBe(true);
+  });
+
+  it('matches any selected IDE and feature, intersects groups, and supports deselection', () => {
+    renderTable([
+      makeUser({ user_login: 'alice', clients_used: ['vscode'], used_chat: true, used_cli: false }),
+      makeUser({ user_login: 'bob', user_id: 2, clients_used: ['intellij'], used_chat: false, used_cli: true }),
+      makeUser({ user_login: 'carol', user_id: 3, clients_used: ['copilot_cli'], used_chat: true, used_cli: false }),
+      makeUser({ user_login: 'dave', user_id: 4, clients_used: ['vscode'], used_chat: false, used_cli: false }),
+    ]);
+
+    toggleFilterOptions('IDE used', ['VS Code', 'JetBrains']);
+    expect(getResultCount()).toBe('Showing 3 of 4 users');
+    toggleFilterOptions('Feature used', ['Chat', 'CLI']);
+    expect(getResultCount()).toBe('Showing 2 of 4 users');
+    const table = screen.getByRole('table');
+    expect(within(table).getByText('alice')).toBeTruthy();
+    expect(within(table).getByText('bob')).toBeTruthy();
+    expect(within(table).queryByText('carol')).toBeNull();
+    expect(within(table).queryByText('dave')).toBeNull();
+
+    toggleFilterOptions('Feature used', ['Chat']);
+    expect(getResultCount()).toBe('Showing 1 of 4 users');
+    expect(within(table).getByText('bob')).toBeTruthy();
+    toggleFilterOptions('Feature used', ['CLI']);
+    expect(getResultCount()).toBe('Showing 3 of 4 users');
+    toggleFilterOptions('IDE used', ['VS Code', 'JetBrains']);
+    expect(getResultCount()).toBe('Showing 4 of 4 users');
+    expect((screen.getByRole('button', { name: 'Clear' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('searches panel options without dropping hidden selections and resets the panel search on close', () => {
+    renderTable([makeUser()]);
+    const anchor = screen.getByRole('button', { name: 'Feature used All features' });
+    fireEvent.click(anchor);
+    expect(screen.getByRole('listbox').getAttribute('aria-multiselectable')).toBe('true');
+    fireEvent.click(screen.getByRole('option', { name: 'Chat' }));
+    const search = screen.getByRole('combobox', { name: 'Filter feature used...' });
+    fireEvent.change(search, { target: { value: '  CLI ' } });
+    expect(screen.queryByRole('option', { name: 'Chat' })).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+    expect(screen.getByRole('option', { name: 'CLI' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Deselect all' }));
+    expect(screen.getByRole('option', { name: 'CLI' }).getAttribute('aria-selected')).toBe('false');
+    fireEvent.click(screen.getByRole('option', { name: 'CLI' }));
+    fireEvent.change(search, { target: { value: 'missing-option' } });
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    fireEvent.click(anchor);
+
+    fireEvent.click(anchor);
+    expect((screen.getByRole('combobox', { name: 'Filter feature used...' }) as HTMLInputElement).value).toBe('');
+    expect(screen.getByRole('option', { name: 'Chat' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('option', { name: 'CLI' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(anchor);
+  });
+
+  it('preserves selections and returns focus to the anchor on Escape', async () => {
+    renderTable([makeUser()]);
+    const anchor = screen.getByRole('button', { name: 'Feature used All features' });
+    fireEvent.click(anchor);
+    const search = screen.getByRole('combobox', { name: 'Filter feature used...' });
+    fireEvent.click(screen.getByRole('option', { name: 'Chat' }));
+    expect(screen.getByRole('option', { name: 'Chat' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.keyDown(search, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(document.activeElement).toBe(anchor);
+    });
+    expect(anchor.textContent).toContain('Chat');
+  });
+
+  it('renders IDE visuals and limits both anchor summaries without hiding selected options', () => {
+    renderTable([makeUser({ clients_used: ['vscode', 'jetbrains', 'copilot_cli'] })]);
+    const ideAnchor = screen.getByRole('button', { name: 'IDE used All IDEs' });
+    fireEvent.click(ideAnchor);
+    for (const name of ['VS Code', 'JetBrains', 'Copilot CLI']) {
+      expect(screen.getByRole('option', { name }).querySelector('svg')).not.toBeNull();
+    }
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+    expect(screen.getAllByRole('option', { selected: true })).toHaveLength(3);
+    fireEvent.click(ideAnchor);
+    expect(ideAnchor.textContent).toBe('Copilot CLI, JetBrains, ...');
+    expect(ideAnchor.getAttribute('aria-label')).toBe('IDE used Copilot CLI, JetBrains, VS Code');
+    expect(ideAnchor.getAttribute('title')).toBe('Copilot CLI, JetBrains, VS Code');
+
+    toggleFilterOptions('Feature used', ['Chat', 'Completions', 'Agent']);
+    const featureAnchor = screen.getByRole('button', { name: 'Feature used Chat, Completions, Agent' });
+    expect(featureAnchor.textContent).toBe('Chat, Completions, ...');
+    fireEvent.click(featureAnchor);
+    expect(screen.getAllByRole('option', { selected: true })).toHaveLength(3);
+    fireEvent.click(featureAnchor);
+    toggleFilterOptions('Feature used', ['Agent']);
+    expect(featureAnchor.textContent).toBe('Chat, Completions');
+    expect(getResultCount()).toBe('Showing 1 of 1 users');
   });
 
   it('shows a filtered empty state when no users match', () => {
     renderTable([makeUser()]);
 
-    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: 'vscode_agent' } });
+    toggleFilterOptions('Feature used', ['VS Code Agents']);
 
     expect(screen.getByText('No users match the selected filters')).toBeTruthy();
   });
@@ -215,21 +363,23 @@ describe('Users feature sections', () => {
   it.each([
     {
       filter: 'app',
+      label: 'App',
       included: makeUser({ user_login: 'app-user', used_copilot_app: true }),
       excluded: [makeUser({ user_id: 2, user_login: 'non-app-user', used_copilot_app: false })],
     },
     {
       filter: 'vscode_agent',
+      label: 'VS Code Agents',
       included: makeUser({ user_login: 'agents-window-user', used_agent: false, used_vscode_agent: true }),
       excluded: [
         makeUser({ user_id: 2, user_login: 'editor-only-user', used_vscode_agent: false }),
         makeUser({ user_id: 3, user_login: 'unreported-user', used_vscode_agent: null }),
       ],
     },
-  ])('filters users by the $filter feature', ({ filter, included, excluded }) => {
+  ])('filters users by the $filter feature', ({ label, included, excluded }) => {
     renderTable([included, ...excluded]);
 
-    fireEvent.change(screen.getByLabelText('Feature used'), { target: { value: filter } });
+    toggleFilterOptions('Feature used', [label]);
 
     const table = screen.getByRole('table');
     expect(within(table).getByText(included.user_login)).toBeTruthy();
