@@ -15,6 +15,8 @@ export const USER_FEATURE_FILTERS = [
   { value: 'auto_mode', label: 'Auto Mode' },
 ] as const;
 
+export type UserFeatureFilter = typeof USER_FEATURE_FILTERS[number]['value'];
+
 interface ClientFilterOption {
   value: string;
   label: string;
@@ -23,10 +25,10 @@ interface ClientFilterOption {
 interface UseUserFiltersResult {
   searchQuery: string;
   setSearchQuery: (value: string) => void;
-  selectedClient: string;
-  setSelectedClient: (value: string) => void;
-  selectedFeature: string;
-  setSelectedFeature: (value: string) => void;
+  selectedClients: string[];
+  setSelectedClients: (value: string[]) => void;
+  selectedFeatures: UserFeatureFilter[];
+  setSelectedFeatures: (value: UserFeatureFilter[]) => void;
   clientOptions: ClientFilterOption[];
   hasActiveFilters: boolean;
   clearFilters: () => void;
@@ -42,7 +44,7 @@ function getClientFilterKey(client: string): string {
   return getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
 }
 
-function matchesFeature(user: UserSummary, feature: string): boolean {
+function matchesFeature(user: UserSummary, feature: UserFeatureFilter): boolean {
   switch (feature) {
     case 'chat':
       return user.used_chat;
@@ -63,16 +65,14 @@ function matchesFeature(user: UserSummary, feature: string): boolean {
         || user.used_copilot_code_review_passive;
     case 'auto_mode':
       return user.used_auto_mode ?? false;
-    default:
-      return true;
   }
 }
 
 export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-  const [selectedClient, setSelectedClient] = useState('');
-  const [selectedFeature, setSelectedFeature] = useState('');
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+  const [selectedFeatures, setSelectedFeatures] = useState<UserFeatureFilter[]>([]);
 
   const trieRoot = useMemo(() => {
     const root: TrieNode = {
@@ -150,31 +150,33 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
 
   const filteredUsers = useMemo(
     () => usernameMatches.filter(user => {
-      const matchesClient = !selectedClient
+      const matchesClient = selectedClients.length === 0
         || user.clients_used.some(
-          client => getClientFilterKey(client) === selectedClient
+          client => selectedClients.includes(getClientFilterKey(client))
         );
-      return matchesClient && matchesFeature(user, selectedFeature);
+      const matchesSelectedFeature = selectedFeatures.length === 0
+        || selectedFeatures.some(feature => matchesFeature(user, feature));
+      return matchesClient && matchesSelectedFeature;
     }),
-    [selectedClient, selectedFeature, usernameMatches]
+    [selectedClients, selectedFeatures, usernameMatches]
   );
 
   const clearFilters = () => {
     setSearchQuery('');
     setDebouncedSearchQuery('');
-    setSelectedClient('');
-    setSelectedFeature('');
+    setSelectedClients([]);
+    setSelectedFeatures([]);
   };
 
   return {
     searchQuery,
     setSearchQuery,
-    selectedClient,
-    setSelectedClient,
-    selectedFeature,
-    setSelectedFeature,
+    selectedClients,
+    setSelectedClients,
+    selectedFeatures,
+    setSelectedFeatures,
     clientOptions,
-    hasActiveFilters: Boolean(searchQuery || selectedClient || selectedFeature),
+    hasActiveFilters: Boolean(searchQuery || selectedClients.length || selectedFeatures.length),
     clearFilters,
     filteredUsers,
   };

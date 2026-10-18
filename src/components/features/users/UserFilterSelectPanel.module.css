@@ -1,0 +1,21 @@
+.anchor {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.anchor [data-component='buttonContent'] {
+  min-width: 0;
+  flex: 1 1 auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.anchor [data-component='text'] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anchor [data-component='trailingAction'] {
+  flex-shrink: 0;
+}

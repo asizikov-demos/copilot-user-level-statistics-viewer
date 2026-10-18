@@ -45,6 +45,10 @@ if (typeof document !== 'undefined') {
     Element.prototype.scrollIntoView = vi.fn();
   }
 
+  if (typeof Element.prototype.scrollTo === 'undefined') {
+    Element.prototype.scrollTo = vi.fn();
+  }
+
   guardJsdomEmptySpecificity();
 }
 
