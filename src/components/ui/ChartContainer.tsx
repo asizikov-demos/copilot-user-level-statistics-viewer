@@ -53,11 +53,11 @@ export default function ChartContainer({
 }: ChartContainerProps) {
   if (isEmpty) {
     return (
-      <div className={cn(styles.root, 'relative min-h-64', className)} data-component="ChartContainer" data-empty="true">
+      <div className={cn(styles.root, 'flex min-h-64 flex-col', className)} data-component="ChartContainer" data-empty="true">
         <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
           {title}
         </Heading>
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
             <EmptyState icon={GraphIcon} heading={emptyState} headingAs="h4" />
           </div>
