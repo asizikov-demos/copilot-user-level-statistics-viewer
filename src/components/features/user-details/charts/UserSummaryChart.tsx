@@ -32,14 +32,14 @@ function CompositionTile({ title, entries, unit, label }: CompositionTileProps) 
   return (
     <div className="bg-muted rounded-lg p-4">
       <h4 className="text-sm font-medium text-default mb-3 text-center">{title}</h4>
-      <CompositionChart variant="pie" entries={entries} unit={unit} label={label} surface="muted" />
+      <CompositionChart variant="doughnut" entries={entries} unit={unit} label={label} surface="muted" />
     </div>
   );
 }
 
 /**
  * Displays a summary of a user's usage across features, IDEs, languages, and models.
- * Each distribution renders as an optional pie chart with a legend of values and shares.
+ * Each distribution renders as an optional doughnut chart with a legend of values and shares.
  */
 export default function UserSummaryChart({
   usedChat,

@@ -7,12 +7,14 @@ import {
   selectUserDetailsHeaderReadModel,
   type UserDetailsViewModel,
 } from '../../../read-models/userDetails';
+import { GraphIcon } from '@primer/octicons-react';
 import { formatIDEName } from '../../icons/IDEIcons';
 import { generateDateRange } from '../../../utils/formatters';
 import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
 import AiCreditsChart from '../../charts/AiCreditsChart';
+import EmptyState from '../../ui/EmptyState';
 import ModeImpactChart from '../../charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
 import UserActivityByLanguageAndFeatureChart from './charts/UserActivityByLanguageAndFeatureChart';
@@ -67,6 +69,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const { userDetails, userSummary, userLogin, userId } = model;
   const { navigateTo } = useNavigation();
   const filledCombinedImpact = useMemo(() => fillDateRange(userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
+  const hasCombinedImpactData = useMemo(() => filledCombinedImpact.some(entry => entry.locAdded !== 0 || entry.locDeleted !== 0), [filledCombinedImpact]);
   const filledAgentImpact = useMemo(() => fillDateRange(userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAgentImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledAskModeImpact = useMemo(() => fillDateRange(userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyAskModeImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
   const filledCompletionImpact = useMemo(() => fillDateRange(userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCompletionImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
@@ -337,12 +340,24 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       />
 
       <div id={combinedImpactSection.id} className="scroll-mt-28">
-        <ModeImpactChart
-          data={filledCombinedImpact}
-          title="Combined Copilot Impact"
-          description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, Copilot App, and CLI activities."
-          emptyStateMessage="No combined impact data available."
-        />
+        {hasCombinedImpactData ? (
+          <ModeImpactChart
+            data={filledCombinedImpact}
+            title="Combined Copilot Impact"
+            description="Daily lines of code added and deleted across Code Completion, Ask Mode, Agent Mode, Edit Mode, Inline Mode, Copilot App, and CLI activities."
+          />
+        ) : (
+          <div className="bg-default border border-default rounded-md h-[400px] flex items-center justify-center p-6 overflow-auto">
+            <div className="w-full max-w-md">
+              <EmptyState
+                icon={GraphIcon}
+                heading="No Copilot impact data"
+                description="No lines of code were added or deleted by Copilot for this user in the selected period. Make sure client-side telemetry is enabled in the IDE, CLI, and Copilot App this user works with, then check back after new activity."
+                data-testid="combined-impact-empty-state"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <UserDetailsImpactBreakdownSection
