@@ -25,7 +25,7 @@ Choose chart type based on data semantics:
 - **Horizontal bars** — for per-category comparisons and rankings; use `createHorizontalBarChartOptions`
 - **Pie and doughnut** — documented exceptions to Primer's bar, line, and area guidance, used only for a single total's part-to-whole breakdown. Render them with `CompositionChart` from `./CompositionChart`, which draws at most five slices (the top four plus an expandable gray "Other") and lists each value and share in an HTML legend. Use `variant="pie"` for compact tiles and `variant="doughnut"` for standalone cards. When entries overlap (for example, users counted under several clients), their sum double-counts: say so in the description and pass `showTotal={false}`
 - **Radar** — reserved for the existing user feature adoption profile; do not add new radar or polar area charts
-- Documented exceptions to Primer chart guidance: Feature Adoption radar, day Clients doughnut, the three User Summary pies, and the organization Client Distribution donut. Do not add others.
+- Documented exceptions to Primer chart guidance: Feature Adoption radar, day Clients doughnut, the three User Summary doughnuts, and the organization Client Distribution donut. Do not add others.
 
 ## Chart Options
 

@@ -23,7 +23,7 @@ const features = {
 describe('UserSummaryChart', () => {
   beforeEach(() => compositionChart.mockClear());
 
-  it('draws a pie for each distribution with positive values', () => {
+  it('draws a doughnut for each distribution with positive values', () => {
     const ideDistribution = [{ label: 'VS Code', value: 12, color: 'rgb(0, 0, 1)' }];
     const modelDistribution = [{ label: 'gpt-5', value: 7, color: 'rgb(0, 0, 2)' }];
 
@@ -42,14 +42,14 @@ describe('UserSummaryChart', () => {
     expect(markup).not.toContain('Languages (Generations)');
     expect(compositionChart.mock.calls.map(([props]) => props)).toEqual([
       {
-        variant: 'pie',
+        variant: 'doughnut',
         entries: ideDistribution,
         unit: 'interactions',
         label: 'Interactions by client',
         surface: 'muted',
       },
       {
-        variant: 'pie',
+        variant: 'doughnut',
         entries: modelDistribution,
         unit: 'interactions',
         label: 'Interactions by model',
@@ -58,7 +58,7 @@ describe('UserSummaryChart', () => {
     ]);
   });
 
-  it('omits every pie without distributions', () => {
+  it('omits every doughnut without distributions', () => {
     const markup = renderToStaticMarkup(<UserSummaryChart {...features} />);
 
     expect(markup).toContain('Features Used');
