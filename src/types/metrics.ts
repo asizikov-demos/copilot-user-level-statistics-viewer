@@ -19,6 +19,7 @@ export interface CopilotClientUsageTotals {
 }
 
 export interface CopilotMetrics extends CliCustomizationFields {
+  totals_by_plugin?: Array<{ plugin: string; interaction_count?: number | null }> | null;
   report_start_day: string;
   report_end_day: string;
   day: string;

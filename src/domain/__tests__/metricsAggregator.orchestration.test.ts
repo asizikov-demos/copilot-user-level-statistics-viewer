@@ -271,6 +271,7 @@ describe('metrics aggregation contract', () => {
       dailyCliTokenData: [...defaults.cli.dailyCliTokenData],
       dailyCliAdoptionTrend: [...defaults.cli.dailyCliAdoptionTrend],
     };
+    const customizationsAggregation = { ...defaults.customizations };
     const aiAggregation = {
       aiAdoptionPhaseData: [...defaults.ai.aiAdoptionPhaseData],
       usageDistributionData: [...defaults.ai.usageDistributionData],
@@ -288,6 +289,7 @@ describe('metrics aggregation contract', () => {
       clientAggregation,
       modelAggregation,
       cliAggregation,
+      customizationsAggregation,
       aiAggregation,
       surfaceProductivityAggregation,
     });

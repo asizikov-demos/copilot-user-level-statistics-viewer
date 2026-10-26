@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
       selectAiAdoptionPhaseReadModel: selector('selectAiAdoptionPhaseReadModel'),
       selectCopilotAdoptionReadModel: selector('selectCopilotAdoptionReadModel'),
       selectCliAdoptionReadModel: selector('selectCliAdoptionReadModel'),
+      selectCustomizationsReadModel: selector('selectCustomizationsReadModel'),
       selectClientsReadModel: selector('selectClientsReadModel'),
       selectClientVersionsReadModel: selector('selectClientVersionsReadModel'),
       selectCopilotImpactReadModel: selector('selectCopilotImpactReadModel'),
@@ -59,6 +60,9 @@ vi.mock('../../../../read-models/adoption', () => ({
 vi.mock('../../../../read-models/cliAdoption', () => ({
   selectCliAdoptionReadModel: mocks.selectors.selectCliAdoptionReadModel,
 }));
+vi.mock('../../../../read-models/customizations', () => ({
+  selectCustomizationsReadModel: mocks.selectors.selectCustomizationsReadModel,
+}));
 vi.mock('../../../../read-models/clients', () => ({
   selectClientsReadModel: mocks.selectors.selectClientsReadModel,
   selectClientVersionsReadModel: mocks.selectors.selectClientVersionsReadModel,
@@ -79,6 +83,9 @@ vi.mock('../../../../read-models/surfaceProductivity', () => ({
 vi.mock('../../../AboutView', () => ({ default: mocks.stubView('AboutView') }));
 vi.mock('../../../AiCreditsView', () => ({ default: mocks.stubView('AiCreditsView') }));
 vi.mock('../../../CLIAdoptionView', () => ({ default: mocks.stubView('CLIAdoptionView') }));
+vi.mock('../../../features/customizations/CustomizationsView', () => ({
+  default: mocks.stubView('CustomizationsView'),
+}));
 vi.mock('../../../ClientsView', () => ({ default: mocks.stubView('ClientsView') }));
 vi.mock('../../../ExecutiveSummaryView', () => ({
   default: mocks.stubView('ExecutiveSummaryView'),
@@ -181,6 +188,7 @@ const ADAPTER_CASES: AdapterCase[] = [
     selector: 'selectModelDetailsReadModel',
   },
   { mode: VIEW_MODES.CLI_ADOPTION, view: 'CLIAdoptionView', selector: 'selectCliAdoptionReadModel' },
+  { mode: VIEW_MODES.CUSTOMIZATIONS, view: 'CustomizationsView', selector: 'selectCustomizationsReadModel' },
   {
     mode: VIEW_MODES.SURFACE_PRODUCTIVITY,
     view: 'SurfaceProductivityView',

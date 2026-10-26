@@ -20,6 +20,8 @@ import { selectSurfaceProductivityReadModel } from '../../../read-models/surface
 import AboutView from '../../AboutView';
 import AiCreditsView from '../../AiCreditsView';
 import CLIAdoptionView from '../../CLIAdoptionView';
+import CustomizationsView from '../../features/customizations/CustomizationsView';
+import { selectCustomizationsReadModel } from '../../../read-models/customizations';
 import ClientsView from '../../ClientsView';
 import ExecutiveSummaryView from '../../ExecutiveSummaryView';
 import ModelDetailsView from '../../ModelDetailsView';
@@ -160,6 +162,16 @@ export function CliAdoptionRouteAdapter({
   return (
     <CLIAdoptionView
       model={selectCliAdoptionReadModel(aggregatedMetrics)}
+    />
+  );
+}
+
+export function CustomizationsRouteAdapter({
+  aggregatedMetrics,
+}: StandardRouteContext) {
+  return (
+    <CustomizationsView
+      model={selectCustomizationsReadModel(aggregatedMetrics)}
     />
   );
 }
