@@ -35,6 +35,12 @@ import {
   type CliAggregationResult,
 } from './aggregation/cliAggregation';
 import {
+  accumulateCustomizationsAggregation,
+  createCustomizationsAggregationAccumulator,
+  finalizeCustomizationsAggregation,
+  type CustomizationsAggregationResult,
+} from './aggregation/customizationsAggregation';
+import {
   accumulateLanguageAggregation,
   createLanguageAggregationAccumulator,
   finalizeLanguageAggregation,
@@ -80,6 +86,7 @@ interface FinalizedAggregationResults {
   clientAggregation: ClientAggregationResult;
   modelAggregation: ModelAggregationResult;
   cliAggregation: CliAggregationResult;
+  customizationsAggregation: CustomizationsAggregationResult;
   aiAggregation: AiAggregationResult;
   surfaceProductivityAggregation: SurfaceProductivityAggregationResult;
 }
@@ -93,6 +100,7 @@ export function assembleAggregatedMetrics({
   clientAggregation,
   modelAggregation,
   cliAggregation,
+  customizationsAggregation,
   aiAggregation,
   surfaceProductivityAggregation,
 }: FinalizedAggregationResults): AggregatedMetrics {
@@ -125,6 +133,7 @@ export function assembleAggregatedMetrics({
       modelBreakdownData: modelAggregation.modelBreakdownData,
     },
     cli: cliAggregation,
+    customizations: customizationsAggregation,
     ai: aiAggregation,
     productivity: surfaceProductivityAggregation,
   };
@@ -144,6 +153,8 @@ export function aggregateMetrics(
     createEngagementAdoptionAggregationAccumulator();
   const clientAggregationAccumulator = createClientAggregationAccumulator();
   const cliAggregationAccumulator = createCliAggregationAccumulator();
+  const customizationsAggregationAccumulator =
+    createCustomizationsAggregationAccumulator();
   const languageAggregationAccumulator = createLanguageAggregationAccumulator();
   const modelAggregationAccumulator = createModelAggregationAccumulator();
   const impactAggregationAccumulator = createImpactAggregationAccumulator();
@@ -188,6 +199,10 @@ export function aggregateMetrics(
       metric
     );
     accumulateCliAggregation(cliAggregationAccumulator, metric);
+    accumulateCustomizationsAggregation(
+      customizationsAggregationAccumulator,
+      metric
+    );
 
     accumulateLanguageAggregation(
       languageAggregationAccumulator,
@@ -217,6 +232,9 @@ export function aggregateMetrics(
     clientAggregationAccumulator
   );
   const cliAggregation = finalizeCliAggregation(cliAggregationAccumulator);
+  const customizationsAggregation = finalizeCustomizationsAggregation(
+    customizationsAggregationAccumulator
+  );
   const cliUsage = getCliUsageForDownstreamCalculations(
     cliAggregationAccumulator
   );
@@ -244,6 +262,7 @@ export function aggregateMetrics(
       clientAggregation,
       modelAggregation,
       cliAggregation,
+      customizationsAggregation,
       aiAggregation,
       surfaceProductivityAggregation,
     }),

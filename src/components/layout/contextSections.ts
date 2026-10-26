@@ -74,6 +74,12 @@ export const AI_CREDITS_SECTIONS: ContextSection[] = [
   { id: 'ai-credits-usage-distribution', label: 'Usage Distribution' },
 ];
 
+export const CUSTOMIZATIONS_SECTIONS: ContextSection[] = [
+  { id: 'customizations-overview', label: 'Overview' },
+  { id: 'customizations-top', label: 'Top Customizations' },
+  { id: 'customizations-explorer', label: 'Explorer' },
+];
+
 export const CONTEXT_SECTIONS: Partial<Record<ViewMode, ContextSection[]>> = {
   [VIEW_MODES.OVERVIEW]: OVERVIEW_SECTIONS,
   [VIEW_MODES.AI_CREDITS]: AI_CREDITS_SECTIONS,
@@ -82,6 +88,7 @@ export const CONTEXT_SECTIONS: Partial<Record<ViewMode, ContextSection[]>> = {
   [VIEW_MODES.COPILOT_ADOPTION]: COPILOT_ADOPTION_SECTIONS,
   [VIEW_MODES.AI_ADOPTION_PHASES]: AI_ADOPTION_PHASE_SECTIONS,
   [VIEW_MODES.CLI_ADOPTION]: CLI_ADOPTION_SECTIONS,
+  [VIEW_MODES.CUSTOMIZATIONS]: CUSTOMIZATIONS_SECTIONS,
   [VIEW_MODES.LANGUAGES]: LANGUAGES_SECTIONS,
   [VIEW_MODES.CLIENT_VERSIONS]: CLIENT_VERSIONS_SECTIONS,
   [VIEW_MODES.USER_DETAILS]: USER_DETAILS_SECTIONS,
