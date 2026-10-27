@@ -24,7 +24,7 @@ Visualize GitHub Copilot usage metrics from your organization. Upload metrics ND
 
 ### Prerequisites
 
-- Node.js (^20.19.0 || >=22.12.0)
+- Node.js (^22.22.2 || ^24.15.0 || >=26.0.0)
 - npm
 
 ### Installation
