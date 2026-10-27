@@ -23,7 +23,7 @@
     "@primer/primitives": "^11.10.0",
     "@primer/react": "^38.42.0",
     "chart.js": "^4.5.1",
-    "next": "^16.4.0",
+    "next": "^16.4.1",
     "react": "^19.3.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.3.0",
