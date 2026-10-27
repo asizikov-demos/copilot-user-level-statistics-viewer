@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { createChunkedFile, createFailingFile } from '../../__tests__/factories/files';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import type { WorkerRequest, WorkerResponse } from '../types';
@@ -53,6 +54,55 @@ describe('metricsWorker protocol', () => {
   });
 
   describe('parseAndAggregate', () => {
+    it('loads the sample report with varied AI credit usage across days and phases', async () => {
+      const sample = readFileSync('public/data/sample-report.ndjson', 'utf8');
+      const records = sample.trimEnd().split('\n').map(line => JSON.parse(line));
+      const credits = records.map(record => record.ai_credits_used as number);
+      expect(credits.every(value => Number.isFinite(value) && value >= 0)).toBe(true);
+      expect(credits.some(value => value === 0)).toBe(true);
+      expect(credits.filter(value => value > 0).length).toBeGreaterThan(records.length / 2);
+      for (const phase of [0, 1, 2, 3]) {
+        expect(records.some(record =>
+          record.ai_adoption_phase?.phase_number === phase && record.ai_credits_used > 0
+        )).toBe(true);
+      }
+      const median = (values: number[]) => {
+        const sorted = [...values].sort((a, b) => a - b);
+        expect(sorted.length).toBeGreaterThan(0);
+        return sorted[Math.floor(sorted.length / 2)];
+      };
+      const medianCredits = (predicate: (record: typeof records[number]) => boolean) =>
+        median(records.filter(predicate).map(record => record.ai_credits_used as number));
+      const lowActivity = medianCredits(record =>
+        record.user_initiated_interaction_count > 0 && record.user_initiated_interaction_count < 10
+      );
+      const mediumActivity = medianCredits(record =>
+        record.user_initiated_interaction_count >= 10 && record.user_initiated_interaction_count < 50
+      );
+      const highActivity = medianCredits(record => record.user_initiated_interaction_count >= 50);
+      expect(mediumActivity).toBeGreaterThan(lowActivity);
+      expect(highActivity).toBeGreaterThan(mediumActivity);
+      expect(medianCredits(record => record.loc_added_sum >= 100))
+        .toBeGreaterThan(medianCredits(record => record.loc_added_sum <= 0));
+
+      const { send, find } = await loadWorker();
+      await send({
+        type: 'parseAndAggregate',
+        id: 'sample',
+        files: [createChunkedFile([sample], 'sample-report.ndjson')],
+      });
+
+      const result = find('parseAndAggregateResult');
+      expect(result).toMatchObject({ recordCount: records.length, errors: [] });
+      expect(result?.result.ai.dailyAiCreditsData).toHaveLength(
+        new Set(records.map(record => record.day)).size
+      );
+      const dailyCredits = result?.result.ai.dailyAiCreditsData ?? [];
+      expect(dailyCredits.every(day => day.aiCreditsUsed > 0 && day.users > 0)).toBe(true);
+      expect(dailyCredits.reduce((total, day) => total + day.aiCreditsUsed, 0))
+        .toBeCloseTo(credits.reduce((total, value) => total + value, 0), 5);
+    });
+
     it('accepts name-only customization entries and retains unavailable counts in user details', async () => {
       const { send, find } = await loadWorker();
       await send({
