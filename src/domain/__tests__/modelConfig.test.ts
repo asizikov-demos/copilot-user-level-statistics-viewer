@@ -23,6 +23,44 @@ describe('modelConfig', () => {
   });
 
   describe('known model catalog', () => {
+    // Pricing-table snapshot checked on 2026-10-27; context tiers share model identities.
+    // https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
+    it.each([
+      ['GPT-5.3-Codex', 'Powerful', 'OpenAI'],
+      ['GPT-5.4 nano', 'Lightweight', 'OpenAI'],
+      ['GPT-5.6 Luna', 'Lightweight', 'OpenAI'],
+      ['GPT-5.6 Sol', 'Powerful', 'OpenAI'],
+      ['GPT-5.6 Terra', 'Versatile', 'OpenAI'],
+      ['GPT-6 Astra', 'Powerful', 'OpenAI'],
+      ['GPT-6 Luna', 'Lightweight', 'OpenAI'],
+      ['GPT-6 Sol', 'Powerful', 'OpenAI'],
+      ['GPT-6.1 Sol', 'Powerful', 'OpenAI'],
+      ['GPT-6.1 Terra', 'Versatile', 'OpenAI'],
+      ['Claude Haiku 4.5', 'Versatile', 'Anthropic'],
+      ['Claude Haiku 5.5', 'Lightweight', 'Anthropic'],
+      ['Claude Sonnet 4', 'Versatile', 'Anthropic'],
+      ['Claude Sonnet 4.6', 'Versatile', 'Anthropic'],
+      ['Claude Opus 4.8', 'Powerful', 'Anthropic'],
+      ['Claude Opus 5', 'Powerful', 'Anthropic'],
+      ['Claude Opus 5.5', 'Powerful', 'Anthropic'],
+      ['Claude Sonnet 5', 'Versatile', 'Anthropic'],
+      ['Claude Sonnet 5.5', 'Versatile', 'Anthropic'],
+      ['Claude Opus 4.8 (fast mode) (preview)', 'Powerful', 'Anthropic'],
+      ['Claude Fable 5', 'Powerful', 'Anthropic'],
+      ['Claude Fable 5.1', 'Powerful', 'Anthropic'],
+      ['Gemini 3.8 Flash', 'Versatile', 'Google'],
+      ['Gemini 4 Argon', 'Powerful', 'Google'],
+      ['MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'],
+      ['Grok 4.5', 'Versatile', 'xAI'],
+      ['Grok 4.6', 'Versatile', 'xAI'],
+      ['Grok 4.7', 'Versatile', 'xAI'],
+      ['Kimi K3', 'Powerful', 'Moonshot AI'],
+    ])('matches the documented category and vendor for %s', (name, category, vendor) => {
+      expect(isKnownModelName(name)).toBe(true);
+      expect(getModelCategory(name)).toBe(category);
+      expect(getModelVendor(name)).toBe(vendor);
+    });
+
     it('recognizes every catalog entry with a valid category and the vendor of its model family', () => {
       const vendorByPrefix: Array<[string, string]> = [
         ['claude', 'Anthropic'],
@@ -57,6 +95,8 @@ describe('modelConfig', () => {
     it.each([
       ['  GPT_6_LUNA  ', 'gpt-6-luna', 'Lightweight', 'OpenAI'],
       ['GPT-6.1 Sol', 'gpt-6.1-sol', 'Powerful', 'OpenAI'],
+      ['gpt-6.1-terra', 'gpt-6.1-terra', 'Versatile', 'OpenAI'],
+      ['  GPT_6.1_TERRA  ', 'gpt-6.1-terra', 'Versatile', 'OpenAI'],
       ['Claude Sonnet 5.5', 'claude-sonnet-5.5', 'Versatile', 'Anthropic'],
       ['Claude Fable 5.1', 'claude-fable-5.1', 'Powerful', 'Anthropic'],
       ['claude-fable-5-1', 'claude-fable-5-1', 'Powerful', 'Anthropic'],
