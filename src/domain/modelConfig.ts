@@ -33,7 +33,8 @@ export class Model {
 }
 
 /**
- * Canonical list of known models.
+ * Canonical list of known models, retaining historical entries for older reports.
+ * Current categories: https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
  */
 export const KNOWN_MODELS: Model[] = [
   new Model('goldeneye', 'Powerful', 'GitHub'),
@@ -67,6 +68,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-6-luna', 'Lightweight', 'OpenAI'),
   new Model('gpt-6-sol', 'Powerful', 'OpenAI'),
   new Model('gpt-6.1-sol', 'Powerful', 'OpenAI'),
+  new Model('gpt-6.1-terra', 'Versatile', 'OpenAI'),
   new Model('grok-code-fast-1', 'Lightweight', 'xAI'),
   new Model('grok-4', 'Versatile', 'xAI'),
   new Model('grok-4.5', 'Versatile', 'xAI'),
