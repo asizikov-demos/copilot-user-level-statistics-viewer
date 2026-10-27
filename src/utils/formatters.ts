@@ -3,6 +3,26 @@
  */
 import type { AIAdoptionPhase } from '../types/metrics';
 
+const ISO_DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function parseIsoDateOnly(dateString: string): Date | null {
+  const match = ISO_DATE_ONLY_PATTERN.exec(dateString);
+  if (!match) return null;
+
+  const date = new Date(`${dateString}T00:00:00Z`);
+  const [, year, month, day] = match;
+  if (
+    Number.isNaN(date.getTime())
+    || date.getUTCFullYear() !== Number(year)
+    || date.getUTCMonth() + 1 !== Number(month)
+    || date.getUTCDate() !== Number(day)
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 /**
  * Format a date string for display.
  * @param dateString - ISO date string (YYYY-MM-DD)
@@ -19,8 +39,15 @@ export function formatDate(
 ): string {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', options);
+    const isDateOnly = ISO_DATE_ONLY_PATTERN.test(dateString);
+    const date = isDateOnly ? parseIsoDateOnly(dateString) : new Date(dateString);
+    if (date === null) return dateString;
+    if (Number.isNaN(date.getTime())) return dateString;
+
+    return date.toLocaleDateString(
+      'en-US',
+      isDateOnly ? { ...options, timeZone: 'UTC' } : options,
+    );
   } catch {
     return dateString;
   }

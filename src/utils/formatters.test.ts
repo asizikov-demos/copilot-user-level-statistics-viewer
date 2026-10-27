@@ -1,7 +1,49 @@
 import { describe, it, expect } from 'vitest';
-import { formatAiAdoptionPhase, formatAiAdoptionPhaseName, formatAiCreditCost, generateDateRange } from './formatters';
+import {
+  formatAiAdoptionPhase,
+  formatAiAdoptionPhaseName,
+  formatAiCreditCost,
+  formatDate,
+  formatLongDate,
+  formatShortDate,
+  generateDateRange,
+} from './formatters';
 
 describe('formatters', () => {
+  describe('date formatting', () => {
+    it.each(['UTC', 'America/Los_Angeles', 'Asia/Tokyo'])(
+      'formats report date keys consistently in %s',
+      timezone => {
+        const originalTimezone = process.env.TZ;
+        process.env.TZ = timezone;
+
+        try {
+          expect(formatShortDate('2024-01-15')).toBe('Jan 15');
+          expect(formatDate('2024-01-15')).toBe('Jan 15, 2024');
+          expect(formatLongDate('2024-01-15')).toBe('January 15, 2024');
+          expect(formatDate('2024-01-15', {
+            month: 'short',
+            day: 'numeric',
+            timeZone: 'America/Los_Angeles',
+          })).toBe('Jan 15');
+        } finally {
+          if (originalTimezone === undefined) {
+            delete process.env.TZ;
+          } else {
+            process.env.TZ = originalTimezone;
+          }
+        }
+      },
+    );
+
+    it.each(['not-a-date', '2024-02-30'])(
+      'preserves invalid input instead of rendering an invalid date label: %s',
+      invalidDate => {
+        expect(formatDate(invalidDate)).toBe(invalidDate);
+      },
+    );
+  });
+
   describe('generateDateRange', () => {
     it('returns a single date when start equals end', () => {
       expect(generateDateRange('2024-01-15', '2024-01-15')).toEqual(['2024-01-15']);
