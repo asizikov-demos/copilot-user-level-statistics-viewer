@@ -56,6 +56,25 @@ npm run lint      # Run ESLint
 npm run test:run  # Run tests
 ```
 
+### Agentic workflows
+
+The workflows in `.github/workflows/*.md` are compiled with `gh aw` v1.0.1.
+After editing them, regenerate the `.lock.yml` files rather than editing generated YAML:
+
+```bash
+gh extension upgrade gh-aw --force  # Upgrade even if the local extension is pinned
+gh aw version                     # Confirm the compiler version before regenerating
+gh aw compile
+```
+
+Keep the compiler-generated `agentics-maintenance.yml` alongside the lock files;
+it handles expiration of workflow-created issues and pull requests.
+
+The code duplication scan uses the documented [`sonnet` model alias](https://github.github.com/gh-aw/reference/model-tables/)
+to resolve an available model from the live Copilot catalog rather than pinning an unavailable model ID.
+Model Sync enables [Copilot SDK mode](https://github.github.com/gh-aw/reference/engines/copilot/)
+for its proxy-aware `web-fetch` tool. Account policies can still restrict model availability.
+
 ## Data Format
 
 The application expects GitHub Copilot user-level metrics NDJSON files as provided by the GitHub Copilot Metrics Dashboard Export. See [`src/types/metrics.ts`](src/types/metrics.ts) for the full `CopilotMetrics` interface.

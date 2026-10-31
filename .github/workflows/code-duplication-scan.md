@@ -20,7 +20,7 @@ concurrency:
 strict: true
 engine:
   id: copilot
-  model: gpt-5.4
+  model: sonnet
 network: defaults
 
 tools:
