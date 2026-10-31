@@ -21,7 +21,7 @@ concurrency:
 strict: true
 engine:
   id: copilot
-  model: gpt-5.5
+  model: sonnet
 network: defaults
 
 runtimes:
