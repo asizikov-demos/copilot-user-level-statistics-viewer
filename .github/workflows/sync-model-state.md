@@ -27,6 +27,7 @@ strict: true
 engine:
   id: copilot
   model: gpt-5.6-terra
+  copilot-sdk: true
   env:
     COPILOT_PROVIDER_WIRE_API: responses
 
