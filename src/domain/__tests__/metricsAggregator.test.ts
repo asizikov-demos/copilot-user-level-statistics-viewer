@@ -15,6 +15,151 @@ const vscodeAt = (version: string) => makeIdeTotal('vscode', 0, {
 });
 
 describe('metricsAggregator cross-family consistency', () => {
+  it('unions TablePro aliases across users and days without changing uploaded records', () => {
+    const metrics = [
+      makeMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        used_cli: true,
+        totals_by_ide: [
+          makeIdeTotal('tablepro:tablepro-copilot', 3),
+          makeIdeTotal('tablepro', 2),
+        ],
+      }),
+      makeMetric({
+        user_id: 1,
+        day: '2024-01-16',
+        totals_by_ide: [makeIdeTotal(' TABLEPRO:TABLEPRO-COPILOT ', 4)],
+      }),
+      makeMetric({
+        user_id: 2,
+        day: '2024-01-15',
+        totals_by_ide: [makeIdeTotal('tablepro', 5)],
+      }),
+    ];
+    const originalMetrics = structuredClone(metrics);
+    const { aggregated, userDetailAccumulator } = aggregateMetrics(metrics);
+
+    expect(aggregated.clients.ideStats).toEqual([
+      expect.objectContaining({
+        ide: 'tablepro',
+        uniqueUsers: 2,
+        cliOverlapUsers: 1,
+        totalEngagements: 14,
+      }),
+    ]);
+    expect(aggregated.clients.multiIDEUsersCount).toBe(0);
+    expect(aggregated.clients.totalUniqueIDEUsers).toBe(2);
+    expect(aggregated.clients.dailyIdeUsersData.find(entry => entry.ide === 'tablepro')).toEqual({
+      ide: 'tablepro',
+      totalUniqueUsers: 2,
+      daily: [
+        { date: '2024-01-15', uniqueUsers: 2 },
+        { date: '2024-01-16', uniqueUsers: 1 },
+      ],
+    });
+    expect(aggregated.clients.dailyIdeUsersData.map(entry => entry.ide).sort()).toEqual([
+      'copilot_cli', 'tablepro',
+    ]);
+    expect(aggregated.overview.stats.topIde).toEqual({ name: 'tablepro', entries: 2 });
+    expect(aggregated.users.userSummaries.find(user => user.user_id === 2)).toMatchObject({
+      top_client: 'tablepro',
+      clients_used: ['tablepro'],
+    });
+    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 1);
+    expect(details?.ideAggregates).toEqual([
+      expect.objectContaining({ ide: 'tablepro', user_initiated_interaction_count: 9 }),
+    ]);
+    expect(details?.days.flatMap(day => day.totals_by_ide.map(total => total.ide)))
+      .toEqual(['tablepro', 'tablepro']);
+    expect(details?.days[0].totals_by_ide).toEqual([
+      expect.objectContaining({ ide: 'tablepro', user_initiated_interaction_count: 5 }),
+    ]);
+    expect(metrics).toEqual(originalMetrics);
+  });
+
+  it('coalesces daily TablePro activity and keeps latest versions', () => {
+    const older = '2024-01-15T09:00:00Z';
+    const newer = '2024-01-15T10:00:00Z';
+    const plugin = { plugin: 'tablepro-copilot', plugin_version: '2.0', sampled_at: newer };
+    const ideVersion = { ide_version: '1.0', sampled_at: newer };
+    const metrics = [makeMetric({
+      totals_by_feature: [makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 9 })],
+      totals_by_ide: [
+        makeIdeTotal('tablepro:tablepro-copilot', 3, {
+          code_generation_activity_count: 3,
+          code_acceptance_activity_count: 2,
+          loc_added_sum: 10,
+          loc_deleted_sum: -2,
+          loc_suggested_to_add_sum: 20,
+          loc_suggested_to_delete_sum: 4,
+          last_known_plugin_version: { ...plugin, plugin_version: '1.0', sampled_at: older },
+          last_known_ide_version: ideVersion,
+        }),
+        makeIdeTotal('tablepro', 2, {
+          code_generation_activity_count: 6,
+          code_acceptance_activity_count: 4,
+          loc_added_sum: 15,
+          loc_deleted_sum: 3,
+          loc_suggested_to_add_sum: 30,
+          loc_suggested_to_delete_sum: 6,
+          last_known_plugin_version: plugin,
+          last_known_ide_version: { ...ideVersion, ide_version: '0.9', sampled_at: older },
+        }),
+      ],
+    })];
+    const original = structuredClone(metrics);
+    const { userDetailAccumulator } = aggregateMetrics(metrics);
+    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, metrics[0].user_id);
+    expect(details?.days[0].totals_by_ide).toEqual([{
+      ide: 'tablepro',
+      user_initiated_interaction_count: 5,
+      assumed_user_initiated_interaction_count: 9,
+      code_generation_activity_count: 9,
+      code_acceptance_activity_count: 6,
+      loc_added_sum: 25,
+      loc_deleted_sum: 1,
+      loc_suggested_to_add_sum: 50,
+      loc_suggested_to_delete_sum: 10,
+      last_known_plugin_version: plugin,
+      last_known_ide_version: ideVersion,
+    }]);
+    expect(details?.pluginVersions).toHaveLength(2);
+    expect(details?.pluginVersions).toEqual(expect.arrayContaining([
+      { ...plugin, plugin_version: '1.0', sampled_at: older },
+      plugin,
+    ]));
+    expect(metrics).toEqual(original);
+  });
+
+  it('allocates assumed interactions identically for split and combined TablePro generation weights', () => {
+    const split = [
+      makeIdeTotal('tablepro:tablepro-copilot', 0, { code_generation_activity_count: 2 }),
+      makeIdeTotal('tablepro', 0, { code_generation_activity_count: 2 }),
+      makeIdeTotal('vscode', 0, { code_generation_activity_count: 3 }),
+    ];
+    const combined = [
+      makeIdeTotal('tablepro', 0, { code_generation_activity_count: 4 }),
+      split[2],
+    ];
+    const results = [split, combined].map(totals_by_ide => {
+      const metric = makeMetric({
+        totals_by_ide,
+        totals_by_feature: [
+          makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 1 }),
+        ],
+      });
+      const { userDetailAccumulator } = aggregateMetrics([metric]);
+      return computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id)!;
+    });
+    for (const details of results) {
+      expect(details.ideAggregates.map(row => [row.ide, row.assumed_user_initiated_interaction_count]))
+        .toEqual([['tablepro', 1], ['vscode', 0]]);
+      expect(details.days[0].totals_by_ide.map(row => [row.ide, row.assumed_user_initiated_interaction_count]))
+        .toEqual([['tablepro', 1], ['vscode', 0]]);
+    }
+  });
+
   describe('cloud-agent signal', () => {
     it('reflects used_copilot_cloud_agent across stats, user summaries, details, and adoption', () => {
       const metrics = [

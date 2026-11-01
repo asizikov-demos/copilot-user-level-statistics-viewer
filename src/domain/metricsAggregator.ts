@@ -1,5 +1,6 @@
 import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
+import { getIDEMetadata } from '../utils/ideMetadata';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { computeExecutiveSummary } from './calculators/executiveSummaryCalculator';
 import {
@@ -164,7 +165,23 @@ export function aggregateMetrics(
   const userDetailAggregationAccumulator =
     createUserDetailAggregationAccumulator();
 
-  for (const metric of metrics) {
+  for (const rawMetric of metrics) {
+    // Normalize the new TablePro aliases before every family consumes them,
+    // preserving existing client identities and the uploaded records.
+    const hasTableProAlias = rawMetric.totals_by_ide.some(
+      total => total.ide !== 'tablepro'
+        && getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
+    );
+    const metric = hasTableProAlias
+      ? {
+          ...rawMetric,
+          totals_by_ide: rawMetric.totals_by_ide.map(total =>
+            getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
+              ? { ...total, ide: 'tablepro' }
+              : total
+          ),
+        }
+      : rawMetric;
     const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
 
     accumulateCoreStatsAggregation(

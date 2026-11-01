@@ -23,7 +23,8 @@ export type IDEIconKey =
   | 'copilot_cli'
   | 'aqua'
   | 'marimo'
-  | 'obsidian';
+  | 'obsidian'
+  | 'tablepro';
 
 interface IDEMetadataDefinition {
   keys: readonly [string, ...string[]];
@@ -65,6 +66,7 @@ const IDE_METADATA_DEFINITIONS: readonly IDEMetadataDefinition[] = [
   { keys: ['aqua'], label: 'Aqua', iconKey: 'aqua' },
   { keys: ['marimo'], label: 'marimo', iconKey: 'marimo', color: '#1C7361' },
   { keys: ['obsidian'], label: 'Obsidian', iconKey: 'obsidian', color: '#7C3AED' },
+  { keys: ['tablepro', 'tablepro:tablepro-copilot'], label: 'TablePro', iconKey: 'tablepro' },
   { keys: ['sublime_text'], color: '#FF9800' },
 ];
 

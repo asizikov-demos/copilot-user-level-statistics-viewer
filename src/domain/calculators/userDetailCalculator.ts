@@ -196,6 +196,34 @@ function accumulateInteractionAggMetricTotals(
   accumulateAggMetricTotals(existing, incoming);
 }
 
+function coalesceTableProDayRows(
+  rows: (UserDayData['totals_by_ide'][number] & InteractionAggMetricTotals)[]
+): UserDayData['totals_by_ide'] {
+  const result: typeof rows = [];
+  let tablePro: typeof rows[number] | undefined;
+  for (const row of rows) {
+    if (row.ide !== 'tablepro' || !tablePro) {
+      result.push(row);
+      if (row.ide === 'tablepro') tablePro = row;
+      continue;
+    }
+
+    accumulateInteractionAggMetricTotals(tablePro, row);
+    for (const key of ['last_known_plugin_version', 'last_known_ide_version'] as const) {
+      const incoming = row[key];
+      const existing = tablePro[key];
+      if (incoming && (!existing || Date.parse(incoming.sampled_at) > Date.parse(existing.sampled_at))) {
+        if (key === 'last_known_plugin_version') {
+          tablePro.last_known_plugin_version = row.last_known_plugin_version;
+        } else {
+          tablePro.last_known_ide_version = row.last_known_ide_version;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 /**
  * Upserts an aggregate entry into a keyed map.
  * If the key exists, calls `accumulate` to merge `entry` into the existing record.
@@ -227,14 +255,18 @@ export function accumulateUserDetail(
   accumulateCliCustomizations(state.cliCustomizations, metric);
   const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
   const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
-  const assumptionEligibleIdeEntries = metric.totals_by_ide
+  const ideTotals = coalesceTableProDayRows(metric.totals_by_ide.map(ide => ({
+    ...ide,
+    assumed_user_initiated_interaction_count: 0,
+  })));
+  const assumptionEligibleIdeEntries = ideTotals
     .map((ide, index) => ({ ide, index }))
     .filter(({ ide }) => ide.ide !== 'copilot_app');
   const eligibleIdeAssumedInteractionCounts = distributeAssumedInteractionsByGeneration(
     assumptionEligibleIdeEntries.map(({ ide }) => ide),
     sumAssumedUserInitiatedInteractions(featureTotals),
   );
-  const ideAssumedInteractionCounts = metric.totals_by_ide.map(() => 0);
+  const ideAssumedInteractionCounts = ideTotals.map(() => 0);
   assumptionEligibleIdeEntries.forEach(({ index }, eligibleIndex) => {
     ideAssumedInteractionCounts[index] =
       eligibleIdeAssumedInteractionCounts[eligibleIndex] ?? 0;
@@ -249,8 +281,7 @@ export function accumulateUserDetail(
     upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
   }
 
-  for (const [index, ide] of metric.totals_by_ide.entries()) {
-    accumulateClientTelemetry(state.telemetry, userId, ide);
+  for (const [index, ide] of ideTotals.entries()) {
     const ideEntry: IDEAgg = {
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
@@ -263,7 +294,10 @@ export function accumulateUserDetail(
       loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
     };
     upsertAggMapEntry(state.ideMap, ide.ide, ideEntry, accumulateInteractionAggMetricTotals);
+  }
 
+  for (const ide of metric.totals_by_ide) {
+    accumulateClientTelemetry(state.telemetry, userId, ide);
     if (ide.last_known_plugin_version) {
       const pv = ide.last_known_plugin_version;
       const key = `${pv.plugin}-${pv.plugin_version}`;
@@ -312,7 +346,7 @@ export function accumulateUserDetail(
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
     used_local_byok: metric.used_local_byok,
     totals_by_feature: featureTotals.map((f) => ({ ...f })),
-    totals_by_ide: metric.totals_by_ide.map((ide, index) => ({
+    totals_by_ide: ideTotals.map((ide, index) => ({
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
       assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,

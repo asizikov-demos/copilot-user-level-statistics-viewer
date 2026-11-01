@@ -1,5 +1,7 @@
 import React from 'react';
+import Image from 'next/image';
 import { getIDEMetadata, type IDEIconKey } from '../../utils/ideMetadata';
+import tableProIcon from './tablepro.png';
 
 // VS Code — simplified ribbon logo
 const VSCodeIcon = () => (
@@ -215,6 +217,11 @@ const ObsidianIcon = () => (
   </svg>
 );
 
+// Official app icon from https://tablepro.app/logo.png.
+const TableProIcon = () => (
+  <Image src={tableProIcon} alt="" width={20} height={20} className="w-5 h-5" />
+);
+
 const DefaultIDEIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="#6B7280" strokeWidth="2" fill="none"/>
@@ -248,6 +255,7 @@ const ideIconMap: Record<IDEIconKey, React.ComponentType> = {
   aqua: AquaIcon,
   marimo: MarimoIcon,
   obsidian: ObsidianIcon,
+  tablepro: TableProIcon,
 };
 
 export const getIDEIcon = (ideName: string): React.ComponentType => {
