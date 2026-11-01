@@ -158,6 +158,10 @@ export function accumulateUserSummaryAggregation(
   userSummary.used_copilot_code_review_passive =
     userSummary.used_copilot_code_review_passive
     || (metric.used_copilot_code_review_passive ?? false);
+  if (metric.used_local_byok != null) {
+    userSummary.used_local_byok =
+      (userSummary.used_local_byok ?? false) || metric.used_local_byok;
+  }
   userSummary.used_auto_mode =
     userSummary.used_auto_mode || hasAutoModeActivity(metric);
 

@@ -13,6 +13,7 @@ interface UserSummaryChartProps {
   usedCodingAgent: boolean;
   usedCodeReview: boolean;
   usedAutoMode: boolean;
+  usedLocalByok: boolean;
   ideDistribution?: CompositionEntry[];
   languageDistribution?: CompositionEntry[];
   modelDistribution?: CompositionEntry[];
@@ -48,6 +49,7 @@ export default function UserSummaryChart({
   usedCodingAgent,
   usedCodeReview,
   usedAutoMode,
+  usedLocalByok,
   ideDistribution,
   languageDistribution,
   modelDistribution,
@@ -64,7 +66,8 @@ export default function UserSummaryChart({
           {usedCodingAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.cloudAgent}>Cloud Agent</Label>}
           {usedCodeReview && <Label size="large" variant={FEATURE_LABEL_VARIANT.codeReview}>Code Review</Label>}
           {usedAutoMode && <Label size="large" variant={FEATURE_LABEL_VARIANT.autoMode}>Auto Mode</Label>}
-          {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && !usedCodeReview && !usedAutoMode && (
+          {usedLocalByok && <Label size="large" variant={FEATURE_LABEL_VARIANT.localByok}>Local BYOK</Label>}
+          {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && !usedCodeReview && !usedAutoMode && !usedLocalByok && (
             <Label size="large" variant={FEATURE_LABEL_VARIANT.completions}>Completion Only</Label>
           )}
         </div>

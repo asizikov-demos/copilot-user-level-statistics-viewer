@@ -301,6 +301,7 @@ export function accumulateUserDetail(
     used_copilot_coding_agent: usedCopilotCloudAgent,
     used_copilot_code_review_active: metric.used_copilot_code_review_active ?? false,
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
+    used_local_byok: metric.used_local_byok,
     totals_by_feature: featureTotals.map((f) => ({ ...f })),
     totals_by_ide: metric.totals_by_ide.map((ide, index) => ({
       ide: ide.ide,

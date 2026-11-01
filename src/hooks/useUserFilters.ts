@@ -13,6 +13,7 @@ export const USER_FEATURE_FILTERS = [
   { value: 'cloud_agent', label: 'Cloud Agent' },
   { value: 'code_review', label: 'Code Review' },
   { value: 'auto_mode', label: 'Auto Mode' },
+  { value: 'local_byok', label: 'Local BYOK' },
 ] as const;
 
 export type UserFeatureFilter = typeof USER_FEATURE_FILTERS[number]['value'];
@@ -65,6 +66,8 @@ function matchesFeature(user: UserSummary, feature: UserFeatureFilter): boolean 
         || user.used_copilot_code_review_passive;
     case 'auto_mode':
       return user.used_auto_mode ?? false;
+    case 'local_byok':
+      return user.used_local_byok === true;
   }
 }
 

@@ -104,6 +104,9 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
   if (reviewMode) {
     pills.push({ label: `Code Review (${reviewMode})`, feature: 'codeReview' });
   }
+  if (dayMetrics.used_local_byok === true) {
+    pills.push({ label: 'Local BYOK', feature: 'localByok' });
+  }
   if (hasCliActivity) {
     pills.push({ label: 'CLI', feature: 'cli' });
   }

@@ -221,6 +221,16 @@ describe('DayDetailsModal', () => {
         expect(markup).not.toContain(absent);
       }
     });
+
+    it.each([
+      { used_local_byok: true, showsFeature: true },
+      { used_local_byok: false, showsFeature: false },
+      { showsFeature: false },
+    ])('shows Local BYOK only when the day flag is true: %j', ({ showsFeature, ...fields }) => {
+      const markup = renderDay(makeUserDay(fields));
+
+      expect(markup.includes('Local BYOK')).toBe(showsFeature);
+    });
   });
 
   describe('customizations', () => {

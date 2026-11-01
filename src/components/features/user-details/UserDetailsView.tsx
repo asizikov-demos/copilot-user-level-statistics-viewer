@@ -171,6 +171,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const usedCodeReviewActive = userSummary.used_copilot_code_review_active;
   const usedCodeReviewPassive = userSummary.used_copilot_code_review_passive;
   const usedCodeReview = usedCodeReviewActive || usedCodeReviewPassive;
+  const usedLocalByok = userSummary.used_local_byok === true;
 
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
   const usedAutoMode = userSummary.used_auto_mode ?? modelFeatureAggregates.some(isActiveAutoModeFeature);
@@ -388,6 +389,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           usedCodingAgent={usedCodingAgent}
           usedCodeReview={usedCodeReview}
           usedAutoMode={usedAutoMode}
+          usedLocalByok={usedLocalByok}
           ideDistribution={ideDistribution}
           languageDistribution={languageDistribution}
           modelDistribution={modelDistribution}

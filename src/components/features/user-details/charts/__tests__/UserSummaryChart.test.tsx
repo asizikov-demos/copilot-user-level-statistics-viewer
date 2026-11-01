@@ -18,6 +18,7 @@ const features = {
   usedCodingAgent: false,
   usedCodeReview: false,
   usedAutoMode: false,
+  usedLocalByok: false,
 };
 
 describe('UserSummaryChart', () => {
@@ -63,5 +64,14 @@ describe('UserSummaryChart', () => {
 
     expect(markup).toContain('Features Used');
     expect(compositionChart).not.toHaveBeenCalled();
+  });
+
+  it('shows Local BYOK without mislabeling the user as completion-only', () => {
+    const markup = renderToStaticMarkup(
+      <UserSummaryChart {...features} usedLocalByok />
+    );
+
+    expect(markup).toContain('Local BYOK');
+    expect(markup).not.toContain('Completion Only');
   });
 });

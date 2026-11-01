@@ -43,4 +43,33 @@ describe('user detail aggregation lifecycle', () => {
       false,
     ]);
   });
+
+  it('preserves missing, null, false, and true Local BYOK values per day', () => {
+    const lifecycle = createUserDetailAggregationAccumulator();
+    const records = [
+      { day: '2024-02-01' },
+      { day: '2024-02-02', used_local_byok: null },
+      { day: '2024-02-03', used_local_byok: false },
+      { day: '2024-02-04', used_local_byok: true },
+    ];
+    for (const record of records) {
+      accumulateUserDetailAggregation(
+        lifecycle,
+        makeMetric({ user_id: 7, ...record }),
+        false
+      );
+    }
+
+    const details = computeSingleUserDetailedMetrics(
+      finalizeUserDetailAggregation(lifecycle),
+      7
+    );
+
+    expect(details?.days.map(day => day.used_local_byok)).toEqual([
+      undefined,
+      null,
+      false,
+      true,
+    ]);
+  });
 });
