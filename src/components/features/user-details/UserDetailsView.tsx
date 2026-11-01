@@ -163,7 +163,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   };
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
-  const daysActive = userSummary.days_active;
   const headerSummary = useMemo(() => selectUserDetailsHeaderReadModel(model), [model]);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
@@ -324,7 +323,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         days={userDetails.days}
         reportStartDay={userDetails.reportStartDay}
         reportEndDay={userDetails.reportEndDay}
-        daysActive={daysActive}
+        activityCalendar={userDetails.activityCalendar}
         onDayClick={handleDayClick}
         agentInteractions={agentInteractions}
         planInteractions={planInteractions}

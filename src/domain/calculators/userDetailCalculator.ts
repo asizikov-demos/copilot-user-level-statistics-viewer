@@ -7,6 +7,7 @@ import {
   type ClientTelemetryAccumulator,
 } from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
+import { computeActivityCalendar } from './activityCalendarCalculator';
 import { accumulateClientTraffic, computeClientTraffic, createClientTrafficAccumulator } from './clientTrafficCalculator';
 import {
   accumulateThirdPartyAgentActivity,
@@ -445,6 +446,7 @@ export function computeSingleUserDetailedMetrics(
   }
 
   return {
+    activityCalendar: computeActivityCalendar(state.days),
     clientTraffic: computeClientTraffic(clientTrafficAccumulator),
     totalModelRequests: state.totalModelRequests,
     telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),

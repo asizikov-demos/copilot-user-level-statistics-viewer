@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserDayData } from '../../../../types/metrics';
+import type { ActivityCalendarData } from '../../../../domain/calculators/activityCalendarCalculator';
 import { formatShortDate } from '../../../../utils/formatters';
 
 interface ActivityCalendarProps {
@@ -8,7 +9,7 @@ interface ActivityCalendarProps {
   reportStartDay: string;
   reportEndDay: string;
   title?: string;
-  activeDaysCount?: number;
+  activity: ActivityCalendarData;
   onDayClick: (date: string, dayData?: UserDayData) => void;
 }
 
@@ -31,7 +32,7 @@ const ACTIVITY_LEGEND_CLASSES: readonly string[] = [
   'bg-[var(--contribution-default-bgColor-4)] border-[var(--contribution-default-borderColor-4)]',
 ];
 
-export default function ActivityCalendar({ days, reportStartDay, reportEndDay, title = 'Activity Calendar', activeDaysCount, onDayClick }: ActivityCalendarProps) {
+export default function ActivityCalendar({ days, activity, reportStartDay, reportEndDay, title = 'Activity Calendar', onDayClick }: ActivityCalendarProps) {
   const startDate = new Date(reportStartDay);
   const endDate = new Date(reportEndDay);
 
@@ -111,26 +112,8 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
     return date.toISOString().split('T')[0];
   };
 
-  const getDayTotal = (metrics: UserDayData) =>
-    metrics.user_initiated_interaction_count +
-    metrics.code_generation_activity_count +
-    metrics.code_acceptance_activity_count +
-    (metrics.totals_by_cli?.prompt_count ?? 0);
-
-  // Color intensity is relative to this user's busiest day, on a log scale so
-  // that large ranges (e.g. 900 vs 10000) still map to distinct shades.
-  const maxDailyTotal = days.reduce((max, day) => Math.max(max, getDayTotal(day)), 0);
-
-  const getActivityLevel = (dateKey: string) => {
-    const metrics = metricsMap.get(dateKey);
-    if (!metrics) return 0;
-
-    const totalActivity = getDayTotal(metrics);
-    if (totalActivity <= 0 || maxDailyTotal <= 0) return 0;
-
-    const ratio = Math.log(totalActivity + 1) / Math.log(maxDailyTotal + 1);
-    return Math.min(4, Math.max(1, Math.ceil(ratio * 4)));
-  };
+  const levels = new Map(activity.daily.map(day => [day.day, day.level]));
+  const getActivityLevel = (dateKey: string) => levels.get(dateKey) ?? 0;
 
   const getActivityColor = (level: number) =>
     ACTIVITY_LEVEL_CLASSES[level] ?? ACTIVITY_LEVEL_CLASSES[0];
@@ -148,11 +131,9 @@ export default function ActivityCalendar({ days, reportStartDay, reportEndDay, t
       <h3 className="text-lg font-semibold text-default mb-4">
         {title}
         <span className="ml-2">{monthLabel}</span>
-        {activeDaysCount !== undefined && (
-          <span className="ml-2 text-sm font-normal text-muted">
-            · {activeDaysCount} active {activeDaysCount === 1 ? 'day' : 'days'}
-          </span>
-        )}
+        <span className="ml-2 text-sm font-normal text-muted">
+          · {activity.activeDays} active {activity.activeDays === 1 ? 'day' : 'days'}
+        </span>
       </h3>
       
       <div className="space-y-2">

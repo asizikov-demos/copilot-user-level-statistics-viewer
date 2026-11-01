@@ -2,10 +2,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import ActivityCalendar from '../ActivityCalendar';
 import { makeUserDay } from '../../__tests__/helpers/userDetailsFixtures';
+import { computeActivityCalendar } from '../../../../../domain/calculators/activityCalendarCalculator';
 
 function renderCalendar() {
   return renderToStaticMarkup(
     <ActivityCalendar
+      activity={computeActivityCalendar([
+        makeUserDay({ day: '2024-01-01', user_initiated_interaction_count: 0 }),
+        makeUserDay({ day: '2024-01-02', user_initiated_interaction_count: 1 }),
+        makeUserDay({ day: '2024-01-03', user_initiated_interaction_count: 1000 }),
+      ])}
       days={[
         makeUserDay({ day: '2024-01-01', user_initiated_interaction_count: 0 }),
         makeUserDay({ day: '2024-01-02', user_initiated_interaction_count: 1 }),
@@ -36,6 +42,7 @@ describe('ActivityCalendar', () => {
     try {
       const markup = renderToStaticMarkup(
         <ActivityCalendar
+          activity={computeActivityCalendar([])}
           days={[]}
           reportStartDay="2024-01-01"
           reportEndDay="2024-01-07"
@@ -76,6 +83,7 @@ describe('ActivityCalendar', () => {
   it('alternates neutral token tints for idle days across months', () => {
     const markup = renderToStaticMarkup(
       <ActivityCalendar
+        activity={computeActivityCalendar([makeUserDay({ day: '2024-02-15', user_initiated_interaction_count: 3 })])}
         days={[makeUserDay({ day: '2024-02-15', user_initiated_interaction_count: 3 })]}
         reportStartDay="2024-01-29"
         reportEndDay="2024-03-03"
@@ -87,5 +95,25 @@ describe('ActivityCalendar', () => {
     expect(idleDayCellClass(markup, 'Feb 2')).toContain('bg-default');
     expect(idleDayCellClass(markup, 'Mar 2')).toContain('bg-muted');
     expect(markup).not.toMatch(/bg-(slate|sky|amber|rose|emerald|violet)-\d+/);
+  });
+
+  it('colors traffic-only days and aligns active days without new tooltip content', () => {
+    const days = [
+      makeUserDay({ day: '2024-01-01', totals_by_client: [{
+        client: 'claude_code', request_count: 20, session_count: 0,
+        token_usage: { prompt_tokens_sum: 20, output_tokens_sum: 10, avg_tokens_per_request: 1.5 },
+        totals_by_model: [],
+      }] }),
+      makeUserDay({ day: '2024-01-02' }),
+    ];
+    const markup = renderToStaticMarkup(<ActivityCalendar
+      days={days} activity={computeActivityCalendar(days)}
+      reportStartDay="2024-01-01" reportEndDay="2024-01-03" onDayClick={() => {}}
+    />);
+    expect(dayCellClass(markup, 'Jan 1')).toContain('bg-[var(--contribution-default-bgColor-1)]');
+    expect(dayCellClass(markup, 'Jan 2')).toContain('bg-[var(--contribution-default-bgColor-0)]');
+    expect(markup).toContain('1 active day');
+    expect(markup).not.toContain('20 requests');
+    expect(markup).not.toContain('reported sessions');
   });
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserDayData } from '../../../../types/metrics';
+import type { ActivityCalendarData } from '../../../../domain/calculators/activityCalendarCalculator';
 import ActivityCalendar from '../day-details/ActivityCalendar';
 import FeatureAdoptionRadarChart from '../charts/FeatureAdoptionRadarChart';
 
@@ -9,7 +10,7 @@ interface UserDetailsOverviewSectionProps {
   days: UserDayData[];
   reportStartDay: string;
   reportEndDay: string;
-  daysActive: number;
+  activityCalendar: ActivityCalendarData;
   onDayClick: (date: string, dayData?: UserDayData) => void;
   agentInteractions: number;
   planInteractions: number;
@@ -24,7 +25,7 @@ export default function UserDetailsOverviewSection({
   days,
   reportStartDay,
   reportEndDay,
-  daysActive,
+  activityCalendar,
   onDayClick,
   agentInteractions,
   planInteractions,
@@ -41,7 +42,7 @@ export default function UserDetailsOverviewSection({
           reportStartDay={reportStartDay}
           reportEndDay={reportEndDay}
           title="Activity Calendar"
-          activeDaysCount={daysActive}
+          activity={activityCalendar}
           onDayClick={onDayClick}
         />
       </div>
