@@ -179,6 +179,31 @@ describe('feature read models', () => {
     });
   });
 
+  it.each([
+    { clients: ['cloud_agent', 'code_review'], cloudDays: 1, reviewDays: 1, expected: 2 },
+    { clients: [' CLOUD_AGENT ', 'Code_Review'], cloudDays: 1, reviewDays: 1, expected: 2 },
+    { clients: ['cloud_agent', 'code_review'], cloudDays: 0, reviewDays: 0, expected: 2 },
+    { clients: ['vscode'], cloudDays: 1, reviewDays: 1, expected: 3 },
+    { clients: ['cloud_agent'], cloudDays: 1, reviewDays: 1, expected: 2 },
+  ])('counts overlapping client and legacy surfaces once: %j', ({ clients, cloudDays, reviewDays, expected }) => {
+    const accumulator = createUserDetailAccumulator();
+    const userSummary = makeUserSummary({
+      clients_used: clients,
+      cloud_agent_days: cloudDays,
+      code_review_days: reviewDays,
+    });
+    accumulateUserDetail(accumulator, makeMetric({ user_id: userSummary.user_id }));
+    const header = selectUserDetailsHeaderReadModel({
+      userDetails: computeSingleUserDetailedMetrics(accumulator, userSummary.user_id)!,
+      userSummary,
+      interactionRank: { rank: 1, totalUsers: 1 },
+      userLogin: userSummary.user_login,
+      userId: userSummary.user_id,
+    });
+    expect(header.surfacesUsed).toBe(expected);
+    expect(userSummary.clients_used).toEqual(clients);
+  });
+
   it('reports no last activity when the user has no detail days', () => {
     const accumulator = createUserDetailAccumulator();
     accumulator.reportStartDay = '2024-01-01';
