@@ -196,6 +196,34 @@ function accumulateInteractionAggMetricTotals(
   accumulateAggMetricTotals(existing, incoming);
 }
 
+function coalesceTableProDayRows(
+  rows: (UserDayData['totals_by_ide'][number] & InteractionAggMetricTotals)[]
+): UserDayData['totals_by_ide'] {
+  const result: typeof rows = [];
+  let tablePro: typeof rows[number] | undefined;
+  for (const row of rows) {
+    if (row.ide !== 'tablepro' || !tablePro) {
+      result.push(row);
+      if (row.ide === 'tablepro') tablePro = row;
+      continue;
+    }
+
+    accumulateInteractionAggMetricTotals(tablePro, row);
+    for (const key of ['last_known_plugin_version', 'last_known_ide_version'] as const) {
+      const incoming = row[key];
+      const existing = tablePro[key];
+      if (incoming && (!existing || Date.parse(incoming.sampled_at) > Date.parse(existing.sampled_at))) {
+        if (key === 'last_known_plugin_version') {
+          tablePro.last_known_plugin_version = row.last_known_plugin_version;
+        } else {
+          tablePro.last_known_ide_version = row.last_known_ide_version;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 /**
  * Upserts an aggregate entry into a keyed map.
  * If the key exists, calls `accumulate` to merge `entry` into the existing record.
@@ -312,7 +340,7 @@ export function accumulateUserDetail(
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
     used_local_byok: metric.used_local_byok,
     totals_by_feature: featureTotals.map((f) => ({ ...f })),
-    totals_by_ide: metric.totals_by_ide.map((ide, index) => ({
+    totals_by_ide: coalesceTableProDayRows(metric.totals_by_ide.map((ide, index) => ({
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
       assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,
@@ -328,7 +356,7 @@ export function accumulateUserDetail(
       last_known_ide_version: ide.last_known_ide_version
         ? { ...ide.last_known_ide_version }
         : undefined,
-    })),
+    }))),
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
     totals_by_model_feature: modelFeatureTotals.map((mf) => ({ ...mf })),

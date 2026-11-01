@@ -71,8 +71,60 @@ describe('metricsAggregator cross-family consistency', () => {
       expect.objectContaining({ ide: 'tablepro', user_initiated_interaction_count: 9 }),
     ]);
     expect(details?.days.flatMap(day => day.totals_by_ide.map(total => total.ide)))
-      .toEqual(['tablepro', 'tablepro', 'tablepro']);
+      .toEqual(['tablepro', 'tablepro']);
+    expect(details?.days[0].totals_by_ide).toEqual([
+      expect.objectContaining({ ide: 'tablepro', user_initiated_interaction_count: 5 }),
+    ]);
     expect(metrics).toEqual(originalMetrics);
+  });
+
+  it('coalesces daily TablePro activity after allocating assumed interactions and keeps latest versions', () => {
+    const older = '2024-01-15T09:00:00Z';
+    const newer = '2024-01-15T10:00:00Z';
+    const plugin = { plugin: 'tablepro-copilot', plugin_version: '2.0', sampled_at: newer };
+    const ideVersion = { ide_version: '1.0', sampled_at: newer };
+    const metrics = [makeMetric({
+      totals_by_feature: [makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 9 })],
+      totals_by_ide: [
+        makeIdeTotal('tablepro:tablepro-copilot', 3, {
+          code_generation_activity_count: 3,
+          code_acceptance_activity_count: 2,
+          loc_added_sum: 10,
+          loc_deleted_sum: -2,
+          loc_suggested_to_add_sum: 20,
+          loc_suggested_to_delete_sum: 4,
+          last_known_plugin_version: { ...plugin, plugin_version: '1.0', sampled_at: older },
+          last_known_ide_version: ideVersion,
+        }),
+        makeIdeTotal('tablepro', 2, {
+          code_generation_activity_count: 6,
+          code_acceptance_activity_count: 4,
+          loc_added_sum: 15,
+          loc_deleted_sum: 3,
+          loc_suggested_to_add_sum: 30,
+          loc_suggested_to_delete_sum: 6,
+          last_known_plugin_version: plugin,
+          last_known_ide_version: { ...ideVersion, ide_version: '0.9', sampled_at: older },
+        }),
+      ],
+    })];
+    const original = structuredClone(metrics);
+    const { userDetailAccumulator } = aggregateMetrics(metrics);
+    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, metrics[0].user_id);
+    expect(details?.days[0].totals_by_ide).toEqual([{
+      ide: 'tablepro',
+      user_initiated_interaction_count: 5,
+      assumed_user_initiated_interaction_count: 9,
+      code_generation_activity_count: 9,
+      code_acceptance_activity_count: 6,
+      loc_added_sum: 25,
+      loc_deleted_sum: 1,
+      loc_suggested_to_add_sum: 50,
+      loc_suggested_to_delete_sum: 10,
+      last_known_plugin_version: plugin,
+      last_known_ide_version: ideVersion,
+    }]);
+    expect(metrics).toEqual(original);
   });
 
   describe('cloud-agent signal', () => {
