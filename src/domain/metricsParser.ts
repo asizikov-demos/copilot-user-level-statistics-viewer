@@ -1,8 +1,44 @@
-import { CopilotMetrics } from '../types/metrics';
+import type { ClientUsageTotals, CopilotMetrics } from '../types/metrics';
 import { StringPool, internMetricStrings } from '../utils/stringPool';
 import type { NdjsonLine } from '../utils/ndjsonParser';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { normalizeLanguage } from './languageNormalizer';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
+}
+
+function hasValidTrafficTotals(value: Record<string, unknown>): boolean {
+  const tokens = value.token_usage;
+  return isCount(value.request_count)
+    && isRecord(tokens)
+    && isCount(tokens.output_tokens_sum)
+    && isCount(tokens.prompt_tokens_sum)
+    && typeof tokens.avg_tokens_per_request === 'number'
+    && Number.isFinite(tokens.avg_tokens_per_request)
+    && tokens.avg_tokens_per_request >= 0;
+}
+
+function isClientUsageTotals(value: unknown): value is ClientUsageTotals {
+  return isRecord(value)
+    && typeof value.client === 'string'
+    && value.client.trim().length > 0
+    && isCount(value.session_count)
+    && hasValidTrafficTotals(value)
+    && Array.isArray(value.totals_by_model)
+    && value.totals_by_model.every(model =>
+      isRecord(model)
+      && typeof model.model === 'string'
+      && model.model.trim().length > 0
+      && typeof model.model_selection_mode === 'string'
+      && model.model_selection_mode.trim().length > 0
+      && hasValidTrafficTotals(model)
+    );
+}
 
 function normalizeMetricLanguages(metric: CopilotMetrics): void {
   const featureTotals = Array.isArray(metric.totals_by_language_feature)
@@ -115,6 +151,14 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
       return null;
     }
     const parsedRaw = parsedUnknown as Record<string, unknown>;
+    const clientTotals = parsedRaw.totals_by_client;
+    if (
+      clientTotals != null
+      && (!Array.isArray(clientTotals) || !clientTotals.every(isClientUsageTotals))
+    ) {
+      console.warn('Skipping line with invalid totals_by_client');
+      return null;
+    }
 
     // Validation: reject old schema lines containing deprecated fields
     const hasDeprecatedRoot = 'generated_loc_sum' in parsedRaw || 'accepted_loc_sum' in parsedRaw;

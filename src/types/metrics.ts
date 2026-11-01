@@ -7,6 +7,28 @@ export interface AIAdoptionPhase {
   version: string;
 }
 
+export interface ClientTokenUsage {
+  output_tokens_sum: number;
+  prompt_tokens_sum: number;
+  avg_tokens_per_request: number;
+}
+
+export interface ClientModelUsageTotals {
+  model: string;
+  // Preserve future selection modes, including product-specific modes.
+  model_selection_mode: string;
+  request_count: number;
+  token_usage: ClientTokenUsage;
+}
+
+export interface ClientUsageTotals {
+  client: string;
+  request_count: number;
+  session_count: number;
+  token_usage: ClientTokenUsage;
+  totals_by_model: ClientModelUsageTotals[];
+}
+
 export interface CopilotClientUsageTotals {
   session_count: number;
   request_count: number;
@@ -24,6 +46,8 @@ export interface CopilotMetrics extends CliCustomizationFields {
     agent_name: string;
     user_initiated_interaction_count: number;
   }> | null;
+  // Server-counted model traffic, independent of editor interactions and LOC.
+  totals_by_client?: ClientUsageTotals[] | null;
   totals_by_plugin?: Array<{ plugin: string; interaction_count?: number | null }> | null;
   report_start_day: string;
   report_end_day: string;
@@ -274,6 +298,7 @@ export interface ModelBreakdownData {
 // ==========================================
 
 export interface UserDayData {
+  totals_by_client?: ClientUsageTotals[] | null;
   day: string;
   cliCustomizations?: CliCustomizationDaySummary[];
   used_vscode_agent?: boolean | null;
