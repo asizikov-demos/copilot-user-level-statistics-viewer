@@ -42,8 +42,10 @@ type TrieNode = {
 };
 
 function getClientFilterKey(client: string): string {
-  return getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
+  const key = getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
+  return key === 'github_app' ? 'copilot_app' : key;
 }
+
 
 function matchesFeature(user: UserSummary, feature: UserFeatureFilter): boolean {
   switch (feature) {

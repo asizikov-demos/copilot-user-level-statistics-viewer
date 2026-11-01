@@ -111,6 +111,29 @@ describe('Users feature sections', () => {
     expect(markup.match(/role="progressbar"/g)?.length).toBe(5);
   });
 
+  it.each([false, true])('groups both App identifiers into one filter regardless of source order: %s', reverse => {
+    const users = [
+      makeUser({ user_login: 'legacy-app', clients_used: ['copilot_app'] }),
+      makeUser({ user_id: 2, user_login: 'traffic-app', clients_used: [' GITHUB_APP '] }),
+      makeUser({ user_id: 3, user_login: 'both-app', clients_used: ['copilot_app', 'github_app'] }),
+      makeUser({ user_id: 4, user_login: 'sdk-only', clients_used: ['copilot_sdk'] }),
+    ];
+    renderTable(reverse ? [...users].reverse() : users);
+    const anchor = screen.getByRole('button', { name: 'IDE used All IDEs' });
+    fireEvent.click(anchor);
+    expect(screen.getAllByRole('option', { name: 'Copilot App' })).toHaveLength(1);
+    expect(screen.getByRole('option', { name: 'Copilot SDK' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('option', { name: 'Copilot App' }));
+    fireEvent.click(anchor);
+    expect(getResultCount()).toBe('Showing 3 of 4 users');
+    const table = screen.getByRole('table');
+    for (const name of ['legacy-app', 'traffic-app', 'both-app']) {
+      expect(within(table).getByText(name)).toBeTruthy();
+    }
+    expect(within(table).queryByText('sdk-only')).toBeNull();
+    expect(users[2].clients_used).toEqual(['copilot_app', 'github_app']);
+  });
+
   it('pages the users table, renders feature chips, and shows the empty state', () => {
     const users = Array.from({ length: 501 }, (_, index) => makeUser({
       user_login: `user-${String(index).padStart(3, '0')}`,
