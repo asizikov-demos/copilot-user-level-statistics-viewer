@@ -93,6 +93,7 @@ describe('client read models', () => {
     const metrics = makeClientMetrics();
 
     expect(selectClientsReadModel(metrics)).toEqual({
+      traffic: metrics.clients.traffic,
       telemetryWarnings: metrics.clients.telemetryWarnings,
       ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: 2,
@@ -158,6 +159,7 @@ describe('client read models', () => {
     });
 
     expect(selectClientsReadModel(metrics)).toEqual({
+      traffic: metrics.clients.traffic,
       telemetryWarnings: [],
       ideStats: metrics.clients.ideStats,
       multiIDEUsersCount: -2,
