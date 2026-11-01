@@ -57,7 +57,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     expect(result.labels).toHaveLength(3);
     expect(result.labels[1]).toBe(formatShortDate('2024-01-02'));
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Gpt 4o');
+    expect(result.datasets[0].label).toBe('GPT-4o');
     expect(result.datasets[0].data).toEqual([7, 0, 4]);
   });
 
@@ -75,7 +75,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
 
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-01');
 
-    expect(result.datasets.map(d => d.label)).toEqual(['Gpt 4o']);
+    expect(result.datasets.map(d => d.label)).toEqual(['GPT-4o']);
   });
 
   it('filters out datasets where every day has zero interactions', () => {
@@ -86,7 +86,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-02');
 
     expect(result.datasets).toHaveLength(1);
-    expect(result.datasets[0].label).toBe('Gpt 4o');
+    expect(result.datasets[0].label).toBe('GPT-4o');
   });
 
   it('formats model labels for display', () => {
@@ -99,7 +99,7 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
 
     const result = buildModelBarChartData(days, '2024-01-01', '2024-01-01');
 
-    expect(result.datasets[0].label).toBe('Claude 3.7 sonnet');
+    expect(result.datasets[0].label).toBe('Claude 3.7 Sonnet');
   });
 
   it('uses getTotalUserInitiatedInteractionCount for interaction totals', () => {

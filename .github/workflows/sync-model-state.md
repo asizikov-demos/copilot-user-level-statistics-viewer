@@ -1,5 +1,5 @@
 ---
-description: Compare the official Copilot model categories with main and open a validated implementation PR when they drift.
+description: Compare the official Copilot model names and categories with main and open a validated implementation PR when they drift.
 
 on:
   workflow_dispatch:
@@ -85,7 +85,8 @@ steps:
 
 # Sync Model State
 
-Maintain the documented Copilot model identities and categories in `KNOWN_MODELS`.
+Maintain the documented Copilot model identities, canonical display names, and
+categories in `KNOWN_MODELS`.
 If verified drift exists, implement it, review it, validate it, and request one
 pull request against `main`. Otherwise report a no-op. Stop after PR creation:
 subsequent PR review, CI follow-up, and merging belong to the maintainer.
@@ -148,21 +149,27 @@ publishing; never classify blocked verification as no drift.
    overall source is blocked, never a clean scan or evidence of model removal.
 5. Strip presentation markup and footnote references from display names, keeping
    version numbers and semantic qualifiers such as `(fast mode)` and `(preview)`.
-   Normalize with the repository helper. Collapse duplicate default/long-context
+   The cleaned name, with the source's exact capitalization and punctuation (for
+   example `GPT-5.6 Terra`, `MAI-Code-1.1-Flash`), is the canonical display name.
+   Normalize it with the repository helper to obtain the identity key. Collapse duplicate default/long-context
    rows only when their normalized identity and category agree.
 6. Accept only `Lightweight`, `Powerful`, and `Versatile`. If there are conflicting
    rows, unknown categories, ambiguous identities, or incomplete evidence, report
    the concrete blocker with `missing_data` and stop without requesting a PR.
-7. Use a deterministic identity/category comparison, not an LLM estimate. For each
-   documented normalized identity: add it if absent (`missing_model`), correct its
-   category if different (`category_drift`), or leave it unchanged if equal.
-   Config-only identities must remain unchanged.
+   Rows sharing a normalized identity must also agree on the cleaned display name.
+7. Use a deterministic identity/display-name/category comparison, not an LLM
+   estimate. For each documented normalized identity: add it if absent
+   (`missing_model`) with the documented display name and category; correct its
+   category if different (`category_drift`); correct its `displayName` if it
+   differs from the documented display name (`display_name_drift`); otherwise
+   leave it unchanged. Config-only identities, including their display names,
+   must remain unchanged.
 8. If there is no verified drift, call `noop` with the baseline SHA, source URL,
    fetch time, compared-model count, and preserved config-only count, then stop.
 
 ## Implement, review, and validate
 
-1. Make only the verified catalog additions/category corrections. Add focused
+1. Make only the verified catalog additions and category/display-name corrections. Add focused
    assertions for all changed identities using the existing test conventions.
 2. Run an independent read-only review of the full diff using an available built-in
    subagent. Apply the review criteria from `.github/agents/code-review.agent.md`,
@@ -173,9 +180,9 @@ publishing; never classify blocked verification as no drift.
    change dependencies, or fix unrelated failures. If a fix changes application
    logic, repeat review before rerunning the validation command. If validation
    cannot pass within scope, report blocked and do not request a PR.
-4. Verify the resulting catalog matches every documented normalized identity and
-   category, has no duplicate normalized keys introduced by this change, and
-   preserves every original config-only entry and category. Confirm the complete
+4. Verify the resulting catalog matches every documented normalized identity,
+   display name, and category, has no duplicate normalized keys introduced by this change, and
+   preserves every original config-only entry, display name, and category. Confirm the complete
    diff is limited to the two allowed files and the verified drift/tests.
 5. Recheck open PRs for competing model-sync work before publishing. If another
    PR now covers the work, call `noop` with its link and do not publish this diff.
@@ -189,13 +196,13 @@ conventional message and the repository-required co-author trailer, then call th
 The safe-output job publishes the commit and PR; a queued request is not confirmed
 publication. Do not claim success before that job's result.
 
-Use a descriptive title such as `Sync documented Copilot model categories`.
+Use a descriptive title such as `Sync documented Copilot model names and categories`.
 The PR body must include:
 
 - The official source URL and UTC retrieval time, the pinned main SHA and config
   permalink, and the normalization method.
-- A table of vendor, documented name, canonical key, previous category (or absent),
-  expected category, and drift kind, with the relevant source excerpts.
+- A table of vendor, documented display name, canonical key, previous display name
+  and category (or absent), expected category, and drift kind, with the relevant source excerpts.
 - The focused test changes, independent review result, and actual build/lint/test
   results. Do not invent passed checks.
 - Confirmation that config-only identities were preserved and that no pricing,

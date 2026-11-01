@@ -2,6 +2,7 @@
  * Centralized formatting utilities for consistent display across the application.
  */
 import type { AIAdoptionPhase } from '../types/metrics';
+import { getModelDisplayName } from '../domain/modelConfig';
 
 const ISO_DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -177,12 +178,15 @@ export function truncateString(str: string, maxLength: number): string {
 }
 
 /**
- * Format a model name for display (capitalize, replace dashes with spaces).
+ * Format a model name for display, preferring the canonical name of known models.
+ * Unknown models are capitalized with dashes replaced by spaces.
  * @param modelName - Raw model name
  * @returns Formatted display name
  */
 export function formatModelDisplayName(modelName: string): string {
   if (!modelName || modelName === 'unknown') return 'Unknown Model';
+  const knownDisplayName = getModelDisplayName(modelName);
+  if (knownDisplayName) return knownDisplayName;
   return modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/-/g, ' ');
 }
 
