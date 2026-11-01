@@ -78,7 +78,7 @@ describe('metricsAggregator cross-family consistency', () => {
     expect(metrics).toEqual(originalMetrics);
   });
 
-  it('coalesces daily TablePro activity after allocating assumed interactions and keeps latest versions', () => {
+  it('coalesces daily TablePro activity and keeps latest versions', () => {
     const older = '2024-01-15T09:00:00Z';
     const newer = '2024-01-15T10:00:00Z';
     const plugin = { plugin: 'tablepro-copilot', plugin_version: '2.0', sampled_at: newer };
@@ -125,6 +125,34 @@ describe('metricsAggregator cross-family consistency', () => {
       last_known_ide_version: ideVersion,
     }]);
     expect(metrics).toEqual(original);
+  });
+
+  it('allocates assumed interactions identically for split and combined TablePro generation weights', () => {
+    const split = [
+      makeIdeTotal('tablepro:tablepro-copilot', 0, { code_generation_activity_count: 2 }),
+      makeIdeTotal('tablepro', 0, { code_generation_activity_count: 2 }),
+      makeIdeTotal('vscode', 0, { code_generation_activity_count: 3 }),
+    ];
+    const combined = [
+      makeIdeTotal('tablepro', 0, { code_generation_activity_count: 4 }),
+      split[2],
+    ];
+    const results = [split, combined].map(totals_by_ide => {
+      const metric = makeMetric({
+        totals_by_ide,
+        totals_by_feature: [
+          makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 1 }),
+        ],
+      });
+      const { userDetailAccumulator } = aggregateMetrics([metric]);
+      return computeSingleUserDetailedMetrics(userDetailAccumulator, metric.user_id)!;
+    });
+    for (const details of results) {
+      expect(details.ideAggregates.map(row => [row.ide, row.assumed_user_initiated_interaction_count]))
+        .toEqual([['tablepro', 1], ['vscode', 0]]);
+      expect(details.days[0].totals_by_ide.map(row => [row.ide, row.assumed_user_initiated_interaction_count]))
+        .toEqual([['tablepro', 1], ['vscode', 0]]);
+    }
   });
 
   describe('cloud-agent signal', () => {

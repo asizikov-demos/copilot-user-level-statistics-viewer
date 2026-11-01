@@ -255,14 +255,18 @@ export function accumulateUserDetail(
   accumulateCliCustomizations(state.cliCustomizations, metric);
   const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
   const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
-  const assumptionEligibleIdeEntries = metric.totals_by_ide
+  const ideTotals = coalesceTableProDayRows(metric.totals_by_ide.map(ide => ({
+    ...ide,
+    assumed_user_initiated_interaction_count: 0,
+  })));
+  const assumptionEligibleIdeEntries = ideTotals
     .map((ide, index) => ({ ide, index }))
     .filter(({ ide }) => ide.ide !== 'copilot_app');
   const eligibleIdeAssumedInteractionCounts = distributeAssumedInteractionsByGeneration(
     assumptionEligibleIdeEntries.map(({ ide }) => ide),
     sumAssumedUserInitiatedInteractions(featureTotals),
   );
-  const ideAssumedInteractionCounts = metric.totals_by_ide.map(() => 0);
+  const ideAssumedInteractionCounts = ideTotals.map(() => 0);
   assumptionEligibleIdeEntries.forEach(({ index }, eligibleIndex) => {
     ideAssumedInteractionCounts[index] =
       eligibleIdeAssumedInteractionCounts[eligibleIndex] ?? 0;
@@ -277,8 +281,7 @@ export function accumulateUserDetail(
     upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
   }
 
-  for (const [index, ide] of metric.totals_by_ide.entries()) {
-    accumulateClientTelemetry(state.telemetry, userId, ide);
+  for (const [index, ide] of ideTotals.entries()) {
     const ideEntry: IDEAgg = {
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
@@ -291,7 +294,10 @@ export function accumulateUserDetail(
       loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
     };
     upsertAggMapEntry(state.ideMap, ide.ide, ideEntry, accumulateInteractionAggMetricTotals);
+  }
 
+  for (const ide of metric.totals_by_ide) {
+    accumulateClientTelemetry(state.telemetry, userId, ide);
     if (ide.last_known_plugin_version) {
       const pv = ide.last_known_plugin_version;
       const key = `${pv.plugin}-${pv.plugin_version}`;
@@ -340,7 +346,7 @@ export function accumulateUserDetail(
     used_copilot_code_review_passive: metric.used_copilot_code_review_passive ?? false,
     used_local_byok: metric.used_local_byok,
     totals_by_feature: featureTotals.map((f) => ({ ...f })),
-    totals_by_ide: coalesceTableProDayRows(metric.totals_by_ide.map((ide, index) => ({
+    totals_by_ide: ideTotals.map((ide, index) => ({
       ide: ide.ide,
       user_initiated_interaction_count: ide.user_initiated_interaction_count,
       assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,
@@ -356,7 +362,7 @@ export function accumulateUserDetail(
       last_known_ide_version: ide.last_known_ide_version
         ? { ...ide.last_known_ide_version }
         : undefined,
-    }))),
+    })),
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
     totals_by_model_feature: modelFeatureTotals.map((mf) => ({ ...mf })),
