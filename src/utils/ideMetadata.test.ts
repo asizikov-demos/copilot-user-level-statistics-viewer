@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { getIDEMetadata } from './ideMetadata';
 import { formatIDEName } from './ideNames';
 import { getIDEIcon } from '../components/icons/IDEIcons';
 import { getIdeColor, hasIdeColor } from '../components/charts/utils/chartColors';
@@ -53,5 +56,24 @@ describe('shared IDE metadata registry', () => {
     expect(formatIDEName('obsidian')).toBe('Obsidian');
     expect(getIDEIcon('obsidian')).not.toBe(getIDEIcon('vscode'));
     expect(getIdeColor('obsidian', 0)).toBe('#7C3AED');
+  });
+
+  it('maps TablePro telemetry and normalized aliases to the official display name and icon', () => {
+    for (const key of ['tablepro:tablepro-copilot', 'tablepro', ' TABLEPRO:TABLEPRO-COPILOT ']) {
+      expect(formatIDEName(key)).toBe('TablePro');
+      expect(getIDEMetadata(key)?.canonicalKey).toBe('tablepro');
+      expect(getIDEIcon(key)).toBe(getIDEIcon('tablepro'));
+      expect(getIDEIcon(key)).not.toBe(getIDEIcon('unknown-ide'));
+      expect(getIdeColor(key, 0)).toBe(getIdeColor('tablepro', 0));
+    }
+  });
+
+  it('renders the bundled TablePro icon at the standard IDE icon size', () => {
+    const markup = renderToStaticMarkup(createElement(getIDEIcon('tablepro:tablepro-copilot')));
+    expect(markup).toContain('<img');
+    expect(markup).toContain('tablepro.png');
+    expect(markup).toContain('width="20"');
+    expect(markup).toContain('height="20"');
+    expect(markup).toContain('alt=""');
   });
 });
