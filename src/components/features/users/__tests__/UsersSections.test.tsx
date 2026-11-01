@@ -111,6 +111,26 @@ describe('Users feature sections', () => {
     expect(markup.match(/role="progressbar"/g)?.length).toBe(5);
   });
 
+  it('filters traffic-only clients and deduplicates overlapping client options', () => {
+    renderTable([
+      makeUser({ user_login: 'legacy', clients_used: ['vscode', 'copilot_cli', 'intellij'] }),
+      makeUser({ user_id: 2, user_login: 'traffic', clients_used: ['vscode', 'opencode', 'claude_code', 'codex', 'copilot_cli', 'github_web', 'github_mobile', 'jetbrains', 'azure_devops'] }),
+      makeUser({ user_id: 3, user_login: 'alias', clients_used: [' VSCODE '] }),
+    ]);
+    const anchor = screen.getByRole('button', { name: 'Clients used All clients' });
+    fireEvent.click(anchor);
+    for (const name of ['VS Code', 'Copilot CLI', 'OpenCode', 'Claude Code', 'Codex', 'JetBrains', 'Azure DevOps']) {
+      expect(screen.getAllByRole('option', { name })).toHaveLength(1);
+    }
+    fireEvent.click(screen.getByRole('option', { name: 'OpenCode' }));
+    fireEvent.click(anchor);
+    expect(getResultCount()).toBe('Showing 1 of 3 users');
+    expect(within(screen.getByRole('table')).getByText('traffic')).toBeTruthy();
+    toggleFilterOptions('Clients used', ['OpenCode', 'VS Code']);
+    expect(getResultCount()).toBe('Showing 3 of 3 users');
+    expect(screen.queryByRole('button', { name: /^IDE used/ })).toBeNull();
+  });
+
   it.each([false, true])('groups both App identifiers into one filter regardless of source order: %s', reverse => {
     const users = [
       makeUser({ user_login: 'legacy-app', clients_used: ['copilot_app'] }),
@@ -119,7 +139,7 @@ describe('Users feature sections', () => {
       makeUser({ user_id: 4, user_login: 'sdk-only', clients_used: ['copilot_sdk'] }),
     ];
     renderTable(reverse ? [...users].reverse() : users);
-    const anchor = screen.getByRole('button', { name: 'IDE used All IDEs' });
+    const anchor = screen.getByRole('button', { name: 'Clients used All clients' });
     fireEvent.click(anchor);
     expect(screen.getAllByRole('option', { name: 'Copilot App' })).toHaveLength(1);
     expect(screen.getByRole('option', { name: 'Copilot SDK' })).toBeTruthy();
@@ -132,6 +152,16 @@ describe('Users feature sections', () => {
     }
     expect(within(table).queryByText('sdk-only')).toBeNull();
     expect(users[2].clients_used).toEqual(['copilot_app', 'github_app']);
+  });
+
+  it('sorts client labels with letters before digits and natural numeric ordering', () => {
+    renderTable([makeUser({ clients_used: [
+      '10-client', 'zebra', '2-client', 'alpha10', 'alpha2', 'codex', 'claude_code',
+    ] })]);
+    fireEvent.click(screen.getByRole('button', { name: 'Clients used All clients' }));
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual([
+      'alpha2', 'alpha10', 'Claude Code', 'Codex', 'zebra', '2-client', '10-client',
+    ]);
   });
 
   it('pages the users table, renders feature chips, and shows the empty state', () => {
@@ -262,7 +292,7 @@ describe('Users feature sections', () => {
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 250));
     });
-    toggleFilterOptions('IDE used', ['Copilot CLI']);
+    toggleFilterOptions('Clients used', ['Copilot CLI']);
     toggleFilterOptions('Feature used', ['Chat']);
 
     const table = screen.getByRole('table');
@@ -277,7 +307,7 @@ describe('Users feature sections', () => {
     expect(within(screen.getByRole('table')).getByText('hubot')).toBeTruthy();
     expect(within(screen.getByRole('table')).getByText('monalisa')).toBeTruthy();
     expect((screen.getByLabelText('Search by user login') as HTMLInputElement).value).toBe('');
-    expect(screen.getByRole('button', { name: 'IDE used All IDEs' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Clients used All clients' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
     expect(clearButton.disabled).toBe(true);
   });
@@ -290,7 +320,7 @@ describe('Users feature sections', () => {
       makeUser({ user_login: 'dave', user_id: 4, clients_used: ['vscode'], used_chat: false, used_cli: false }),
     ]);
 
-    toggleFilterOptions('IDE used', ['VS Code', 'JetBrains']);
+    toggleFilterOptions('Clients used', ['VS Code', 'JetBrains']);
     expect(getResultCount()).toBe('Showing 3 of 4 users');
     toggleFilterOptions('Feature used', ['Chat', 'CLI']);
     expect(getResultCount()).toBe('Showing 2 of 4 users');
@@ -305,7 +335,7 @@ describe('Users feature sections', () => {
     expect(within(table).getByText('bob')).toBeTruthy();
     toggleFilterOptions('Feature used', ['CLI']);
     expect(getResultCount()).toBe('Showing 3 of 4 users');
-    toggleFilterOptions('IDE used', ['VS Code', 'JetBrains']);
+    toggleFilterOptions('Clients used', ['VS Code', 'JetBrains']);
     expect(getResultCount()).toBe('Showing 4 of 4 users');
     expect((screen.getByRole('button', { name: 'Clear' }) as HTMLButtonElement).disabled).toBe(true);
   });
@@ -352,7 +382,7 @@ describe('Users feature sections', () => {
 
   it('renders IDE visuals and limits both anchor summaries without hiding selected options', () => {
     renderTable([makeUser({ clients_used: ['vscode', 'jetbrains', 'copilot_cli'] })]);
-    const ideAnchor = screen.getByRole('button', { name: 'IDE used All IDEs' });
+    const ideAnchor = screen.getByRole('button', { name: 'Clients used All clients' });
     fireEvent.click(ideAnchor);
     for (const name of ['VS Code', 'JetBrains', 'Copilot CLI']) {
       expect(screen.getByRole('option', { name }).querySelector('svg')).not.toBeNull();
@@ -361,7 +391,7 @@ describe('Users feature sections', () => {
     expect(screen.getAllByRole('option', { selected: true })).toHaveLength(3);
     fireEvent.click(ideAnchor);
     expect(ideAnchor.textContent).toBe('Copilot CLI, JetBrains, ...');
-    expect(ideAnchor.getAttribute('aria-label')).toBe('IDE used Copilot CLI, JetBrains, VS Code');
+    expect(ideAnchor.getAttribute('aria-label')).toBe('Clients used Copilot CLI, JetBrains, VS Code');
     expect(ideAnchor.getAttribute('title')).toBe('Copilot CLI, JetBrains, VS Code');
 
     toggleFilterOptions('Feature used', ['Chat', 'Completions', 'Agent']);
