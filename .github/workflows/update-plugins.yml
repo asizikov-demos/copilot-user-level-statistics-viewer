@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout main
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.1.0
         with:
           ref: main
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.5.0
         with:
           node-version: '24'
           cache: 'npm'
@@ -45,7 +45,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.git-diff.outputs.changes == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v7.0.11
         with:
           commit-message: "Update plugin versions"
           branch: automated/plugin-versions-update

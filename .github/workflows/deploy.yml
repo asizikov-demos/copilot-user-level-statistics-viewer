@@ -16,10 +16,10 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.1.0
         
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.5.0
         with:
           node-version: '24'
           cache: 'npm'
@@ -35,11 +35,11 @@ jobs:
             run: npm run test:run
 
       - name: Setup Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v6.0.0
         if: github.ref == 'refs/heads/main'
           
       - name: Restore cache
-        uses: actions/cache@v5
+        uses: actions/cache@v5.1.0
         if: github.ref == 'refs/heads/main'
         with:
           path: |
@@ -58,7 +58,7 @@ jobs:
           NODE_ENV: production
         
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v4.0.0
         if: github.ref == 'refs/heads/main'
         with:
           path: ./out
@@ -80,4 +80,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v5.0.1
