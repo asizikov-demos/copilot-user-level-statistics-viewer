@@ -60,6 +60,7 @@ describe('UserDetailsCustomizationsSection', () => {
     expect(markup).not.toContain('id="user-details-client-sessions"');
     expect(markup).toContain('Reported sessions');
     expect(markup).toContain('OpenCode');
+    expect(markup).not.toContain('data-testid="user-details-empty-state"');
     model.userDetails.clientTraffic.summary.reportedRecords = 0;
     expect(renderToStaticMarkup(renderProfile(model))).not.toContain('id="user-details-client-activity"');
   });

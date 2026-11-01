@@ -5,10 +5,7 @@ import { getIDEMetadata } from './ideMetadata';
 import { formatIDEName } from './ideNames';
 import { getIDEIcon } from '../components/icons/IDEIcons';
 import { getIdeColor, hasIdeColor } from '../components/charts/utils/chartColors';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { MarkGithubIcon, CopilotIcon, WorkflowIcon, CodeReviewIcon, DeviceDesktopIcon, DeviceMobileIcon } from '@primer/octicons-react';
-import { getIDEMetadata } from './ideMetadata';
 
 describe('shared IDE metadata registry', () => {
   it('recognizes Azure DevOps with its vendor icon and brand color', () => {
