@@ -267,6 +267,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const hasClientActivity = ideAggregates.length > 0
+    || userDetails.clientTraffic.summary.reportedRecords > 0
     || userDetails.days.some(day => day.totals_by_cli != null)
     || featureAggregates.some(feature => isCliFeature(feature.feature));
   const hasDetailedActivity = hasClientActivity
@@ -432,6 +433,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       {hasClientActivity && (
         <div id={clientActivitySection.id} className="scroll-mt-28">
           <ClientActivityChart
+            key={userId}
+            traffic={userDetails.clientTraffic}
             ideAggregates={ideAggregates}
             days={userDetails.days}
             reportStartDay={userDetails.reportStartDay}

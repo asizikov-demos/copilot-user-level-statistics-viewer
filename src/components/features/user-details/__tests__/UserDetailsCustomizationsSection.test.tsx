@@ -46,6 +46,24 @@ function renderProfile(model: UserDetailsViewModel) {
 }
 
 describe('UserDetailsCustomizationsSection', () => {
+  it('surfaces reported client sessions in the profile independently of legacy client activity', () => {
+    const model = makeUserDetailsViewModel();
+    model.userDetails.clientTraffic.summary = {
+      recordCount: 2, reportedRecords: 1, activeUsers: 1,
+      clients: [{
+        client: 'opencode', reportedSessionCount: 0, requestCount: 20,
+        activeUsers: 1, promptTokens: 20, outputTokens: 10, avgTokensPerRequest: 1.5, models: [],
+      }],
+    };
+    const markup = renderToStaticMarkup(renderProfile(model));
+    expect(markup).toContain('id="user-details-client-activity"');
+    expect(markup).not.toContain('id="user-details-client-sessions"');
+    expect(markup).toContain('Reported sessions');
+    expect(markup).toContain('OpenCode');
+    model.userDetails.clientTraffic.summary.reportedRecords = 0;
+    expect(renderToStaticMarkup(renderProfile(model))).not.toContain('id="user-details-client-activity"');
+  });
+
   describe('visibility', () => {
     it.each([
       { case: 'no summaries', summaries: [] },
