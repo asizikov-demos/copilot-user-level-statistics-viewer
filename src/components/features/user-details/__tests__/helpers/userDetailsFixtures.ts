@@ -60,7 +60,12 @@ export function makeUserDetails(
   overrides: Partial<UserDetailedMetrics> = {}
 ): UserDetailedMetrics {
   return {
+    activityCalendar: { daily: [], activeDays: 0 },
     telemetryWarnings: [],
+    clientTraffic: {
+      summary: { recordCount: 0, reportedRecords: 0, activeUsers: 0, clients: [] },
+      daily: [],
+    },
     agentActivity: makeAgentActivity(),
     cliCustomizations: [],
     vscodeAgentUsage: {

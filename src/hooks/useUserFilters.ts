@@ -42,7 +42,15 @@ type TrieNode = {
 };
 
 function getClientFilterKey(client: string): string {
-  return getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
+  const key = getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
+  return key === 'github_app' ? 'copilot_app' : key;
+}
+
+function clientLabelGroup(label: string): number {
+  const trimmed = label.trim();
+  if (/^\p{L}/u.test(trimmed)) return 0;
+  if (/^\p{N}/u.test(trimmed)) return 1;
+  return 2;
 }
 
 function matchesFeature(user: UserSummary, feature: UserFeatureFilter): boolean {
@@ -122,7 +130,9 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
     }
 
     return Array.from(options, ([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => clientLabelGroup(a.label) - clientLabelGroup(b.label)
+        || a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' })
+        || a.value.localeCompare(b.value));
   }, [users]);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
 
 export interface ClientsReadModel {
+  traffic: AggregatedMetrics['clients']['traffic'];
   telemetryWarnings: AggregatedMetrics['clients']['telemetryWarnings'];
   ideStats: AggregatedMetrics['clients']['ideStats'];
   multiIDEUsersCount: number;
@@ -24,6 +25,7 @@ export function selectClientsReadModel(
   metrics: AggregatedMetrics
 ): ClientsReadModel {
   return {
+    traffic: metrics.clients.traffic,
     telemetryWarnings: metrics.clients.telemetryWarnings,
     ideStats: metrics.clients.ideStats,
     multiIDEUsersCount: metrics.clients.multiIDEUsersCount,

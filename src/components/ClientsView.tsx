@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import type { ClientTrafficSummary } from '../types/clientTraffic';
 import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
@@ -15,6 +16,16 @@ import { appendCliClientStatsRow } from '../domain/calculators/clientActivityRow
 import type { ClientsReadModel } from '../read-models/clients';
 
 type IDEStats = IDEStatsData;
+
+const TRAFFIC_METRIC_COLUMNS = [
+  ['activeUsers', 'Active Users'],
+  ['requestCount', 'Model Requests'],
+  ['reportedSessionCount', 'Reported Sessions'],
+  ['promptTokens', 'Prompt Tokens'],
+  ['outputTokens', 'Output Tokens'],
+  ['avgTokensPerRequest', 'Tokens / Request'],
+] as const;
+type TrafficSortField = 'client' | typeof TRAFFIC_METRIC_COLUMNS[number][0];
 
 interface IDEViewProps {
   model: ClientsReadModel;
@@ -60,6 +71,35 @@ export default function ClientsView({ model }: IDEViewProps) {
   const headerClass = 'px-6 py-3 text-left';
   const headerRightClass = 'px-6 py-3 text-right';
   const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
+
+  const { sortedItems: sortedTraffic, sortField: trafficSortField, sortDirection: trafficSortDirection,
+    handleSort: handleTrafficSort } = useSortableTable<ClientTrafficSummary, TrafficSortField>(
+      model.traffic.summary.clients, 'requestCount', 'desc'
+    );
+  const trafficColumns: TableColumn<ClientTrafficSummary>[] = [
+    {
+      id: 'client', header: 'Client', sortable: true,
+      renderCell: (client) => {
+        const Icon = getIDEIcon(client.client);
+        return (
+          <span className="inline-flex items-center gap-3">
+            <span aria-hidden="true"><Icon /></span>
+            <span className="font-medium">{formatIDEName(client.client)}</span>
+          </span>
+        );
+      },
+    },
+    ...TRAFFIC_METRIC_COLUMNS.map(([field, header]): TableColumn<ClientTrafficSummary> => ({
+      id: field, header, sortable: true,
+      headerClassName: headerRightClass,
+      className: cellClass,
+      renderCell: (client) => client[field]?.toLocaleString(undefined, {
+        maximumFractionDigits: field === 'avgTokensPerRequest' ? 1 : 0,
+      }) ?? 'Not available',
+    })),
+  ];
+  const trafficSummary = model.traffic.summary;
+  const reportedDays = model.traffic.daily.filter(day => day.reportedRecords > 0);
 
   const renderIDEInfo = (ide: IDEStats) => {
     const IDEIcon = getIDEIcon(ide.ide);
@@ -163,17 +203,57 @@ export default function ClientsView({ model }: IDEViewProps) {
 
   const usersColumns = createColumns({ field: 'uniqueUsers', label: 'Unique Users' });
   const engagementsColumns = createColumns({ field: 'totalEngagements', label: 'Engagements' });
-  const [distributionSection, dailyIdeUsersSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
+  const [trafficSection, distributionSection, dailyIdeUsersSection, insightsSection, usersSection, engagementsSection] = CLIENT_ANALYSIS_SECTIONS;
 
   return (
     <ViewPanel
       headerProps={{
         title: 'Client Analysis',
-        description: 'Overview of IDE and CLI usage across your organization.',
+        description: 'Model traffic from Copilot clients, alongside IDE and CLI activity.',
       }}
       contentClassName="space-y-8"
     >
       <div className="space-y-8">
+        <section id={trafficSection.id} aria-labelledby="client-traffic-title" className="bg-default rounded-md border border-default scroll-mt-28">
+          <div className="px-6 py-4 border-b border-default space-y-2">
+            <h3 id="client-traffic-title" className="text-lg font-semibold text-default">Model traffic by client</h3>
+            <p className="text-sm text-muted">
+              Successful model calls, not prompts or editor interactions. Active users made at least one
+              model request; users can appear under multiple clients.
+            </p>
+            <p className="text-sm text-muted">
+              Coverage: {trafficSummary.reportedRecords.toLocaleString()} of {trafficSummary.recordCount.toLocaleString()} user-day
+              records report client traffic.
+              {reportedDays.length > 0 && ` Reported dates: ${reportedDays[0].day} to ${reportedDays[reportedDays.length - 1].day} (${reportedDays.length} observed days).`}
+              {' '}Missing records are not zero usage. Zero reported sessions do not imply no traffic.
+            </p>
+          </div>
+          {trafficSummary.reportedRecords === 0 ? (
+            <p className="px-6 py-4 text-sm text-muted">Client model traffic is not reported in this upload. Editor and CLI activity remain available below.</p>
+          ) : sortedTraffic.length === 0 ? (
+            <p className="px-6 py-4 text-sm text-muted">No client model traffic was reported in the available records.</p>
+          ) : (
+            <MetricsTable<ClientTrafficSummary>
+              data={sortedTraffic}
+              columns={trafficColumns}
+              sortState={{ field: trafficSortField ?? 'requestCount', direction: trafficSortDirection }}
+              onSortChange={({ field }) => {
+                if (field === 'client') handleTrafficSort('client');
+                else {
+                  const key = TRAFFIC_METRIC_COLUMNS.find(([key]) => key === field)?.[0];
+                  if (key) handleTrafficSort(key);
+                }
+              }}
+              getRowKey={client => client.client}
+              initialCount={10}
+              buttonCollapsedLabel={total => `Show all ${total} clients`}
+              buttonExpandedLabel="Show fewer clients"
+              tableContainerClassName="overflow-x-auto"
+              rowClassName={() => 'hover:bg-muted'}
+            />
+          )}
+        </section>
+
         <div id={distributionSection.id} className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-28">
           <IDEDistributionChart ideStats={ideStats} cliUsers={cliUsers} />
           <CLIOverlapChart ideStats={ideStats} />

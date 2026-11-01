@@ -1,5 +1,5 @@
-import type { CopilotMetrics } from '../../types/metrics';
-import { describe, it, expect } from 'vitest';
+import type { ClientUsageTotals, CopilotMetrics } from '../../types/metrics';
+import { describe, it, expect, vi } from 'vitest';
 import { makeMetric, makeMetricLine } from '../../__tests__/factories/metrics';
 import {
   makeFeatureTotal,
@@ -46,8 +46,123 @@ function omitMetricField(metric: CopilotMetrics, field: keyof CopilotMetrics): R
   return Object.fromEntries(Object.entries(metric).filter(([key]) => key !== field));
 }
 
+function makeClientTotal(): ClientUsageTotals {
+  return {
+    client: 'opencode',
+    request_count: 2,
+    session_count: 0,
+    token_usage: {
+      prompt_tokens_sum: 10,
+      output_tokens_sum: 5,
+      avg_tokens_per_request: 7.5,
+    },
+    totals_by_model: [{
+      model: 'future-model',
+      model_selection_mode: 'fusion_high',
+      request_count: 2,
+      token_usage: {
+        prompt_tokens_sum: 10,
+        output_tokens_sum: 5,
+        avg_tokens_per_request: 7.5,
+      },
+    }],
+  };
+}
+
 describe('metricsParser', () => {
   describe('parseMetricsLine', () => {
+    it('preserves client traffic without inferring legacy activity or adding IDE rows', () => {
+      const clients = [makeClientTotal(), {
+        ...makeClientTotal(),
+        client: 'github_app',
+        totals_by_model: [{
+          ...makeClientTotal().totals_by_model[0],
+          model: 'unknown',
+          model_selection_mode: 'product_selected',
+        }],
+      }];
+      const result = parseMetricsLine(makeParserMetricLine({
+        ...zeroInteractionMetrics,
+        used_chat: false,
+        used_cli: false,
+        used_copilot_app: false,
+        totals_by_client: clients,
+      }));
+
+      expect(result?.totals_by_client).toEqual(clients);
+      expect(result?.totals_by_ide).toEqual([]);
+      expect(result?.used_cli).toBe(false);
+      expect(result?.used_copilot_app).toBe(false);
+      expect(result?.user_initiated_interaction_count).toBe(0);
+    });
+
+    it.each([undefined, null, []])('preserves unavailable or empty client traffic: %j', (clients) => {
+      const result = parseMetricsLine(makeParserMetricLine({ totals_by_client: clients }));
+
+      expect(result).not.toBeNull();
+      expect(result?.totals_by_client).toEqual(clients);
+      if (clients === undefined) {
+        expect(result).not.toHaveProperty('totals_by_client');
+      }
+    });
+
+    it('preserves future client names, selection modes, and zero traffic with no model rows', () => {
+      const client = {
+        ...makeClientTotal(),
+        client: 'future_client',
+        request_count: 0,
+        session_count: 0,
+        token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+        totals_by_model: [],
+      };
+      expect(parseMetricsLine(makeParserMetricLine({ totals_by_client: [client] }))?.totals_by_client)
+        .toEqual([client]);
+    });
+
+    it.each([
+      'not-an-array',
+      {},
+      [null],
+      [{ ...makeClientTotal(), client: '' }],
+      [{ ...makeClientTotal(), request_count: -1 }],
+      [{ ...makeClientTotal(), request_count: 1.5 }],
+      [{ ...makeClientTotal(), session_count: Number.MAX_SAFE_INTEGER + 1 }],
+      [{ ...makeClientTotal(), token_usage: null }],
+      [{ ...makeClientTotal(), token_usage: { ...makeClientTotal().token_usage, output_tokens_sum: '5' } }],
+      [{ ...makeClientTotal(), token_usage: { ...makeClientTotal().token_usage, avg_tokens_per_request: -1 } }],
+      [{ ...makeClientTotal(), token_usage: { ...makeClientTotal().token_usage, avg_tokens_per_request: Number.POSITIVE_INFINITY } }],
+      [{ ...makeClientTotal(), totals_by_model: null }],
+      [{ ...makeClientTotal(), totals_by_model: [null] }],
+      [{ ...makeClientTotal(), totals_by_model: [{ ...makeClientTotal().totals_by_model[0], model_selection_mode: 1 }] }],
+      [{ ...makeClientTotal(), totals_by_model: [{ ...makeClientTotal().totals_by_model[0], request_count: -1 }] }],
+    ])('rejects malformed client traffic with a warning: %j', (clients) => {
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const result = parseMetricsLine(JSON.stringify({ ...makeParserMetric(), totals_by_client: clients }));
+        expect(result).toBeNull();
+        expect(warning).toHaveBeenCalledWith('Skipping line with invalid totals_by_client');
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
+    it('interns client, model, and selection-mode identifiers without altering traffic', () => {
+      const pool = new StringPool();
+      const intern = vi.spyOn(pool, 'intern');
+      const clients = [makeClientTotal()];
+      const line = makeParserMetricLine({ totals_by_client: clients });
+      const first = parseMetricsLine(line, pool);
+      const size = pool.size;
+      const second = parseMetricsLine(line, pool);
+
+      expect(first?.totals_by_client).toEqual(clients);
+      expect(second?.totals_by_client).toEqual(clients);
+      expect(intern).toHaveBeenCalledWith('opencode');
+      expect(intern).toHaveBeenCalledWith('future-model');
+      expect(intern).toHaveBeenCalledWith('fusion_high');
+      expect(pool.size).toBe(size);
+    });
+
     it('should parse valid new schema with required LOC fields', () => {
       const validLine = makeParserMetricLine({
         ai_credits_used: 55.053015,

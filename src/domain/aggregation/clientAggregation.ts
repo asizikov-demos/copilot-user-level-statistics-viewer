@@ -1,6 +1,12 @@
 import type { ClientsMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
+  accumulateClientTraffic,
+  computeClientTraffic,
+  createClientTrafficAccumulator,
+  type ClientTrafficAccumulator,
+} from '../calculators/clientTrafficCalculator';
+import {
   accumulateClientTelemetry,
   computeClientTelemetryWarnings,
   createClientTelemetryAccumulator,
@@ -31,6 +37,7 @@ import {
 } from '../calculators/statsCalculator';
 
 export interface ClientAggregationAccumulator {
+  traffic: ClientTrafficAccumulator;
   telemetry: ClientTelemetryAccumulator;
   ideStats: IDEStatsAccumulator;
   pluginVersions: PluginVersionAccumulator;
@@ -41,6 +48,7 @@ export type ClientAggregationResult = ClientsMetricsSlice;
 
 export function createClientAggregationAccumulator(): ClientAggregationAccumulator {
   return {
+    traffic: createClientTrafficAccumulator(),
     telemetry: createClientTelemetryAccumulator(),
     ideStats: createIDEStatsAccumulator(),
     pluginVersions: createPluginVersionAccumulator(),
@@ -53,6 +61,7 @@ export function accumulateClientAggregation(
   statsAccumulator: StatsAccumulator,
   metric: CopilotMetrics
 ): void {
+  accumulateClientTraffic(accumulator.traffic, metric);
   for (const ideTotal of metric.totals_by_ide) {
     accumulateClientTelemetry(accumulator.telemetry, metric.user_id, ideTotal);
     accumulateIdeUser(statsAccumulator, ideTotal.ide, metric.user_id);
@@ -75,6 +84,7 @@ export function finalizeClientAggregation(
   accumulator: ClientAggregationAccumulator
 ): ClientAggregationResult {
   return {
+    traffic: computeClientTraffic(accumulator.traffic),
     telemetryWarnings: computeClientTelemetryWarnings(accumulator.telemetry),
     ...computeIDEStatsData(accumulator.ideStats),
     pluginVersionData: computePluginVersionData(accumulator.pluginVersions),

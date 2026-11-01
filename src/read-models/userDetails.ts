@@ -4,6 +4,7 @@ import type { SelectedUser } from '../types/navigation';
 import type { DailyCliTokenData } from '../domain/calculators/metricCalculators';
 import { mapReportRangeData } from '../utils/timeSeries';
 import { generateDateRange } from '../utils/formatters';
+import { normalizeIDEKey } from '../utils/ideMetadata';
 
 export interface UserInteractionRank {
   rank: number;
@@ -185,9 +186,10 @@ export function selectUserDetailsHeaderReadModel(
     : Math.max(0, Math.round(
       (Date.parse(`${userDetails.reportEndDay}T00:00:00Z`) - Date.parse(`${lastActiveDay}T00:00:00Z`)) / DAY_MS
     ));
-  const surfacesUsed = userSummary.clients_used.length
-    + (userSummary.cloud_agent_days > 0 ? 1 : 0)
-    + (userSummary.code_review_days > 0 ? 1 : 0);
+  const surfaces = new Set(userSummary.clients_used.map(normalizeIDEKey));
+  if (userSummary.cloud_agent_days > 0) surfaces.add('cloud_agent');
+  if (userSummary.code_review_days > 0) surfaces.add('code_review');
+  const surfacesUsed = surfaces.size;
 
   return {
     daysActive: userSummary.days_active,

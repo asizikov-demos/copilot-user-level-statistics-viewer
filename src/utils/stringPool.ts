@@ -59,6 +59,10 @@ export function internMetricStrings<T extends {
   totals_by_language_feature?: Array<{ language: string; feature: string }>;
   totals_by_language_model?: Array<{ language: string; model: string }>;
   totals_by_model_feature?: Array<{ model: string; feature: string }>;
+  totals_by_client?: Array<{
+    client: string;
+    totals_by_model: Array<{ model: string; model_selection_mode: string }>;
+  }> | null;
 }>(metric: T, pool: StringPool): T {
   // Intern root-level strings
   if (metric.report_start_day) {
@@ -119,6 +123,16 @@ export function internMetricStrings<T extends {
     for (const item of metric.totals_by_model_feature) {
       item.model = pool.intern(item.model);
       item.feature = pool.intern(item.feature);
+    }
+  }
+
+  if (metric.totals_by_client) {
+    for (const client of metric.totals_by_client) {
+      client.client = pool.intern(client.client);
+      for (const model of client.totals_by_model) {
+        model.model = pool.intern(model.model);
+        model.model_selection_mode = pool.intern(model.model_selection_mode);
+      }
     }
   }
 

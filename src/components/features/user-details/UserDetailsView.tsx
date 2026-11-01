@@ -163,7 +163,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   };
 
   const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
-  const daysActive = userSummary.days_active;
   const headerSummary = useMemo(() => selectUserDetailsHeaderReadModel(model), [model]);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
@@ -267,6 +266,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const hasClientActivity = ideAggregates.length > 0
+    || userDetails.clientTraffic.summary.reportedRecords > 0
     || userDetails.days.some(day => day.totals_by_cli != null)
     || featureAggregates.some(feature => isCliFeature(feature.feature));
   const hasDetailedActivity = hasClientActivity
@@ -323,7 +323,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         days={userDetails.days}
         reportStartDay={userDetails.reportStartDay}
         reportEndDay={userDetails.reportEndDay}
-        daysActive={daysActive}
+        activityCalendar={userDetails.activityCalendar}
         onDayClick={handleDayClick}
         agentInteractions={agentInteractions}
         planInteractions={planInteractions}
@@ -432,6 +432,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       {hasClientActivity && (
         <div id={clientActivitySection.id} className="scroll-mt-28">
           <ClientActivityChart
+            key={userId}
+            traffic={userDetails.clientTraffic}
             ideAggregates={ideAggregates}
             days={userDetails.days}
             reportStartDay={userDetails.reportStartDay}

@@ -237,8 +237,8 @@ export default function UsersTableSection({
         </FormControl>
         <UserFilterSelectPanel
           id="clientFilter"
-          label="IDE used"
-          placeholder="All IDEs"
+          label="Clients used"
+          placeholder="All clients"
           options={clientFilterOptions}
           selectedValues={selectedClients}
           onSelectionChange={setSelectedClients}

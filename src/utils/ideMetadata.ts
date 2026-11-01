@@ -24,7 +24,17 @@ export type IDEIconKey =
   | 'aqua'
   | 'marimo'
   | 'obsidian'
-  | 'tablepro';
+  | 'tablepro'
+  | 'opencode'
+  | 'claude_code'
+  | 'codex'
+  | 'slack'
+  | 'azure_devops'
+  | 'workflow'
+  | 'code_review'
+  | 'desktop'
+  | 'mobile'
+  | 'github';
 
 interface IDEMetadataDefinition {
   keys: readonly [string, ...string[]];
@@ -41,6 +51,19 @@ export interface IDEMetadata {
 }
 
 const IDE_METADATA_DEFINITIONS: readonly IDEMetadataDefinition[] = [
+  { keys: ['opencode'], label: 'OpenCode', iconKey: 'opencode' },
+  { keys: ['claude_code'], label: 'Claude Code', iconKey: 'claude_code' },
+  { keys: ['codex'], label: 'Codex', iconKey: 'codex' },
+  { keys: ['slack'], label: 'Slack', iconKey: 'slack' },
+  { keys: ['azure_devops'], label: 'Azure DevOps', iconKey: 'azure_devops', color: '#0078D7' },
+  { keys: ['github_desktop'], label: 'GitHub Desktop', iconKey: 'desktop' },
+  { keys: ['github_web'], label: 'GitHub Web', iconKey: 'github' },
+  { keys: ['github_mobile'], label: 'GitHub Mobile', iconKey: 'mobile' },
+  { keys: ['github_app'], label: 'Copilot App', iconKey: 'copilot_app' },
+  { keys: ['copilot_sdk'], label: 'Copilot SDK', iconKey: 'copilot_app' },
+  { keys: ['agentic_workflows'], label: 'Agentic Workflows', iconKey: 'workflow' },
+  { keys: ['cloud_agent'], label: 'Copilot Cloud Agent', iconKey: 'copilot_app' },
+  { keys: ['code_review'], label: 'Copilot Code Review', iconKey: 'code_review' },
   { keys: ['vscode'], label: 'VS Code', iconKey: 'vscode', color: '#007ACC' },
   { keys: ['jetbrains', 'intellij'], label: 'JetBrains', iconKey: 'jetbrains', color: '#FC801D' },
   { keys: ['visualstudio', 'visual_studio'], label: 'Visual Studio', iconKey: 'visualstudio', color: '#68217A' },
