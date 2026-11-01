@@ -124,6 +124,11 @@ describe('metricsAggregator cross-family consistency', () => {
       last_known_plugin_version: plugin,
       last_known_ide_version: ideVersion,
     }]);
+    expect(details?.pluginVersions).toHaveLength(2);
+    expect(details?.pluginVersions).toEqual(expect.arrayContaining([
+      { ...plugin, plugin_version: '1.0', sampled_at: older },
+      plugin,
+    ]));
     expect(metrics).toEqual(original);
   });
 
