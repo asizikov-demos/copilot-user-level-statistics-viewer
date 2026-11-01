@@ -7,6 +7,7 @@ import {
   type ClientTelemetryAccumulator,
 } from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
+import { accumulateClientTraffic, computeClientTraffic, createClientTrafficAccumulator } from './clientTrafficCalculator';
 import {
   accumulateThirdPartyAgentActivity,
   computeThirdPartyAgentActivity,
@@ -326,6 +327,14 @@ export function accumulateUserDetail(
   }
 
   state.days.push({
+    totals_by_client: metric.totals_by_client?.map(client => ({
+      ...client,
+      token_usage: { ...client.token_usage },
+      totals_by_model: client.totals_by_model.map(model => ({
+        ...model,
+        token_usage: { ...model.token_usage },
+      })),
+    })) ?? metric.totals_by_client,
     day: metric.day,
     cliCustomizations: computeDailyCliCustomizations(metric),
     used_vscode_agent: metric.used_vscode_agent,
@@ -417,8 +426,10 @@ export function computeSingleUserDetailedMetrics(
   const impactAccumulator = createImpactAccumulator();
   const modelUsageAccumulator = createModelUsageAccumulator();
   const vscodeAgentUsageAccumulator = createVSCodeAgentUsageAccumulator();
+  const clientTrafficAccumulator = createClientTrafficAccumulator();
 
   for (const day of state.days) {
+    accumulateClientTraffic(clientTrafficAccumulator, { ...day, user_id: userId });
     accumulateVSCodeAgentUsage(vscodeAgentUsageAccumulator, { ...day, user_id: userId });
     ensureImpactDates(impactAccumulator, day.day);
     accumulateFeatureImpactRecord(impactAccumulator, day.day, userId, day);
@@ -434,6 +445,7 @@ export function computeSingleUserDetailedMetrics(
   }
 
   return {
+    clientTraffic: computeClientTraffic(clientTrafficAccumulator),
     totalModelRequests: state.totalModelRequests,
     telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),
     agentActivity: computeAgentActivity(state.days),

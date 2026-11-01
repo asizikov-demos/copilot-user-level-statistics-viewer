@@ -54,6 +54,37 @@ describe('metricsWorker protocol', () => {
   });
 
   describe('parseAndAggregate', () => {
+    it('returns client traffic through aggregation and on-demand detail messages', async () => {
+      const { send, find } = await loadWorker();
+      await send({
+        type: 'parseAndAggregate',
+        id: 'traffic',
+        files: [metricFile('traffic.ndjson', {
+          user_id: 1,
+          totals_by_client: [{
+            client: 'opencode',
+            request_count: 2,
+            session_count: 0,
+            token_usage: { prompt_tokens_sum: 20, output_tokens_sum: 10, avg_tokens_per_request: 15 },
+            totals_by_model: [{
+              model: 'unknown',
+              model_selection_mode: 'future_mode',
+              request_count: 2,
+              token_usage: { prompt_tokens_sum: 20, output_tokens_sum: 10, avg_tokens_per_request: 15 },
+            }],
+          }],
+        })],
+      });
+      const result = find('parseAndAggregateResult');
+      expect(result?.result.clients.traffic.summary).toMatchObject({
+        recordCount: 1, reportedRecords: 1, activeUsers: 1,
+        clients: [{ client: 'opencode', requestCount: 2, reportedSessionCount: 0 }],
+      });
+      await send({ type: 'computeUserDetails', id: 'details', userId: 1 });
+      expect(find('userDetailsResult')?.result?.clientTraffic).toEqual(result?.result.clients.traffic);
+      expect(find('error')).toBeUndefined();
+    });
+
     it('loads the sample report with varied AI credit usage across days and phases', async () => {
       const sample = readFileSync('public/data/sample-report.ndjson', 'utf8');
       const records = sample.trimEnd().split('\n').map(line => JSON.parse(line));

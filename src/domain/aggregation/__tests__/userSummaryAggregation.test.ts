@@ -282,4 +282,43 @@ describe('user summary aggregation', () => {
 
     expect(summaries.map(user => user.user_id)).toEqual([2, 3, 1]);
   });
+
+  it('unions active traffic clients with historical clients without inflating legacy metrics', () => {
+    const traffic = (client: string, requests: number, sessions = 0, tokens = 0) => ({
+      client, request_count: requests, session_count: sessions,
+      token_usage: { prompt_tokens_sum: tokens, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      totals_by_model: [],
+    });
+    const summary = summarizeOne([
+      { metric: { day: '2024-01-15', totals_by_ide: [makeIdeTotal('vscode', 3)], used_cli: true } },
+      { metric: { day: '2024-01-16', totals_by_client: [
+        traffic(' vscode ', 100), traffic('copilot_cli', 10),
+        traffic('opencode', 5), traffic('claude_code', 0, 2),
+        traffic('codex', 0, 0, 1), traffic('github_web', 1),
+        traffic('github_mobile', 1), traffic('idle', 0), traffic(' ', 1),
+      ] } },
+      { metric: { day: '2024-01-17', totals_by_client: [traffic('opencode', 1)] } },
+      { metric: { totals_by_client: null } },
+      { metric: { totals_by_client: [] } },
+    ]);
+    expect(summary.clients_used).toEqual([
+      'claude_code', 'codex', 'copilot_cli', 'github_mobile', 'github_web', 'opencode', 'vscode',
+    ]);
+    expect(summary.top_client).toBe('vscode');
+    expect(summary.total_user_initiated_interactions).toBe(0);
+    expect(summary.used_copilot_app).toBe(false);
+  });
+
+  it('includes traffic-only usage without inferring feature flags or top client', () => {
+    const summary = summarizeOne([{ metric: {
+      totals_by_client: [{
+        client: 'copilot_cli', request_count: 4, session_count: 0,
+        token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 10, avg_tokens_per_request: 2.5 },
+        totals_by_model: [],
+      }],
+    } }]);
+    expect(summary.clients_used).toEqual(['copilot_cli']);
+    expect(summary.top_client).toBeNull();
+    expect(summary.used_cli).toBe(false);
+  });
 });

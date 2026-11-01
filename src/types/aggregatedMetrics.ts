@@ -36,6 +36,7 @@ import type { CustomizationsMetricsSlice } from './customizationsOverview';
 import type { AgentActivity, ThirdPartyAgentActivity } from './agentActivity';
 import type { ExecutiveSummaryMetrics } from '../domain/calculators/executiveSummaryCalculator';
 import type { ClientTelemetryWarning } from '../domain/calculators/clientTelemetryCalculator';
+import type { ClientTrafficMetrics } from './clientTraffic';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -76,6 +77,7 @@ export interface LanguagesMetricsSlice {
 }
 
 export interface ClientsMetricsSlice {
+  traffic: ClientTrafficMetrics;
   telemetryWarnings: ClientTelemetryWarning[];
   ideStats: IDEStatsData[];
   multiIDEUsersCount: number;
@@ -116,6 +118,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  clientTraffic: ClientTrafficMetrics;
   telemetryWarnings: ClientTelemetryWarning[];
   agentActivity: AgentActivity;
   thirdPartyAgentActivity?: ThirdPartyAgentActivity;

@@ -255,6 +255,7 @@ describe('metrics aggregation contract', () => {
       },
     };
     const clientAggregation = {
+      traffic: defaults.clients.traffic,
       telemetryWarnings: defaults.clients.telemetryWarnings,
       ideStats: [...defaults.clients.ideStats],
       multiIDEUsersCount: 12,

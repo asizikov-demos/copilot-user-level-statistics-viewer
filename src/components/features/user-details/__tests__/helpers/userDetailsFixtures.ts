@@ -61,6 +61,10 @@ export function makeUserDetails(
 ): UserDetailedMetrics {
   return {
     telemetryWarnings: [],
+    clientTraffic: {
+      summary: { recordCount: 0, reportedRecords: 0, activeUsers: 0, clients: [] },
+      daily: [],
+    },
     agentActivity: makeAgentActivity(),
     cliCustomizations: [],
     vscodeAgentUsage: {

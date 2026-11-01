@@ -178,6 +178,17 @@ export function accumulateUserSummaryAggregation(
   const userClientInteractions =
     accumulator.userClientInteractions.get(userId)!;
   const userClientsUsed = accumulator.userClientsUsed.get(userId)!;
+  for (const clientTotal of metric.totals_by_client ?? []) {
+    const client = clientTotal.client.trim();
+    if (client && [
+      clientTotal.request_count,
+      clientTotal.session_count,
+      clientTotal.token_usage.prompt_tokens_sum,
+      clientTotal.token_usage.output_tokens_sum,
+    ].some(value => value > 0)) {
+      userClientsUsed.add(client);
+    }
+  }
   for (const ideTotal of metric.totals_by_ide) {
     const normalizedClient = ideTotal.ide.trim();
     if (normalizedClient && hasIDEActivity(ideTotal)) {
