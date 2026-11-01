@@ -14,6 +14,7 @@ import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/t
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
 import AiCreditsChart from '../../charts/AiCreditsChart';
+import ThirdPartyAgentActivityChart from '../../charts/ThirdPartyAgentActivityChart';
 import EmptyState from '../../ui/EmptyState';
 import ModeImpactChart from '../../charts/ModeImpactChart';
 import UserSummaryChart from './charts/UserSummaryChart';
@@ -287,6 +288,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     combinedImpactSection,
     impactBreakdownSection,
     agentActivitySection,
+    thirdPartyAgentActivitySection,
     summarySection,
     clientActivitySection,
     featureActivitySection,
@@ -380,6 +382,16 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         reportStartDay={userDetails.reportStartDay}
         reportEndDay={userDetails.reportEndDay}
       />
+
+      {userDetails.thirdPartyAgentActivity?.agents.length ? (
+        <div id={thirdPartyAgentActivitySection.id} className="scroll-mt-28">
+          <ThirdPartyAgentActivityChart
+            data={userDetails.thirdPartyAgentActivity}
+            reportStartDay={userDetails.reportStartDay}
+            reportEndDay={userDetails.reportEndDay}
+          />
+        </div>
+      ) : null}
 
       <div id={summarySection.id} className="scroll-mt-28">
         <UserSummaryChart

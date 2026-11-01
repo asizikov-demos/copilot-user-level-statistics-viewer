@@ -33,7 +33,7 @@ import type { SurfaceProductivityMetrics } from './surfaceProductivity';
 import type { VSCodeAgentUsage } from './vscodeAgent';
 import type { CliCustomizationSummary } from './cliCustomizations';
 import type { CustomizationsMetricsSlice } from './customizationsOverview';
-import type { AgentActivity } from './agentActivity';
+import type { AgentActivity, ThirdPartyAgentActivity } from './agentActivity';
 import type { ExecutiveSummaryMetrics } from '../domain/calculators/executiveSummaryCalculator';
 import type { ClientTelemetryWarning } from '../domain/calculators/clientTelemetryCalculator';
 
@@ -118,6 +118,7 @@ export interface AggregatedMetrics {
 export interface UserDetailedMetrics {
   telemetryWarnings: ClientTelemetryWarning[];
   agentActivity: AgentActivity;
+  thirdPartyAgentActivity?: ThirdPartyAgentActivity;
   cliCustomizations: CliCustomizationSummary[];
   vscodeAgentUsage: VSCodeAgentUsage;
   totalModelRequests: number;

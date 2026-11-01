@@ -7,6 +7,7 @@ export const USER_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'user-details-combined-impact', label: 'Combined Impact' },
   { id: 'user-details-impact-breakdown', label: 'Impact Breakdown' },
   { id: 'user-details-agent-activity', label: 'Agent-native activity' },
+  { id: 'user-details-third-party-agent-activity', label: 'Third-party Agent Activity' },
   { id: 'user-details-summary', label: 'Usage Summary' },
   { id: 'user-details-client-activity', label: 'Client Activity' },
   { id: 'user-details-feature-activity', label: 'Activity by Feature' },

@@ -8,6 +8,12 @@ import {
 } from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
 import {
+  accumulateThirdPartyAgentActivity,
+  computeThirdPartyAgentActivity,
+  createThirdPartyAgentActivityAccumulator,
+  type ThirdPartyAgentActivityAccumulator,
+} from './thirdPartyAgentActivityCalculator';
+import {
   accumulateCliCustomizations,
   computeCliCustomizations,
   computeDailyCliCustomizations,
@@ -102,6 +108,7 @@ interface CliVersionEntry {
 }
 
 interface UserAccState {
+  thirdPartyAgents: ThirdPartyAgentActivityAccumulator;
   telemetry: ClientTelemetryAccumulator;
   cliCustomizations: CliCustomizationAccumulator;
   totalModelRequests: number;
@@ -133,6 +140,7 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   let state = accumulator.users.get(userId);
   if (!state) {
     state = {
+      thirdPartyAgents: createThirdPartyAgentActivityAccumulator(),
       telemetry: createClientTelemetryAccumulator(),
       cliCustomizations: createCliCustomizationAccumulator(),
       totalModelRequests: 0,
@@ -215,6 +223,7 @@ export function accumulateUserDetail(
 ): void {
   const userId = metric.user_id;
   const state = getOrCreateUserState(accumulator, userId);
+  accumulateThirdPartyAgentActivity(state.thirdPartyAgents, metric);
   accumulateCliCustomizations(state.cliCustomizations, metric);
   const featureTotals = metric.totals_by_feature.map(withAssumedUserInitiatedInteractionCount);
   const modelFeatureTotals = metric.totals_by_model_feature.map(withAssumedUserInitiatedInteractionCount);
@@ -394,6 +403,7 @@ export function computeSingleUserDetailedMetrics(
     totalModelRequests: state.totalModelRequests,
     telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),
     agentActivity: computeAgentActivity(state.days),
+    thirdPartyAgentActivity: computeThirdPartyAgentActivity(state.thirdPartyAgents),
     cliCustomizations: computeCliCustomizations(state.cliCustomizations),
     vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),
     total_ai_credits_used: state.totalAiCreditsUsed,
