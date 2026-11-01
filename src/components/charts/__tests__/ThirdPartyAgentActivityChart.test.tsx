@@ -50,4 +50,36 @@ describe('ThirdPartyAgentActivityChart', () => {
     ]);
     expect(props['aria-label']).toBe('Daily third-party agent activity: Claude, Codex.');
   });
+
+  it('disambiguates duplicate names consistently without changing unique names', () => {
+    const markup = renderToStaticMarkup(<ThirdPartyAgentActivityChart {...range} data={{
+      agents: [
+        { id: '1', name: 'Agent', interactions: 3 },
+        { id: '2', name: 'Agent', interactions: 1 },
+        { id: '3', name: 'Codex', interactions: 1 },
+      ],
+      daily: [{ date: '2024-01-15', interactions: { '1': 3, '2': 1, '3': 1 } }],
+    }} />);
+    const props = bar.mock.lastCall![0];
+    expect(props.data.datasets.map(dataset => dataset.label))
+      .toEqual(['Agent (1)', 'Agent (2)', 'Codex']);
+    expect(props['aria-label']).toBe('Daily third-party agent activity: Agent (1), Agent (2), Codex.');
+    expect(markup).toContain('Agent (1)');
+    expect(markup).toContain('Agent (2)');
+  });
+
+  it('zero-fills prototype-named IDs while preserving their own reported counts', () => {
+    renderToStaticMarkup(<ThirdPartyAgentActivityChart {...range} data={{
+      agents: [
+        { id: 'constructor', name: 'Agent A', interactions: 3 },
+        { id: 'toString', name: 'Agent B', interactions: 1 },
+      ],
+      daily: [
+        { date: '2024-01-15', interactions: Object.fromEntries([['constructor', 3]]) },
+        { date: '2024-01-17', interactions: Object.fromEntries([['toString', 1]]) },
+      ],
+    }} />);
+    expect(bar.mock.lastCall![0].data.datasets.map(dataset => dataset.data))
+      .toEqual([[3, 0, 0], [0, 0, 1]]);
+  });
 });

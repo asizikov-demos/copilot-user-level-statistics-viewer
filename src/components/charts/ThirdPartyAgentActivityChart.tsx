@@ -24,6 +24,14 @@ export default function ThirdPartyAgentActivityChart({
 }: ThirdPartyAgentActivityChartProps) {
   if (!data?.agents.length) return null;
 
+  const nameCounts = new Map<string, number>();
+  for (const agent of data.agents) {
+    nameCounts.set(agent.name, (nameCounts.get(agent.name) ?? 0) + 1);
+  }
+  const labels = data.agents.map(agent =>
+    nameCounts.get(agent.name)! > 1 ? `${agent.name} (${agent.id})` : agent.name,
+  );
+
   const { chartData, options } = createDailyReportRangeChartConfig<
     ThirdPartyAgentActivity['daily'][number],
     'bar'
@@ -33,9 +41,11 @@ export default function ThirdPartyAgentActivityChart({
     reportEndDay,
     type: 'bar',
     series: data.agents.map((agent, index) => ({
-      label: agent.name,
+      label: labels[index],
       color: getSequentialColor(index),
-      getValue: entry => entry?.interactions[agent.id] ?? 0,
+      getValue: entry => entry && Object.hasOwn(entry.interactions, agent.id)
+        ? entry.interactions[agent.id]
+        : 0,
     })),
     createDataset: (series, values) => createBarDataset(series.color, series.label, values),
     options: {
@@ -50,8 +60,8 @@ export default function ThirdPartyAgentActivityChart({
     <ChartContainer
       title="Daily third-party agent activity"
       description="Daily user-initiated interactions by third-party agent, separate from Copilot agent-native activity."
-      summaryStats={data.agents.map(agent => ({
-        label: agent.name,
+      summaryStats={data.agents.map((agent, index) => ({
+        label: labels[index],
         value: agent.interactions.toLocaleString(),
       }))}
     >
@@ -59,7 +69,7 @@ export default function ThirdPartyAgentActivityChart({
         data={chartData}
         options={options}
         role="img"
-        aria-label={`Daily third-party agent activity: ${data.agents.map(agent => agent.name).join(', ')}.`}
+        aria-label={`Daily third-party agent activity: ${labels.join(', ')}.`}
       />
     </ChartContainer>
   );
