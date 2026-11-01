@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   classifyModelRequest,
   getModelCategory,
+  getModelDisplayName,
   getModelVendor,
   isActiveAutoModeFeature,
   isKnownModelName,
@@ -59,6 +60,27 @@ describe('modelConfig', () => {
       expect(isKnownModelName(name)).toBe(true);
       expect(getModelCategory(name)).toBe(category);
       expect(getModelVendor(name)).toBe(vendor);
+      expect(getModelDisplayName(name)).toBe(name);
+    });
+
+    it('gives every catalog entry a display name for its own identity', () => {
+      for (const model of KNOWN_MODELS) {
+        expect(model.displayName.trim()).not.toBe('');
+        expect(getModelDisplayName(model.name)).toBe(model.displayName);
+      }
+    });
+
+    it.each([
+      ['gpt-5.6-terra', 'GPT-5.6 Terra'],
+      ['  GPT_6.1_TERRA  ', 'GPT-6.1 Terra'],
+      ['claude-sonnet-5.5', 'Claude Sonnet 5.5'],
+      ['claude-4.5-haiku', 'Claude 4.5 Haiku'],
+      ['gemini-3.8-flash', 'Gemini 3.8 Flash'],
+      ['gpt-4o', 'GPT-4o'],
+      ['mai-code-1.1-flash', 'MAI-Code-1.1-Flash'],
+      ['o3-mini', 'o3-mini'],
+    ])('returns the canonical display name for %j', (modelName, expected) => {
+      expect(getModelDisplayName(modelName)).toBe(expected);
     });
 
     it('recognizes every catalog entry with a valid category and the vendor of its model family', () => {
@@ -123,6 +145,7 @@ describe('modelConfig', () => {
         expect(isKnownModelName(modelName)).toBe(false);
         expect(getModelCategory(modelName)).toBeUndefined();
         expect(getModelVendor(modelName)).toBeUndefined();
+        expect(getModelDisplayName(modelName)).toBeUndefined();
       },
     );
   });

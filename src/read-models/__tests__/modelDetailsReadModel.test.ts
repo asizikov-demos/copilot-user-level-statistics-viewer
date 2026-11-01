@@ -26,7 +26,7 @@ describe('selectModelDetailsReadModel', () => {
   });
 
   it('groups models into category and vendor tables with their share of the model total', () => {
-    const row = { model: 'gpt-5', displayName: 'Gpt 5', interactions: 11, sharePercentage: 100, users: 1 };
+    const row = { model: 'gpt-5', displayName: 'GPT-5', interactions: 11, sharePercentage: 100, users: 1 };
 
     const { categoryTables, vendorTables } = selectModelDetailsReadModel(makeModelMetrics());
 

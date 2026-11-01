@@ -59,7 +59,7 @@ flowchart LR
 | `src/workers/` | Framework-free worker entry point, typed client, and message contracts |
 | `src/infra/` | Streaming parser |
 | `src/domain/aggregation/`, `src/domain/calculators/` | Metric-family lifecycles and pure calculations |
-| `src/domain/modelConfig.ts` | Curated model catalog, normalization, aliases, and unknown/empty detection |
+| `src/domain/modelConfig.ts` | Curated model catalog (canonical display names, categories, vendors), normalization, aliases, and unknown/empty detection |
 | `src/types/`, `src/utils/` | Contracts and shared utilities |
 
 The [AggregatedMetrics contract](../src/types/aggregatedMetrics.ts) groups fields by owning slice:
