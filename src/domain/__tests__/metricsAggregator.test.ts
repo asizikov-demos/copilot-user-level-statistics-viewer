@@ -15,6 +15,66 @@ const vscodeAt = (version: string) => makeIdeTotal('vscode', 0, {
 });
 
 describe('metricsAggregator cross-family consistency', () => {
+  it('unions TablePro aliases across users and days without changing uploaded records', () => {
+    const metrics = [
+      makeMetric({
+        user_id: 1,
+        day: '2024-01-15',
+        used_cli: true,
+        totals_by_ide: [
+          makeIdeTotal('tablepro:tablepro-copilot', 3),
+          makeIdeTotal('tablepro', 2),
+        ],
+      }),
+      makeMetric({
+        user_id: 1,
+        day: '2024-01-16',
+        totals_by_ide: [makeIdeTotal(' TABLEPRO:TABLEPRO-COPILOT ', 4)],
+      }),
+      makeMetric({
+        user_id: 2,
+        day: '2024-01-15',
+        totals_by_ide: [makeIdeTotal('tablepro', 5)],
+      }),
+    ];
+    const originalMetrics = structuredClone(metrics);
+    const { aggregated, userDetailAccumulator } = aggregateMetrics(metrics);
+
+    expect(aggregated.clients.ideStats).toEqual([
+      expect.objectContaining({
+        ide: 'tablepro',
+        uniqueUsers: 2,
+        cliOverlapUsers: 1,
+        totalEngagements: 14,
+      }),
+    ]);
+    expect(aggregated.clients.multiIDEUsersCount).toBe(0);
+    expect(aggregated.clients.totalUniqueIDEUsers).toBe(2);
+    expect(aggregated.clients.dailyIdeUsersData.find(entry => entry.ide === 'tablepro')).toEqual({
+      ide: 'tablepro',
+      totalUniqueUsers: 2,
+      daily: [
+        { date: '2024-01-15', uniqueUsers: 2 },
+        { date: '2024-01-16', uniqueUsers: 1 },
+      ],
+    });
+    expect(aggregated.clients.dailyIdeUsersData.map(entry => entry.ide).sort()).toEqual([
+      'copilot_cli', 'tablepro',
+    ]);
+    expect(aggregated.overview.stats.topIde).toEqual({ name: 'tablepro', entries: 2 });
+    expect(aggregated.users.userSummaries.find(user => user.user_id === 2)).toMatchObject({
+      top_client: 'tablepro',
+      clients_used: ['tablepro'],
+    });
+    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 1);
+    expect(details?.ideAggregates).toEqual([
+      expect.objectContaining({ ide: 'tablepro', user_initiated_interaction_count: 9 }),
+    ]);
+    expect(details?.days.flatMap(day => day.totals_by_ide.map(total => total.ide)))
+      .toEqual(['tablepro', 'tablepro', 'tablepro']);
+    expect(metrics).toEqual(originalMetrics);
+  });
+
   describe('cloud-agent signal', () => {
     it('reflects used_copilot_cloud_agent across stats, user summaries, details, and adoption', () => {
       const metrics = [
