@@ -3,6 +3,8 @@
 import CompositionChart from '../../../charts/CompositionChart';
 import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
 import ChartContainer from '../../../ui/ChartContainer';
+import EmptyState from '../../../ui/EmptyState';
+import { GraphIcon } from '@primer/octicons-react';
 import { Label } from '@primer/react';
 import { FEATURE_LABEL_VARIANT } from '../../../ui/featureLabels';
 
@@ -28,19 +30,25 @@ interface CompositionTileProps {
 }
 
 function CompositionTile({ title, entries, unit, label }: CompositionTileProps) {
-  if (!entries || !hasCompositionData(entries)) return null;
-
   return (
-    <div className="bg-muted rounded-lg p-4">
+    <div className="bg-muted rounded-lg p-4 flex flex-col">
       <h4 className="text-sm font-medium text-default mb-3 text-center">{title}</h4>
-      <CompositionChart variant="doughnut" entries={entries} unit={unit} label={label} surface="muted" />
+      {entries && hasCompositionData(entries) ? (
+        <CompositionChart variant="doughnut" entries={entries} unit={unit} label={label} surface="muted" />
+      ) : (
+        <div className="flex h-52 items-center justify-center">
+          <div className="w-full">
+            <EmptyState icon={GraphIcon} heading="No data available" headingAs="h5" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /**
  * Displays a summary of a user's usage across features, IDEs, languages, and models.
- * Each distribution renders as an optional doughnut chart with a legend of values and shares.
+ * Each distribution renders a doughnut chart with values and shares, or an empty state.
  */
 export default function UserSummaryChart({
   usedChat,

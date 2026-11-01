@@ -24,7 +24,10 @@ const features = {
 describe('UserSummaryChart', () => {
   beforeEach(() => compositionChart.mockClear());
 
-  it('draws a doughnut for each distribution with positive values', () => {
+  it.each([
+    ['missing', undefined],
+    ['zero-only', [{ label: 'typescript', value: 0, color: 'rgb(0, 0, 3)' }]],
+  ])('keeps populated doughnuts alongside a %s language distribution', (_name, languageDistribution) => {
     const ideDistribution = [{ label: 'VS Code', value: 12, color: 'rgb(0, 0, 1)' }];
     const modelDistribution = [{ label: 'gpt-5', value: 7, color: 'rgb(0, 0, 2)' }];
 
@@ -32,7 +35,7 @@ describe('UserSummaryChart', () => {
       <UserSummaryChart
         {...features}
         ideDistribution={ideDistribution}
-        languageDistribution={[{ label: 'typescript', value: 0, color: 'rgb(0, 0, 3)' }]}
+        languageDistribution={languageDistribution}
         modelDistribution={modelDistribution}
       />,
     );
@@ -40,7 +43,8 @@ describe('UserSummaryChart', () => {
     expect(markup).toContain('Chat');
     expect(markup).toContain('Client Interactions');
     expect(markup).toContain('Models (Interactions)');
-    expect(markup).not.toContain('Languages (Generations)');
+    expect(markup).toContain('Languages (Generations)');
+    expect(markup.match(/No data available/g)).toHaveLength(1);
     expect(compositionChart.mock.calls.map(([props]) => props)).toEqual([
       {
         variant: 'doughnut',
@@ -59,10 +63,45 @@ describe('UserSummaryChart', () => {
     ]);
   });
 
-  it('omits every doughnut without distributions', () => {
-    const markup = renderToStaticMarkup(<UserSummaryChart {...features} />);
+  it('draws all three doughnuts without empty states when distributions have data', () => {
+    const entries = [{ label: 'Reported', value: 1, color: 'rgb(0, 0, 1)' }];
+    const markup = renderToStaticMarkup(
+      <UserSummaryChart
+        {...features}
+        ideDistribution={entries}
+        languageDistribution={entries}
+        modelDistribution={entries}
+      />,
+    );
+
+    expect(compositionChart).toHaveBeenCalledTimes(3);
+    expect(markup).not.toContain('No data available');
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['empty', []],
+    ['zero-only', [{ label: 'Unknown', value: 0, color: 'rgb(0, 0, 1)' }]],
+    ['negative-only', [{ label: 'Unknown', value: -1, color: 'rgb(0, 0, 1)' }]],
+    ['non-finite', [
+      { label: 'Unknown', value: NaN, color: 'rgb(0, 0, 1)' },
+      { label: 'Other', value: Infinity, color: 'rgb(0, 0, 2)' },
+    ]],
+  ])('shows all tile titles and empty states for %s distributions', (_name, entries) => {
+    const markup = renderToStaticMarkup(
+      <UserSummaryChart
+        {...features}
+        ideDistribution={entries}
+        languageDistribution={entries}
+        modelDistribution={entries}
+      />,
+    );
 
     expect(markup).toContain('Features Used');
+    expect(markup).toContain('Client Interactions');
+    expect(markup).toContain('Languages (Generations)');
+    expect(markup).toContain('Models (Interactions)');
+    expect(markup.match(/No data available/g)).toHaveLength(3);
     expect(compositionChart).not.toHaveBeenCalled();
   });
 
