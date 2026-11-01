@@ -266,6 +266,13 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     );
   }, [userDetails.days, userDetails.reportStartDay, userDetails.reportEndDay]);
 
+  const hasClientActivity = ideAggregates.length > 0
+    || userDetails.days.some(day => day.totals_by_cli != null)
+    || featureAggregates.some(feature => isCliFeature(feature.feature));
+  const hasDetailedActivity = hasClientActivity
+    || featureAggregates.length > 0
+    || languageFeatureAggregates.length > 0
+    || modelFeatureAggregates.length > 0;
   const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
   const dailyAiCreditsData = useMemo<DailyAiCreditsData[]>(() => {
     const creditsByDay = new Map<string, number>();
@@ -412,9 +419,17 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         <CloudAgentsUsageChart data={cloudAgentsUsageData} />
       )}
 
-      {(ideAggregates.length > 0
-        || userDetails.days.some(day => day.totals_by_cli != null)
-        || featureAggregates.some(feature => isCliFeature(feature.feature))) && (
+      {!hasDetailedActivity && (
+        <EmptyState
+          border
+          icon={GraphIcon}
+          heading="No detailed activity data"
+          description="This user has no client, feature, language, or model activity in the selected report to break down."
+          data-testid="user-details-empty-state"
+        />
+      )}
+
+      {hasClientActivity && (
         <div id={clientActivitySection.id} className="scroll-mt-28">
           <ClientActivityChart
             ideAggregates={ideAggregates}
