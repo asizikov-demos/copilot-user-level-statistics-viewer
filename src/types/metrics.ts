@@ -107,6 +107,7 @@ export interface CopilotMetrics extends CliCustomizationFields {
   used_copilot_cloud_agent?: boolean;
   used_copilot_code_review_active?: boolean | null;
   used_copilot_code_review_passive?: boolean | null;
+  used_local_byok?: boolean | null;
   ai_adoption_phase?: AIAdoptionPhase;
   totals_by_copilot_app?: CopilotClientUsageTotals;
   totals_by_cli?: CopilotClientUsageTotals & {
@@ -158,6 +159,7 @@ export interface UserSummary {
   used_copilot_coding_agent: boolean;
   used_copilot_code_review_active: boolean;
   used_copilot_code_review_passive: boolean;
+  used_local_byok?: boolean | null;
   used_auto_mode?: boolean;
   ai_adoption_phase?: AIAdoptionPhase;
 }
@@ -283,6 +285,7 @@ export interface UserDayData {
   used_copilot_coding_agent: boolean;
   used_copilot_code_review_active: boolean;
   used_copilot_code_review_passive: boolean;
+  used_local_byok?: boolean | null;
   totals_by_feature: Array<{
     feature: string;
     user_initiated_interaction_count: number;

@@ -392,6 +392,28 @@ describe('Users feature sections', () => {
     expect(within(screen.getByRole('table')).getByText('VS Code Agents')).toBeTruthy();
   });
 
+  it('labels and filters only users with explicit Local BYOK usage', () => {
+    const localByokUser = makeUser({
+      user_login: 'byok-user',
+      used_local_byok: true,
+    });
+    const nonByokUsers = [
+      makeUser({ user_id: 2, user_login: 'false-user', used_local_byok: false }),
+      makeUser({ user_id: 3, user_login: 'unreported-user' }),
+    ];
+    renderTable([localByokUser, ...nonByokUsers]);
+
+    expect(within(screen.getByRole('table')).getByText('Local BYOK')).toBeTruthy();
+    toggleFilterOptions('Feature used', ['Local BYOK']);
+
+    const table = screen.getByRole('table');
+    expect(within(table).getByText('byok-user')).toBeTruthy();
+    for (const user of nonByokUsers) {
+      expect(within(table).queryByText(user.user_login)).toBeNull();
+    }
+    expect(getResultCount()).toBe('Showing 1 of 3 users');
+  });
+
   it('forwards row selection with the selected user login and id', () => {
     const onUserClick = vi.fn();
     renderTable([

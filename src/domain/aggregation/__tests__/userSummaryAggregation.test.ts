@@ -138,6 +138,18 @@ describe('user summary aggregation', () => {
     expect(summary.used_vscode_agent).toBe(expected);
   });
 
+  it.each<{ name: string; flags: (boolean | null | undefined)[]; expected: boolean | undefined }>([
+    { name: 'never reported', flags: [undefined, null], expected: undefined },
+    { name: 'explicitly false', flags: [false, null], expected: false },
+    { name: 'true on any day', flags: [false, true, null], expected: true },
+  ])('reflects used_local_byok when $name', ({ flags, expected }) => {
+    const summary = summarizeOne(flags.map((flag, index) => ({
+      metric: { day: `2024-01-1${index + 5}`, used_local_byok: flag },
+    })));
+
+    expect(summary.used_local_byok).toBe(expected);
+  });
+
   it('counts distinct active, cloud-agent, and code-review days', () => {
     const summary = summarizeOne([
       {

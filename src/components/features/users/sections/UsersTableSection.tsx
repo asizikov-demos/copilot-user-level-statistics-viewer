@@ -46,6 +46,7 @@ const USER_FEATURE_LABELS: ReadonlyArray<{
     isUsed: (user) => user.used_copilot_code_review_active || user.used_copilot_code_review_passive,
   },
   { key: 'autoMode', label: 'Auto Mode', isUsed: (user) => Boolean(user.used_auto_mode) },
+  { key: 'localByok', label: 'Local BYOK', isUsed: (user) => user.used_local_byok === true },
   { key: 'completions', label: 'Completions', isUsed: (user) => user.used_code_completion },
 ];
 

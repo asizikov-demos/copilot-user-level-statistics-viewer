@@ -182,6 +182,17 @@ describe('metricsParser', () => {
       expect(parseMetricsLine(lineWithoutApp)?.used_copilot_app).toBe(false);
     });
 
+    it.each([
+      { name: 'missing', flags: {}, expected: undefined },
+      { name: 'null', flags: { used_local_byok: null }, expected: null },
+      { name: 'false', flags: { used_local_byok: false }, expected: false },
+      { name: 'true', flags: { used_local_byok: true }, expected: true },
+    ])('preserves used_local_byok when $name', ({ flags, expected }) => {
+      const result = parseMetricsLine(makeParserMetricLine(flags));
+
+      expect(result?.used_local_byok).toBe(expected);
+    });
+
     it('should infer App usage and interactions from App totals only', () => {
       const result = parseMetricsLine(makeParserMetricLine({
         totals_by_copilot_app: {
