@@ -63,14 +63,17 @@ function detectTelemetryRisk(ideTotal: IdeTotal): WarningObservation | null {
 
   const fixedVersion = policy.fixedVersion;
   if (fixedVersion && ideVersion) {
-    const match = /^(\d+)\.(\d+)(?:\.(\d+))?$/.exec(ideVersion.trim());
+    const match = /^(\d+)\.(\d+)(?:\.(\d+))?(-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.exec(ideVersion.trim());
     if (match) {
       const parts = [Number(match[1]), Number(match[2]), Number(match[3] ?? 0)];
       const comparison = parts.findIndex((part, index) => part !== fixedVersion[index]);
-      if (comparison === -1 || parts[comparison] > fixedVersion[comparison]) {
+      if (comparison > -1 && parts[comparison] > fixedVersion[comparison]) {
         return null;
       }
-      action = 'upgrade';
+      if (comparison === -1 && !match[4]) {
+        return null;
+      }
+      action = comparison === -1 ? 'verify' : 'upgrade';
     }
   }
 
