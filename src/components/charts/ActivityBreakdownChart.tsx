@@ -37,6 +37,7 @@ interface ActivityBreakdownChartConfig<T extends BaseAggregate> {
   countAccessor: (item: T) => number;
   columns: ColumnConfig<T>[];
   groupIcon?: (groupKey: string) => ComponentType;
+  formatGroupName?: (groupKey: string) => string;
 }
 
 interface ActivityBreakdownChartProps<T extends BaseAggregate> {
@@ -94,14 +95,16 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
             {groupedAndSorted.sortedKeys.map(key => {
               const items = groupedAndSorted.grouped[key];
               const total = items.reduce((sum, i) => sum + config.countAccessor(i), 0);
-              const groupLabel = key === 'unknown' || key === '' ? config.unknownLabel : key;
+              const groupLabel = key === 'unknown' || key === ''
+                ? config.unknownLabel
+                : config.formatGroupName?.(key) ?? key;
               const GroupIcon = config.groupIcon?.(key);
               return items.map((item, idx) => (
                 <tr key={`${key}-${item.feature}`} className={idx === 0 ? 'border-t-2 border-default' : undefined}>
                   {idx === 0 && (
                     <td
                       rowSpan={items.length}
-                      className="px-4 py-2 align-top text-sm font-semibold text-default capitalize"
+                      className={`px-4 py-2 align-top text-sm font-semibold text-default${config.formatGroupName ? '' : ' capitalize'}`}
                     >
                       <div className="flex items-center gap-2">
                         {GroupIcon && (
