@@ -58,7 +58,7 @@ describe('user profile empty state', () => {
       expect(markup).toContain('aria-label="Interactions by model"');
       expect(markup).toContain(`<span class="wrap-break-word">${displayName}</span>`);
       expect(markup).not.toContain(`<span class="wrap-break-word">${model}</span>`);
-      expect(markup).toContain('100%');
+      expect(markup).toContain('<span class="text-right tabular-nums text-muted">100.0%</span>');
     });
   });
 
