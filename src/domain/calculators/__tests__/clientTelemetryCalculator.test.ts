@@ -51,6 +51,7 @@ describe('client telemetry warnings', () => {
     ['vscode', '1.139.0'],
     ['vscode', '1.139.1'],
     ['vscode', '1.140.0'],
+    ['vscode', '1.143.0-insider'],
     ['vscode', '2.0.0'],
     ['visualstudio', '18.12'],
     ['visualstudio', '18.12.0'],
