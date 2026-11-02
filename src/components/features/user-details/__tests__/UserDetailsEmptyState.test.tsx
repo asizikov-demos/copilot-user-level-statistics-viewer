@@ -44,6 +44,24 @@ describe('user profile empty state', () => {
     expect(render()).toContain(EMPTY_STATE_TEST_ID);
   });
 
+  describe('user profile model distribution', () => {
+    it.each([
+      ['gpt-4o', 'GPT-4o'],
+      ['claude-3.7-sonnet', 'Claude 3.7 Sonnet'],
+      ['some-new-model', 'Some new model'],
+      ['unknown', 'Unknown Model'],
+    ])('uses %s as %s in the summary donut legend', (model, displayName) => {
+      const markup = render({
+        modelFeatureAggregates: [{ model, feature: 'chat_panel_agent_mode', ...metrics }],
+      });
+
+      expect(markup).toContain('aria-label="Interactions by model"');
+      expect(markup).toContain(`<span class="wrap-break-word">${displayName}</span>`);
+      expect(markup).not.toContain(`<span class="wrap-break-word">${model}</span>`);
+      expect(markup).toContain('100%');
+    });
+  });
+
   it.each([
     ['ide', { ideAggregates: [{ ide: 'vscode', ...metrics }] }],
     ['feature', { featureAggregates: [{ feature: 'chat_panel_agent_mode', ...metrics }] }],

@@ -9,7 +9,7 @@ import {
 } from '../../../read-models/userDetails';
 import { GraphIcon } from '@primer/octicons-react';
 import { formatIDEName } from '../../icons/IDEIcons';
-import { generateDateRange } from '../../../utils/formatters';
+import { formatModelDisplayName, generateDateRange } from '../../../utils/formatters';
 import { mapReportRangeData, padReportRangeWithDefaults } from '../../../utils/timeSeries';
 import ClientActivityChart from './charts/ClientActivityChart';
 import CloudAgentsUsageChart from './charts/CloudAgentsUsageChart';
@@ -239,7 +239,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }, {} as Record<string, number>);
 
     return sortBySelector(Object.entries(interactions), ([, value]) => value, 'desc').map(([model, value], rank) => ({
-      label: model,
+      label: formatModelDisplayName(model),
       value,
       color: getSequentialColor(rank),
     }));

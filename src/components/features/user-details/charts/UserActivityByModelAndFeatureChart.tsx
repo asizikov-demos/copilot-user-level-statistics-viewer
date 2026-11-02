@@ -47,6 +47,7 @@ const modelChartConfig = {
   groupKey: 'model' as const,
   countAccessor: getTotalUserInitiatedInteractionCount,
   groupIcon: getModelIcon,
+  formatGroupName: formatModelDisplayName,
   columns: [
     { header: 'Interactions', accessor: getTotalUserInitiatedInteractionCount },
     { header: 'Generation', accessor: (item: ModelFeatureAggregate) => item.code_generation_activity_count },

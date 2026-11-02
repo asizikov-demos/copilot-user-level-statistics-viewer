@@ -1,9 +1,18 @@
-import { describe, it, expect } from 'vitest';
-import { buildModelBarChartData } from '../UserActivityByModelAndFeatureChart';
+// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import UserActivityByModelAndFeatureChart, { buildModelBarChartData } from '../UserActivityByModelAndFeatureChart';
 import { getSequentialColor } from '../../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../../domain/assumedInteractions';
 import type { UserDayData } from '../../../../../types/metrics';
+
+vi.mock('react-chartjs-2', () => ({
+  Bar: () => <div data-testid="model-bars" />,
+}));
+
+afterEach(cleanup);
 
 function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
   return {
@@ -59,6 +68,40 @@ describe('UserActivityByModelAndFeatureChart data construction', () => {
     expect(result.datasets).toHaveLength(1);
     expect(result.datasets[0].label).toBe('GPT-4o');
     expect(result.datasets[0].data).toEqual([7, 0, 4]);
+  });
+
+  describe('UserActivityByModelAndFeatureChart detail table', () => {
+    it.each([
+      ['gpt-4o', 'GPT-4o'],
+      ['claude-3.7-sonnet', 'Claude 3.7 Sonnet'],
+      ['some-new-model', 'Some new model'],
+      ['unknown', 'Unknown Model'],
+      ['', 'Unknown Model'],
+    ])('displays %j as %s without CSS capitalization', (model, displayName) => {
+      const entry = makeModelEntry(model, 5);
+      const days = [makeUserDayData({ totals_by_model_feature: [entry] })];
+      render(
+        <UserActivityByModelAndFeatureChart
+          modelFeatureAggregates={[{ ...entry, assumed_user_initiated_interaction_count: 0 }]}
+          days={days}
+          reportStartDay="2024-01-15"
+          reportEndDay="2024-01-15"
+        />,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Detailed Model and Feature Breakdown' }));
+
+      const table = screen.getByRole('table');
+      const label = within(table).getByText(displayName);
+      expect(label.closest('td')?.classList.contains('capitalize')).toBe(false);
+      expect(within(table).getByText('5 total interactions')).toBeTruthy();
+      expect(within(table).getAllByRole('row')).toHaveLength(2);
+      if (model && model !== 'unknown') {
+        expect(buildModelBarChartData(days, '2024-01-15', '2024-01-15').datasets[0].label)
+          .toBe(displayName);
+        expect(within(table).queryByText(model, { exact: true })).toBeNull();
+      }
+    });
   });
 
   it('excludes "unknown" and empty-string model names', () => {
