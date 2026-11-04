@@ -193,26 +193,38 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const cliInteractions = totalCliPrompts;
 
   // Distribution colors follow rank, so the largest slices get the first palette colors.
-  const ideDistribution = useMemo<CompositionEntry[]>(() => {
-    const clients = ideAggregates.map(ide => ({
+  const { ideDistribution, clientRequestDistribution } = useMemo(() => {
+    const interactions = ideAggregates.map(ide => ({
       ide: ide.ide,
       label: formatIDEName(ide.ide),
       value: getTotalUserInitiatedInteractionCount(ide),
     }));
 
     if (totalCliPrompts > 0) {
-      clients.push({ ide: 'copilot_cli', label: 'Copilot CLI', value: totalCliPrompts });
+      interactions.push({ ide: 'copilot_cli', label: 'Copilot CLI', value: totalCliPrompts });
     }
 
-    let fallbackIndex = 0;
-    return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
-      const color = getIdeColor(ide, fallbackIndex);
-      if (!hasIdeColor(ide)) {
-        fallbackIndex += 1;
-      }
-      return { label, value, color };
-    });
-  }, [ideAggregates, totalCliPrompts]);
+    const requests = userDetails.clientTraffic.summary.clients.map(client => ({
+        ide: client.client,
+        label: formatIDEName(client.client),
+        value: client.requestCount,
+      }));
+
+    const toDistribution = (clients: typeof interactions): CompositionEntry[] => {
+      let fallbackIndex = 0;
+      return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
+        const color = getIdeColor(ide, fallbackIndex);
+        if (!hasIdeColor(ide)) {
+          fallbackIndex += 1;
+        }
+        return { label, value, color };
+      });
+    };
+    return {
+      ideDistribution: toDistribution(interactions),
+      clientRequestDistribution: toDistribution(requests),
+    };
+  }, [ideAggregates, totalCliPrompts, userDetails.clientTraffic]);
 
   const languageDistribution = useMemo<CompositionEntry[]>(() => {
     const generations = languageFeatureAggregates.reduce((acc, item) => {
@@ -229,7 +241,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }));
   }, [languageFeatureAggregates]);
 
-  const modelDistribution = useMemo<CompositionEntry[]>(() => {
+  const { modelDistribution, modelRequestDistribution } = useMemo(() => {
     const interactions = modelFeatureAggregates.reduce((acc, item) => {
       if (item.model && item.model !== '') {
         acc[item.model] = (acc[item.model] || 0) + getTotalUserInitiatedInteractionCount(item);
@@ -237,12 +249,24 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    return sortBySelector(Object.entries(interactions), ([, value]) => value, 'desc').map(([model, value], rank) => ({
-      label: formatModelDisplayName(model),
-      value,
-      color: getSequentialColor(rank),
-    }));
-  }, [modelFeatureAggregates]);
+    const requests: Record<string, number> = Object.create(null);
+    for (const client of userDetails.clientTraffic.summary.clients) {
+      for (const model of client.models) {
+        requests[model.model] = (requests[model.model] ?? 0) + model.requestCount;
+      }
+    }
+
+    const toDistribution = (totals: Record<string, number>): CompositionEntry[] =>
+      sortBySelector(Object.entries(totals), ([, value]) => value, 'desc').map(([model, value], rank) => ({
+        label: formatModelDisplayName(model),
+        value,
+        color: getSequentialColor(rank),
+      }));
+    return {
+      modelDistribution: toDistribution(interactions),
+      modelRequestDistribution: toDistribution(requests),
+    };
+  }, [modelFeatureAggregates, userDetails.clientTraffic]);
 
   const cloudAgentsUsageData = useMemo(() => {
     return mapReportRangeData(
@@ -395,6 +419,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
 
       <div id={summarySection.id} className="scroll-mt-28">
         <UserSummaryChart
+          key={userId}
           usedChat={usedChat}
           usedAgent={usedAgent}
           usedCli={usedCli}
@@ -403,8 +428,10 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           usedAutoMode={usedAutoMode}
           usedLocalByok={usedLocalByok}
           ideDistribution={ideDistribution}
+          clientRequestDistribution={clientRequestDistribution}
           languageDistribution={languageDistribution}
           modelDistribution={modelDistribution}
+          modelRequestDistribution={modelRequestDistribution}
         />
       </div>
 

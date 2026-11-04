@@ -6,6 +6,8 @@ import type { UserDetailsViewModel } from '../../../../read-models/userDetails';
 import type { CliCustomizationSummary } from '../../../../types/cliCustomizations';
 import { NavigationProvider } from '../../../../state/NavigationContext';
 import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
+import UserDetailsAgentUsageSection from '../sections/UserDetailsAgentUsageSection';
+import UserSummaryChart from '../charts/UserSummaryChart';
 import UserDetailsView from '../UserDetailsView';
 import {
   makeAgentActivity,
@@ -221,16 +223,23 @@ describe('UserDetailsCustomizationsSection', () => {
         const root = (await mount(profile(1))).root;
         expect(duplicateKeyErrors()).toEqual([]);
         const customizationsButton = () => root.findByType(UserDetailsCustomizationsSection).findByType('button');
+        const agentMeasure = () => root.findByType(UserDetailsAgentUsageSection).findByType('select');
+        const summaryMeasures = () => root.findByType(UserSummaryChart).findAllByType('select');
         await act(async () => {
           customizationsButton().props.onClick();
-          root.findByType('select').props.onChange({ target: { value: 'userInputs' } });
+          agentMeasure().props.onChange({ target: { value: 'userInputs' } });
+          for (const select of summaryMeasures()) {
+            select.props.onChange({ target: { value: 'requests' } });
+          }
         });
         expect(customizationsButton().props['aria-expanded']).toBe(true);
-        expect(root.findByType('select').props.value).toBe('userInputs');
+        expect(agentMeasure().props.value).toBe('userInputs');
+        expect(summaryMeasures().map(select => select.props.value)).toEqual(['requests', 'requests']);
 
         await act(async () => { renderer!.update(profile(2)); });
         expect(customizationsButton().props['aria-expanded']).toBe(false);
-        expect(root.findByType('select').props.value).toBe('sessions');
+        expect(agentMeasure().props.value).toBe('sessions');
+        expect(summaryMeasures().map(select => select.props.value)).toEqual(['interactions', 'interactions']);
         expect(duplicateKeyErrors()).toEqual([]);
       } finally {
         errors.mockRestore();

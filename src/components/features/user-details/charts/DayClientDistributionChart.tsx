@@ -13,10 +13,23 @@ import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assume
 interface DayClientDistributionChartProps {
   dayMetrics: UserDayData;
   cliInteractionCount: number;
+  measure?: 'interactions' | 'requests';
 }
 
-export default function DayClientDistributionChart({ dayMetrics, cliInteractionCount }: DayClientDistributionChartProps) {
+export default function DayClientDistributionChart({ dayMetrics, cliInteractionCount, measure = 'interactions' }: DayClientDistributionChartProps) {
   const entries = useMemo<CompositionEntry[]>(() => {
+    if (measure === 'requests') {
+      const totals = new Map<string, number>();
+      for (const client of dayMetrics.totals_by_client ?? []) {
+        totals.set(client.client, (totals.get(client.client) ?? 0) + client.request_count);
+      }
+      let fallbackIndex = 0;
+      return sortBySelector([...totals], ([, count]) => count, 'desc').map(([client, value]) => {
+        const color = getIdeColor(client, fallbackIndex);
+        if (!hasIdeColor(client)) fallbackIndex += 1;
+        return { label: formatIDEName(client), value, color };
+      });
+    }
     const sorted = sortBySelector(
       dayMetrics.totals_by_ide.filter((ide) => getTotalUserInitiatedInteractionCount(ide) > 0),
       getTotalUserInitiatedInteractionCount,
@@ -35,12 +48,14 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       clients.push({ label: 'Copilot CLI', value: cliInteractionCount, color: ideColors['copilot_cli'] });
     }
     return clients;
-  }, [dayMetrics.totals_by_ide, cliInteractionCount]);
+  }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure]);
 
   return (
     <ChartContainer
       title="Clients"
-      description="Share of recorded and assumed interactions across clients on this day."
+      description={measure === 'requests'
+        ? 'Share of reported model requests across clients on this day.'
+        : 'Share of recorded and assumed interactions across clients on this day.'}
       chartHeight="h-auto"
       className="h-full"
       isEmpty={!hasCompositionData(entries)}
@@ -49,8 +64,8 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       <CompositionChart
         variant="doughnut"
         entries={entries}
-        unit="interactions"
-        label="Interactions by client"
+        unit={measure}
+        label={measure === 'requests' ? 'Requests by client' : 'Interactions by client'}
         legendPlacement="right"
       />
     </ChartContainer>

@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../../types/clientTraffic';
+import type { UserDayData } from '../../../../../types/metrics';
 import ClientActivityChart from '../ClientActivityChart';
 import { makeMetric } from '../../../../../__tests__/factories/metrics';
 
@@ -12,8 +13,8 @@ vi.mock('react-chartjs-2', () => ({
 }));
 afterEach(() => { cleanup(); bar.mockClear(); });
 
-function client(name: string, sessions: number): ClientTrafficSummary {
-  return { client: name, reportedSessionCount: sessions, requestCount: 10, promptTokens: 20,
+function client(name: string, sessions: number, requests = 10): ClientTrafficSummary {
+  return { client: name, reportedSessionCount: sessions, requestCount: requests, promptTokens: 20,
     outputTokens: 10, avgTokensPerRequest: 3, activeUsers: 1, models: [] };
 }
 
@@ -35,9 +36,90 @@ function selectSessions() {
 }
 
 describe('ClientActivityChart traffic', () => {
+  it.each([
+    ['legacy IDE interactions', 'ide'],
+    ['assumed IDE interactions', 'assumed'],
+    ['CLI prompts', 'cli'],
+  ])('prefers %s over positive sessions and requests', (_label, source) => {
+    const activity = {
+      ide: 'vscode', user_initiated_interaction_count: source === 'ide' ? 7 : 0,
+      assumed_user_initiated_interaction_count: source === 'assumed' ? 7 : 0,
+      code_generation_activity_count: 0, code_acceptance_activity_count: 0,
+      loc_added_sum: 0, loc_deleted_sum: 0,
+      loc_suggested_to_add_sum: 0, loc_suggested_to_delete_sum: 0,
+    };
+    const day: UserDayData = {
+      ...makeMetric(),
+      used_copilot_app: false, used_copilot_coding_agent: false,
+      used_copilot_code_review_active: false, used_copilot_code_review_passive: false,
+      day: '2026-10-23',
+      totals_by_ide: source === 'cli' ? [] : [activity],
+      ...(source === 'cli' ? {
+        totals_by_cli: {
+          prompt_count: 7, session_count: 0, request_count: 10,
+          token_usage: { prompt_tokens_sum: 20, output_tokens_sum: 10, avg_tokens_per_request: 3 },
+        },
+      } : {}),
+    };
+    render(
+      <ClientActivityChart
+        traffic={traffic([client('opencode', 5)])}
+        ideAggregates={source === 'cli' ? [] : [activity]}
+        days={[day]}
+        reportStartDay="2026-10-22" reportEndDay="2026-10-24"
+      />,
+    );
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([0, 7, 0]);
+  });
+
+  it('defaults to model requests for traffic with zero sessions and preserves gaps and reported zeros', () => {
+    const data = traffic([client('opencode', 0, 176), client('copilot_cli', 0, 0)]);
+    data.daily.push({ day: '2026-10-24', clients: [], reportedRecords: 1, recordCount: 1, activeUsers: 0 });
+    render(chart(data));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+    expect(screen.getByText('Daily Client Model Requests')).toBeTruthy();
+    const props = bar.mock.lastCall?.[0];
+    expect(props.data.datasets.map((row: { label: string; data: unknown[] }) => [row.label, row.data]))
+      .toEqual([['OpenCode', [null, 176, 0]], ['Copilot CLI', [null, 0, 0]]]);
+    expect(props.options.scales.y.title.text).toBe('Model requests');
+    expect(props.options.scales.x.stacked).toBe(false);
+    expect(props['aria-label']).toBe('Daily Client Model Requests');
+    expect(props.options.plugins.tooltip.callbacks.label({
+      dataset: { label: 'OpenCode' }, parsed: { y: 176 },
+    })).toBe('OpenCode: 176 model requests');
+    selectSessions();
+    expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 0, 0]);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 176, 0]);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'interactions' } });
+    expect(screen.getByText('No client interactions were reported in the available records.')).toBeTruthy();
+  });
+
+  it('falls back to interactions for all-zero traffic and allows selecting empty request data', () => {
+    const { rerender } = render(chart(traffic([client('opencode', 0, 0)])));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 0, null]);
+    rerender(chart(traffic([])));
+    expect(screen.getByText('No client model requests were reported in the available records.')).toBeTruthy();
+  });
+
+  it('adapts the automatic default to new data but preserves a manual selection', () => {
+    const { rerender } = render(chart(traffic([])));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    rerender(chart(traffic([client('opencode', 0)])));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+    rerender(chart(traffic([client('opencode', 5)])));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'sessions');
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    rerender(chart(traffic([client('opencode', 10)])));
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+  });
+
   it('uses daily grouped bars and preserves missing days as null instead of zero', () => {
     render(chart(traffic([client('copilot_cli', 5), client('opencode', 0)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    expect(screen.getByRole('combobox')).toHaveProperty('value', 'sessions');
     selectSessions();
     const props = bar.mock.lastCall?.[0];
     expect(props.data.labels).toHaveLength(3);

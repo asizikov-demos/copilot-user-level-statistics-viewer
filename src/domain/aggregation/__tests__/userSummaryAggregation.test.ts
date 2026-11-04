@@ -309,7 +309,7 @@ describe('user summary aggregation', () => {
     expect(summary.used_copilot_app).toBe(false);
   });
 
-  it('includes traffic-only usage without inferring feature flags or top client', () => {
+  it('uses traffic-only requests for the top client without inferring feature flags', () => {
     const summary = summarizeOne([{ metric: {
       totals_by_client: [{
         client: 'copilot_cli', request_count: 4, session_count: 0,
@@ -318,7 +318,58 @@ describe('user summary aggregation', () => {
       }],
     } }]);
     expect(summary.clients_used).toEqual(['copilot_cli']);
-    expect(summary.top_client).toBeNull();
+    expect(summary.top_client).toBe('copilot_cli');
     expect(summary.used_cli).toBe(false);
+  });
+
+  it('falls back to summed requests across records with trimmed IDs and lexical tie-breaking', () => {
+    const traffic = (client: string, requests: number) => ({
+      client, request_count: requests, session_count: 100,
+      token_usage: { prompt_tokens_sum: 100, output_tokens_sum: 10, avg_tokens_per_request: 0 },
+      totals_by_model: [],
+    });
+    const records: SummaryRecord[] = [
+      { metric: { totals_by_ide: [makeIdeTotal('vscode', 0)], totals_by_client: [
+        traffic(' opencode ', 7), traffic('zebra', 10), traffic(' ', 1000), traffic('tokens-only', 0),
+      ] } },
+      { metric: { day: '2024-01-16', totals_by_client: [traffic('opencode', 3)] } },
+      { metric: { totals_by_client: null } },
+      { metric: { totals_by_client: [] } },
+    ];
+    const summary = summarizeOne(records);
+    expect(summary.top_client).toBe('opencode');
+    expect(summary.total_user_initiated_interactions).toBe(0);
+    expect(summary.total_loc_added).toBe(0);
+    expect(summarizeOne([...records].reverse()).top_client).toBe('opencode');
+  });
+
+  it.each([false, true])('preserves legacy primary client over larger request totals with CLI: %s', cli => {
+    const summary = summarizeOne([{ metric: {
+      totals_by_ide: cli ? [] : [makeIdeTotal('vscode', 1)],
+      ...(cli ? { used_cli: true, totals_by_cli: makeCliTotals({ prompt_count: 1 }) } : {}),
+      totals_by_client: [{
+        client: 'opencode', request_count: 1000, session_count: 0,
+        token_usage: { prompt_tokens_sum: 100, output_tokens_sum: 10, avg_tokens_per_request: 0 },
+        totals_by_model: [],
+      }],
+    } }]);
+    expect(summary.top_client).toBe(cli ? 'copilot_cli' : 'vscode');
+  });
+
+  it('keeps the primary client unknown for session/token-only traffic and isolates users', () => {
+    const summaries = summarize([
+      { metric: { user_id: 1, totals_by_client: [{
+        client: 'opencode', request_count: 5, session_count: 0,
+        token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+        totals_by_model: [],
+      }] } },
+      { metric: { user_id: 2, totals_by_client: [{
+        client: 'copilot_cli', request_count: 0, session_count: 100,
+        token_usage: { prompt_tokens_sum: 100, output_tokens_sum: 10, avg_tokens_per_request: 0 },
+        totals_by_model: [],
+      }] } },
+    ]);
+    expect(summaries.find(user => user.user_id === 1)?.top_client).toBe('opencode');
+    expect(summaries.find(user => user.user_id === 2)?.top_client).toBeNull();
   });
 });

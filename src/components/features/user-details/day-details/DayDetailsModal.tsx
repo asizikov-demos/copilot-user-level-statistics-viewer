@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Dialog, IconButton, Label } from '@primer/react';
+import { Dialog, FormControl, IconButton, Label, Select } from '@primer/react';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
 import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
 import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
 import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
+import { getModelIcon } from '../../../icons/ModelIcons';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import EmptyState from '../../../ui/EmptyState';
 import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
@@ -16,7 +17,7 @@ import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizati
 import DayClientDistributionChart from '../charts/DayClientDistributionChart';
 import type { VoidCallback } from '../../../../types/events';
 import { isAgentFeature, isCliFeature, isCodeCompletionFeature, isCopilotAppFeature } from '../../../../domain/featureCategories';
-import { formatAiCreditCost } from '../../../../utils/formatters';
+import { formatAiCreditCost, formatModelDisplayName } from '../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 
 interface DayDetailsModalProps {
@@ -31,6 +32,28 @@ interface DayDetailsModalProps {
 }
 
 type LanguageModelRow = UserDayData['totals_by_language_model'][number];
+type BreakdownMeasure = 'interactions' | 'requests';
+type ClientRequestRow = NonNullable<UserDayData['totals_by_client']>[number];
+type ModelRequestRow = ClientRequestRow['totals_by_model'][number] & { client: string };
+
+function MeasureSelect({ label, value, onChange }: {
+  label: string;
+  value: BreakdownMeasure;
+  onChange: (measure: BreakdownMeasure) => void;
+}) {
+  return (
+    <FormControl>
+      <FormControl.Label visuallyHidden>{label}</FormControl.Label>
+      <Select size="small" value={value} onChange={event => {
+        const measure = event.target.value;
+        if (measure === 'interactions' || measure === 'requests') onChange(measure);
+      }}>
+        <Select.Option value="interactions">Legacy activity</Select.Option>
+        <Select.Option value="requests">Model requests</Select.Option>
+      </Select>
+    </FormControl>
+  );
+}
 
 interface ClientRow {
   name: string;
@@ -122,23 +145,22 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
   return pills;
 }
 
+function NameWithIcon({ icon: Icon, name }: { icon: React.ComponentType; name: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex-shrink-0" aria-hidden="true"><Icon /></span>
+      <span>{name}</span>
+    </div>
+  );
+}
+
 const clientColumns: TableColumn<ClientRow>[] = [
   {
     id: 'name',
     header: 'Client',
     headerClassName: headerLeft,
     className: cellLeft,
-    renderCell: (r) => {
-      const ClientIcon = getIDEIcon(r.iconName);
-      return (
-        <div className="flex items-center gap-2">
-          <span className="flex-shrink-0" aria-hidden="true">
-            <ClientIcon />
-          </span>
-          <span>{r.name}</span>
-        </div>
-      );
-    },
+    renderCell: r => <NameWithIcon icon={getIDEIcon(r.iconName)} name={r.name} />,
   },
   { id: 'interactions', header: 'Interactions', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.user_initiated_interaction_count.toLocaleString() },
   { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
@@ -153,20 +175,48 @@ const usageStatValueClass = 'mt-1 text-2xl font-semibold text-default';
 
 const languageModelColumns: TableColumn<LanguageModelRow>[] = [
   { id: 'language', header: 'Language', headerClassName: headerLeft, className: cellLeft, renderCell: (r) => r.language || 'Unknown' },
-  { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-default', renderCell: (r) => r.model || 'Unknown' },
+  { id: 'model', header: 'Model', headerClassName: headerLeft, className: 'px-4 py-3 text-sm text-default', renderCell: r => <NameWithIcon icon={getModelIcon(r.model)} name={formatModelDisplayName(r.model)} /> },
   { id: 'generation', header: 'Generation', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_generation_activity_count.toLocaleString() },
   { id: 'acceptance', header: 'Acceptance', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.code_acceptance_activity_count.toLocaleString() },
   { id: 'locAdded', header: 'LOC Added', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_added_sum.toLocaleString() },
   { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRight, className: cellRight, renderCell: (r) => r.loc_deleted_sum.toLocaleString() },
 ];
 
+const requestColumns: TableColumn<ClientRequestRow>[] = [
+  { id: 'client', header: 'Client', headerClassName: headerLeft, className: cellLeft, renderCell: row => <NameWithIcon icon={getIDEIcon(row.client)} name={formatIDEName(row.client)} /> },
+  { id: 'requests', header: 'Model requests', headerClassName: headerRight, className: cellRight, renderCell: row => row.request_count.toLocaleString() },
+  { id: 'sessions', header: 'Reported sessions', headerClassName: headerRight, className: cellRight, renderCell: row => row.session_count.toLocaleString() },
+  { id: 'promptTokens', header: 'Prompt tokens', headerClassName: headerRight, className: cellRight, renderCell: row => row.token_usage.prompt_tokens_sum.toLocaleString() },
+  { id: 'outputTokens', header: 'Output tokens', headerClassName: headerRight, className: cellRight, renderCell: row => row.token_usage.output_tokens_sum.toLocaleString() },
+];
+
+const modelRequestColumns: TableColumn<ModelRequestRow>[] = [
+  { id: 'client', header: 'Client', headerClassName: headerLeft, className: cellLeft, renderCell: row => <NameWithIcon icon={getIDEIcon(row.client)} name={formatIDEName(row.client)} /> },
+  { id: 'model', header: 'Model', headerClassName: headerLeft, className: cellLeft, renderCell: row => <NameWithIcon icon={getModelIcon(row.model)} name={formatModelDisplayName(row.model)} /> },
+  { id: 'mode', header: 'Selection mode', headerClassName: headerLeft, className: cellLeft, renderCell: row => row.model_selection_mode },
+  { id: 'requests', header: 'Model requests', headerClassName: headerRight, className: cellRight, renderCell: row => row.request_count.toLocaleString() },
+  { id: 'promptTokens', header: 'Prompt tokens', headerClassName: headerRight, className: cellRight, renderCell: row => row.token_usage.prompt_tokens_sum.toLocaleString() },
+  { id: 'outputTokens', header: 'Output tokens', headerClassName: headerRight, className: cellRight, renderCell: row => row.token_usage.output_tokens_sum.toLocaleString() },
+];
+
 export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {
   // Focus the title on open: focusing an IconButton would open its tooltip, which swallows the first Escape.
   const titleRef = React.useRef<HTMLHeadingElement>(null);
+  const [selection, setSelection] = React.useState<{
+    date: string;
+    userLogin: string | undefined;
+    isOpen: boolean;
+    client: BreakdownMeasure | null;
+    model: BreakdownMeasure | null;
+  }>({ date, userLogin, isOpen, client: null, model: null });
+  if (selection.date !== date || selection.userLogin !== userLogin || selection.isOpen !== isOpen) {
+    setSelection({ date, userLogin, isOpen, client: null, model: null });
+  }
 
   React.useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && event.target.closest('select')) return;
       if (event.key === 'ArrowLeft' && onNavigateDay && canNavigatePrevDay) {
         event.preventDefault();
         onNavigateDay(-1);
@@ -201,6 +251,19 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
   const cliInteractionCount = cliDayTotals.interactionCount;
   const hasClientInteractions = cliInteractionCount > 0
     || dayMetrics?.totals_by_ide.some(ide => getTotalUserInitiatedInteractionCount(ide) > 0);
+  const clientRequestRows = [...(dayMetrics?.totals_by_client ?? [])]
+    .sort((a, b) => b.request_count - a.request_count || a.client.localeCompare(b.client));
+  const modelRequestRows = clientRequestRows.flatMap(client =>
+    client.totals_by_model.map(model => ({ ...model, client: client.client }))
+  ).sort((a, b) => b.request_count - a.request_count || a.model.localeCompare(b.model));
+  const hasClientRequests = clientRequestRows.some(row => row.request_count > 0);
+  const hasLegacyModels = dayMetrics?.totals_by_language_model.some(row => [
+    row.code_generation_activity_count, row.code_acceptance_activity_count,
+    row.loc_added_sum, row.loc_deleted_sum,
+    row.loc_suggested_to_add_sum, row.loc_suggested_to_delete_sum,
+  ].some(value => value !== 0));
+  const clientMeasure = selection.client ?? (hasClientInteractions || !hasClientRequests ? 'interactions' : 'requests');
+  const modelMeasure = selection.model ?? (hasLegacyModels || !modelRequestRows.some(row => row.request_count > 0) ? 'interactions' : 'requests');
   const hasVSCodeAgentData = dayMetrics?.used_vscode_agent != null
     || dayMetrics?.totals_by_vscode_agent?.session_count != null
     || dayMetrics?.totals_by_vscode_agent?.total_user_messages != null;
@@ -323,11 +386,12 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
           )}
 
           {/* Clients & Impact cards */}
-          <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions ? ' md:grid-cols-2' : ''}`}>
-            {hasClientInteractions && (
+          <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions || hasClientRequests ? ' md:grid-cols-2' : ''}`}>
+            {(hasClientInteractions || hasClientRequests) && (
               <DayClientDistributionChart
                 dayMetrics={dayMetrics}
                 cliInteractionCount={cliInteractionCount}
+                measure={clientMeasure}
               />
             )}
             <DayImpactCard
@@ -406,38 +470,76 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
           )}
 
           {/* Activity by Client section (includes IDE & CLI clients) */}
-          {clientRows.length > 0 && (
+          {(clientRows.length > 0 || clientRequestRows.length > 0) && (
             <div className="bg-default rounded-md border border-default p-6">
-              <h4 className="text-lg font-semibold text-default mb-4">Activity by Client</h4>
-              <MetricsTable
-                data={clientRows}
-                columns={clientColumns}
-                tableClassName="w-full divide-y divide-default"
-                tableContainerClassName="overflow-x-auto"
-                theadClassName="bg-muted"
-                tbodyClassName="bg-default divide-y divide-default"
-                rowClassName={() => 'hover:bg-muted'}
-                getRowKey={(_, idx) => idx}
-                initialCount={5}
-              />
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h4 className="text-lg font-semibold text-default">Activity by Client</h4>
+                <MeasureSelect label="Day client measure" value={clientMeasure}
+                  onChange={client => setSelection(previous => ({ ...previous, client }))} />
+              </div>
+              {clientMeasure === 'requests' ? (
+                <>
+                  <p className="text-sm text-muted mb-4">Reported model calls and tokens for this day, separate from legacy interactions and LOC.</p>
+                  <MetricsTable
+                    data={clientRequestRows}
+                    columns={requestColumns}
+                    tableContainerClassName="overflow-x-auto"
+                    getRowKey={(_, idx) => idx}
+                    initialCount={5}
+                    emptyState={<p className="text-sm text-muted">No client model requests reported for this day.</p>}
+                  />
+                </>
+              ) : clientRows.length > 0 ? (
+                <MetricsTable
+                  data={clientRows}
+                  columns={clientColumns}
+                  tableClassName="w-full divide-y divide-default"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-muted"
+                  tbodyClassName="bg-default divide-y divide-default"
+                  rowClassName={() => 'hover:bg-muted'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={5}
+                />
+              ) : <p className="text-sm text-muted">No legacy client activity reported for this day.</p>}
             </div>
           )}
 
           {/* Language + Model Section */}
-          {dayMetrics.totals_by_language_model.length > 0 && (
+          {(dayMetrics.totals_by_language_model.length > 0 || modelRequestRows.length > 0) && (
             <div className="bg-default rounded-md border border-default p-6">
-              <h4 className="text-lg font-semibold text-default mb-4">Activity by Language &amp; Model</h4>
-              <MetricsTable
-                data={dayMetrics.totals_by_language_model}
-                columns={languageModelColumns}
-                tableClassName="w-full divide-y divide-default"
-                tableContainerClassName="overflow-x-auto"
-                theadClassName="bg-muted"
-                tbodyClassName="bg-default divide-y divide-default"
-                rowClassName={() => 'hover:bg-muted'}
-                getRowKey={(_, idx) => idx}
-                initialCount={10}
-              />
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h4 className="text-lg font-semibold text-default">
+                  {modelMeasure === 'requests' ? 'Activity by Model' : 'Activity by Language & Model'}
+                </h4>
+                <MeasureSelect label="Day model measure" value={modelMeasure}
+                  onChange={model => setSelection(previous => ({ ...previous, model }))} />
+              </div>
+              {modelMeasure === 'requests' ? (
+                <>
+                  <p className="text-sm text-muted mb-4">Reported model calls by client and selection mode. Request records do not include language or feature attribution.</p>
+                  <MetricsTable
+                    data={modelRequestRows}
+                    columns={modelRequestColumns}
+                    tableContainerClassName="overflow-x-auto"
+                    getRowKey={(_, idx) => idx}
+                    initialCount={10}
+                    emptyState={<p className="text-sm text-muted">No model requests reported for this day.</p>}
+                  />
+                </>
+              ) : dayMetrics.totals_by_language_model.length > 0 ? (
+                <MetricsTable
+                  data={dayMetrics.totals_by_language_model}
+                  columns={languageModelColumns}
+                  tableClassName="w-full divide-y divide-default"
+                  tableContainerClassName="overflow-x-auto"
+                  theadClassName="bg-muted"
+                  tbodyClassName="bg-default divide-y divide-default"
+                  rowClassName={() => 'hover:bg-muted'}
+                  getRowKey={(_, idx) => idx}
+                  initialCount={10}
+                />
+              ) : <p className="text-sm text-muted">No legacy language and model activity reported for this day.</p>}
             </div>
           )}
         </div>
