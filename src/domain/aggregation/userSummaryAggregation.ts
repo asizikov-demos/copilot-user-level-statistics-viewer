@@ -8,6 +8,7 @@ export interface UserSummaryAggregationAccumulator {
   userCloudAgentDays: Map<number, Set<string>>;
   userCodeReviewDays: Map<number, Set<string>>;
   userClientInteractions: Map<number, Map<string, number>>;
+  userClientRequests: Map<number, Map<string, number>>;
   userClientsUsed: Map<number, Set<string>>;
   userAiAdoptionPhaseDays: Map<number, string>;
 }
@@ -22,6 +23,7 @@ export function createUserSummaryAggregationAccumulator(
     userCloudAgentDays: new Map(),
     userCodeReviewDays: new Map(),
     userClientInteractions: new Map(),
+    userClientRequests: new Map(),
     userClientsUsed: new Map(),
     userAiAdoptionPhaseDays: new Map(),
   };
@@ -31,7 +33,7 @@ function hasAutoModeActivity(metric: CopilotMetrics): boolean {
   return metric.totals_by_model_feature.some(isActiveAutoModeFeature);
 }
 
-function addClientInteractions(
+function addClientCount(
   clientInteractions: Map<string, number>,
   client: string | undefined,
   interactions: number
@@ -84,6 +86,7 @@ function initializeUser(
   accumulator.userCloudAgentDays.set(userId, new Set());
   accumulator.userCodeReviewDays.set(userId, new Set());
   accumulator.userClientInteractions.set(userId, new Map());
+  accumulator.userClientRequests.set(userId, new Map());
   accumulator.userClientsUsed.set(userId, new Set());
   return userSummary;
 }
@@ -179,6 +182,11 @@ export function accumulateUserSummaryAggregation(
     accumulator.userClientInteractions.get(userId)!;
   const userClientsUsed = accumulator.userClientsUsed.get(userId)!;
   for (const clientTotal of metric.totals_by_client ?? []) {
+    addClientCount(
+      accumulator.userClientRequests.get(userId)!,
+      clientTotal.client,
+      clientTotal.request_count
+    );
     const client = clientTotal.client.trim();
     if (client && [
       clientTotal.request_count,
@@ -194,7 +202,7 @@ export function accumulateUserSummaryAggregation(
     if (normalizedClient && hasIDEActivity(ideTotal)) {
       userClientsUsed.add(normalizedClient);
     }
-    addClientInteractions(
+    addClientCount(
       userClientInteractions,
       ideTotal.ide,
       ideTotal.user_initiated_interaction_count || 0
@@ -207,7 +215,7 @@ export function accumulateUserSummaryAggregation(
     if (hasCLIActivity(metric)) {
       userClientsUsed.add('copilot_cli');
     }
-    addClientInteractions(
+    addClientCount(
       userClientInteractions,
       'copilot_cli',
       metric.totals_by_cli?.prompt_count ?? (metric.used_cli ? 1 : 0)
@@ -263,7 +271,7 @@ export function finalizeUserSummaryAggregation(
           accumulator.userCodeReviewDays.get(user.user_id)?.size || 0,
         top_client: getTopClient(
           accumulator.userClientInteractions.get(user.user_id)
-        ),
+        ) ?? getTopClient(accumulator.userClientRequests.get(user.user_id)),
         clients_used: Array.from(
           accumulator.userClientsUsed.get(user.user_id) ?? []
         ).sort((a, b) => a.localeCompare(b)),

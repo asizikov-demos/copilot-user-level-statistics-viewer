@@ -89,7 +89,7 @@ describe('client traffic aggregation', () => {
     expect({ ...aggregated.clients, traffic: legacy.clients.traffic }).toEqual(legacy.clients);
     expect(aggregated.overview).toEqual(legacy.overview);
     expect(aggregated.users.userSummaries).toEqual(
-      legacy.users.userSummaries.map(user => ({ ...user, clients_used: ['opencode'] })),
+      legacy.users.userSummaries.map(user => ({ ...user, clients_used: ['opencode'], top_client: 'opencode' })),
     );
     expect(aggregated.models).toEqual(legacy.models);
     expect(aggregated.cli).toEqual(legacy.cli);
