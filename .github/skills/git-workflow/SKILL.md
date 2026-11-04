@@ -18,8 +18,8 @@ Classify the requested workflow, then read only the matching reference file(s).
 | --- | --- |
 | Create branch or commits | `reference/branch-and-commit.md` |
 | Push committed changes without PR creation | `reference/branch-and-commit.md` |
-| Create a new PR | `reference/pr-creation.md`; also load `reference/branch-and-commit.md` if creating or checking commits |
-| Push follow-up commits to an existing PR | `reference/pr-follow-up.md`; also load `reference/branch-and-commit.md` if creating or amending commits |
+| Create a new PR | `reference/pr-creation.md` and `reference/branch-and-commit.md` |
+| Push follow-up commits to an existing PR | `reference/pr-follow-up.md` and `reference/branch-and-commit.md` |
 | PR was merged or cleanup requested | `reference/post-merge-cleanup.md` |
 
 For "push changes" requests, check whether the current branch already has an
@@ -32,5 +32,8 @@ the user's request.
 ## Always apply
 
 - Follow the loaded reference instructions strictly.
+- Before creating commits, present the commit plan required by the commit
+  reference. Before pushing, check the actual commit boundaries; this also
+  applies when the commits already exist.
 - If the user's request spans multiple workflow phases, load each corresponding
   reference file just before that phase.
