@@ -58,6 +58,7 @@ interface ClientActivityChartProps {
 
 type VersionEntry = { name: string; version: string; sampled_at: string };
 type ClientChartDay = Pick<UserDayData, 'day' | 'totals_by_ide'>;
+type ClientActivityMeasure = 'interactions' | 'sessions' | 'requests';
 
 const headerLeftClass = 'px-6 py-3 text-left';
 const headerRightClass = 'px-6 py-3 text-right';
@@ -124,10 +125,9 @@ export default function ClientActivityChart({
   pluginVersions,
   cliVersions,
 }: ClientActivityChartProps) {
-  const [selectedMeasure, setSelectedMeasure] = useState<'interactions' | 'sessions'>('interactions');
+  const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
-  const measure = hasTraffic ? selectedMeasure : 'interactions';
   const clientColors = useMemo(() => {
     const clients = [...new Set([
       ...ideAggregates.map(row => row.ide),
@@ -221,6 +221,17 @@ export default function ClientActivityChart({
     },
   }), []);
 
+  const hasInteractions = barChartData.datasets.some(dataset => dataset.data.some(value => value > 0));
+  const defaultMeasure: ClientActivityMeasure = hasInteractions
+    ? 'interactions'
+    : traffic?.summary.clients.some(client => client.reportedSessionCount > 0)
+      ? 'sessions'
+      : traffic?.summary.clients.some(client => client.requestCount > 0)
+        ? 'requests'
+        : 'interactions';
+  const measure = hasTraffic ? selectedMeasure ?? defaultMeasure : 'interactions';
+  const measureLabel = measure === 'requests' ? 'Model requests' : 'Reported sessions';
+
   const ideClientRows = useMemo(
     () => mapIdeClientActivityRows(ideAggregates),
     [ideAggregates],
@@ -249,7 +260,7 @@ export default function ClientActivityChart({
     },
     [ideClientRows, cliClientRow, traffic, hasTraffic],
   );
-  const sessionChart = createDailyReportRangeChartConfig({
+  const trafficChart = createDailyReportRangeChartConfig({
     data: (traffic?.daily ?? []).map(day => ({ ...day, date: day.day })),
     reportStartDay,
     reportEndDay,
@@ -259,20 +270,25 @@ export default function ClientActivityChart({
       color: clientColors.get(client.client) ?? getIdeColor(client.client, 0),
       getValue: (entry: (ClientTrafficMetrics['daily'][number] & { date: string }) | undefined) =>
         entry && entry.reportedRecords > 0
-          ? entry.clients.find(row => row.client === client.client)?.reportedSessionCount ?? 0
+          ? entry.clients.find(row => row.client === client.client)?.[
+            measure === 'requests' ? 'requestCount' : 'reportedSessionCount'
+          ] ?? 0
           : null,
     })),
     createDataset: (series, values) => createBarDataset(series.color, series.label, values),
     options: {
       xAxisLabel: 'Date',
-      yAxisLabel: 'Reported sessions',
+      yAxisLabel: measureLabel,
       yTicksCallback: yAxisFormatters.integer,
       xAutoSkip: true,
-      tooltipLabelCallback: context => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()} reported sessions`,
+      tooltipLabelCallback: context => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()} ${measureLabel.toLowerCase()}`,
     },
   });
-  const chartData = measure === 'sessions' ? sessionChart.chartData : barChartData;
-  const chartOptions = measure === 'sessions' ? sessionChart.options : barChartOptions;
+  const chartData = measure === 'interactions' ? barChartData : trafficChart.chartData;
+  const chartOptions = measure === 'interactions' ? barChartOptions : trafficChart.options;
+  const chartTitle = measure === 'interactions'
+    ? 'Daily Client Interactions'
+    : measure === 'sessions' ? 'Daily Reported Client Sessions' : 'Daily Client Model Requests';
   const hasCliVersions = cliVersions && cliVersions.length > 0;
   const allVersions = [
     ...(pluginVersions || []).map(p => ({
@@ -313,7 +329,8 @@ export default function ClientActivityChart({
         <p className="mt-4 text-xs text-muted">
           Client sessions reported in {traffic?.summary.reportedRecords.toLocaleString()} of {traffic?.summary.recordCount.toLocaleString()} uploaded records.
           {' '}Missing session records are gaps, not zero usage. Reported zeros can accompany model requests.
-          {' '}Sessions and legacy interactions are separate measures; sessions are not deduplicated across clients or days.
+          {' '}Model requests are model calls, not user interactions or prompts.
+          {' '}Sessions, model requests, and legacy interactions are separate measures; sessions are not deduplicated across clients or days.
           {' '}Table session totals cover only reported records.
         </p>
       )}
@@ -338,7 +355,7 @@ export default function ClientActivityChart({
   return (
     <ChartContainer
       title={title}
-      description="Daily activity and reported sessions by client. Select a measure to compare clients without combining unlike counts."
+      description="Daily interactions, reported sessions, and model requests by client. Select a measure to compare clients without combining unlike counts."
       footer={!isEmpty ? footer : undefined}
       isEmpty={isEmpty}
       emptyState="No client activity data available."
@@ -348,9 +365,15 @@ export default function ClientActivityChart({
         <div className="mb-4">
           <FormControl>
             <FormControl.Label>Client activity measure</FormControl.Label>
-            <Select value={measure} onChange={event => setSelectedMeasure(event.target.value === 'sessions' ? 'sessions' : 'interactions')}>
+            <Select value={measure} onChange={event => {
+              const value = event.target.value;
+              if (value === 'interactions' || value === 'sessions' || value === 'requests') {
+                setSelectedMeasure(value);
+              }
+            }}>
               <Select.Option value="interactions">Interactions</Select.Option>
               <Select.Option value="sessions">Reported sessions</Select.Option>
+              <Select.Option value="requests">Model requests</Select.Option>
             </Select>
           </FormControl>
         </div>
@@ -358,15 +381,19 @@ export default function ClientActivityChart({
       {chartData.datasets.length > 0 ? (
         <div className="mb-6">
             <h4 className="text-sm font-medium text-default mb-4 text-center">
-              {measure === 'sessions' ? 'Daily Reported Client Sessions' : 'Daily Client Interactions'}
+              {chartTitle}
             </h4>
             <div className="h-64">
-              <Bar data={chartData} options={chartOptions} role="img" aria-label={measure === 'sessions' ? 'Daily reported client sessions' : 'Daily client interactions'} />
+              <Bar data={chartData} options={chartOptions} role="img" aria-label={chartTitle} />
             </div>
         </div>
       ) : !isEmpty && (
         <p className="mb-4 text-sm text-muted">
-          {measure === 'sessions' ? 'No client sessions were reported in the available records.' : 'No client interactions were reported in the available records.'}
+          {measure === 'interactions'
+            ? 'No client interactions were reported in the available records.'
+            : measure === 'sessions'
+              ? 'No client sessions were reported in the available records.'
+              : 'No client model requests were reported in the available records.'}
         </p>
       )}
     </ChartContainer>
