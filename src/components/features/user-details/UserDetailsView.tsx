@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import type { UserDayData } from '../../../types/metrics';
 import {
-  selectCopilotCliAndAppUsageReadModel,
   selectUserDetailsHeaderReadModel,
   type UserDetailsViewModel,
 } from '../../../read-models/userDetails';
@@ -245,11 +244,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }));
   }, [modelFeatureAggregates]);
 
-  const cliAndAppUsage = useMemo(
-    () => selectCopilotCliAndAppUsageReadModel(userDetails),
-    [userDetails],
-  );
-
   const cloudAgentsUsageData = useMemo(() => {
     return mapReportRangeData(
       userDetails.days,
@@ -385,7 +379,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         key={`${agentActivitySection.id}-${userId}`}
         sectionId={agentActivitySection.id}
         activity={userDetails.agentActivity}
-        tokenUsage={cliAndAppUsage}
         reportStartDay={userDetails.reportStartDay}
         reportEndDay={userDetails.reportEndDay}
       />
