@@ -9,7 +9,7 @@ import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createBaseChartOptions, yAxisFormatters } from '../../../charts/utils/chartOptions';
 import { createDailyReportRangeChartConfig } from '../../../charts/utils/dailyBarChart';
 import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../types/clientTraffic';
-import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
+import { getIdeColor } from '../../../charts/utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
 import {
   createCliClientActivityRow,
@@ -128,20 +128,6 @@ export default function ClientActivityChart({
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
-  const clientColors = useMemo(() => {
-    const clients = [...new Set([
-      ...ideAggregates.map(row => row.ide),
-      ...days.flatMap(day => day.totals_by_ide.map(row => row.ide)),
-      ...(hasTraffic ? traffic?.summary.clients.map(row => row.client) ?? [] : []),
-      'copilot_cli',
-    ])].sort();
-    let fallbackIndex = 0;
-    return new Map(clients.map(client => {
-      const color = getIdeColor(client, fallbackIndex);
-      if (!hasIdeColor(client)) fallbackIndex += 1;
-      return [client, color];
-    }));
-  }, [ideAggregates, days, traffic, hasTraffic]);
   const { cliTotals, cliTotalsByDay } = useMemo(() => {
     const totals = {
       promptCount: 0,
@@ -192,7 +178,7 @@ export default function ClientActivityChart({
         return ideData ? getTotalUserInitiatedInteractionCount(ideData) : 0;
       });
 
-      const color = clientColors.get(ide) ?? getIdeColor(ide, 0);
+      const color = getIdeColor(ide);
       return createBarDataset(color, formatIDEName(ide), data);
     }).filter(dataset => dataset.data.some(value => value > 0));
 
@@ -202,14 +188,14 @@ export default function ClientActivityChart({
       const cliData = paddedDays.map(dayData => {
         return cliTotalsByDay.get(dayData.day)?.interactionCount ?? 0;
       });
-      datasets.push(createBarDataset(ideColors['copilot_cli'], 'Copilot CLI', cliData));
+      datasets.push(createBarDataset(getIdeColor('copilot_cli'), 'Copilot CLI', cliData));
     }
 
     return {
       labels: paddedDays.map(day => formatShortDate(day.day)),
       datasets: datasets,
     };
-  }, [cliTotalsByDay, days, reportStartDay, reportEndDay, clientColors]);
+  }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
 
   const barChartOptions = useMemo(() => createBaseChartOptions({
     xAxisLabel: 'Date',
@@ -267,7 +253,7 @@ export default function ClientActivityChart({
     type: 'bar',
     series: (hasTraffic ? traffic?.summary.clients ?? [] : []).map(client => ({
       label: formatIDEName(client.client),
-      color: clientColors.get(client.client) ?? getIdeColor(client.client, 0),
+      color: getIdeColor(client.client),
       getValue: (entry: (ClientTrafficMetrics['daily'][number] & { date: string }) | undefined) =>
         entry && entry.reportedRecords > 0
           ? entry.clients.find(row => row.client === client.client)?.[

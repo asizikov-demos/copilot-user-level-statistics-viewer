@@ -57,7 +57,7 @@ Use helpers from `./utils/chartStyles`:
 Colors come from `chartColors` in `./utils/chartColors` — use the `.solid`, `.alpha`, `.alpha60`, and `.muted` variants. Each named color resolves a Primer data-visualization token (`--data-<hue>-color-emphasis` / `-muted`) at access time through `./utils/chartTheme`, with a static light-theme fallback for prerendering and tests. Read colors inside render or memoized builders rather than capturing them in module-level constants.
 
 - Never add Tailwind RGB, hex, or HSL literals for chart series; use `chartColors`, the semantic maps (`featureColors`, `chatModeColors`, `modelCategoryColors`, `modelVendorColors`), or `getSequentialColor(index)` for dynamic categories. Gray is reserved for unknown/other series.
-- IDE and language brand colors (`ideColors`, `getIdeColor`, `languageColors`) are the only explicit exceptions.
+- Canonical client chart colors (`ideColors`, `getIdeColor`) and language brand colors (`languageColors`) are the only explicit exceptions. Client colors live in `src/utils/ideMetadata.ts`, are chart-optimized rather than exact branding, and never depend on sorting or rank. Unknown clients use gray. Icons retain their original colors.
 - Use `withAlpha(color, alpha)` from `./utils/chartTheme` for custom opacity instead of string replacement.
 - Grid, tick, and legend colors come from `resolveChartTheme()`; chart options factories already apply them.
 - Ordered three-step blue categories need `resolveChartTheme().sequentialBlue` (Primer `--display-blue-scale-1/4/9`) because data-viz tokens only provide two steps per hue.

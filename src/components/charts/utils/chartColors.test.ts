@@ -59,19 +59,20 @@ describe('getIdeColor', () => {
     ['VSCode', 'vscode'],
     ['  JetBrains  ', 'jetbrains'],
     ['visual_studio', 'visualstudio'],
-  ])('resolves %j to the same brand color as %s', (variant, canonical) => {
+  ])('resolves %j to the same chart color as %s', (variant, canonical) => {
     expect(hasIdeColor(variant)).toBe(true);
-    expect(getIdeColor(variant, 0)).toBe(getIdeColor(canonical, 0));
+    expect(getIdeColor(variant)).toBe(getIdeColor(canonical));
   });
 
-  it('uses a brand color independent of the fallback index for known IDEs', () => {
-    expect(getIdeColor('vscode', 3)).toBe(getIdeColor('vscode', 0));
+  it('uses the approved chart color for known IDEs', () => {
+    expect(getIdeColor('vscode')).toBe('#006EDB');
   });
 
-  it('cycles through the categorical palette for unknown IDEs', () => {
+  it('uses neutral gray for unknown clients, independent of order or spelling', () => {
     expect(hasIdeColor('unknown_ide')).toBe(false);
-    expect(getIdeColor('unknown_ide', 1)).toBe(getSequentialColor(1));
-    expect(getIdeColor('unknown_ide', categoricalColors.length + 3)).toBe(getSequentialColor(3));
+    expect(getIdeColor('unknown_ide')).toBe(chartColors.gray.solid);
+    expect(getIdeColor(' UNKNOWN_IDE ')).toBe(chartColors.gray.solid);
+    expect(getIdeColor('different_future_client')).toBe(chartColors.gray.solid);
   });
 });
 

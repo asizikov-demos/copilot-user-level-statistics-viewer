@@ -61,7 +61,7 @@ export default function DailyIDEUsersChart({
 
   const ideLabel = activeIde ? formatIDEName(activeIde) : '';
   const IDEIcon = getIDEIcon(activeIde);
-  const color = getIdeColor(activeIde, 0);
+  const color = getIdeColor(activeIde);
 
   const { displayData, chartData, options } = useMemo(
     () => createDailyReportRangeChartConfig<
