@@ -162,6 +162,19 @@ describe('user profile empty state', () => {
       expect(markup).not.toContain('<span class="wrap-break-word">GPT-4o</span>');
     });
 
+    it.each(['constructor', '__proto__', 'toString'])('preserves requests for model identifier %s', model => {
+      const traffic = modelTraffic();
+      for (const client of traffic.summary.clients) {
+        client.models = client.models.slice(0, 2).map(row => ({ ...row, model }));
+      }
+
+      const markup = render({ clientTraffic: traffic });
+
+      expect(markup).toContain('aria-label="Requests by model"');
+      expect(markup).toContain('40<span class="sr-only"> requests</span>');
+      expect(markup).toContain('<span class="text-right tabular-nums text-muted">100.0%</span>');
+    });
+
     it('keeps the existing model empty state when neither source has positive values', () => {
       const markup = render({ clientTraffic: modelTraffic(0) });
       expect(markup).toContain('Models');

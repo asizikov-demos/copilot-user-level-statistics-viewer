@@ -250,7 +250,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    const requests: Record<string, number> = {};
+    const requests: Record<string, number> = Object.create(null);
     for (const client of userDetails.clientTraffic.summary.clients) {
       for (const model of client.models) {
         requests[model.model] = (requests[model.model] ?? 0) + model.requestCount;
