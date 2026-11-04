@@ -24,7 +24,7 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
         totals.set(client.client, (totals.get(client.client) ?? 0) + client.request_count);
       }
       return sortBySelector([...totals], ([, count]) => count, 'desc').map(([client, value]) => {
-        return { label: formatIDEName(client), value, color: getIdeColor(client) };
+        return { clientKey: client, label: formatIDEName(client), value, color: getIdeColor(client) };
       });
     }
     const sorted = sortBySelector(
@@ -34,10 +34,10 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
     );
 
     const clients = sorted.map((ide) => {
-      return { label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color: getIdeColor(ide.ide) };
+      return { clientKey: ide.ide, label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color: getIdeColor(ide.ide) };
     });
     if (cliInteractionCount > 0) {
-      clients.push({ label: 'Copilot CLI', value: cliInteractionCount, color: getIdeColor('copilot_cli') });
+      clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliInteractionCount, color: getIdeColor('copilot_cli') });
     }
     return clients;
   }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure]);

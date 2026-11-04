@@ -211,7 +211,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
 
     const toDistribution = (clients: typeof interactions): CompositionEntry[] => {
       return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
-        return { label, value, color: getIdeColor(ide) };
+        return { clientKey: ide, label, value, color: getIdeColor(ide) };
       });
     };
     return {

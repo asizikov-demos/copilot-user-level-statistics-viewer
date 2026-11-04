@@ -17,10 +17,10 @@ interface IDEDistributionChartProps {
 export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistributionChartProps) {
   const entries = useMemo<CompositionEntry[]>(() => {
     const clients = sortBySelector(ideStats, ide => ide.uniqueUsers, 'desc').map((ide) => {
-      return { label: formatIDEName(ide.ide), value: ide.uniqueUsers, color: getIdeColor(ide.ide) };
+      return { clientKey: ide.ide, label: formatIDEName(ide.ide), value: ide.uniqueUsers, color: getIdeColor(ide.ide) };
     });
     if (cliUsers > 0) {
-      clients.push({ label: 'Copilot CLI', value: cliUsers, color: getIdeColor('copilot_cli') });
+      clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliUsers, color: getIdeColor('copilot_cli') });
     }
     return clients;
   }, [ideStats, cliUsers]);

@@ -58,6 +58,7 @@ Colors come from `chartColors` in `./utils/chartColors` — use the `.solid`, `.
 
 - Never add Tailwind RGB, hex, or HSL literals for chart series; use `chartColors`, the semantic maps (`featureColors`, `chatModeColors`, `modelCategoryColors`, `modelVendorColors`), or `getSequentialColor(index)` for dynamic categories. Gray is reserved for unknown/other series.
 - Canonical client chart colors (`ideColors`, `getIdeColor`) and language brand colors (`languageColors`) are the only explicit exceptions. Client colors live in `src/utils/ideMetadata.ts`, are chart-optimized rather than exact branding, and never depend on sorting or rank. Unknown clients use gray. Icons retain their original colors.
+- Client comparisons support an opt-in "Show client patterns" control. Use `ClientSwatch` and `useClientPatterns` for matching HTML/Canvas marks, with the original client key (aliases normalize internally). Six repeating motifs supplement colors and names; they are not unique IDs. Pass `clientKey` on client `CompositionEntry` values to enable the same legend/control in doughnuts. Leave non-client compositions unchanged.
 - Use `withAlpha(color, alpha)` from `./utils/chartTheme` for custom opacity instead of string replacement.
 - Grid, tick, and legend colors come from `resolveChartTheme()`; chart options factories already apply them.
 - Ordered three-step blue categories need `resolveChartTheme().sequentialBlue` (Primer `--display-blue-scale-1/4/9`) because data-viz tokens only provide two steps per hue.

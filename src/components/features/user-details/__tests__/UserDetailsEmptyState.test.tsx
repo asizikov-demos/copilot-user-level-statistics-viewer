@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { NavigationProvider } from '../../../../state/NavigationContext';
@@ -73,9 +74,9 @@ describe('user profile empty state', () => {
       expect(markup).toContain('24<span class="sr-only"> requests</span>');
       expect(markup).toContain('88.0%');
       expect(markup).not.toContain('aria-label="Interactions by client"');
-      expect(markup).not.toContain('<span class="wrap-break-word">Copilot CLI</span>');
-      expect(markup.indexOf('<span class="wrap-break-word">OpenCode</span>'))
-        .toBeLessThan(markup.indexOf('<span class="wrap-break-word">VS Code</span>'));
+      const legend = new DOMParser().parseFromString(markup, 'text/html').querySelector('[aria-label="Requests by client"]');
+      const rows = [...legend!.querySelectorAll('li')].map(row => row.textContent);
+      expect(rows).toEqual(['OpenCode176 requests88.0%', 'VS Code24 requests12.0%']);
     });
 
     it.each(['legacy', 'assumed', 'cli'])('prefers positive %s interactions and never adds requests', source => {
@@ -97,7 +98,8 @@ describe('user profile empty state', () => {
       expect(markup).toContain('aria-label="Interactions by client"');
       expect(markup).toContain('7<span class="sr-only"> interactions</span>');
       expect(markup).not.toContain('aria-label="Requests by client"');
-      expect(markup).not.toContain('<span class="wrap-break-word">OpenCode</span>');
+      const legend = new DOMParser().parseFromString(markup, 'text/html').querySelector('[aria-label="Interactions by client"]');
+      expect(legend?.textContent).not.toContain('OpenCode');
     });
 
     it('keeps the existing empty state when neither source has positive values', () => {
