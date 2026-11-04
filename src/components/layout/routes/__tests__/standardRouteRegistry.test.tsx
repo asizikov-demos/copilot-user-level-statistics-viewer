@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => {
       selectAiCreditsReadModel: selector('selectAiCreditsReadModel'),
       selectAiAdoptionPhaseReadModel: selector('selectAiAdoptionPhaseReadModel'),
       selectCopilotAdoptionReadModel: selector('selectCopilotAdoptionReadModel'),
-      selectCliAdoptionReadModel: selector('selectCliAdoptionReadModel'),
+      selectCopilotAppAdoptionReadModel: selector('selectCopilotAppAdoptionReadModel'),
       selectCustomizationsReadModel: selector('selectCustomizationsReadModel'),
       selectClientsReadModel: selector('selectClientsReadModel'),
       selectClientVersionsReadModel: selector('selectClientVersionsReadModel'),
@@ -57,8 +57,8 @@ vi.mock('../../../../read-models/aiAdoptionPhases', () => ({
 vi.mock('../../../../read-models/adoption', () => ({
   selectCopilotAdoptionReadModel: mocks.selectors.selectCopilotAdoptionReadModel,
 }));
-vi.mock('../../../../read-models/cliAdoption', () => ({
-  selectCliAdoptionReadModel: mocks.selectors.selectCliAdoptionReadModel,
+vi.mock('../../../../read-models/copilotAppAdoption', () => ({
+  selectCopilotAppAdoptionReadModel: mocks.selectors.selectCopilotAppAdoptionReadModel,
 }));
 vi.mock('../../../../read-models/customizations', () => ({
   selectCustomizationsReadModel: mocks.selectors.selectCustomizationsReadModel,
@@ -82,7 +82,7 @@ vi.mock('../../../../read-models/surfaceProductivity', () => ({
 
 vi.mock('../../../AboutView', () => ({ default: mocks.stubView('AboutView') }));
 vi.mock('../../../AiCreditsView', () => ({ default: mocks.stubView('AiCreditsView') }));
-vi.mock('../../../CLIAdoptionView', () => ({ default: mocks.stubView('CLIAdoptionView') }));
+vi.mock('../../../CopilotAppAdoptionView', () => ({ default: mocks.stubView('CopilotAppAdoptionView') }));
 vi.mock('../../../features/customizations/CustomizationsView', () => ({
   default: mocks.stubView('CustomizationsView'),
 }));
@@ -187,7 +187,7 @@ const ADAPTER_CASES: AdapterCase[] = [
     view: 'ModelDetailsView',
     selector: 'selectModelDetailsReadModel',
   },
-  { mode: VIEW_MODES.CLI_ADOPTION, view: 'CLIAdoptionView', selector: 'selectCliAdoptionReadModel' },
+  { mode: VIEW_MODES.CLI_ADOPTION, view: 'CopilotAppAdoptionView', selector: 'selectCopilotAppAdoptionReadModel' },
   { mode: VIEW_MODES.CUSTOMIZATIONS, view: 'CustomizationsView', selector: 'selectCustomizationsReadModel' },
   {
     mode: VIEW_MODES.SURFACE_PRODUCTIVITY,

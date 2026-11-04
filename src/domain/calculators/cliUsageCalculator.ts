@@ -130,7 +130,15 @@ export function accumulateCliUsage(
   userId: number,
   metric: CopilotMetrics
 ): void {
-  const cli = metric.totals_by_cli;
+  accumulateClientUsage(accumulator, date, userId, metric.totals_by_cli);
+}
+
+export function accumulateClientUsage(
+  accumulator: CliUsageAccumulator,
+  date: string,
+  userId: number,
+  cli: CopilotMetrics['totals_by_cli']
+): void {
   if (!cli) return;
 
   ensureCliDates(accumulator, date);

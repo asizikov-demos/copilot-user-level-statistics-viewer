@@ -18,12 +18,12 @@ export const COPILOT_IMPACT_SECTIONS: ContextSection[] = [
   { id: 'impact-inline', label: 'Inline Mode' },
 ];
 
-export const CLI_ADOPTION_SECTIONS: ContextSection[] = [
-  { id: 'cli-adoption-trend', label: 'CLI Adoption Trend' },
-  { id: 'cli-daily-users', label: 'Daily CLI Users' },
-  { id: 'cli-daily-sessions', label: 'Daily CLI Sessions' },
-  { id: 'cli-daily-tokens', label: 'Daily CLI Token Usage' },
-  { id: 'cli-models-usage', label: 'CLI Models Daily Usage' },
+export const COPILOT_APP_ADOPTION_SECTIONS: ContextSection[] = [
+  { id: 'app-adoption-trend', label: 'Copilot App Adoption Trend' },
+  { id: 'app-daily-users', label: 'Daily Copilot App Users' },
+  { id: 'app-daily-sessions', label: 'Daily Copilot App Sessions' },
+  { id: 'app-daily-tokens', label: 'Daily Copilot App Token Usage' },
+  { id: 'app-models-usage', label: 'Copilot App Models Daily Usage' },
 ];
 
 export const SURFACE_PRODUCTIVITY_SECTIONS: ContextSection[] = [
@@ -88,7 +88,7 @@ export const CONTEXT_SECTIONS: Partial<Record<ViewMode, ContextSection[]>> = {
   [VIEW_MODES.COPILOT_IMPACT]: COPILOT_IMPACT_SECTIONS,
   [VIEW_MODES.COPILOT_ADOPTION]: COPILOT_ADOPTION_SECTIONS,
   [VIEW_MODES.AI_ADOPTION_PHASES]: AI_ADOPTION_PHASE_SECTIONS,
-  [VIEW_MODES.CLI_ADOPTION]: CLI_ADOPTION_SECTIONS,
+  [VIEW_MODES.CLI_ADOPTION]: COPILOT_APP_ADOPTION_SECTIONS,
   [VIEW_MODES.CUSTOMIZATIONS]: CUSTOMIZATIONS_SECTIONS,
   [VIEW_MODES.LANGUAGES]: LANGUAGES_SECTIONS,
   [VIEW_MODES.CLIENT_VERSIONS]: CLIENT_VERSIONS_SECTIONS,

@@ -43,6 +43,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   ],
   models: ['modelUsageData', 'modelBreakdownData'],
   cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],
+  copilotApp: ['dailyAppSessionData', 'dailyAppTokenData', 'dailyAppAdoptionTrend'],
   customizations: ['dates', 'types'],
   ai: ['aiAdoptionPhaseData', 'usageDistributionData', 'dailyAiCreditsData'],
   productivity: [
@@ -73,6 +74,7 @@ export function makeAggregatedMetrics(
     clients: { ...defaults.clients, ...overrides.clients },
     models: { ...defaults.models, ...overrides.models },
     cli: { ...defaults.cli, ...overrides.cli },
+    copilotApp: { ...defaults.copilotApp, ...overrides.copilotApp },
     customizations: { ...defaults.customizations, ...overrides.customizations },
     ai: { ...defaults.ai, ...overrides.ai },
     productivity: { ...defaults.productivity, ...overrides.productivity },

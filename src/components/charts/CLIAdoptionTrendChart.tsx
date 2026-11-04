@@ -15,11 +15,13 @@ registerChartJS();
 interface CLIAdoptionTrendChartProps {
   data: DailyCliAdoptionTrend[];
   stats: MetricsStats;
+  client?: 'CLI' | 'Copilot App';
+  clientUsers?: number;
 }
 
-export default function CLIAdoptionTrendChart({ data, stats }: CLIAdoptionTrendChartProps) {
+export default function CLIAdoptionTrendChart({ data, stats, client = 'CLI', clientUsers = stats.cliUsers }: CLIAdoptionTrendChartProps) {
   const metrics = getAdoptionTrendMetrics(data);
-  const insights = computeCliInsights(stats, data);
+  const insights = computeCliInsights(stats, data, { client, clientUsers });
   const paddedData = useMemo(
     () => padAdoptionTrendData(data, stats.reportStartDay, stats.reportEndDay),
     [data, stats.reportStartDay, stats.reportEndDay]
@@ -33,11 +35,11 @@ export default function CLIAdoptionTrendChart({ data, stats }: CLIAdoptionTrendC
 
   return (
     <ChartContainer
-      title="CLI Adoption Trend"
-      description="New vs returning CLI users per day, with cumulative growth and retention rate."
+      title={`${client} Adoption Trend`}
+      description={`New vs returning ${client} users per day, with cumulative growth and retention rate.`}
       isEmpty={data.length === 0}
-      emptyState="No CLI adoption data available"
-      summaryStats={createAdoptionTrendSummaryStats(metrics, { totalUsersLabel: 'Total CLI Users' })}
+      emptyState={`No ${client} adoption data available`}
+      summaryStats={createAdoptionTrendSummaryStats(metrics, { totalUsersLabel: `Total ${client} Users` })}
       footer={
         insights.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

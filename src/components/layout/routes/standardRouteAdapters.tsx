@@ -3,7 +3,7 @@ import type { AggregatedMetrics } from '../../../types/aggregatedMetrics';
 import { selectAiCreditsReadModel } from '../../../read-models/aiCredits';
 import { selectAiAdoptionPhaseReadModel } from '../../../read-models/aiAdoptionPhases';
 import { selectCopilotAdoptionReadModel } from '../../../read-models/adoption';
-import { selectCliAdoptionReadModel } from '../../../read-models/cliAdoption';
+import { selectCopilotAppAdoptionReadModel } from '../../../read-models/copilotAppAdoption';
 import {
   selectClientsReadModel,
   selectClientVersionsReadModel,
@@ -19,7 +19,7 @@ import { selectUsersReadModel } from '../../../read-models/users';
 import { selectSurfaceProductivityReadModel } from '../../../read-models/surfaceProductivity';
 import AboutView from '../../AboutView';
 import AiCreditsView from '../../AiCreditsView';
-import CLIAdoptionView from '../../CLIAdoptionView';
+import CopilotAppAdoptionView from '../../CopilotAppAdoptionView';
 import CustomizationsView from '../../features/customizations/CustomizationsView';
 import { selectCustomizationsReadModel } from '../../../read-models/customizations';
 import ClientsView from '../../ClientsView';
@@ -160,8 +160,8 @@ export function CliAdoptionRouteAdapter({
   aggregatedMetrics,
 }: StandardRouteContext) {
   return (
-    <CLIAdoptionView
-      model={selectCliAdoptionReadModel(aggregatedMetrics)}
+    <CopilotAppAdoptionView
+      model={selectCopilotAppAdoptionReadModel(aggregatedMetrics)}
     />
   );
 }

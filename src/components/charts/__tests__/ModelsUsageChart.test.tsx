@@ -63,6 +63,7 @@ describe('ModelsUsageChart', () => {
     });
 
     const select = renderer!.root.findByType('select');
+    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'custom-model']);
     expect(select.findAllByType('option').map(option => option.children.join(''))).toEqual([
       'All Vendors',
       'OpenAI',
@@ -86,7 +87,7 @@ describe('ModelsUsageChart', () => {
     expect(totalInteractionsValue.children).toEqual(['2']);
   });
 
-  it('does not add the vendor filter to specialized chart variants', async () => {
+  it.each(['auto', 'cli', 'app'] as const)('uses canonical model labels in the %s variant without a vendor filter', async (variant) => {
     await act(async () => {
       renderer = create(
         <ModelsUsageChart
@@ -98,12 +99,13 @@ describe('ModelsUsageChart', () => {
           }]}
           dates={['2026-01-15']}
           totalInteractions={1}
-          variant="auto"
+          variant={variant}
         />
       );
     });
 
     expect(renderer!.root.findAllByType('select')).toHaveLength(0);
+    expect(datasetLabels()).toEqual(['GPT-4.1']);
   });
 
   it('clears a vendor selection that is no longer present in refreshed data', async () => {
@@ -157,6 +159,6 @@ describe('ModelsUsageChart', () => {
     });
 
     expect(renderer!.root.findByType('select').props.value).toBe('');
-    expect(datasetLabels()).toEqual(['claude-sonnet-4.5', 'gpt-4.1']);
+    expect(datasetLabels()).toEqual(['Claude Sonnet 4.5', 'GPT-4.1']);
   });
 });

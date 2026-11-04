@@ -190,10 +190,12 @@ describe('modelBreakdownCalculator', () => {
         modelVendors: [],
         autoModels: [],
         cliModels: [],
+        appModels: [],
         autoModeAdoptionTrend: [],
         dates: [],
         modelTotal: 0,
         cliTotal: 0,
+        appTotal: 0,
         unknownTotal: 0,
       });
     });

@@ -13,9 +13,10 @@ registerChartJS();
 
 interface CLIUsersChartProps {
   data: DailyCliSessionData[];
+  client?: 'CLI' | 'Copilot App';
 }
 
-export default function CLIUsersChart({ data }: CLIUsersChartProps) {
+export default function CLIUsersChart({ data, client = 'CLI' }: CLIUsersChartProps) {
   const labels: string[] = [];
   const values: number[] = [];
   let sum = 0;
@@ -33,7 +34,7 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
   const chartData = {
     labels,
     datasets: [
-      createBarDataset(chartColors.indigo.solid, 'CLI Users', values),
+      createBarDataset(chartColors.indigo.solid, `${client} Users`, values),
     ],
   };
 
@@ -48,10 +49,10 @@ export default function CLIUsersChart({ data }: CLIUsersChartProps) {
 
   return (
     <ChartContainer
-      title="Daily CLI Users"
-      description="Number of unique CLI users per day."
+      title={`Daily ${client} Users`}
+      description={`Number of unique ${client} users per day.`}
       isEmpty={data.length === 0}
-      emptyState="No CLI user data available"
+      emptyState={`No ${client} user data available`}
       summaryStats={[
         { value: avg.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }), label: 'Avg Daily Users' },
         { value: max.toLocaleString(), label: 'Peak Daily Users' },
