@@ -68,4 +68,27 @@ describe('DayClientDistributionChart', () => {
     expect(markup).toContain('No client activity recorded');
     expect(compositionChart).not.toHaveBeenCalled();
   });
+
+  it('uses day-local model requests without adding interactions or CLI prompts', () => {
+    const traffic = (client: string, request_count: number) => ({
+      client, request_count, session_count: 0,
+      token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      totals_by_model: [],
+    });
+    const day = {
+      ...dayWith([ideTotals('vscode', 99)]),
+      totals_by_client: [traffic('opencode', 100), traffic('opencode', 76), traffic('copilot_cli', 0)],
+    };
+    renderToStaticMarkup(
+      <DayClientDistributionChart dayMetrics={day} cliInteractionCount={50} measure="requests" />,
+    );
+    expect(compositionChart.mock.lastCall?.[0]).toMatchObject({
+      unit: 'requests',
+      label: 'Requests by client',
+      entries: [
+        { label: 'OpenCode', value: 176 },
+        { label: 'Copilot CLI', value: 0 },
+      ],
+    });
+  });
 });

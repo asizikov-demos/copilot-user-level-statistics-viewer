@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { useState } from 'react';
 import { BaseStyles, ThemeProvider } from '@primer/react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import DayDetailsModal from '../DayDetailsModal';
@@ -113,6 +113,120 @@ describe('DayDetailsModal', () => {
     cleanup();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  describe('daily client and model measures', () => {
+    const requestDay = makeUserDay({
+      totals_by_client: [{
+        client: 'opencode', request_count: 176, session_count: 0,
+        token_usage: { prompt_tokens_sum: 36316766, output_tokens_sum: 104427, avg_tokens_per_request: 206938.6 },
+        totals_by_model: [{
+          model: 'gpt-4o', model_selection_mode: 'user_selected', request_count: 174,
+          token_usage: { prompt_tokens_sum: 36315763, output_tokens_sum: 104415, avg_tokens_per_request: 209311.4 },
+        }, {
+          model: 'unknown', model_selection_mode: 'auto', request_count: 2,
+          token_usage: { prompt_tokens_sum: 1003, output_tokens_sum: 12, avg_tokens_per_request: 507.5 },
+        }],
+      }],
+    });
+
+    it('defaults traffic-only clients and models to requests and displays day-local counts', () => {
+      renderDay(requestDay);
+      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+      expect(screen.getByText('Client distribution')).toBeTruthy();
+      const tables = screen.getAllByRole('table');
+      expect(within(tables[0]).getAllByRole('cell').map(cell => cell.textContent))
+        .toEqual(['OpenCode', '176', '0', '36,316,766', '104,427']);
+      expect(within(tables[1]).getAllByRole('cell').map(cell => cell.textContent))
+        .toEqual(['OpenCode', 'GPT-4o', 'user_selected', '174', '36,315,763', '104,415',
+          'OpenCode', 'Unknown Model', 'auto', '2', '1,003', '12']);
+      for (const cell of [
+        within(tables[0]).getByRole('cell', { name: 'OpenCode' }),
+        within(tables[1]).getByRole('cell', { name: 'GPT-4o' }),
+        within(tables[1]).getByRole('cell', { name: 'Unknown Model' }),
+      ]) {
+        expect(cell.querySelector('[aria-hidden="true"] svg')).toBeTruthy();
+      }
+      expect(screen.queryByRole('columnheader', { name: 'Language' })).toBeNull();
+    });
+
+    it('switches client and model measures independently and permits unavailable legacy views', () => {
+      renderDay(requestDay);
+      fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: 'interactions' } });
+      expect(screen.getByText('No legacy client activity reported for this day.')).toBeTruthy();
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'interactions' } });
+      expect(screen.getByText('No legacy language and model activity reported for this day.')).toBeTruthy();
+      fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: 'requests' } });
+      expect(screen.getByRole('cell', { name: '176' })).toBeTruthy();
+    });
+
+    it('prefers existing positive legacy data but retains request views', () => {
+      renderDay({
+        ...requestDay,
+        totals_by_ide: [makeIdeTotal('vscode', { assumed_user_initiated_interaction_count: 7 })],
+        totals_by_language_model: [{ ...ZERO_TOTALS, language: 'typescript', model: 'legacy-model', code_generation_activity_count: 3 }],
+      });
+      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'interactions');
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'interactions');
+      expect(screen.getByRole('cell', { name: 'Legacy model' })).toBeTruthy();
+      expect(screen.getByRole('cell', { name: 'Legacy model' }).querySelector('[aria-hidden="true"] svg')).toBeTruthy();
+      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'requests' } });
+      expect(screen.getByRole('cell', { name: 'GPT-4o' })).toBeTruthy();
+      expect(screen.queryByRole('cell', { name: 'Legacy model' })).toBeNull();
+    });
+
+    it.each([
+      ['gpt-4o', 'GPT-4o'],
+      ['claude-3.7-sonnet', 'Claude 3.7 Sonnet'],
+      ['unknown', 'Unknown Model'],
+      ['', 'Unknown Model'],
+    ])('uses the canonical display name for legacy model %s', (model, displayName) => {
+      renderDay(makeUserDay({
+        totals_by_language_model: [{
+          ...ZERO_TOTALS, language: 'typescript', model, code_generation_activity_count: 1,
+        }],
+      }));
+      const cell = screen.getByRole('cell', { name: displayName });
+      expect(cell.querySelector('[aria-hidden="true"] svg')).toBeTruthy();
+    });
+
+    it('falls back from zero-only legacy data and defaults all-zero data to legacy', () => {
+      const zeroLegacy = {
+        totals_by_ide: [makeIdeTotal('vscode')],
+        totals_by_language_model: [{ ...ZERO_TOTALS, language: 'typescript', model: 'legacy-model' }],
+      };
+      const { rerender } = render(withTheme(
+        <DayDetailsModal isOpen onClose={vi.fn()} date={requestDay.day} dayMetrics={{ ...requestDay, ...zeroLegacy }} />,
+      ));
+      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+      rerender(withTheme(
+        <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-16" dayMetrics={makeUserDay(zeroLegacy)} />,
+      ));
+      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'interactions');
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'interactions');
+    });
+
+    it('resets manual choices on date changes and reopening, without intercepting select arrow keys', () => {
+      const navigate = vi.fn();
+      const modal = (date: string, isOpen = true) => withTheme(
+        <DayDetailsModal isOpen={isOpen} date={date} dayMetrics={requestDay}
+          onClose={vi.fn()} onNavigateDay={navigate} canNavigatePrevDay canNavigateNextDay />,
+      );
+      const { rerender } = render(modal(requestDay.day));
+      const select = screen.getByRole('combobox', { name: 'Day client measure' });
+      fireEvent.keyDown(select, { key: 'ArrowRight' });
+      expect(navigate).not.toHaveBeenCalled();
+      fireEvent.change(select, { target: { value: 'interactions' } });
+      rerender(modal('2024-01-16'));
+      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
+      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'interactions' } });
+      rerender(modal('2024-01-16', false));
+      rerender(modal('2024-01-16'));
+      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+    });
   });
 
   describe('dialog behavior', () => {
