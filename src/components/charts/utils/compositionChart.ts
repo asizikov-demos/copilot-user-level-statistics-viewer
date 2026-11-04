@@ -7,6 +7,8 @@ import { createDoughnutChartOptions } from './chartOptions';
 import { createDoughnutDataset } from './chartStyles';
 
 export interface CompositionEntry {
+  /** Present only for client breakdowns; enables the shared client legend and pattern control. */
+  clientKey?: string;
   label: string;
   value: number;
   color: string;

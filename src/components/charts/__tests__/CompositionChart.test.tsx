@@ -129,4 +129,22 @@ describe('CompositionChart', () => {
     expect(container.innerHTML).toBe('');
     expect(doughnut).not.toHaveBeenCalled();
   });
+
+  it('offers opt-in client patterns without changing values, rank, or the Other slice', () => {
+    render(
+      <CompositionChart variant="doughnut" entries={[
+        { label: 'VS Code', value: 80, color: '#006EDB', clientKey: 'vscode' },
+        { label: 'Azure DevOps', value: 20, color: '#003B70', clientKey: 'azure_devops' },
+      ]} unit="users" label="Clients" />,
+    );
+    const toggle = screen.getByRole('checkbox', { name: 'Show client patterns' });
+    const before = lastDoughnutProps().data;
+    expect(before.datasets[0]).toMatchObject({ backgroundColor: ['#006EDB', '#003B70'] });
+    fireEvent.click(toggle);
+    expect(lastDoughnutProps().data.labels).toEqual(before.labels);
+    expect(lastDoughnutProps().data.datasets[0].data).toEqual(before.datasets[0].data);
+    expect(lastDoughnutProps().data.datasets[0]).toHaveProperty('backgroundColor', expect.any(Function));
+    fireEvent.click(toggle);
+    expect(lastDoughnutProps().data.datasets[0]).toMatchObject({ backgroundColor: ['#006EDB', '#003B70'] });
+  });
 });

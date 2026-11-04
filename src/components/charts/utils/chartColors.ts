@@ -99,7 +99,7 @@ export const modelVendorColors = {
 } as const;
 
 /**
- * IDE/client brand colors for consistent representation across distribution and activity charts.
+ * Canonical IDE/client chart colors, optimized for comparison rather than exact branding.
  * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').
  * Both 'visualstudio' and 'visual_studio' are supported as aliases.
  */
@@ -114,7 +114,7 @@ export const ideColors: Record<string, string> = Object.entries(IDE_METADATA_BY_
 );
 
 /**
- * Check whether the given IDE key has a configured brand color.
+ * Check whether the given IDE key has a configured chart color.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains')
  */
 export function hasIdeColor(ideKey: string): boolean {
@@ -122,12 +122,11 @@ export function hasIdeColor(ideKey: string): boolean {
 }
 
 /**
- * Get a color for the given IDE key, falling back to the categorical palette for unknown IDEs.
+ * Get a stable chart color. Unknown clients use neutral gray, never a rank-dependent hue.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains')
- * @param fallbackIndex - Index into the categorical palette for unknown IDEs (wraps around)
  */
-export function getIdeColor(ideKey: string, fallbackIndex: number): string {
-  return getIDEMetadata(ideKey)?.color ?? getSequentialColor(fallbackIndex);
+export function getIdeColor(ideKey: string): string {
+  return getIDEMetadata(ideKey)?.color ?? chartColors.gray.solid;
 }
 
 /**

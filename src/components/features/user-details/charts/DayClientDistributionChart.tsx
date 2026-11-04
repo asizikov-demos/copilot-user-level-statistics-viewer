@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import CompositionChart from '../../../charts/CompositionChart';
 import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
-import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
+import { getIdeColor } from '../../../charts/utils/chartColors';
 import ChartContainer from '../../../ui/ChartContainer';
 import { formatIDEName } from '../../../icons/IDEIcons';
 import { sortBySelector } from '../../../../utils/sorting';
@@ -23,11 +23,8 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       for (const client of dayMetrics.totals_by_client ?? []) {
         totals.set(client.client, (totals.get(client.client) ?? 0) + client.request_count);
       }
-      let fallbackIndex = 0;
       return sortBySelector([...totals], ([, count]) => count, 'desc').map(([client, value]) => {
-        const color = getIdeColor(client, fallbackIndex);
-        if (!hasIdeColor(client)) fallbackIndex += 1;
-        return { label: formatIDEName(client), value, color };
+        return { clientKey: client, label: formatIDEName(client), value, color: getIdeColor(client) };
       });
     }
     const sorted = sortBySelector(
@@ -36,16 +33,11 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       'desc'
     );
 
-    let fallbackIndex = 0;
     const clients = sorted.map((ide) => {
-      const color = getIdeColor(ide.ide, fallbackIndex);
-      if (!hasIdeColor(ide.ide)) {
-        fallbackIndex += 1;
-      }
-      return { label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color };
+      return { clientKey: ide.ide, label: formatIDEName(ide.ide), value: getTotalUserInitiatedInteractionCount(ide), color: getIdeColor(ide.ide) };
     });
     if (cliInteractionCount > 0) {
-      clients.push({ label: 'Copilot CLI', value: cliInteractionCount, color: ideColors['copilot_cli'] });
+      clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliInteractionCount, color: getIdeColor('copilot_cli') });
     }
     return clients;
   }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure]);

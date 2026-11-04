@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { getIDEMetadata } from './ideMetadata';
+import { getIDEMetadata, IDE_METADATA_BY_KEY } from './ideMetadata';
 import { formatIDEName } from './ideNames';
 import { getIDEIcon } from '../components/icons/IDEIcons';
 import { getIdeColor, hasIdeColor } from '../components/charts/utils/chartColors';
 import { MarkGithubIcon, CopilotIcon, WorkflowIcon, CodeReviewIcon, DeviceDesktopIcon, DeviceMobileIcon } from '@primer/octicons-react';
 
 describe('shared IDE metadata registry', () => {
-  it('recognizes Azure DevOps with its vendor icon and brand color', () => {
+  it('recognizes Azure DevOps with its vendor icon and separate chart color', () => {
     expect(formatIDEName(' AZURE_DEVOPS ')).toBe('Azure DevOps');
     expect(getIDEMetadata('azure_devops')?.canonicalKey).toBe('azure_devops');
     expect(getIDEIcon(' AZURE_DEVOPS ')).toBe(getIDEIcon('azure_devops'));
     expect(getIDEIcon('azure_devops')).not.toBe(getIDEIcon('unknown-client'));
-    expect(getIdeColor('azure_devops', 0)).toBe('#0078D7');
+    expect(getIdeColor('azure_devops')).toBe('#003B70');
     const svg = renderToStaticMarkup(createElement(getIDEIcon('azure_devops')));
     expect(svg).toContain('<path');
     expect(svg).toContain('fill="#0078D7"');
@@ -108,51 +108,54 @@ describe('shared IDE metadata registry', () => {
     expect(formatIDEName(' visual_studio ')).toBe('Visual Studio');
     expect(formatIDEName('VisualStudio')).toBe('Visual Studio');
     expect(getIDEIcon('visual_studio')).toBe(getIDEIcon('visualstudio'));
-    expect(getIdeColor('visual_studio', 0)).toBe(getIdeColor('visualstudio', 0));
+    expect(getIdeColor('visual_studio')).toBe(getIdeColor('visualstudio'));
   });
 
   it('applies case-insensitive normalization for shared metadata lookups', () => {
     expect(formatIDEName('VSCODE')).toBe('VS Code');
     expect(getIDEIcon('VsCoDe')).toBe(getIDEIcon('vscode'));
-    expect(getIdeColor('VSCode', 0)).toBe(getIdeColor('vscode', 0));
+    expect(getIdeColor('VSCode')).toBe(getIdeColor('vscode'));
   });
 
   it('keeps zed aliases in sync across label, icon, and color helpers', () => {
     expect(formatIDEName('zed:zed-copilot')).toBe('Zed');
     expect(formatIDEName(' ZED ')).toBe('Zed');
     expect(getIDEIcon('zed:zed-copilot')).toBe(getIDEIcon('zed'));
-    expect(getIdeColor('zed:zed-copilot', 0)).toBe(getIdeColor('zed', 0));
+    expect(getIdeColor('zed:zed-copilot')).toBe(getIdeColor('zed'));
   });
 
   it('maps intellij to jetbrains across label, icon, and color helpers', () => {
     expect(formatIDEName('intellij')).toBe('JetBrains');
     expect(getIDEIcon('intellij')).toBe(getIDEIcon('jetbrains'));
-    expect(getIdeColor('intellij', 0)).toBe(getIdeColor('jetbrains', 0));
+    expect(getIdeColor('intellij')).toBe(getIdeColor('jetbrains'));
   });
 
   it('maps Copilot App as a named client with Copilot visuals', () => {
     expect(formatIDEName('copilot_app')).toBe('Copilot App');
     expect(getIDEIcon('copilot_app')).not.toBe(getIDEIcon('copilot_cli'));
-    expect(getIdeColor('copilot_app', 0)).toBe('#000000');
+    expect(getIdeColor('copilot_app')).toBe('#1F2328');
+    expect(getIdeColor('github_app')).toBe(getIdeColor('copilot_app'));
+    expect(getIDEMetadata('github_app')?.canonicalKey).not.toBe(getIDEMetadata('copilot_app')?.canonicalKey);
   });
 
-  it('maps Aqua with display name and a distinct icon, falling back to sequential color like other JetBrains monogram IDEs', () => {
+  it('maps Aqua with display name, a distinct icon, and a canonical chart color', () => {
     expect(formatIDEName('aqua')).toBe('Aqua');
     expect(getIDEIcon('aqua')).not.toBe(getIDEIcon('vscode'));
     expect(getIDEIcon('aqua')).not.toBe(getIDEIcon('rubymine'));
-    expect(hasIdeColor('aqua')).toBe(false);
+    expect(hasIdeColor('aqua')).toBe(true);
+    expect(getIdeColor('aqua')).toBe('#006A6A');
   });
 
   it('maps marimo with display name, icon, and brand color', () => {
     expect(formatIDEName('marimo')).toBe('marimo');
     expect(getIDEIcon('marimo')).not.toBe(getIDEIcon('vscode'));
-    expect(getIdeColor('marimo', 0)).toBe('#1C7361');
+    expect(getIdeColor('marimo')).toBe('#1C7361');
   });
 
   it('maps Obsidian with display name, icon, and brand color', () => {
     expect(formatIDEName('obsidian')).toBe('Obsidian');
     expect(getIDEIcon('obsidian')).not.toBe(getIDEIcon('vscode'));
-    expect(getIdeColor('obsidian', 0)).toBe('#7C3AED');
+    expect(getIdeColor('obsidian')).toBe('#5925AB');
   });
 
   it('maps TablePro telemetry and normalized aliases to the official display name and icon', () => {
@@ -161,7 +164,7 @@ describe('shared IDE metadata registry', () => {
       expect(getIDEMetadata(key)?.canonicalKey).toBe('tablepro');
       expect(getIDEIcon(key)).toBe(getIDEIcon('tablepro'));
       expect(getIDEIcon(key)).not.toBe(getIDEIcon('unknown-ide'));
-      expect(getIdeColor(key, 0)).toBe(getIdeColor('tablepro', 0));
+      expect(getIdeColor(key)).toBe(getIdeColor('tablepro'));
     }
   });
 
@@ -172,5 +175,21 @@ describe('shared IDE metadata registry', () => {
     expect(markup).toContain('width="20"');
     expect(markup).toContain('height="20"');
     expect(markup).toContain('alt=""');
+  });
+
+  it('assigns every known key a color, with only Copilot App sharing a visual identity', () => {
+    const canonicals = new Map(Object.values(IDE_METADATA_BY_KEY).map(metadata => [metadata.canonicalKey, metadata]));
+    const colors = new Map<string, string[]>();
+    for (const [key, metadata] of canonicals) {
+      expect(metadata.color).toMatch(/^#[0-9A-F]{6}$/);
+      const color = getIdeColor(key);
+      colors.set(color, [...colors.get(color) ?? [], key]);
+    }
+    expect(canonicals.size).toBe(40);
+    expect(colors.size).toBe(39);
+    expect([...colors.values()].filter(keys => keys.length > 1)).toEqual([['github_app', 'copilot_app']]);
+    for (const [key, metadata] of Object.entries(IDE_METADATA_BY_KEY)) {
+      expect(getIdeColor(` ${key.toUpperCase()} `)).toBe(getIdeColor(metadata.canonicalKey));
+    }
   });
 });

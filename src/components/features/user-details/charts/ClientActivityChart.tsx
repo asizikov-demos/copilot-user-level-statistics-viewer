@@ -2,14 +2,15 @@
 import { useMemo, useState } from 'react';
 import { Button, FormControl, Select } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
-import type { TooltipItem } from 'chart.js';
+import type { ScriptableContext, TooltipItem } from 'chart.js';
+import { ClientChartLegend, ClientPatternControl, useClientPatterns } from '../../../charts/ClientChartLegend';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createBaseChartOptions, yAxisFormatters } from '../../../charts/utils/chartOptions';
 import { createDailyReportRangeChartConfig } from '../../../charts/utils/dailyBarChart';
 import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../types/clientTraffic';
-import { getIdeColor, hasIdeColor, ideColors } from '../../../charts/utils/chartColors';
+import { getIdeColor } from '../../../charts/utils/chartColors';
 import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
 import {
   createCliClientActivityRow,
@@ -127,21 +128,9 @@ export default function ClientActivityChart({
 }: ClientActivityChartProps) {
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const { patterned, setPatterned, getFill } = useClientPatterns();
+  const [hiddenClients, setHiddenClients] = useState<ReadonlySet<string>>(new Set());
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
-  const clientColors = useMemo(() => {
-    const clients = [...new Set([
-      ...ideAggregates.map(row => row.ide),
-      ...days.flatMap(day => day.totals_by_ide.map(row => row.ide)),
-      ...(hasTraffic ? traffic?.summary.clients.map(row => row.client) ?? [] : []),
-      'copilot_cli',
-    ])].sort();
-    let fallbackIndex = 0;
-    return new Map(clients.map(client => {
-      const color = getIdeColor(client, fallbackIndex);
-      if (!hasIdeColor(client)) fallbackIndex += 1;
-      return [client, color];
-    }));
-  }, [ideAggregates, days, traffic, hasTraffic]);
   const { cliTotals, cliTotalsByDay } = useMemo(() => {
     const totals = {
       promptCount: 0,
@@ -192,8 +181,7 @@ export default function ClientActivityChart({
         return ideData ? getTotalUserInitiatedInteractionCount(ideData) : 0;
       });
 
-      const color = clientColors.get(ide) ?? getIdeColor(ide, 0);
-      return createBarDataset(color, formatIDEName(ide), data);
+      return { ...createBarDataset(getIdeColor(ide), formatIDEName(ide), data), clientKey: ide };
     }).filter(dataset => dataset.data.some(value => value > 0));
 
     // Add CLI dataset if any day has CLI data
@@ -202,16 +190,17 @@ export default function ClientActivityChart({
       const cliData = paddedDays.map(dayData => {
         return cliTotalsByDay.get(dayData.day)?.interactionCount ?? 0;
       });
-      datasets.push(createBarDataset(ideColors['copilot_cli'], 'Copilot CLI', cliData));
+      datasets.push({ ...createBarDataset(getIdeColor('copilot_cli'), 'Copilot CLI', cliData), clientKey: 'copilot_cli' });
     }
 
     return {
       labels: paddedDays.map(day => formatShortDate(day.day)),
       datasets: datasets,
     };
-  }, [cliTotalsByDay, days, reportStartDay, reportEndDay, clientColors]);
+  }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
 
   const barChartOptions = useMemo(() => createBaseChartOptions({
+    showLegend: false,
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
     tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
@@ -267,7 +256,7 @@ export default function ClientActivityChart({
     type: 'bar',
     series: (hasTraffic ? traffic?.summary.clients ?? [] : []).map(client => ({
       label: formatIDEName(client.client),
-      color: clientColors.get(client.client) ?? getIdeColor(client.client, 0),
+      color: getIdeColor(client.client),
       getValue: (entry: (ClientTrafficMetrics['daily'][number] & { date: string }) | undefined) =>
         entry && entry.reportedRecords > 0
           ? entry.clients.find(row => row.client === client.client)?.[
@@ -277,6 +266,7 @@ export default function ClientActivityChart({
     })),
     createDataset: (series, values) => createBarDataset(series.color, series.label, values),
     options: {
+      showLegend: false,
       xAxisLabel: 'Date',
       yAxisLabel: measureLabel,
       yTicksCallback: yAxisFormatters.integer,
@@ -285,6 +275,24 @@ export default function ClientActivityChart({
     },
   });
   const chartData = measure === 'interactions' ? barChartData : trafficChart.chartData;
+  const clientKeys = measure === 'interactions'
+    ? barChartData.datasets.map(dataset => dataset.clientKey)
+    : (traffic?.summary.clients ?? []).map(client => client.client);
+  const displayData = {
+    ...chartData,
+    datasets: chartData.datasets.map((dataset, index) => {
+      const clientKey = clientKeys[index];
+      const color = getIdeColor(clientKey);
+      return {
+        ...dataset,
+        clientKey,
+        hidden: hiddenClients.has(clientKey),
+        backgroundColor: patterned
+          ? (context: ScriptableContext<'bar'>) => getFill(context.chart.ctx, color, clientKey)
+          : color,
+      };
+    }),
+  };
   const chartOptions = measure === 'interactions' ? barChartOptions : trafficChart.options;
   const chartTitle = measure === 'interactions'
     ? 'Daily Client Interactions'
@@ -380,12 +388,24 @@ export default function ClientActivityChart({
       )}
       {chartData.datasets.length > 0 ? (
         <div className="mb-6">
+            <ClientPatternControl checked={patterned} onChange={setPatterned} />
             <h4 className="text-sm font-medium text-default mb-4 text-center">
               {chartTitle}
             </h4>
             <div className="h-64">
-              <Bar data={chartData} options={chartOptions} role="img" aria-label={chartTitle} />
+              <Bar data={displayData} datasetIdKey="clientKey" options={chartOptions} role="img" aria-label={chartTitle} />
             </div>
+            <ClientChartLegend
+              entries={clientKeys.map(clientKey => ({ clientKey, label: formatIDEName(clientKey), color: getIdeColor(clientKey) }))}
+              patterned={patterned}
+              hiddenKeys={hiddenClients}
+              onToggle={key => setHiddenClients(previous => {
+                const next = new Set(previous);
+                if (next.has(key)) next.delete(key);
+                else next.add(key);
+                return next;
+              })}
+            />
         </div>
       ) : !isEmpty && (
         <p className="mb-4 text-sm text-muted">

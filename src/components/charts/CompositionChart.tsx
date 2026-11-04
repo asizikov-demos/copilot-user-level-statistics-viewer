@@ -3,6 +3,9 @@
 import { useId, useMemo, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { ChevronDownIcon, ChevronRightIcon } from '@primer/octicons-react';
+import type { ScriptableContext } from 'chart.js';
+import { getIDEIcon } from '../icons/IDEIcons';
+import { ClientPatternControl, ClientSwatch, useClientPatterns } from './ClientChartLegend';
 import { registerChartJS } from './utils/chartSetup';
 import { readChartToken, toRgbColor } from './utils/chartTheme';
 import {
@@ -37,7 +40,7 @@ const DOUGHNUT_CUTOUT = '62%';
 
 // Swatch, label, value and share columns are shared by every legend row so figures align.
 // Rows align to the first line because long labels wrap instead of hiding their text.
-const LEGEND_ROW_CLASS = 'grid grid-cols-[0.625rem_minmax(0,1fr)_auto_3.5rem] items-start gap-x-2 rounded-sm px-1';
+const LEGEND_ROW_CLASS = 'grid grid-cols-[1.25rem_minmax(0,1fr)_auto_3.5rem] items-start gap-x-2 rounded-sm px-1';
 
 function Swatch({ color }: { color: string }) {
   // The offset centers the swatch on the first line of a text-sm label.
@@ -56,6 +59,12 @@ function SliceFigures({ slice, unit }: { slice: CompositionSlice; unit: string }
   );
 }
 
+function ClientLabel({ slice }: { slice: CompositionSlice }) {
+  if (!slice.clientKey) return <>{slice.label}</>;
+  const Icon = getIDEIcon(slice.clientKey);
+  return <span className="flex items-start gap-2"><span aria-hidden="true"><Icon /></span><span>{slice.label}</span></span>;
+}
+
 /**
  * Pie or doughnut for a single total's part-to-whole breakdown, with an HTML legend that lists
  * every value and share. Small slices beyond the top four are grouped into an expandable "Other".
@@ -72,6 +81,8 @@ export default function CompositionChart({
 }: CompositionChartProps) {
   const [isOtherExpanded, setIsOtherExpanded] = useState(false);
   const otherListId = useId();
+  const { patterned, setPatterned, getFill } = useClientPatterns();
+  const hasClients = entries.some(entry => entry.clientKey !== undefined);
   const group = useMemo(() => groupCompositionEntries(entries), [entries]);
   const { chartData, options } = useMemo(
     () => createCompositionChartConfig({
@@ -82,6 +93,18 @@ export default function CompositionChart({
     }),
     [group, unit, variant, surface],
   );
+  const displayData = !patterned ? chartData : {
+    ...chartData,
+    datasets: chartData.datasets.map(dataset => ({
+      ...dataset,
+      backgroundColor: (context: ScriptableContext<'doughnut'>) => {
+        const slice = group.slices[context.dataIndex];
+        return slice?.clientKey
+          ? getFill(context.chart.ctx, slice.color, slice.clientKey)
+          : slice?.color ?? readChartToken('data-gray-color-emphasis');
+      },
+    })),
+  };
 
   if (group.slices.length === 0) return null;
 
@@ -91,6 +114,7 @@ export default function CompositionChart({
 
   return (
     <div className={cn(isLegendRight && '@container', className)}>
+      {hasClients && <ClientPatternControl checked={patterned} onChange={setPatterned} />}
       <div
         className={cn(
           'flex flex-col gap-4',
@@ -99,7 +123,7 @@ export default function CompositionChart({
         )}
       >
         <div className={cn('relative w-full', isDoughnut ? 'h-52' : 'h-40', isLegendRight && '@md:w-52 @md:shrink-0')}>
-          <Doughnut data={chartData} options={options} aria-hidden="true" />
+          <Doughnut data={displayData} options={options} aria-hidden="true" />
           {isDoughnut && showTotal && (
             <p className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="sr-only">Total: </span>
@@ -136,8 +160,10 @@ export default function CompositionChart({
                 <ul id={otherListId} hidden={!isOtherExpanded} className="pb-1 text-xs text-muted">
                   {group.otherEntries.map((entry, entryIndex) => (
                     <li key={`${entryIndex}-${entry.label}`} className={cn(LEGEND_ROW_CLASS, 'py-0.5')}>
-                      <span aria-hidden="true" />
-                      <span className="wrap-break-word">{entry.label}</span>
+                      {entry.clientKey
+                        ? <ClientSwatch color={entry.color} clientKey={entry.clientKey} patterned={patterned} />
+                        : <span aria-hidden="true" />}
+                      <span className="wrap-break-word"><ClientLabel slice={entry} /></span>
                       <SliceFigures slice={entry} unit={unit} />
                     </li>
                   ))}
@@ -145,8 +171,10 @@ export default function CompositionChart({
               </li>
             ) : (
               <li key={`${index}-${slice.label}`} className={cn(LEGEND_ROW_CLASS, 'py-1')}>
-                <Swatch color={slice.color} />
-                <span className="wrap-break-word">{slice.label}</span>
+                {slice.clientKey
+                  ? <ClientSwatch color={slice.color} clientKey={slice.clientKey} patterned={patterned} />
+                  : <Swatch color={slice.color} />}
+                <span className="wrap-break-word"><ClientLabel slice={slice} /></span>
                 <SliceFigures slice={slice} unit={unit} />
               </li>
             ),

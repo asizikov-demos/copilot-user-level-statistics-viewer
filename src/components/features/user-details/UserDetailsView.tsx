@@ -36,7 +36,6 @@ import {
   getIdeColor,
   getLanguageColor,
   getSequentialColor,
-  hasIdeColor,
 } from '../../charts/utils/chartColors';
 import type { CompositionEntry } from '../../charts/utils/compositionChart';
 import { sortBySelector } from '../../../utils/sorting';
@@ -192,7 +191,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     .reduce((sum, f) => sum + getTotalUserInitiatedInteractionCount(f), 0);
   const cliInteractions = totalCliPrompts;
 
-  // Distribution colors follow rank, so the largest slices get the first palette colors.
+  // Client identities keep their colors when ranks change.
   const { ideDistribution, clientRequestDistribution } = useMemo(() => {
     const interactions = ideAggregates.map(ide => ({
       ide: ide.ide,
@@ -211,13 +210,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       }));
 
     const toDistribution = (clients: typeof interactions): CompositionEntry[] => {
-      let fallbackIndex = 0;
       return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
-        const color = getIdeColor(ide, fallbackIndex);
-        if (!hasIdeColor(ide)) {
-          fallbackIndex += 1;
-        }
-        return { label, value, color };
+        return { clientKey: ide, label, value, color: getIdeColor(ide) };
       });
     };
     return {

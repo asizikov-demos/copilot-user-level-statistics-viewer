@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import CompositionChart from './CompositionChart';
 import { hasCompositionData, type CompositionEntry } from './utils/compositionChart';
-import { getIdeColor, hasIdeColor, ideColors } from './utils/chartColors';
+import { getIdeColor } from './utils/chartColors';
 import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import { sortBySelector } from '../../utils/sorting';
@@ -16,16 +16,11 @@ interface IDEDistributionChartProps {
 
 export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistributionChartProps) {
   const entries = useMemo<CompositionEntry[]>(() => {
-    let fallbackIndex = 0;
     const clients = sortBySelector(ideStats, ide => ide.uniqueUsers, 'desc').map((ide) => {
-      const color = getIdeColor(ide.ide, fallbackIndex);
-      if (!hasIdeColor(ide.ide)) {
-        fallbackIndex += 1;
-      }
-      return { label: formatIDEName(ide.ide), value: ide.uniqueUsers, color };
+      return { clientKey: ide.ide, label: formatIDEName(ide.ide), value: ide.uniqueUsers, color: getIdeColor(ide.ide) };
     });
     if (cliUsers > 0) {
-      clients.push({ label: 'Copilot CLI', value: cliUsers, color: ideColors['copilot_cli'] });
+      clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliUsers, color: getIdeColor('copilot_cli') });
     }
     return clients;
   }, [ideStats, cliUsers]);
