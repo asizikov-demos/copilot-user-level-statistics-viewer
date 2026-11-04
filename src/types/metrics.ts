@@ -286,10 +286,12 @@ export interface ModelBreakdownData {
   modelVendors: ModelVendorUsageEntry[];
   autoModels?: ModelDailyUsageEntry[];
   cliModels?: ModelDailyUsageEntry[];
+  appModels?: ModelDailyUsageEntry[];
   autoModeAdoptionTrend?: AutoModeAdoptionTrendEntry[];
   dates: string[];
   modelTotal: number;
   cliTotal?: number;
+  appTotal?: number;
   unknownTotal: number;
 }
 

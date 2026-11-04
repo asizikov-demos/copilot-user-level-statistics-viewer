@@ -74,10 +74,13 @@ The [AggregatedMetrics contract](../src/types/aggregatedMetrics.ts) groups field
 | `clients` | IDE stats/counts, plugin versions, telemetry warnings |
 | `models` | Daily model usage and model breakdown |
 | `cli` | Session, token, and adoption series |
+| `copilotApp` | Copilot App session, token, and adoption series |
 | `ai` | Adoption phases, usage distribution, and credits |
 | `productivity` | Surface reach, active user-days, attributed LOC, and overlap cohorts |
 
 Executive Summary composes `overview` and `adoption`. Shared charts stay outside feature folders when multiple features consume them.
+
+Copilot App Adoption replaces the former CLI Adoption page, retaining the adoption trend, daily users, sessions, tokens, and model usage charts. Its worker-owned series use `totals_by_copilot_app` and App usage signals; its model breakdown uses only `copilot_app` feature interactions. CLI aggregates remain separate for other views. The internal `cliAdoption` navigation key is retained for compatibility. Daily model charts use canonical catalog display names, falling back to the reported identifier for uncatalogued models.
 
 Copilot Impact and user-details views omit a standalone Edit Mode Impact chart. Edit Mode data remains included in combined impact totals.
 

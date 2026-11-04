@@ -12,7 +12,6 @@ import {
   PackageIcon,
   PeopleIcon,
   StackIcon,
-  TerminalIcon,
   VersionsIcon,
 } from '@primer/octicons-react';
 import type { Icon } from '@primer/octicons-react';
@@ -35,7 +34,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: PeopleIcon,
   },
   { label: 'Clients', view: VIEW_MODES.CLIENT_ANALYSIS, icon: DeviceDesktopIcon },
-  { label: 'CLI Adoption', view: VIEW_MODES.CLI_ADOPTION, icon: TerminalIcon },
+  { label: 'Copilot App Adoption', view: VIEW_MODES.CLI_ADOPTION, icon: CopilotIcon },
   { label: 'Customizations', view: VIEW_MODES.CUSTOMIZATIONS, icon: PackageIcon },
   { label: 'Surface', view: VIEW_MODES.SURFACE_PRODUCTIVITY, icon: StackIcon },
   { label: 'Copilot Impact', view: VIEW_MODES.COPILOT_IMPACT, icon: GraphIcon },

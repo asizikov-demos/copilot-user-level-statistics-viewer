@@ -1,5 +1,10 @@
 import type { CopilotMetrics } from '../types/metrics';
 import type { AggregatedMetrics } from '../types/aggregatedMetrics';
+import {
+  accumulateCopilotAppAggregation,
+  createCopilotAppAggregationAccumulator,
+  finalizeCopilotAppAggregation,
+} from './aggregation/copilotAppAggregation';
 import { getIDEMetadata } from '../utils/ideMetadata';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { computeExecutiveSummary } from './calculators/executiveSummaryCalculator';
@@ -87,6 +92,7 @@ interface FinalizedAggregationResults {
   clientAggregation: ClientAggregationResult;
   modelAggregation: ModelAggregationResult;
   cliAggregation: CliAggregationResult;
+  copilotAppAggregation: AggregatedMetrics['copilotApp'];
   customizationsAggregation: CustomizationsAggregationResult;
   aiAggregation: AiAggregationResult;
   surfaceProductivityAggregation: SurfaceProductivityAggregationResult;
@@ -101,6 +107,7 @@ export function assembleAggregatedMetrics({
   clientAggregation,
   modelAggregation,
   cliAggregation,
+  copilotAppAggregation,
   customizationsAggregation,
   aiAggregation,
   surfaceProductivityAggregation,
@@ -134,6 +141,7 @@ export function assembleAggregatedMetrics({
       modelBreakdownData: modelAggregation.modelBreakdownData,
     },
     cli: cliAggregation,
+    copilotApp: copilotAppAggregation,
     customizations: customizationsAggregation,
     ai: aiAggregation,
     productivity: surfaceProductivityAggregation,
@@ -154,6 +162,7 @@ export function aggregateMetrics(
     createEngagementAdoptionAggregationAccumulator();
   const clientAggregationAccumulator = createClientAggregationAccumulator();
   const cliAggregationAccumulator = createCliAggregationAccumulator();
+  const copilotAppAccumulator = createCopilotAppAggregationAccumulator();
   const customizationsAggregationAccumulator =
     createCustomizationsAggregationAccumulator();
   const languageAggregationAccumulator = createLanguageAggregationAccumulator();
@@ -216,6 +225,7 @@ export function aggregateMetrics(
       metric
     );
     accumulateCliAggregation(cliAggregationAccumulator, metric);
+    accumulateCopilotAppAggregation(copilotAppAccumulator, metric);
     accumulateCustomizationsAggregation(
       customizationsAggregationAccumulator,
       metric
@@ -279,6 +289,7 @@ export function aggregateMetrics(
       clientAggregation,
       modelAggregation,
       cliAggregation,
+      copilotAppAggregation: finalizeCopilotAppAggregation(copilotAppAccumulator),
       customizationsAggregation,
       aiAggregation,
       surfaceProductivityAggregation,

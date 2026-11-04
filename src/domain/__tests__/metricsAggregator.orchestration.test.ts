@@ -153,6 +153,10 @@ const emptyAggregateContract: Array<{
     },
   },
   {
+    slice: 'copilotApp',
+    expected: { dailyAppSessionData: [], dailyAppTokenData: [], dailyAppAdoptionTrend: [] },
+  },
+  {
     slice: 'ai',
     expected: {
       aiAdoptionPhaseData: [],
@@ -290,11 +294,13 @@ describe('metrics aggregation contract', () => {
       clientAggregation,
       modelAggregation,
       cliAggregation,
+      copilotAppAggregation: defaults.copilotApp,
       customizationsAggregation,
       aiAggregation,
       surfaceProductivityAggregation,
     });
     expect(aggregated.overview.stats).toBe(coreStatsAggregation.stats);
+    expect(aggregated.copilotApp).toBe(defaults.copilotApp);
     expect(aggregated.overview.engagementData).toBe(
       engagementAdoptionAggregation.engagementData
     );

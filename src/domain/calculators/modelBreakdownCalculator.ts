@@ -31,9 +31,11 @@ export interface ModelBreakdownAccumulator {
   modelVendors: Map<ModelVendorGroup, ModelAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
   cliModels: Map<string, ModelAccEntry>;
+  appModels: Map<string, ModelAccEntry>;
   autoModeUsersByDate: Map<string, Set<number>>;
   modelTotal: number;
   cliTotal: number;
+  appTotal: number;
   unknownTotal: number;
   allDates: Set<string>;
 }
@@ -45,9 +47,11 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
     modelVendors: new Map(),
     autoModels: new Map(),
     cliModels: new Map(),
+    appModels: new Map(),
     autoModeUsersByDate: new Map(),
     modelTotal: 0,
     cliTotal: 0,
+    appTotal: 0,
     unknownTotal: 0,
     allDates: new Set(),
   };
@@ -91,6 +95,12 @@ export function accumulateModelBreakdown(
     accumulator.allDates.add(date);
     accumulator.cliTotal += interactionCount;
     accumulateModelEntry(accumulator.cliModels, normalizedModel || 'unknown', date, interactionCount, userId);
+  }
+
+  if (modelFeature.feature === 'copilot_app' && interactionCount > 0) {
+    accumulator.allDates.add(date);
+    accumulator.appTotal += interactionCount;
+    accumulateModelEntry(accumulator.appModels, normalizedModel || 'unknown', date, interactionCount, userId);
   }
 
   if (isActiveAutoModeFeature(modelFeature)) {
@@ -216,10 +226,12 @@ export function computeModelBreakdownData(
     modelVendors: buildModelVendorEntries(accumulator.modelVendors),
     autoModels: buildModelEntries(accumulator.autoModels),
     cliModels: buildModelEntries(accumulator.cliModels),
+    appModels: buildModelEntries(accumulator.appModels),
     autoModeAdoptionTrend: computeAutoModeAdoptionTrend(dates, accumulator.autoModeUsersByDate),
     dates,
     modelTotal: accumulator.modelTotal,
     cliTotal: accumulator.cliTotal,
+    appTotal: accumulator.appTotal,
     unknownTotal: accumulator.unknownTotal,
   };
 }

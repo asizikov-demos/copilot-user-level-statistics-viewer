@@ -15,9 +15,10 @@ registerChartJS();
 interface CLISessionChartProps {
   data: DailyCliSessionData[];
   appData?: DailyCliSessionData[];
+  client?: 'CLI' | 'Copilot App';
 }
 
-export default function CLISessionChart({ data, appData }: CLISessionChartProps) {
+export default function CLISessionChart({ data, appData, client = 'CLI' }: CLISessionChartProps) {
   const combinedData = [...data, ...(appData ?? [])];
   const totalSessions = calculateTotal(combinedData, d => d.sessionCount);
   const totalRequests = calculateTotal(combinedData, d => d.requestCount);
@@ -52,12 +53,12 @@ export default function CLISessionChart({ data, appData }: CLISessionChartProps)
 
   return (
     <ChartContainer
-      title={showApp ? 'Daily CLI and App Sessions' : 'Daily CLI Sessions'}
+      title={showApp ? 'Daily CLI and App Sessions' : `Daily ${client} Sessions`}
       description={showApp
         ? 'Daily breakdown of Copilot CLI and App sessions, requests, and prompts.'
-        : 'Daily breakdown of CLI sessions, requests, and prompts across all users.'}
+        : `Daily breakdown of ${client} sessions, requests, and prompts across all users.`}
       isEmpty={combinedData.length === 0}
-      emptyState={showApp ? 'No CLI or App session data available' : 'No CLI session data available'}
+      emptyState={showApp ? 'No CLI or App session data available' : `No ${client} session data available`}
       summaryStats={[
         { value: totalSessions.toLocaleString(), label: 'Total Sessions' },
         { value: totalRequests.toLocaleString(), label: 'Total Requests' },

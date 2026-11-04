@@ -41,6 +41,14 @@ function makeTrend(days: Array<{ date: string; newUsers: number; returningUsers:
 }
 
 describe('computeCliInsights', () => {
+  it('uses App users and App wording rather than CLI users', () => {
+    const insights = computeCliInsights(makeStats({ cliUsers: 90 }), [], {
+      client: 'Copilot App', clientUsers: 0,
+    });
+    expect(insights).toHaveLength(1);
+    expect(insights[0].title).toBe('Copilot App Not in Use');
+  });
+
   it('should return "CLI Not in Use" when cliUsers is 0', () => {
     const insights = computeCliInsights(makeStats({ cliUsers: 0 }), []);
     expect(insights).toHaveLength(1);

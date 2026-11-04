@@ -16,6 +16,7 @@ registerChartJS();
 interface CLITokensChartProps {
   data: DailyCliTokenData[];
   appData?: DailyCliTokenData[];
+  client?: 'CLI' | 'Copilot App';
 }
 
 function formatTokenCount(count: number): string {
@@ -24,7 +25,7 @@ function formatTokenCount(count: number): string {
   return count.toLocaleString();
 }
 
-export default function CLITokensChart({ data, appData }: CLITokensChartProps) {
+export default function CLITokensChart({ data, appData, client = 'CLI' }: CLITokensChartProps) {
   const combinedData = [...data, ...(appData ?? [])];
   const totalOutput = calculateTotal(combinedData, d => d.outputTokens);
   const totalPrompt = calculateTotal(combinedData, d => d.promptTokens);
@@ -134,12 +135,12 @@ export default function CLITokensChart({ data, appData }: CLITokensChartProps) {
 
   return (
     <ChartContainer
-      title={showApp ? 'Daily CLI and App Token Usage' : 'Daily CLI Token Usage'}
+      title={showApp ? 'Daily CLI and App Token Usage' : `Daily ${client} Token Usage`}
       description={showApp
         ? 'Daily prompt and output tokens for Copilot CLI and App.'
-        : 'Stacked daily prompt and output tokens across all CLI users.'}
+        : `Stacked daily prompt and output tokens across all ${client} users.`}
       isEmpty={combinedData.length === 0}
-      emptyState={showApp ? 'No CLI or App token data available' : 'No CLI token data available'}
+      emptyState={showApp ? 'No CLI or App token data available' : `No ${client} token data available`}
       summaryStats={[
         { value: formatTokenCount(totalPrompt), label: 'Total Prompt Tokens' },
         { value: formatTokenCount(totalOutput), label: 'Total Output Tokens' },

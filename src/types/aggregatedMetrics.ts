@@ -98,6 +98,12 @@ export interface CliMetricsSlice {
   dailyCliAdoptionTrend: DailyCliAdoptionTrend[];
 }
 
+export interface CopilotAppMetricsSlice {
+  dailyAppSessionData: DailyCliSessionData[];
+  dailyAppTokenData: DailyCliTokenData[];
+  dailyAppAdoptionTrend: DailyCliAdoptionTrend[];
+}
+
 export interface AiMetricsSlice {
   aiAdoptionPhaseData: AiAdoptionPhaseData[];
   usageDistributionData: UsageDistributionBucket[];
@@ -113,6 +119,7 @@ export interface AggregatedMetrics {
   clients: ClientsMetricsSlice;
   models: ModelsMetricsSlice;
   cli: CliMetricsSlice;
+  copilotApp: CopilotAppMetricsSlice;
   customizations: CustomizationsMetricsSlice;
   ai: AiMetricsSlice;
   productivity: SurfaceProductivityMetrics;

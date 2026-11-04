@@ -6,6 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import { FormControl, Select } from '@primer/react';
 import {
   getModelVendor,
+  getModelDisplayName,
   MODEL_VENDOR_ORDER,
   type ModelVendorGroup,
 } from '../../domain/modelConfig';
@@ -25,12 +26,15 @@ interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
   dates: string[];
   totalInteractions: number;
-  variant: 'auto' | 'cli' | 'all';
+  variant: 'auto' | 'cli' | 'app' | 'all';
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
+  const isApp = variant === 'app';
+  const client = isApp ? 'Copilot App' : 'CLI';
+  const isClient = isCli || isApp;
   const [selectedVendor, setSelectedVendor] = useState<ModelVendorGroup | ''>('');
 
   const vendorOptions = useMemo(() => {
@@ -67,20 +71,20 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       if (isAuto || model === 'auto') {
         return chartColors.violet.solid;
       }
-      if (isCli) {
-        const adjustedIndex = modelIndexMap.get(model) ?? 0;
-        return getSequentialColor(adjustedIndex + 7);
-      }
       if (model === 'unknown') {
         return chartColors.gray.solid;
+      }
+      if (isClient) {
+        const adjustedIndex = modelIndexMap.get(model) ?? 0;
+        return getSequentialColor(adjustedIndex + 7);
       }
       return getSequentialColor(modelIndexMap.get(model) ?? 0);
     };
 
     const datasets = sortedModels.map((entry) => {
       const color = getModelColor(entry.model);
-      return createBarDataset(color, entry.model, dates.map(d => entry.dailyData[d] || 0), {
-        stack: isAuto ? 'auto-models' : isCli ? 'cli-models' : 'models'
+      return createBarDataset(color, getModelDisplayName(entry.model) ?? entry.model, dates.map(d => entry.dailyData[d] || 0), {
+        stack: isAuto ? 'auto-models' : isClient ? `${variant}-models` : 'models'
       });
     });
 
@@ -88,31 +92,31 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       labels: dates.map(d => formatShortDate(d)),
       datasets
     };
-  }, [filteredEntries, dates, isAuto, isCli]);
+  }, [filteredEntries, dates, isAuto, isClient, variant]);
 
   const displayedTotalInteractions = activeVendor
     ? filteredEntries.reduce((sum, entry) => sum + entry.total, 0)
     : totalInteractions;
 
-  const chartTitle = isCli
-    ? 'CLI Models Daily Usage'
+  const chartTitle = isClient
+    ? `${client} Models Daily Usage`
     : isAuto
       ? 'Auto Model Daily Usage'
       : 'Models Daily Usage';
-  const chartDescription = isCli
-    ? 'Daily Copilot CLI user-initiated interactions grouped by model.'
+  const chartDescription = isClient
+    ? `Daily ${isCli ? 'Copilot CLI' : client} user-initiated interactions grouped by model.`
     : isAuto
       ? 'Daily interactions routed through Copilot Auto mode.'
       : 'Daily user-initiated interactions grouped by model.';
-  const variantLabel = isCli ? 'CLI' : isAuto ? 'Auto' : 'Tracked';
-  const summaryColorClass = isCli ? 'text-sponsors' : 'text-done';
-  const emptyState = isCli
-    ? 'No CLI model usage data available'
+  const variantLabel = isClient ? client : isAuto ? 'Auto' : 'Tracked';
+  const summaryColorClass = isClient ? 'text-sponsors' : 'text-done';
+  const emptyState = isClient
+    ? `No ${client} model usage data available`
     : isAuto
       ? 'No auto model usage data available'
       : 'No model usage data available';
-  const footerDescription = isCli
-    ? 'Counts aggregate user-initiated interactions for the Copilot CLI feature per model per day.'
+  const footerDescription = isClient
+    ? `Counts aggregate user-initiated interactions for the ${isCli ? 'Copilot CLI' : client} feature per model per day.`
     : isAuto
       ? 'Counts aggregate user-initiated interactions routed through Copilot Auto mode per model per day.'
       : 'Counts aggregate user-initiated interactions across all tracked models per day.';
@@ -135,7 +139,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       description={chartDescription}
       isEmpty={dates.length === 0 || datasets.length === 0}
       emptyState={emptyState}
-      headerActions={!isAuto && !isCli ? (
+      headerActions={!isAuto && !isClient ? (
         <FormControl id="models-usage-vendor-filter" className="min-w-44">
           <FormControl.Label>Model vendor</FormControl.Label>
           <Select
