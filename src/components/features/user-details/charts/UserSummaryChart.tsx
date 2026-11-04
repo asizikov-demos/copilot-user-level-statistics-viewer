@@ -1,11 +1,12 @@
 'use client';
 
+import { useState, type ReactNode } from 'react';
 import CompositionChart from '../../../charts/CompositionChart';
 import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
 import ChartContainer from '../../../ui/ChartContainer';
 import EmptyState from '../../../ui/EmptyState';
 import { GraphIcon } from '@primer/octicons-react';
-import { Label } from '@primer/react';
+import { FormControl, Label, Select } from '@primer/react';
 import { FEATURE_LABEL_VARIANT } from '../../../ui/featureLabels';
 
 interface UserSummaryChartProps {
@@ -17,8 +18,10 @@ interface UserSummaryChartProps {
   usedAutoMode: boolean;
   usedLocalByok: boolean;
   ideDistribution?: CompositionEntry[];
+  clientRequestDistribution?: CompositionEntry[];
   languageDistribution?: CompositionEntry[];
   modelDistribution?: CompositionEntry[];
+  modelRequestDistribution?: CompositionEntry[];
 }
 
 interface CompositionTileProps {
@@ -27,12 +30,16 @@ interface CompositionTileProps {
   unit: string;
   /** Accessible name for the tile's breakdown list */
   label: string;
+  controls?: ReactNode;
 }
 
-function CompositionTile({ title, entries, unit, label }: CompositionTileProps) {
+function CompositionTile({ title, entries, unit, label, controls }: CompositionTileProps) {
   return (
-    <div className="bg-muted rounded-lg p-4 flex flex-col">
-      <h4 className="text-sm font-medium text-default mb-3 text-center">{title}</h4>
+    <div className="bg-muted rounded-lg p-4 flex min-w-0 flex-col">
+      <div className="mb-4 flex min-h-8 flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-medium text-default">{title}</h4>
+        {controls}
+      </div>
       {entries && hasCompositionData(entries) ? (
         <CompositionChart variant="doughnut" entries={entries} unit={unit} label={label} surface="muted" />
       ) : (
@@ -43,6 +50,48 @@ function CompositionTile({ title, entries, unit, label }: CompositionTileProps) 
         </div>
       )}
     </div>
+  );
+}
+
+function SelectableCompositionTile({ kind, interactions, requests }: {
+  kind: 'client' | 'model';
+  interactions?: CompositionEntry[];
+  requests?: CompositionEntry[];
+}) {
+  const [selectedMeasure, setSelectedMeasure] = useState<'interactions' | 'requests' | null>(null);
+  const defaultMeasure = hasCompositionData(interactions) || !hasCompositionData(requests)
+    ? 'interactions'
+    : 'requests';
+  const measure = selectedMeasure ?? defaultMeasure;
+  const isRequests = measure === 'requests';
+  const title = kind === 'client' ? 'Clients' : 'Models';
+
+  return (
+    <CompositionTile
+      title={title}
+      entries={isRequests ? requests : interactions}
+      unit={measure}
+      label={`${isRequests ? 'Requests' : 'Interactions'} by ${kind}`}
+      controls={(
+        <>
+          <span className="hidden text-xs text-muted print:inline">{isRequests ? 'Model requests' : 'Interactions'}</span>
+          <div className="print:hidden">
+            <FormControl>
+              <FormControl.Label visuallyHidden>{kind === 'client' ? 'Client summary measure' : 'Model summary measure'}</FormControl.Label>
+              <Select size="small" value={measure} onChange={event => {
+                const value = event.target.value;
+                if (value === 'interactions' || value === 'requests') {
+                  setSelectedMeasure(value);
+                }
+              }}>
+                <Select.Option value="interactions">Interactions</Select.Option>
+                <Select.Option value="requests">Model requests</Select.Option>
+              </Select>
+            </FormControl>
+          </div>
+        </>
+      )}
+    />
   );
 }
 
@@ -59,8 +108,10 @@ export default function UserSummaryChart({
   usedAutoMode,
   usedLocalByok,
   ideDistribution,
+  clientRequestDistribution,
   languageDistribution,
   modelDistribution,
+  modelRequestDistribution,
 }: UserSummaryChartProps) {
   return (
     <ChartContainer title="Summary" chartHeight="h-auto">
@@ -83,23 +134,22 @@ export default function UserSummaryChart({
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <CompositionTile
-          title="Client Interactions"
-          entries={ideDistribution}
-          unit="interactions"
-          label="Interactions by client"
+        <SelectableCompositionTile
+          kind="client"
+          interactions={ideDistribution}
+          requests={clientRequestDistribution}
         />
         <CompositionTile
-          title="Languages (Generations)"
+          title="Languages"
           entries={languageDistribution}
           unit="generations"
           label="Generations by language"
+          controls={<span className="text-xs text-muted">Generations</span>}
         />
-        <CompositionTile
-          title="Models (Interactions)"
-          entries={modelDistribution}
-          unit="interactions"
-          label="Interactions by model"
+        <SelectableCompositionTile
+          kind="model"
+          interactions={modelDistribution}
+          requests={modelRequestDistribution}
         />
       </div>
     </ChartContainer>

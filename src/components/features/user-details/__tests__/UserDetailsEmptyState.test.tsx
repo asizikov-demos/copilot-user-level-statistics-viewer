@@ -44,7 +44,131 @@ describe('user profile empty state', () => {
     expect(render()).toContain(EMPTY_STATE_TEST_ID);
   });
 
+  describe('user profile client distribution', () => {
+    function clientTraffic(requestCount = 176): UserDetailedMetrics['clientTraffic'] {
+      return {
+        summary: {
+          recordCount: 2, reportedRecords: 2, activeUsers: 1,
+          clients: [
+            { client: 'copilot_cli', requestCount: 0 },
+            { client: 'opencode', requestCount },
+            { client: 'vscode', requestCount: requestCount > 0 ? 24 : 0 },
+          ].map(client => ({
+            ...client, promptTokens: 20, outputTokens: 10,
+            avgTokensPerRequest: null, activeUsers: 1, reportedSessionCount: 0, models: [],
+          })),
+        },
+        daily: [],
+      };
+    }
+
+    it.each([false, true])('uses client requests when interactions are missing or zero-only: %s', (hasZeroRows) => {
+      const markup = render({
+        clientTraffic: clientTraffic(),
+        ideAggregates: hasZeroRows ? [{ ide: 'copilot_cli', ...metrics, user_initiated_interaction_count: 0 }] : [],
+      });
+      expect(markup).toContain('Clients');
+      expect(markup).toContain('aria-label="Requests by client"');
+      expect(markup).toContain('176<span class="sr-only"> requests</span>');
+      expect(markup).toContain('24<span class="sr-only"> requests</span>');
+      expect(markup).toContain('88.0%');
+      expect(markup).not.toContain('aria-label="Interactions by client"');
+      expect(markup).not.toContain('<span class="wrap-break-word">Copilot CLI</span>');
+      expect(markup.indexOf('<span class="wrap-break-word">OpenCode</span>'))
+        .toBeLessThan(markup.indexOf('<span class="wrap-break-word">VS Code</span>'));
+    });
+
+    it.each(['legacy', 'assumed', 'cli'])('prefers positive %s interactions and never adds requests', source => {
+      const markup = render({
+        clientTraffic: clientTraffic(),
+        ideAggregates: source === 'cli' ? [] : [{
+          ide: 'vscode', ...metrics,
+          user_initiated_interaction_count: source === 'legacy' ? 7 : 0,
+          assumed_user_initiated_interaction_count: source === 'assumed' ? 7 : 0,
+        }],
+        days: source === 'cli' ? [makeUserDay({
+          totals_by_cli: {
+            prompt_count: 7, session_count: 0, request_count: 10,
+            token_usage: { prompt_tokens_sum: 20, output_tokens_sum: 10, avg_tokens_per_request: 3 },
+          },
+        })] : [],
+      });
+      expect(markup).toContain('Clients');
+      expect(markup).toContain('aria-label="Interactions by client"');
+      expect(markup).toContain('7<span class="sr-only"> interactions</span>');
+      expect(markup).not.toContain('aria-label="Requests by client"');
+      expect(markup).not.toContain('<span class="wrap-break-word">OpenCode</span>');
+    });
+
+    it('keeps the existing empty state when neither source has positive values', () => {
+      const markup = render({ clientTraffic: clientTraffic(0) });
+      expect(markup).toContain('Clients');
+      expect(markup).not.toContain('aria-label="Requests by client"');
+      expect(markup.match(/No data available/g)).toHaveLength(3);
+    });
+  });
+
   describe('user profile model distribution', () => {
+    function modelTraffic(requestCount = 10): UserDetailedMetrics['clientTraffic'] {
+      const counts = { requestCount, promptTokens: 20, outputTokens: 10, avgTokensPerRequest: 3, activeUsers: 1 };
+      return {
+        summary: {
+          recordCount: 2, reportedRecords: 2, activeUsers: 1,
+          clients: ['opencode', 'copilot_cli'].map(client => ({
+            ...counts, client, reportedSessionCount: 0,
+            models: [
+              { ...counts, model: 'gpt-4o', modelSelectionMode: 'user_selected' },
+              { ...counts, model: 'gpt-4o', modelSelectionMode: 'auto' },
+              { ...counts, requestCount: 0, model: 'claude-3.7-sonnet', modelSelectionMode: 'user_selected' },
+              { ...counts, requestCount: requestCount > 0 ? 2 : 0, model: 'unknown', modelSelectionMode: 'user_selected' },
+            ],
+          })),
+        },
+        daily: [],
+      };
+    }
+
+    it.each([false, true])('falls back to requests across clients and selection modes with zero interaction rows: %s', (hasZeroRows) => {
+      const markup = render({
+        clientTraffic: modelTraffic(),
+        modelFeatureAggregates: hasZeroRows
+          ? [{ model: 'claude-3.7-sonnet', feature: 'chat_panel_agent_mode', ...metrics, user_initiated_interaction_count: 0 }]
+          : [],
+      });
+      expect(markup).toContain('Models');
+      expect(markup).toContain('aria-label="Requests by model"');
+      expect(markup).toContain('40<span class="sr-only"> requests</span>');
+      expect(markup).toContain('4<span class="sr-only"> requests</span>');
+      expect(markup).toContain('<span class="wrap-break-word">GPT-4o</span>');
+      expect(markup).toContain('<span class="wrap-break-word">Unknown Model</span>');
+      expect(markup).not.toContain('<span class="wrap-break-word">Claude 3.7 Sonnet</span>');
+      expect(markup.indexOf('<span class="wrap-break-word">GPT-4o</span>'))
+        .toBeLessThan(markup.indexOf('<span class="wrap-break-word">Unknown Model</span>'));
+    });
+
+    it.each([false, true])('prefers positive model interactions over requests with assumed interactions: %s', (assumed) => {
+      const markup = render({
+        clientTraffic: modelTraffic(),
+        modelFeatureAggregates: [{
+          model: 'claude-3.7-sonnet', feature: 'chat_panel_agent_mode', ...metrics,
+          user_initiated_interaction_count: assumed ? 0 : 7,
+          assumed_user_initiated_interaction_count: assumed ? 7 : 0,
+        }],
+      });
+      expect(markup).toContain('Models');
+      expect(markup).toContain('aria-label="Interactions by model"');
+      expect(markup).toContain('7<span class="sr-only"> interactions</span>');
+      expect(markup).not.toContain('aria-label="Requests by model"');
+      expect(markup).not.toContain('<span class="wrap-break-word">GPT-4o</span>');
+    });
+
+    it('keeps the existing model empty state when neither source has positive values', () => {
+      const markup = render({ clientTraffic: modelTraffic(0) });
+      expect(markup).toContain('Models');
+      expect(markup).not.toContain('aria-label="Requests by model"');
+      expect(markup.match(/No data available/g)).toHaveLength(3);
+    });
+
     it.each([
       ['gpt-4o', 'GPT-4o'],
       ['claude-3.7-sonnet', 'Claude 3.7 Sonnet'],
