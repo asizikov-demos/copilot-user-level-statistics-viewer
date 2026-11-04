@@ -2,6 +2,10 @@
 
 Use this reference after all intended commits are ready.
 
+Before publishing, complete the commit-boundary gate in
+`reference/branch-and-commit.md`, including when the commits already exist.
+Do not treat one PR or feature as evidence that one commit is appropriate.
+
 1. Push the branch: `git push -u origin <branch-name>`.
 2. Create a PR with `gh pr create`.
 3. Use a concise PR title based on the commit messages, fix messages, or the

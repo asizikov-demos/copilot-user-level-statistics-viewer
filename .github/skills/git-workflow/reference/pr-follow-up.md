@@ -3,6 +3,11 @@
 Use this reference when a branch already has an open PR and you push additional
 commits.
 
+Before publishing, complete the commit-boundary gate in
+`reference/branch-and-commit.md` for the outgoing commits. Review-feedback fixes
+still need coherent boundaries; do not rewrite previously published commits
+without the required authorization.
+
 1. Read the current PR body with `gh pr view --json body -q .body` and use that
    exact content as the base for your update. Do not generate a fresh PR
    description from scratch.
