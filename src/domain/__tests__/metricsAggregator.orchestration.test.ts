@@ -278,6 +278,7 @@ describe('metrics aggregation contract', () => {
       modelUsageData: [...defaults.models.modelUsageData],
       modelBreakdownData: { ...defaults.models.modelBreakdownData },
       localByokUsage: { ...defaults.models.localByokUsage },
+      selectionModeRequests: defaults.models.selectionModeRequests,
     };
     const cliAggregation = {
       dailyCliSessionData: [...defaults.cli.dailyCliSessionData],

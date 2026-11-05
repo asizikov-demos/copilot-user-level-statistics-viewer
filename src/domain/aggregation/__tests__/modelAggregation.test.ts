@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
 import { makeModelFeatureTotal } from '../../../__tests__/factories/metricTotals';
-import type { CopilotMetrics } from '../../../types/metrics';
+import type { ClientUsageTotals, CopilotMetrics } from '../../../types/metrics';
 import {
   computeStats,
   createStatsAccumulator,
@@ -25,6 +25,109 @@ function aggregateModels(metrics: Partial<CopilotMetrics>[]) {
 }
 
 describe('model aggregation', () => {
+  it('sums category requests across clients and days separately for each selection mode', () => {
+    const client = (name: string, rows: Array<[string, string, number]>): ClientUsageTotals => ({
+      client: name,
+      request_count: 999,
+      session_count: 0,
+      token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      totals_by_model: rows.map(([model, model_selection_mode, request_count]) => ({
+        model, model_selection_mode, request_count,
+        token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      })),
+    });
+    const { result } = aggregateModels([
+      { totals_by_client: [
+        client('vscode', [
+          ['gpt-5', 'user_selected', 10],
+          ['gpt-4o-mini', 'user_selected', 2],
+          ['gpt-5', 'auto', 3],
+          ['unknown', 'product_selected', 4],
+          ['gpt-5', 'other', 5],
+          ['gpt-5', 'unknown', 6],
+          ['gpt-5', 'future_mode', 7],
+        ]),
+        client('opencode', [['gpt-5', 'user_selected', 8], ['new-model', 'auto', 9]]),
+      ] },
+      { day: '2024-01-16', totals_by_client: [
+        client('vscode', [['gpt-5', 'user_selected', 1], ['gpt-4o', 'product_selected', 2]]),
+      ] },
+    ]);
+
+    expect(result.selectionModeRequests).toEqual({
+      recordCount: 2,
+      reportedRecords: 2,
+      excludedRequestCount: 18,
+      modes: [
+        { mode: 'user_selected', categories: [
+          { category: 'Lightweight', requestCount: 2 },
+          { category: 'Versatile', requestCount: 0 },
+          { category: 'Powerful', requestCount: 19 },
+          { category: 'Uncategorized', requestCount: 0 },
+          { category: 'Code Review Model', requestCount: 0 },
+        ] },
+        { mode: 'auto', categories: [
+          { category: 'Lightweight', requestCount: 0 },
+          { category: 'Versatile', requestCount: 0 },
+          { category: 'Powerful', requestCount: 3 },
+          { category: 'Uncategorized', requestCount: 9 },
+          { category: 'Code Review Model', requestCount: 0 },
+        ] },
+        { mode: 'product_selected', categories: [
+          { category: 'Lightweight', requestCount: 0 },
+          { category: 'Versatile', requestCount: 2 },
+          { category: 'Powerful', requestCount: 0 },
+          { category: 'Uncategorized', requestCount: 4 },
+          { category: 'Code Review Model', requestCount: 0 },
+        ] },
+      ],
+    });
+    expect(result.modelBreakdownData.modelTotal).toBe(0);
+    expect(result.modelUsageData).toEqual([]);
+  });
+
+  it('labels unknown code review models without reclassifying other clients or known models', () => {
+    const token_usage = { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 };
+    const client = (name: string, rows: Array<[string, number]>): ClientUsageTotals => ({
+      client: name, request_count: 100, session_count: 0, token_usage,
+      totals_by_model: rows.map(([model, request_count]) => ({
+        model, request_count, model_selection_mode: 'product_selected', token_usage,
+      })),
+    });
+    const { result } = aggregateModels([{
+      totals_by_client: [
+        client('code_review', [['unknown', 10], [' UNKNOWN ', 2], ['', 1], ['gpt-5', 3], ['future-model', 4]]),
+        client('cloud_agent', [['unknown', 5]]),
+        client('vscode', [['unknown', 6]]),
+      ],
+    }]);
+
+    expect(result.selectionModeRequests.modes.find(entry => entry.mode === 'product_selected')?.categories)
+      .toEqual([
+        { category: 'Lightweight', requestCount: 0 },
+        { category: 'Versatile', requestCount: 0 },
+        { category: 'Powerful', requestCount: 3 },
+        { category: 'Uncategorized', requestCount: 15 },
+        { category: 'Code Review Model', requestCount: 13 },
+      ]);
+    expect(result.selectionModeRequests.excludedRequestCount).toBe(0);
+  });
+
+  it('distinguishes missing and null traffic from reported empty traffic without inferring requests', () => {
+    const { result } = aggregateModels([
+      {},
+      { totals_by_client: null },
+      { totals_by_client: [] },
+      { totals_by_model_feature: [makeModelFeatureTotal('auto', 'chat_panel', 5)] },
+    ]);
+    expect(result.selectionModeRequests).toMatchObject({
+      recordCount: 4, reportedRecords: 1, excludedRequestCount: 0,
+    });
+    expect(result.selectionModeRequests.modes.every(mode =>
+      mode.categories.every(entry => entry.requestCount === 0),
+    )).toBe(true);
+  });
+
   it('coordinates canonical interactions, engagement stats, and model ordering', () => {
     const { result, stats } = aggregateModels([
       {

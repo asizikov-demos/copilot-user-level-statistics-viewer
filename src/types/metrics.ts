@@ -29,6 +29,18 @@ export interface ClientUsageTotals {
   totals_by_model: ClientModelUsageTotals[];
 }
 
+export type ModelSelectionMode = 'user_selected' | 'auto' | 'product_selected';
+
+export interface ModelSelectionRequests {
+  recordCount: number;
+  reportedRecords: number;
+  excludedRequestCount: number;
+  modes: Array<{
+    mode: ModelSelectionMode;
+    categories: Array<{ category: ModelUsageCategory | 'Code Review Model'; requestCount: number }>;
+  }>;
+}
+
 export interface CopilotClientUsageTotals {
   session_count: number;
   request_count: number;

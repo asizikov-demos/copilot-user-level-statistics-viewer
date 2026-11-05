@@ -19,6 +19,7 @@ describe('selectModelDetailsReadModel', () => {
       categoryTables: expect.any(Array),
       vendorTables: expect.any(Array),
       localByokUsage: metrics.models.localByokUsage,
+      selectionModeRequests: metrics.models.selectionModeRequests,
       reportStartDay: metrics.overview.stats.reportStartDay,
       reportEndDay: metrics.overview.stats.reportEndDay,
     });

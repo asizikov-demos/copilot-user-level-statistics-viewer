@@ -62,6 +62,7 @@ export const CLIENT_VERSIONS_SECTIONS: ContextSection[] = [
 export const MODEL_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'model-usage-all', label: 'All Models' },
   { id: 'model-type-distribution', label: 'Model Types' },
+  { id: 'model-selection-modes', label: 'Types by Selection Mode' },
   { id: 'models-by-category', label: 'Models by Category' },
   { id: 'model-vendor-distribution', label: 'Model Vendors' },
   { id: 'models-by-vendor', label: 'Models by Vendor' },

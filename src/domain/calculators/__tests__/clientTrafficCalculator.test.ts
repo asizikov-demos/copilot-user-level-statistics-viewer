@@ -91,7 +91,10 @@ describe('client traffic aggregation', () => {
     expect(aggregated.users.userSummaries).toEqual(
       legacy.users.userSummaries.map(user => ({ ...user, clients_used: ['opencode'], top_client: 'opencode' })),
     );
-    expect(aggregated.models).toEqual(legacy.models);
+    expect({ ...aggregated.models, selectionModeRequests: legacy.models.selectionModeRequests }).toEqual(legacy.models);
+    expect(aggregated.models.selectionModeRequests).toMatchObject({
+      recordCount: 1, reportedRecords: 1, excludedRequestCount: 2,
+    });
     expect(aggregated.cli).toEqual(legacy.cli);
     expect(aggregated.impact).toEqual(legacy.impact);
     expect(aggregated.clients.traffic.summary.clients[0].requestCount).toBe(2);
