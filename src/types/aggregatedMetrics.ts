@@ -2,6 +2,7 @@ import type {
   DailyLanguageChartData,
   IDEStatsData,
   LanguageFeatureImpactData,
+  LocalByokUsageData,
   MetricsStats,
   ModelBreakdownData,
   PluginVersionAnalysisData,
@@ -90,6 +91,7 @@ export interface ClientsMetricsSlice {
 export interface ModelsMetricsSlice {
   modelUsageData: DailyModelUsageData[];
   modelBreakdownData: ModelBreakdownData;
+  localByokUsage: LocalByokUsageData;
 }
 
 export interface CliMetricsSlice {

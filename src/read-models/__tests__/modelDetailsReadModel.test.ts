@@ -18,6 +18,9 @@ describe('selectModelDetailsReadModel', () => {
       autoTotal: expect.any(Number),
       categoryTables: expect.any(Array),
       vendorTables: expect.any(Array),
+      localByokUsage: metrics.models.localByokUsage,
+      reportStartDay: metrics.overview.stats.reportStartDay,
+      reportEndDay: metrics.overview.stats.reportEndDay,
     });
   });
 

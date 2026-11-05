@@ -5,6 +5,7 @@ import ModelsUsageChart from './charts/ModelsUsageChart';
 import ModelCategoryDistributionChart from './charts/ModelCategoryDistributionChart';
 import ModelVendorDistributionChart from './charts/ModelVendorDistributionChart';
 import AutoModeAdoptionTrendChart from './charts/AutoModeAdoptionTrendChart';
+import LocalByokSessionsChart from './charts/LocalByokSessionsChart';
 import ModelCategoryBreakdown from './ModelCategoryBreakdown';
 import ModelVendorBreakdown from './ModelVendorBreakdown';
 import type { ModelDetailsReadModel } from '../read-models/models';
@@ -27,6 +28,9 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
     autoTotal,
     categoryTables,
     vendorTables,
+    localByokUsage,
+    reportStartDay,
+    reportEndDay,
   } = model;
   const [
     allModelsSection,
@@ -36,6 +40,7 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
     modelsByVendorSection,
     autoModelsSection,
     autoAdoptionSection,
+    localByokSection,
   ] = MODEL_DETAILS_SECTIONS;
 
   return (
@@ -75,6 +80,13 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
         </div>
         <div id={autoAdoptionSection.id} className="scroll-mt-28">
           <AutoModeAdoptionTrendChart data={autoModeAdoptionTrend} />
+        </div>
+        <div id={localByokSection.id} className="scroll-mt-28">
+          <LocalByokSessionsChart
+            data={localByokUsage}
+            reportStartDay={reportStartDay}
+            reportEndDay={reportEndDay}
+          />
         </div>
       </div>
     </ViewPanel>

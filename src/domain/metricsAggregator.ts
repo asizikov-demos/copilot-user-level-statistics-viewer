@@ -139,6 +139,7 @@ export function assembleAggregatedMetrics({
     models: {
       modelUsageData: modelAggregation.modelUsageData,
       modelBreakdownData: modelAggregation.modelBreakdownData,
+      localByokUsage: modelAggregation.localByokUsage,
     },
     cli: cliAggregation,
     copilotApp: copilotAppAggregation,

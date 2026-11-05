@@ -40,6 +40,11 @@ export interface CopilotClientUsageTotals {
   };
 }
 
+export interface LocalByokUsageTotals extends CopilotClientUsageTotals {
+  byok_kind: string;
+  surface: string;
+}
+
 export interface CopilotMetrics extends CliCustomizationFields {
   totals_by_3rd_party_agent?: Array<{
     agent_id: string;
@@ -137,6 +142,7 @@ export interface CopilotMetrics extends CliCustomizationFields {
   used_copilot_code_review_active?: boolean | null;
   used_copilot_code_review_passive?: boolean | null;
   used_local_byok?: boolean | null;
+  totals_by_local_byok?: LocalByokUsageTotals[] | null;
   ai_adoption_phase?: AIAdoptionPhase;
   totals_by_copilot_app?: CopilotClientUsageTotals;
   totals_by_cli?: CopilotClientUsageTotals & {
@@ -278,6 +284,20 @@ export interface AutoModeAdoptionTrendEntry {
   returningUsers: number;
   totalActiveUsers: number;
   cumulativeUsers: number;
+}
+
+export interface DailyLocalByokSessionsEntry {
+  date: string;
+  sessionsBySurface: Record<string, number>;
+}
+
+export interface LocalByokUsageData {
+  /** Surfaces ordered by total sessions, descending. */
+  surfaces: string[];
+  daily: DailyLocalByokSessionsEntry[];
+  totalSessions: number;
+  totalRequests: number;
+  totalUsers: number;
 }
 
 export interface ModelBreakdownData {

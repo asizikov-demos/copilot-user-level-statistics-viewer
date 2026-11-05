@@ -67,6 +67,7 @@ export const MODEL_DETAILS_SECTIONS: ContextSection[] = [
   { id: 'models-by-vendor', label: 'Models by Vendor' },
   { id: 'model-usage-auto', label: 'Auto Models' },
   { id: 'model-auto-adoption', label: 'Auto Adoption' },
+  { id: 'model-local-byok', label: 'Local BYOK' },
 ];
 
 export const AI_CREDITS_SECTIONS: ContextSection[] = [
