@@ -49,7 +49,7 @@ export default function EmptyState({
     >
       {VisualIcon && (
         <Blankslate.Visual>
-          <VisualIcon size={size === 'small' ? 24 : 32} />
+          <VisualIcon size={24} aria-hidden="true" />
         </Blankslate.Visual>
       )}
       <Blankslate.Heading as={headingAs}>{heading}</Blankslate.Heading>

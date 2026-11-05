@@ -28,7 +28,7 @@ const HowToGetData: React.FC = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium"
           >
-            <LinkExternalIcon size={14} aria-hidden="true" />
+            <LinkExternalIcon size={16} aria-hidden="true" />
             View GitHub Documentation
           </a>
         </div>

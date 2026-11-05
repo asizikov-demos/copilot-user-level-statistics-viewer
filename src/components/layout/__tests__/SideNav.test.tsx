@@ -50,7 +50,10 @@ describe('SideNav', () => {
     for (const button of buttons) {
       expect(button.getAttribute('type')).toBe('button');
       expect(button.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+      expect(button.querySelector('svg')?.getAttribute('width')).toBe('16');
+      expect(button.querySelector('svg')?.getAttribute('height')).toBe('16');
     }
+    expect(within(nav).getByRole('button', { name: 'Model Usage' }).querySelector('.octicon-ai-model')).not.toBeNull();
   });
 
   it('marks only the active view with aria-current="page"', () => {

@@ -1,7 +1,7 @@
 import {
   CodeIcon,
   CopilotIcon,
-  CpuIcon,
+  AiModelIcon,
   CreditCardIcon,
   DeviceDesktopIcon,
   FileIcon,
@@ -40,7 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Copilot Impact', view: VIEW_MODES.COPILOT_IMPACT, icon: GraphIcon },
   { label: 'Copilot Adoption', view: VIEW_MODES.COPILOT_ADOPTION, icon: CopilotIcon },
   { label: 'AI Adoption Phases', view: VIEW_MODES.AI_ADOPTION_PHASES, icon: MilestoneIcon },
-  { label: 'Model Usage', view: VIEW_MODES.MODEL_DETAILS, icon: CpuIcon },
+  { label: 'Model Usage', view: VIEW_MODES.MODEL_DETAILS, icon: AiModelIcon },
   { label: 'Languages', view: VIEW_MODES.LANGUAGES, icon: CodeIcon },
   { label: 'Client Versions', view: VIEW_MODES.CLIENT_VERSIONS, icon: VersionsIcon },
   { label: 'AI Credits', view: VIEW_MODES.AI_CREDITS, icon: CreditCardIcon },

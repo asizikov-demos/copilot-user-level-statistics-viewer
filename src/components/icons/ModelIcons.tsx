@@ -1,25 +1,27 @@
 import React from 'react';
+import { AiModelIcon, MarkGithubIcon } from '@primer/octicons-react';
 import { getModelVendor, ModelVendor, ModelVendorGroup } from '../../domain/modelConfig';
+import type { BrandIcon, BrandIconProps } from './iconTypes';
 
 // OpenAI — from Simple Icons (CC0). Matches GPT-* / o3* / o4* models.
-const OpenAIIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const OpenAIIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" fill="#000"/>
   </svg>
 );
 
 // Anthropic — from Simple Icons (CC0). Matches Claude-* models.
-const AnthropicIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const AnthropicIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z" fill="#D97757"/>
   </svg>
 );
 
 // Google Gemini — from Simple Icons (CC0). Matches Gemini-* models.
-const GeminiIcon = () => {
+const GeminiIcon = ({ size = 16 }: BrandIconProps) => {
   const gradientId = React.useId();
   return (
-    <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#4285F4"/>
@@ -33,15 +35,15 @@ const GeminiIcon = () => {
 };
 
 // xAI — stylized X mark (from Simple Icons "X", CC0). Matches Grok-* models.
-const XAIIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const XAIIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z" fill="#000"/>
   </svg>
 );
 
 // Microsoft — four-color logo (from Simple Icons geometry, CC0). Matches MAI-* models.
-const MicrosoftIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const MicrosoftIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0h11.408v11.408H0z" fill="#F25022"/>
     <path d="M12.594 0H24v11.408H12.594z" fill="#7FBA00"/>
     <path d="M0 12.594h11.408V24H0z" fill="#00A4EF"/>
@@ -50,27 +52,22 @@ const MicrosoftIcon = () => (
 );
 
 // Moonshot AI — from Simple Icons (CC0). Matches Kimi-* models.
-const MoonshotIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const MoonshotIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="m1.053 16.91 9.538 2.55a21 20.981 0 0 0 .06 2.031l5.956 1.592a12 11.99 0 0 1-15.554-6.172m-1.02-5.79 11.352 3.035a21 20.981 0 0 0-.469 2.01l10.817 2.89a12 11.99 0 0 1-1.845 2.004L.658 15.918a12 11.99 0 0 1-.625-4.796m1.593-5.146L13.573 9.17a21 20.981 0 0 0-1.01 1.874l11.297 3.02a21 20.981 0 0 1-.67 2.362l-11.55-3.087L.125 10.26a12 11.99 0 0 1 1.499-4.285ZM6.067 1.58l11.285 3.016a21 20.981 0 0 0-1.688 1.719l7.824 2.091a21 20.981 0 0 1 .513 2.664L2.107 5.218a12 11.99 0 0 1 3.96-3.638M21.68 4.866 7.222 1.003A12 11.99 0 0 1 21.68 4.866" fill="#000"/>
   </svg>
 );
 
 // GitHub — from Primer Octicons (MIT). Matches GitHub fine-tuned models.
-const GitHubIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.5.75C6.146.75 1 5.896 1 12.25c0 5.089 3.292 9.387 7.863 10.91.575.101.79-.244.79-.546 0-.273-.014-1.178-.014-2.142-2.889.532-3.636-.704-3.866-1.35-.13-.331-.69-1.352-1.18-1.625-.402-.216-.977-.748-.014-.762.906-.014 1.553.834 1.769 1.179 1.035 1.74 2.688 1.25 3.349.948.1-.747.402-1.25.733-1.538-2.559-.287-5.232-1.279-5.232-5.678 0-1.25.445-2.285 1.178-3.09-.115-.288-.517-1.467.115-3.048 0 0 .963-.302 3.163 1.179.92-.259 1.897-.388 2.875-.388.977 0 1.955.13 2.875.388 2.2-1.495 3.162-1.179 3.162-1.179.633 1.581.23 2.76.115 3.048.733.805 1.179 1.825 1.179 3.09 0 4.413-2.688 5.39-5.247 5.678.417.36.776 1.05.776 2.128 0 1.538-.014 2.774-.014 3.162 0 .302.216.662.79.547C20.709 21.637 24 17.324 24 12.25 24 5.896 18.854.75 12.5.75Z" fill="#000"/>
-  </svg>
+const GitHubIcon = ({ size = 16 }: BrandIconProps) => (
+  <MarkGithubIcon size={size} fill="#000" aria-hidden="true" />
 );
 
-const DefaultModelIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="9" stroke="#6B7280" strokeWidth="2" fill="none"/>
-    <path d="M12 7v5l3 2" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+const DefaultModelIcon = ({ size = 16 }: BrandIconProps) => (
+  <AiModelIcon size={size} className="text-muted" aria-hidden="true" />
 );
 
-const MODEL_VENDOR_ICONS: Record<ModelVendor, React.ComponentType> = {
+const MODEL_VENDOR_ICONS: Record<ModelVendor, BrandIcon> = {
   Anthropic: AnthropicIcon,
   GitHub: GitHubIcon,
   Google: GeminiIcon,
@@ -80,10 +77,10 @@ const MODEL_VENDOR_ICONS: Record<ModelVendor, React.ComponentType> = {
   xAI: XAIIcon,
 };
 
-export const getVendorIcon = (vendor: ModelVendorGroup): React.ComponentType =>
+export const getVendorIcon = (vendor: ModelVendorGroup): BrandIcon =>
   vendor === 'Unattributed' ? DefaultModelIcon : MODEL_VENDOR_ICONS[vendor];
 
-export const getModelIcon = (modelName: string): React.ComponentType => {
+export const getModelIcon = (modelName: string): BrandIcon => {
   const vendor = getModelVendor(modelName);
   return vendor ? getVendorIcon(vendor) : DefaultModelIcon;
 };

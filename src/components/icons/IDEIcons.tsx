@@ -1,98 +1,96 @@
 import React from 'react';
 import Image from 'next/image';
-import { MarkGithubIcon, WorkflowIcon, CodeReviewIcon, DeviceDesktopIcon, DeviceMobileIcon, CopilotIcon as PrimerCopilotIcon } from '@primer/octicons-react';
+import { MarkGithubIcon, WorkflowIcon, CodeReviewIcon, DeviceDesktopIcon, DeviceMobileIcon, TerminalIcon, CopilotIcon as PrimerCopilotIcon } from '@primer/octicons-react';
 import { getIDEMetadata, type IDEIconKey } from '../../utils/ideMetadata';
 import tableProIcon from './tablepro.png';
+import type { BrandIcon, BrandIconProps } from './iconTypes';
 
 // VS Code — simplified ribbon logo
-const VSCodeIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const VSCodeIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.5 0L7 9.2 2.9 6.1a.9.9 0 0 0-1.15.05L.33 7.47a.9.9 0 0 0 0 1.33L3.8 12 .33 15.2a.9.9 0 0 0 0 1.33l1.42 1.32a.9.9 0 0 0 1.15.05L7 14.8 17.5 24a1.35 1.35 0 0 0 1.53.26L23.5 22a1.35 1.35 0 0 0 .5-1V3a1.35 1.35 0 0 0-.5-1L19.03-.26A1.35 1.35 0 0 0 17.5 0zm.5 5.8V18.2L12.2 12 18 5.8z" fill="#007ACC"/>
   </svg>
 );
 
 // Visual Studio — shield logo
-const VisualStudioIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const VisualStudioIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.5.5l5.5 2.2v18.6l-5.5 2.2L8 16.3l-4 3.2L1 18V6l3 -1.5 4 3.2L17.5.5zM18 6.8L12 12l6 5.2V6.8zM4 8.6v6.8L7 12 4 8.6z" fill="#5C2D91"/>
   </svg>
 );
 
 // JetBrains — from Simple Icons (CC0), used for all JetBrains IDEs
-const JetBrainsIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const JetBrainsIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0zm3.723 3.111h5v1.834h-1.39v6.277h1.39v1.834h-5v-1.834h1.444V4.945H3.723zm11.055 0H17v6.5c0 .612-.055 1.111-.222 1.556-.167.444-.39.777-.723 1.11-.277.279-.666.557-1.11.668a3.933 3.933 0 0 1-1.445.278c-.778 0-1.444-.167-1.944-.445a4.81 4.81 0 0 1-1.279-1.056l1.39-1.555c.277.334.555.555.833.722.277.167.611.278.945.278.389 0 .721-.111 1-.389.221-.278.333-.667.333-1.278zM2.222 19.5h9V21h-9z" fill="#000"/>
   </svg>
 );
 
 // GNU Emacs — from Simple Icons (CC0)
-const EmacsIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const EmacsIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 24C5.448 24 .118 18.617.118 12S5.448 0 12 0c6.552 0 11.882 5.383 11.882 12S18.552 24 12 24zm0-23.339C5.813.661.779 5.748.779 12S5.813 23.339 12 23.339c6.187 0 11.221-5.086 11.221-11.339S18.187.661 12 .661zM8.03 20.197s.978.069 2.236-.042c.51-.045 2.444-.235 3.891-.552 0 0 1.764-.377 2.707-.725.987-.364 1.524-.673 1.766-1.11-.011-.09.074-.408-.381-.599-1.164-.488-2.514-.4-5.185-.457-2.962-.102-3.948-.598-4.472-.997-.503-.405-.25-1.526 1.907-2.513 1.086-.526 5.345-1.496 5.345-1.496-1.434-.709-4.109-1.955-4.659-2.224-.482-.236-1.254-.591-1.421-1.021-.19-.413.448-.768.804-.87 1.147-.331 2.766-.536 4.24-.56.741-.012.861-.059.861-.059 1.022-.17 1.695-.869 1.414-1.976-.252-1.13-1.579-1.795-2.84-1.565-1.188.217-4.05 1.048-4.05 1.048 3.539-.031 4.131.028 4.395.398.156.218-.071.518-1.015.672-1.027.168-3.163.37-3.163.37-2.049.122-3.492.13-3.925 1.046-.082.349.503.879.759 1.21 1.082 1.204 2.646 1.853 3.652 2.331.379.18 1.49.52 1.49.52-3.265-.18-5.619.823-7.001 1.977-1.562 1.445-.871 3.168 2.33 4.228 1.891.626 2.828.921 5.648.667 1.661-.09 1.923-.036 1.939.1.023.192-1.845.669-2.355.816-1.298.374-4.699 1.129-4.716 1.133z" fill="#7F5AB6"/>
   </svg>
 );
 
 // Neovim — from Simple Icons (CC0)
-const NeovimIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const NeovimIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M2.214 4.954v13.615L7.655 24V10.314L3.312 3.845 2.214 4.954zm4.999 17.98l-4.557-4.548V5.136l.59-.596 3.967 5.908v12.485zm14.573-4.457l-.862.937-4.24-6.376V0l5.068 5.092.034 13.385zM7.431.001l12.998 19.835-3.637 3.637L3.787 3.683 7.43 0z" fill="#57A143"/>
   </svg>
 );
 
 // Vim — simplified "V" diamond mark
-const VimIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const VimIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 .5L1 12l11 11.5L23 12 12 .5zm0 3l8 8.5-8 8.5-8-8.5 8-8.5zM8 12l4 6 4-6-4-6-4 6z" fill="#019733"/>
   </svg>
 );
 
 // Eclipse IDE — from Simple Icons (CC0)
-const EclipseIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const EclipseIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M11.109.024a15.58 15.58 0 00-.737.023C6.728.361 3.469 2.517 1.579 5.86A12.53 12.53 0 00.021 11.11c-.04.517-.02 1.745.035 2.208.306 2.682 1.353 5.06 3.07 6.965 1.962 2.173 4.586 3.467 7.437 3.663.42.032 1.043.04 1.02.012a2.404 2.404 0 00-.338-.074c-1.674-.33-3.388-1.13-4.777-2.232a12.344 12.344 0 01-2.45-2.636A12.387 12.387 0 011.884 12.5a12.413 12.413 0 01.56-4.274c.785-2.522 2.37-4.726 4.475-6.228A11.073 11.073 0 0111.156.122l.443-.098zm1.474.51C10.646.65 8.807 1.299 7.301 2.4 5.426 3.77 3.995 5.644 3.22 7.746c-.145.397-.282.82-.282.879 0 .012 3.828.024 10.31.024 8.463 0 10.315-.008 10.315-.036 0-.047-.153-.525-.283-.878-.153-.42-.576-1.31-.82-1.722-.4-.683-.91-1.373-1.474-1.992-1.65-1.82-3.593-2.934-5.82-3.334-.785-.141-1.8-.2-2.585-.153zM23.83 9.97c-.02 0-4.792 0-10.609.004l-10.573.008-.011.059c-.036.16-.134 1.081-.134 1.242 0 .028 1.785.032 10.746.032H24v-.075c0-.102-.07-.791-.106-1.054-.02-.16-.04-.216-.063-.216zm-10.573 2.635c-9.37-.004-10.73 0-10.742.035-.02.04.024.557.075.973.02.157.035.298.035.314 0 .027 2.137.035 10.624.035h10.624l.024-.188c.043-.326.102-.97.094-1.067l-.008-.094zm.003 2.718c-8.882 0-10.321.004-10.321.035 0 .02.054.208.12.42a11.122 11.122 0 002.072 3.741c.282.342.945 1.036 1.228 1.287 1.568 1.4 3.247 2.216 5.18 2.53.605.094.886.113 1.75.11.91 0 1.297-.032 2.023-.177 2.11-.416 3.914-1.451 5.53-3.17 1.267-1.348 2.106-2.76 2.628-4.41l.117-.366z" fill="#2C2255"/>
   </svg>
 );
 
 // Xcode — simplified hammer in rounded square
-const XcodeIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const XcodeIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <rect width="24" height="24" rx="5" fill="#147EFB"/>
     <path d="M7.5 7.5l4 4m0 0l-4 4m4-4l4-4m-4 4l4 4" stroke="white" strokeWidth="2" strokeLinecap="round"/>
   </svg>
 );
 
 // Zed — from Simple Icons (CC0)
-const ZedIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const ZedIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M2.25 1.5a.75.75 0 0 0-.75.75v16.5H0V2.25A2.25 2.25 0 0 1 2.25 0h20.095c1.002 0 1.504 1.212.795 1.92L10.764 14.298h3.486V12.75h1.5v1.922a1.125 1.125 0 0 1-1.125 1.125H9.264l-2.578 2.578h11.689V9h1.5v9.375a1.5 1.5 0 0 1-1.5 1.5H5.185L2.562 22.5H21.75a.75.75 0 0 0 .75-.75V5.25H24v16.5A2.25 2.25 0 0 1 21.75 24H1.655C.653 24 .151 22.788.86 22.08L13.19 9.75H9.75v1.5h-1.5V9.375A1.125 1.125 0 0 1 9.375 8.25h5.314l2.625-2.625H5.625V15h-1.5V5.625a1.5 1.5 0 0 1 1.5-1.5h13.19L21.438 1.5z" fill="#084CCF"/>
   </svg>
 );
 
 // GitHub Copilot — from Primer Octicons (MIT)
-export const CopilotIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M23.922 16.992c-.861 1.495-5.859 5.023-11.922 5.023-6.063 0-11.061-3.528-11.922-5.023A.641.641 0 0 1 0 16.736v-2.869a.841.841 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.195 10.195 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952 1.399-1.136 3.392-2.093 6.122-2.093 2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.832.832 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256ZM12.172 11h-.344a4.323 4.323 0 0 1-.355.508C10.703 12.455 9.555 13 7.965 13c-1.725 0-2.989-.359-3.782-1.259a2.005 2.005 0 0 1-.085-.104L4 11.741v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.323 4.323 0 0 1-.355-.508Zm.641-2.935c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z" fill="#6E40C9"/>
-    <path d="M14.5 14.25a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Zm-5 0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Z" fill="#6E40C9"/>
-  </svg>
+export const CopilotIcon = ({ size = 16 }: BrandIconProps) => (
+  <PrimerCopilotIcon size={size} fill="#6E40C9" aria-hidden="true" />
 );
 
-const CopilotAppIcon = () => <PrimerCopilotIcon size={20} />;
-const GitHubClientIcon = () => <MarkGithubIcon size={20} />;
-const AgenticWorkflowsIcon = () => <WorkflowIcon size={16} />;
-const CopilotCodeReviewIcon = () => <CodeReviewIcon size={16} />;
-const DesktopClientIcon = () => <DeviceDesktopIcon size={16} />;
-const MobileClientIcon = () => <DeviceMobileIcon size={16} />;
+const CopilotAppIcon = ({ size = 16 }: BrandIconProps) => <PrimerCopilotIcon size={size} aria-hidden="true" />;
+const GitHubClientIcon = ({ size = 16 }: BrandIconProps) => <MarkGithubIcon size={size} aria-hidden="true" />;
+const AgenticWorkflowsIcon = ({ size = 16 }: BrandIconProps) => <WorkflowIcon size={size} aria-hidden="true" />;
+const CopilotCodeReviewIcon = ({ size = 16 }: BrandIconProps) => <CodeReviewIcon size={size} aria-hidden="true" />;
+const DesktopClientIcon = ({ size = 16 }: BrandIconProps) => <DeviceDesktopIcon size={size} aria-hidden="true" />;
+const MobileClientIcon = ({ size = 16 }: BrandIconProps) => <DeviceMobileIcon size={size} aria-hidden="true" />;
 
 // Azure DevOps — from Simple Icons (CC0)
-const AzureDevOpsIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const AzureDevOpsIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 8.877L2.247 5.91l8.405-3.416V.022l7.37 5.393L2.966 8.338v8.225L0 15.707zm24-4.45v14.651l-5.753 4.9-9.303-3.057v3.056l-5.978-7.416 15.057 1.798V5.415z" fill="#0078D7" />
   </svg>
 );
 
 // Slack — from Simple Icons (CC0)
-const SlackIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const SlackIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z" fill="#E01E5A" />
     <path d="M8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312z" fill="#36C5F0" />
     <path d="M18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312z" fill="#2EB67D" />
@@ -101,72 +99,72 @@ const SlackIcon = () => (
 );
 
 // PyCharm — from Simple Icons (CC0)
-const PyCharmIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const PyCharmIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M7.833 6.666v-.055c0-1-.667-1.5-1.778-1.5H4.389v3.055h1.723c1.111 0 1.721-.666 1.721-1.5zM0 0v24h24V0H0zm2.223 3.167h4c2.389 0 3.833 1.389 3.833 3.445v.055c0 2.278-1.778 3.5-4.001 3.5H4.389v2.945H2.223V3.167zM11.277 21h-9v-1.5h9V21zm4.779-7.777c-2.944.055-5.111-2.223-5.111-5.057C10.944 5.333 13.056 3 16.111 3c1.889 0 3 .611 3.944 1.556l-1.389 1.61c-.778-.722-1.556-1.111-2.556-1.111-1.658 0-2.873 1.375-2.887 3.084.014 1.709 1.174 3.083 2.887 3.083 1.111 0 1.833-.445 2.61-1.167l1.39 1.389c-.999 1.112-2.166 1.779-4.054 1.779z" fill="#000"/>
   </svg>
 );
 
 // WebStorm — from Simple Icons (CC0)
-const WebStormIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const WebStormIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0zm17.889 2.889c1.444 0 2.667.444 3.667 1.278l-1.111 1.667c-.889-.611-1.722-1-2.556-1s-1.278.389-1.278.889v.056c0 .667.444.889 2.111 1.333 2 .556 3.111 1.278 3.111 3v.056c0 2-1.5 3.111-3.611 3.111-1.5-.056-3-.611-4.167-1.667l1.278-1.556c.889.722 1.833 1.222 2.944 1.222.889 0 1.389-.333 1.389-.944v-.056c0-.556-.333-.833-2-1.278-2-.5-3.222-1.056-3.222-3.056v-.056c0-1.833 1.444-3 3.444-3zm-16.111.222h2.278l1.5 5.778 1.722-5.778h1.667l1.667 5.778 1.5-5.778h2.333l-2.833 9.944H9.723L8.112 7.277l-1.667 5.778H4.612L1.779 3.111zm.5 16.389h9V21h-9v-1.5z" fill="#000"/>
   </svg>
 );
 
 // Rider — from Simple Icons (CC0)
-const RiderIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const RiderIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0zm7.031 3.113A4.063 4.063 0 0 1 9.72 4.14a3.23 3.23 0 0 1 .84 2.28A3.16 3.16 0 0 1 8.4 9.54l2.46 3.6H8.28L6.12 9.9H4.38v3.24H2.16V3.12c1.61-.004 3.281.009 4.871-.007zm5.509.007h3.96c3.18 0 5.34 2.16 5.34 5.04 0 2.82-2.16 5.04-5.34 5.04h-3.96zm4.069 1.976c-.607.01-1.235.004-1.849.004v6.06h1.74a2.882 2.882 0 0 0 3.06-3 2.897 2.897 0 0 0-2.951-3.064zM4.319 5.1v2.88H6.6c1.08 0 1.68-.6 1.68-1.44 0-.96-.66-1.44-1.74-1.44zM2.16 19.5h9V21h-9Z" fill="#000"/>
   </svg>
 );
 
 // DataGrip — from Simple Icons (CC0)
-const DataGripIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const DataGripIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0Zm17.1797 2.9477a5.452 5.452 0 0 1 3.9047 1.364L19.7078 5.972a3.672 3.672 0 0 0-2.596-1.0086c-1.6 0-2.8555 1.408-2.8555 3.096v.0282c0 1.816 1.2517 3.1523 3.0117 3.1523a3.492 3.492 0 0 0 2.064-.5921V9.2234h-2.2V7.336h4.3157v4.3157a6.436 6.436 0 0 1-4.2438 1.5757c-3.096 0-5.2242-2.1797-5.2242-5.1117v-.0281a5.1 5.1 0 0 1 5.2-5.1398zm-14.7438.1718h3.8758c3.12 0 5.2805 2.1439 5.2805 4.9399v.028c0 2.8-2.1605 4.968-5.2805 4.968H2.436Zm4.075 1.9688a2.852 2.852 0 0 0-.1992.003H4.6203v6h1.6914A2.832 2.832 0 0 0 9.304 8.1235v-.036a2.852 2.852 0 0 0-2.793-2.9991Zm-4.303 14.407h9v1.5h-9z" fill="#000"/>
   </svg>
 );
 
 // Android Studio — from Simple Icons (CC0)
-const AndroidStudioIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const AndroidStudioIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M19.2693 10.3368c-.3321 0-.6026.2705-.6026.6031v9.8324h-1.7379l-3.3355-6.9396c.476-.5387.6797-1.286.5243-2.0009a2.2862 2.2862 0 0 0-1.2893-1.6248v-.8124c.0121-.2871-.1426-.5787-.4043-.7407-.1391-.0825-.2884-.1234-.4402-.1234a.8478.8478 0 0 0-.4318.1182c-.2701.1671-.4248.4587-.4123.7662l-.0003.721c-1.0149.3668-1.6619 1.4153-1.4867 2.5197a2.282 2.282 0 0 0 .5916 1.2103l-3.2096 6.9064H4.0928c-1.0949-.007-1.9797-.8948-1.9832-1.9896V5.016c-.0055 1.1024.8836 2.0006 1.9859 2.0062a2.024 2.024 0 0 0 .1326-.0037h14.7453s2.5343-.2189 2.8619 1.5392c-.2491.0287-.4449.2321-.4449.4889 0 .7115-.5791 1.2901-1.3028 1.2901h-.8183zM17.222 22.5366c.2347.4837.0329 1.066-.4507 1.3007-.1296.0629-.2666.0895-.4018.0927a.9738.9738 0 0 1-.3194-.0455c-.024-.0078-.046-.0209-.0694-.0305a.9701.9701 0 0 1-.2277-.1321c-.0247-.0192-.0495-.038-.0724-.0598-.0825-.0783-.1574-.1672-.21-.2757l-1.2554-2.6143-1.5585-3.2452a.7725.7725 0 0 0-.6995-.4443h-.0024a.792.792 0 0 0-.7083.4443l-1.5109 3.2452-1.2321 2.6464a.9722.9722 0 0 1-.7985.5795c-.0626.0053-.1238-.0024-.185-.0087-.0344-.0036-.069-.0053-.1025-.0124-.0489-.0103-.0954-.0278-.142-.0452-.0301-.0113-.0613-.0197-.0901-.0339-.0496-.0244-.0948-.0565-.1397-.0889-.0217-.0156-.0457-.0275-.0662-.045a.9862.9862 0 0 1-.1695-.1844.9788.9788 0 0 1-.0708-.9852l.8469-1.8223 3.2676-7.0314a1.7964 1.7964 0 0 1-.7072-1.1637c-.1555-.9799.5129-1.9003 1.4928-2.0559V9.3946a.3542.3542 0 0 1 .1674-.3155.3468.3468 0 0 1 .3541 0 .354.354 0 0 1 .1674.3155v1.159l.0129.0064a1.8028 1.8028 0 0 1 1.2878 1.378 1.7835 1.7835 0 0 1-.6439 1.7836l3.3889 7.0507.8481 1.7643zM12.9841 12.306c.0042-.6081-.4854-1.1044-1.0935-1.1085a1.1204 1.1204 0 0 0-.7856.3219 1.101 1.101 0 0 0-.323.7716c-.0042.6081.4854 1.1044 1.0935 1.1085h.0077c.6046 0 1.0967-.488 1.1009-1.0935zm-1.027 5.2768c-.1119.0005-.2121.0632-.2571.1553l-1.4127 3.0342h3.3733l-1.4564-3.0328a.274.274 0 0 0-.2471-.1567zm8.1432-6.7459l-.0129-.0001h-.8177a.103.103 0 0 0-.103.103v12.9103a.103.103 0 0 0 .0966.103h.8435c.9861-.0035 1.7836-.804 1.7836-1.79V9.0468c0 .9887-.8014 1.7901-1.7901 1.7901zM2.6098 5.0161v.019c.0039.816.6719 1.483 1.4874 1.4869a12.061 12.061 0 0 1 .1309-.0034h1.1286c.1972-1.315.7607-2.525 1.638-3.4859H4.0993c-.9266.0031-1.6971.6401-1.9191 1.4975.2417.0355.4296.235.4296.4859zm6.3381-2.8977L7.9112.3284a.219.219 0 0 1 0-.2189A.2384.2384 0 0 1 8.098 0a.219.219 0 0 1 .1867.1094l1.0496 1.8158a6.4907 6.4907 0 0 1 5.3186 0L15.696.1094a.2189.2189 0 0 1 .3734.2189l-1.0302 1.79c1.6671.9125 2.7974 2.5439 3.0975 4.4018l-12.286-.0014c.3004-1.8572 1.4305-3.488 3.0972-4.4003zm5.3774 2.6202a.515.515 0 0 0 .5271.5028.515.515 0 0 0 .5151-.5151.5213.5213 0 0 0-.8885-.367.5151.5151 0 0 0-.1537.3793zm-5.7178-.0067a.5151.5151 0 0 0 .5207.5095.5086.5086 0 0 0 .367-.1481.5215.5215 0 1 0-.734-.7341.515.515 0 0 0-.1537.3727z" fill="#3DDC84"/>
   </svg>
 );
 
 // GoLand — from Simple Icons (CC0)
-const GoLandIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const GoLandIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0Zm6.764 3a5.448 5.448 0 0 1 3.892 1.356L9.284 6.012A3.652 3.652 0 0 0 6.696 5c-1.6 0-2.844 1.4-2.844 3.08v.028c0 1.812 1.244 3.14 3 3.14a3.468 3.468 0 0 0 2.048-.596V9.228H6.708v-1.88H11v4.296a6.428 6.428 0 0 1-4.228 1.572c-3.076 0-5.196-2.164-5.196-5.092v-.028A5.08 5.08 0 0 1 6.764 3Zm10.432 0c3.052 0 5.244 2.276 5.244 5.088v.028a5.116 5.116 0 0 1-5.272 5.12c-3.056-.02-5.248-2.296-5.248-5.112v-.028A5.116 5.116 0 0 1 17.196 3Zm-.028 2A2.96 2.96 0 0 0 14.2 8.068v.028a3.008 3.008 0 0 0 3 3.112 2.96 2.96 0 0 0 2.964-3.084v-.028A3.004 3.004 0 0 0 17.168 5ZM2.252 19.5h9V21h-9z" fill="#000"/>
   </svg>
 );
 
 // PhpStorm — from Simple Icons (CC0)
-const PhpStormIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const PhpStormIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M7.833 6.611v-.055c0-1-.667-1.5-1.778-1.5H4.389v3.056h1.722c1.111-.001 1.722-.668 1.722-1.501zM0 0v24h24V0H0zm2.167 3.111h4.056c2.389 0 3.833 1.389 3.833 3.445v.055c0 2.333-1.778 3.5-4.056 3.5H4.333v3H2.167v-10zM11.278 21h-9v-1.5h9V21zM18.5 10.222c0 2-1.5 3.111-3.667 3.111-1.5-.056-3-.611-4.222-1.667l1.278-1.556c.89.722 1.833 1.222 3 1.222.889 0 1.444-.333 1.444-.944v-.056c0-.555-.333-.833-2-1.277C12.333 8.555 11 8 11 6v-.056c0-1.833 1.444-3 3.5-3 1.444 0 2.723.444 3.723 1.278l-1.167 1.667c-.889-.611-1.777-1-2.611-1-.833 0-1.278.389-1.278.889v.056c0 .667.445.889 2.167 1.333 2 .556 3.167 1.278 3.167 3v.055z" fill="#000"/>
   </svg>
 );
 
 // RStudio — from Simple Icons (CC0)
-const RStudioIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const RStudioIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M12.178.002a12.002 12.002 0 0 0-8.662 3.515 12.002 12.002 0 0 0 0 16.97 12.002 12.002 0 0 0 16.97 0 12.002 12.002 0 0 0 0-16.97A12.002 12.002 0 0 0 12.179.002zM7.77 5.995c.562.128 1.05.217 1.663.217.921 0 1.863-.217 2.786-.217 1.79 0 3.45.814 3.45 2.8 0 1.54-.921 2.517-2.35 2.93l2.788 4.107h1.301v1.01h-1.986l-3.293-4.934h-1.757v3.924h1.718v1.01H7.77v-1.01h1.483V7.134L7.77 6.951v-.957zm4.466 1.012c-.596 0-1.213.053-1.864.127v3.798l.941.02c2.298.034 3.183-.85 3.183-2.026 0-1.376-.997-1.919-2.26-1.919z" fill="#75AADB"/>
   </svg>
 );
 
 // CLion — from Simple Icons (CC0)
-const CLionIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const CLionIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0zm7.041 3a5.049 5.049 0 0 1 .219 0c1.86 0 3 .6 3.9 1.56L9.78 6.18C9 5.46 8.22 5.04 7.26 5.04c-1.68 0-2.88 1.38-2.88 3.12 0 1.68 1.2 3.12 2.88 3.12 1.14 0 1.86-.48 2.64-1.14l1.38 1.38c-1.02 1.08-2.16 1.8-4.08 1.8a5.1 5.1 0 0 1-5.1-5.16A5.049 5.049 0 0 1 7.04 3zm5.738.12H15v8.1h4.32v1.86h-6.54V3.12zM2.28 19.5h9V21h-9v-1.5Z" fill="#000"/>
   </svg>
 );
 
 // RustRover — JetBrains-style mark (no official Simple Icons vector available),
 // drawn to match the family's black square with white lettering.
-const RustRoverIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+const RustRoverIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0z" fill="#000" />
     <text
       x="12"
@@ -183,8 +181,8 @@ const RustRoverIcon = () => (
   </svg>
 );
 
-const RubyMineIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+const RubyMineIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0z" fill="#000" />
     <text
       x="12"
@@ -204,8 +202,8 @@ const RubyMineIcon = () => (
 // Aqua — JetBrains test automation IDE; no official Simple Icons vector, so
 // it follows the family's monogram convention (black square, white lettering)
 // used for RubyMine/RustRover.
-const AquaIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+const AquaIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0v24h24V0H0z" fill="#000" />
     <text
       x="12"
@@ -223,48 +221,45 @@ const AquaIcon = () => (
 );
 
 // marimo — brand mark is a simple green circle (marimo is a round moss-ball).
-const MarimoIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const MarimoIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <circle cx="12" cy="12" r="10" fill="#1C7361" />
   </svg>
 );
 
 // Obsidian — from Simple Icons (CC0)
-const ObsidianIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+const ObsidianIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362-.553-1.321-.636-3.375-.64-4.377a1.707 1.707 0 0 0-.358-1.05l-3.198-4.064a3.744 3.744 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59-.124 1.26.046 2.73.815 4.481.128.011.257.025.386.044a6.363 6.363 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569c.073.012.146.02.22.02.78.024 2.095.092 3.16.29.87.16 2.593.64 4.01 1.055 1.083.316 2.198-.548 2.355-1.664.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.295 5.295 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45.532 2.218.368 4.829-1.425 7.531zM5.533 9.938c-.023.1-.056.197-.098.29L2.82 16.059a1.602 1.602 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534-.683-1.725-.848-3.233-.716-4.577.154-1.552.7-2.847 1.235-3.95.113-.235.223-.454.328-.664.149-.297.288-.577.419-.86.217-.47.379-.885.46-1.27.08-.38.08-.72-.014-1.043-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.602 1.602 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711.09.21.175.43.253.653z" fill="#7C3AED"/>
   </svg>
 );
 
 // Official app icon from https://tablepro.app/logo.png.
-const TableProIcon = () => (
-  <Image src={tableProIcon} alt="" width={20} height={20} className="w-5 h-5" />
+const TableProIcon = ({ size = 16 }: BrandIconProps) => (
+  <Image src={tableProIcon} alt="" width={size} height={size} />
 );
 
-const DefaultIDEIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="#6B7280" strokeWidth="2" fill="none"/>
-    <path d="M8 9l3 3-3 3M13 15h5" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+const DefaultIDEIcon = ({ size = 16 }: BrandIconProps) => (
+  <TerminalIcon size={size} className="text-muted" aria-hidden="true" />
 );
 
 // Vendor paths from LobeHub Icons (MIT); see docs/icon-attribution.md.
-const OpenCodeIcon = () => (
-  <svg className="w-5 h-5 text-default" viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
+const OpenCodeIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" className="text-default" viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
     <path d="M16 6H8v12h8V6zm4 16H4V2h16v20z" />
   </svg>
 );
 
-const ClaudeCodeIcon = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#D97757" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
+const ClaudeCodeIcon = ({ size = 16 }: BrandIconProps) => (
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="#D97757" fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
     <path clipRule="evenodd" d="M20.998 10.949H24v3.102h-3v3.028h-1.487V20H18v-2.921h-1.487V20H15v-2.921H9V20H7.488v-2.921H6V20H4.487v-2.921H3V14.05H0V10.95h3V5h17.998v5.949zM6 10.949h1.488V8.102H6v2.847zm10.51 0H18V8.102h-1.49v2.847z" />
   </svg>
 );
 
-const CodexIcon = () => {
+const CodexIcon = ({ size = 16 }: BrandIconProps) => {
   const gradientId = React.useId();
   return (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" fill={`url(#${gradientId})`} fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
+  <svg width={size} height={size} aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill={`url(#${gradientId})`} fillRule="evenodd" xmlns="http://www.w3.org/2000/svg">
     <path clipRule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z" />
     <defs>
       <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="12" x2="12" y1="0" y2="24">
@@ -277,7 +272,7 @@ const CodexIcon = () => {
   );
 };
 
-const ideIconMap: Record<IDEIconKey, React.ComponentType> = {
+const ideIconMap: Record<IDEIconKey, BrandIcon> = {
   azure_devops: AzureDevOpsIcon,
   desktop: DesktopClientIcon,
   mobile: MobileClientIcon,
@@ -316,7 +311,7 @@ const ideIconMap: Record<IDEIconKey, React.ComponentType> = {
   tablepro: TableProIcon,
 };
 
-export const getIDEIcon = (ideName: string): React.ComponentType => {
+export const getIDEIcon = (ideName: string): BrandIcon => {
   const iconKey = getIDEMetadata(ideName)?.iconKey;
   return iconKey ? ideIconMap[iconKey] : DefaultIDEIcon;
 };

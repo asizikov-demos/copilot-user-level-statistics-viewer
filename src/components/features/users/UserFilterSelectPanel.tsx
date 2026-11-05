@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ComponentType } from 'react';
 import { Button, FormControl, SelectPanel, type SelectPanelItemInput } from '@primer/react';
-import { TriangleDownIcon } from '@primer/octicons-react';
+import { ChevronDownIcon } from '@primer/octicons-react';
 import styles from './UserFilterSelectPanel.module.css';
 
 interface UserFilterSelectPanelProps<Value extends string> {
@@ -73,7 +73,7 @@ export default function UserFilterSelectPanel<Value extends string>({
             aria-label={`${label} ${fullSummary}`}
             title={fullSummary}
             className={styles.anchor}
-            trailingAction={TriangleDownIcon}
+            trailingAction={ChevronDownIcon}
           >
             {summary}
           </Button>

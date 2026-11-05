@@ -16,7 +16,7 @@ describe('SectionHeader', () => {
     expect(markup).toMatch(/<h2[^>]*>Languages<\/h2>/);
     expect(markup).toContain('Language usage');
     expect(markup).toContain('Back to Overview');
-    expect(markup).toContain('octicon-arrow-left');
+    expect(markup).toContain('octicon-chevron-left');
   });
 
   it('omits the back button without a handler', () => {
@@ -82,6 +82,8 @@ describe('DisclosureSection', () => {
       const root = renderer!.root;
       const button = root.findByType('button');
       expect(button.props['aria-expanded']).toBe(false);
+      expect(button.findByType('svg').props.width).toBe(16);
+      expect(button.findByType('svg').props.height).toBe(16);
       expect(root.findAllByType('p')).toHaveLength(0);
 
       await act(async () => { button.props.onClick(); });

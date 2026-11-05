@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button, Heading } from '@primer/react';
-import { ArrowLeftIcon } from '@primer/octicons-react';
+import { ChevronLeftIcon } from '@primer/octicons-react';
 import { cn } from '../../utils/cn';
 import styles from './SectionHeader.module.css';
 
@@ -45,7 +45,7 @@ export default function SectionHeader({
         <Button
           type="button"
           onClick={onBack}
-          leadingVisual={ArrowLeftIcon}
+          leadingVisual={ChevronLeftIcon}
           className={backButtonClassName}
         >
           {backButtonLabel}

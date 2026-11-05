@@ -20,7 +20,7 @@ const StickyHeader: React.FC = () => {
       <Header className={styles.header}>
         <div className="flex h-full w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           <Header.Item full className="min-w-0 gap-3">
-            <MarkGithubIcon size={32} fill="var(--header-fgColor-logo)" className="shrink-0" />
+            <MarkGithubIcon size={24} fill="var(--header-fgColor-logo)" className="shrink-0" aria-hidden="true" />
             <span className="hidden truncate text-white font-semibold text-lg tracking-tight sm:inline">
               Copilot Usage Metrics
             </span>
@@ -45,7 +45,7 @@ const StickyHeader: React.FC = () => {
                           onSelect={() => navigateTo(view)}
                         >
                           <ActionList.LeadingVisual>
-                            <Icon />
+                            <Icon size={16} aria-hidden="true" />
                           </ActionList.LeadingVisual>
                           {label}
                         </ActionList.Item>
