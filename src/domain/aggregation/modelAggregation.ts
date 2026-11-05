@@ -8,6 +8,12 @@ import {
   type ModelBreakdownAccumulator,
 } from '../calculators/modelBreakdownCalculator';
 import {
+  accumulateLocalByok,
+  computeLocalByokUsageData,
+  createLocalByokAccumulator,
+  type LocalByokAccumulator,
+} from '../calculators/localByokCalculator';
+import {
   accumulateModelFeature,
   computeDailyModelUsageData,
   createModelUsageAccumulator,
@@ -21,6 +27,7 @@ import {
 export interface ModelAggregationAccumulator {
   usage: ModelUsageAccumulator;
   breakdown: ModelBreakdownAccumulator;
+  localByok: LocalByokAccumulator;
 }
 
 export type ModelAggregationResult = ModelsMetricsSlice;
@@ -29,6 +36,7 @@ export function createModelAggregationAccumulator(): ModelAggregationAccumulator
   return {
     usage: createModelUsageAccumulator(),
     breakdown: createModelBreakdownAccumulator(),
+    localByok: createLocalByokAccumulator(),
   };
 }
 
@@ -37,6 +45,7 @@ export function accumulateModelAggregation(
   statsAccumulator: StatsAccumulator,
   metric: CopilotMetrics
 ): void {
+  accumulateLocalByok(accumulator.localByok, metric);
   for (const modelFeature of metric.totals_by_model_feature) {
     const engagements =
       modelFeature.code_generation_activity_count
@@ -67,5 +76,6 @@ export function finalizeModelAggregation(
   return {
     modelUsageData: computeDailyModelUsageData(accumulator.usage),
     modelBreakdownData: computeModelBreakdownData(accumulator.breakdown),
+    localByokUsage: computeLocalByokUsageData(accumulator.localByok),
   };
 }

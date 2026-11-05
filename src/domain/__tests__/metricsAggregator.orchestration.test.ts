@@ -142,6 +142,13 @@ const emptyAggregateContract: Array<{
         cliTotal: 0,
         unknownTotal: 0,
       },
+      localByokUsage: {
+        surfaces: [],
+        daily: [],
+        totalSessions: 0,
+        totalRequests: 0,
+        totalUsers: 0,
+      },
     },
   },
   {
@@ -270,6 +277,7 @@ describe('metrics aggregation contract', () => {
     const modelAggregation = {
       modelUsageData: [...defaults.models.modelUsageData],
       modelBreakdownData: { ...defaults.models.modelBreakdownData },
+      localByokUsage: { ...defaults.models.localByokUsage },
     };
     const cliAggregation = {
       dailyCliSessionData: [...defaults.cli.dailyCliSessionData],
@@ -377,6 +385,9 @@ describe('metrics aggregation contract', () => {
     );
     expect(aggregated.models.modelBreakdownData).toBe(
       modelAggregation.modelBreakdownData
+    );
+    expect(aggregated.models.localByokUsage).toBe(
+      modelAggregation.localByokUsage
     );
     expect(aggregated.cli.dailyCliSessionData).toBe(
       cliAggregation.dailyCliSessionData

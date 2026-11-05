@@ -15,6 +15,7 @@ export { default as EngagementChart } from './EngagementChart';
 export { default as FeatureAdoptionChart } from './FeatureAdoptionChart';
 export { default as CLIOverlapChart } from './CLIOverlapChart';
 export { default as ModeImpactChart } from './ModeImpactChart';
+export { default as LocalByokSessionsChart } from './LocalByokSessionsChart';
 export { default as ModelCategoryDistributionChart } from './ModelCategoryDistributionChart';
 export { default as ModelVendorDistributionChart } from './ModelVendorDistributionChart';
 export { default as ModelsUsageChart } from './ModelsUsageChart';

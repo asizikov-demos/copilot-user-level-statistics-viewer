@@ -154,4 +154,36 @@ describe('model aggregation', () => {
       { model: 'claude-sonnet-4.6', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
     ]);
   });
+
+  it('aggregates daily local BYOK sessions by surface', () => {
+    const byok = (surface: string, session_count: number, request_count: number, byok_kind = 'local_user') => ({
+      byok_kind,
+      surface,
+      session_count,
+      request_count,
+      prompt_count: 1,
+      token_usage: { output_tokens_sum: 0, prompt_tokens_sum: 0, avg_tokens_per_request: 0 },
+    });
+    const { result } = aggregateModels([
+      {
+        user_id: 1,
+        day: '2026-10-16',
+        totals_by_local_byok: [byok('copilot_cli', 25, 137), byok('copilot_cli', 1, 4, 'remote_user')],
+      },
+      { user_id: 2, day: '2026-10-15', totals_by_local_byok: [byok('copilot_app', 2, 27)] },
+      { user_id: 3, day: '2026-10-15', totals_by_local_byok: [byok('copilot_cli', 0, 0)] },
+      { user_id: 4, day: '2026-10-15', totals_by_local_byok: null },
+    ]);
+
+    expect(result.localByokUsage).toEqual({
+      surfaces: ['copilot_cli', 'copilot_app'],
+      daily: [
+        { date: '2026-10-15', sessionsBySurface: { copilot_app: 2 } },
+        { date: '2026-10-16', sessionsBySurface: { copilot_cli: 26 } },
+      ],
+      totalSessions: 28,
+      totalRequests: 168,
+      totalUsers: 2,
+    });
+  });
 });

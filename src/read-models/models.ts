@@ -44,6 +44,9 @@ export interface ModelDetailsReadModel {
   autoTotal: number;
   categoryTables: ModelCategoryTable[];
   vendorTables: ModelVendorTable[];
+  localByokUsage: AggregatedMetrics['models']['localByokUsage'];
+  reportStartDay: string;
+  reportEndDay: string;
 }
 
 function buildCategoryTables(
@@ -149,5 +152,8 @@ export function selectModelDetailsReadModel(
     autoTotal: autoModels.reduce((sum, entry) => sum + entry.total, 0),
     categoryTables: buildCategoryTables(allModels, modelCategories, modelTotal),
     vendorTables: buildVendorTables(allModels, modelVendors, modelTotal),
+    localByokUsage: metrics.models.localByokUsage,
+    reportStartDay: metrics.overview.stats.reportStartDay,
+    reportEndDay: metrics.overview.stats.reportEndDay,
   };
 }
