@@ -1,4 +1,48 @@
-# Client icon attribution
+# Icon conventions and attribution
+
+## Shared interface contract
+
+The statistics and billing viewers use named `@primer/octicons-react` components
+for interface icons. Use native **16px** icons for navigation, inline/table
+controls, search, copy, pagination, sorting and disclosure. Use **24px** for
+prominent metric, status and upload visuals, empty states, and the header GitHub
+mark. Native 12px is reserved for genuinely supported condensed contexts.
+Do not override native dimensions with CSS; keep control hit areas independent
+of icon size. Icons supplement labels and are decorative (`aria-hidden` or an
+empty image `alt`); icon-only controls must have accessible names.
+
+| Category | Primer icon |
+| --- | --- |
+| Overview | `HomeIcon` |
+| Users | `PeopleIcon` |
+| Models / model usage | `AiModelIcon` |
+| Agent-specific adoption | `AgentIcon` |
+| Insights | `LightBulbIcon` |
+| AI Credits / financial AI Usage | `CreditCardIcon` |
+| Organizations | `OrganizationIcon` |
+| Cost Centers | `BriefcaseIcon` |
+
+Use these mappings wherever the category exists; generic Copilot adoption keeps
+`CopilotIcon`, not `AgentIcon`. Shared actions use `UploadIcon`, `LockIcon`,
+`CopyIcon`, `SearchIcon`, `ChevronLeftIcon`, `ChevronRightIcon`,
+`ChevronDownIcon`, `AlertIcon` for warnings, `XCircleFillIcon` for errors, and
+`XIcon` for close. Sorting uses `SortIndicator`: `ArrowSwitchIcon` when inactive
+and `TriangleUpIcon` / `TriangleDownIcon` when active.
+
+Client and model registries accept `size={16 | 24}`, defaulting to 16px for
+compact rows and legends; prominent contexts pass 24px. Unknown models use
+`AiModelIcon`; unknown clients use `TerminalIcon`.
+
+**Exceptions:** recognizable third-party IDE and vendor marks retain their
+original brand geometry, aspect ratio and colors at the same 16px/24px sizes.
+GitHub and Copilot geometry comes from the package, including the deliberate
+purple CLI Copilot and black GitHub model marks. Chart SVGs, sparklines and
+visualization geometry are not interface icons and retain their own sizing.
+Primer-managed controls retain package-owned visuals: in particular, critical
+`Banner` uses `StopIcon` and does not support a custom leading visual. Keep that
+critical variant rather than changing alert semantics or overriding package CSS.
+
+## Client icon attribution
 
 The Azure DevOps SVG and blue (`#0078D7`) are from
 [Simple Icons 11.0.0](https://github.com/simple-icons/simple-icons/blob/11.0.0/icons/azuredevops.svg),

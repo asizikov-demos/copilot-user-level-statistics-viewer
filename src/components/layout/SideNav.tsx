@@ -23,7 +23,7 @@ const SideNav: React.FC = () => {
                 aria-current={isNavItemActive(item, currentView) ? 'page' : undefined}
               >
                 <NavList.LeadingVisual>
-                  <Icon />
+                  <Icon size={16} aria-hidden="true" />
                 </NavList.LeadingVisual>
                 {label}
               </NavList.Item>

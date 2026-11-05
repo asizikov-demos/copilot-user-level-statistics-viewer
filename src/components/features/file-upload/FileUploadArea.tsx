@@ -119,7 +119,7 @@ const FileUploadArea: React.FC<FileUploadAreaProps> = ({
               id="file-upload"
             />
             <div className="mb-3 flex justify-center" aria-hidden="true">
-              <UploadIcon size={40} className="text-muted" />
+              <UploadIcon size={24} className="text-muted" />
             </div>
             <p className="text-sm font-medium text-default">Drag &amp; drop files here, or click to browse</p>
             <p className="mt-1 text-xs text-muted">Accepts .ndjson and .json &mdash; multiple files supported</p>

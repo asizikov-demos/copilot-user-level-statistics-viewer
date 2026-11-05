@@ -83,7 +83,7 @@ export default function UserDetailsHeader({
             >
               <span>{userLogin}</span>
               <CopyIcon
-                size={20}
+                size={16}
                 className="text-muted transition-colors duration-150 group-hover:text-accent"
                 aria-hidden="true"
               />

@@ -39,7 +39,7 @@ describe('shared IDE metadata registry', () => {
     expect(formatIDEName(key)).toBe(label);
     expect(getIDEMetadata(key)?.canonicalKey).toBe(key);
     expect(renderToStaticMarkup(createElement(getIDEIcon(key))))
-      .toBe(renderToStaticMarkup(createElement(MarkGithubIcon, { size: 20 })));
+      .toBe(renderToStaticMarkup(createElement(MarkGithubIcon, { size: 16 })));
   });
 
   it.each([
@@ -51,7 +51,7 @@ describe('shared IDE metadata registry', () => {
     expect(formatIDEName(key)).toBe(label);
     expect(getIDEMetadata(key)?.canonicalKey).toBe(key);
     expect(renderToStaticMarkup(createElement(getIDEIcon(key))))
-      .toBe(renderToStaticMarkup(createElement(CopilotIcon, { size: 20 })));
+      .toBe(renderToStaticMarkup(createElement(CopilotIcon, { size: 16 })));
   });
 
   it.each(['opencode', 'claude_code', 'codex'])('renders vendor paths rather than a monogram for %s', key => {
@@ -172,8 +172,8 @@ describe('shared IDE metadata registry', () => {
     const markup = renderToStaticMarkup(createElement(getIDEIcon('tablepro:tablepro-copilot')));
     expect(markup).toContain('<img');
     expect(markup).toContain('tablepro.png');
-    expect(markup).toContain('width="20"');
-    expect(markup).toContain('height="20"');
+    expect(markup).toContain('width="16"');
+    expect(markup).toContain('height="16"');
     expect(markup).toContain('alt=""');
   });
 

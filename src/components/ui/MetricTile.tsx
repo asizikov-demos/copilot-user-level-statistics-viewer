@@ -107,7 +107,7 @@ export const MetricTile: React.FC<MetricTileProps> = ({
       </span>
       {arrow && (
         <span className={styles.arrow} aria-hidden="true">
-          <ChevronRightIcon size={24} />
+          <ChevronRightIcon size={16} />
         </span>
       )}
     </span>

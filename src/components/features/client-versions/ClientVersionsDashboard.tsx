@@ -41,7 +41,7 @@ function StatusIcon({ kind }: { kind: keyof typeof STATUS_ICON }) {
 
   return (
     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${className}`}>
-      <Icon size={20} aria-hidden="true" />
+      <Icon size={24} aria-hidden="true" />
       <span className="sr-only">{label}</span>
     </span>
   );
@@ -55,7 +55,7 @@ function PlatformMark({ scope }: { scope: ClientPlatformHealth['scope'] }) {
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-default bg-muted"
       aria-hidden="true"
     >
-      <Icon />
+      <Icon size={24} />
     </span>
   );
 }

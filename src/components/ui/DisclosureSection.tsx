@@ -43,7 +43,7 @@ export default function DisclosureSection({
       >
         <span className={labelClassName ?? styles.label}>{label}</span>
         <span className={styles.chevron} data-expanded={isExpanded ? 'true' : 'false'} aria-hidden="true">
-          <ChevronDownIcon size={20} />
+          <ChevronDownIcon size={16} />
         </span>
       </button>
 
