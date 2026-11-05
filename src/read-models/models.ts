@@ -45,6 +45,7 @@ export interface ModelDetailsReadModel {
   categoryTables: ModelCategoryTable[];
   vendorTables: ModelVendorTable[];
   localByokUsage: AggregatedMetrics['models']['localByokUsage'];
+  selectionModeRequests: AggregatedMetrics['models']['selectionModeRequests'];
   reportStartDay: string;
   reportEndDay: string;
 }
@@ -153,6 +154,7 @@ export function selectModelDetailsReadModel(
     categoryTables: buildCategoryTables(allModels, modelCategories, modelTotal),
     vendorTables: buildVendorTables(allModels, modelVendors, modelTotal),
     localByokUsage: metrics.models.localByokUsage,
+    selectionModeRequests: metrics.models.selectionModeRequests,
     reportStartDay: metrics.overview.stats.reportStartDay,
     reportEndDay: metrics.overview.stats.reportEndDay,
   };

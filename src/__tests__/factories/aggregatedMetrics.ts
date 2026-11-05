@@ -41,7 +41,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
     'pluginVersionData',
     'dailyIdeUsersData',
   ],
-  models: ['modelUsageData', 'modelBreakdownData', 'localByokUsage'],
+  models: ['modelUsageData', 'modelBreakdownData', 'localByokUsage', 'selectionModeRequests'],
   cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],
   copilotApp: ['dailyAppSessionData', 'dailyAppTokenData', 'dailyAppAdoptionTrend'],
   customizations: ['dates', 'types'],

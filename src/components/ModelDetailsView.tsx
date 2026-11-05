@@ -3,6 +3,7 @@
 import React from 'react';
 import ModelsUsageChart from './charts/ModelsUsageChart';
 import ModelCategoryDistributionChart from './charts/ModelCategoryDistributionChart';
+import ModelSelectionModeCharts from './charts/ModelSelectionModeCharts';
 import ModelVendorDistributionChart from './charts/ModelVendorDistributionChart';
 import AutoModeAdoptionTrendChart from './charts/AutoModeAdoptionTrendChart';
 import LocalByokSessionsChart from './charts/LocalByokSessionsChart';
@@ -20,6 +21,7 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
   const {
     allModels,
     modelCategories,
+    selectionModeRequests,
     modelVendors,
     autoModels,
     autoModeAdoptionTrend,
@@ -35,6 +37,7 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
   const [
     allModelsSection,
     modelTypesSection,
+    selectionModesSection,
     modelsByCategorySection,
     modelVendorsSection,
     modelsByVendorSection,
@@ -61,6 +64,9 @@ export default function ModelDetailsView({ model }: ModelDetailsViewProps) {
             dates={dates}
             totalInteractions={modelTotal}
           />
+        </div>
+        <div id={selectionModesSection.id} className="scroll-mt-28">
+          <ModelSelectionModeCharts data={selectionModeRequests} />
         </div>
         <div id={modelsByCategorySection.id} className="scroll-mt-28">
           <ModelCategoryBreakdown categoryTables={categoryTables} />

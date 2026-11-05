@@ -140,6 +140,7 @@ export function assembleAggregatedMetrics({
       modelUsageData: modelAggregation.modelUsageData,
       modelBreakdownData: modelAggregation.modelBreakdownData,
       localByokUsage: modelAggregation.localByokUsage,
+      selectionModeRequests: modelAggregation.selectionModeRequests,
     },
     cli: cliAggregation,
     copilotApp: copilotAppAggregation,

@@ -5,6 +5,7 @@ import type {
   LocalByokUsageData,
   MetricsStats,
   ModelBreakdownData,
+  ModelSelectionRequests,
   PluginVersionAnalysisData,
   UserDayData,
   UserSummary,
@@ -92,6 +93,7 @@ export interface ModelsMetricsSlice {
   modelUsageData: DailyModelUsageData[];
   modelBreakdownData: ModelBreakdownData;
   localByokUsage: LocalByokUsageData;
+  selectionModeRequests: ModelSelectionRequests;
 }
 
 export interface CliMetricsSlice {
