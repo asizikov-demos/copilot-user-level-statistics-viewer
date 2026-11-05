@@ -85,7 +85,11 @@ function ClientName({ ide }: { ide: string }) {
 interface ClientRow {
   ide: string;
   activity?: ClientActivityMetricsRow;
-  traffic?: ClientTrafficSummary;
+  traffic?: Pick<ClientTrafficSummary, 'reportedSessionCount' | 'requestCount' | 'promptTokens' | 'outputTokens'>;
+}
+
+function getClientRowKey(client: string): string {
+  return client === 'github_app' ? 'copilot_app' : client;
 }
 
 const activityValue = (row: ClientRow, key: Exclude<keyof ClientActivityMetricsRow, 'ide'>) =>
@@ -235,11 +239,29 @@ export default function ClientActivityChart({
     () => {
       const rows = new Map<string, ClientRow>();
       for (const activity of [...ideClientRows, ...(cliClientRow ? [cliClientRow] : [])]) {
-        rows.set(activity.ide, { ide: activity.ide, activity });
+        const key = getClientRowKey(activity.ide);
+        const existing = rows.get(key)?.activity;
+        rows.set(key, { ide: key, activity: existing && key === 'copilot_app' ? {
+          ide: key,
+          user_initiated_interaction_count: existing.user_initiated_interaction_count + activity.user_initiated_interaction_count,
+          code_generation_activity_count: existing.code_generation_activity_count + activity.code_generation_activity_count,
+          code_acceptance_activity_count: existing.code_acceptance_activity_count + activity.code_acceptance_activity_count,
+          loc_added_sum: existing.loc_added_sum + activity.loc_added_sum,
+          loc_deleted_sum: existing.loc_deleted_sum + activity.loc_deleted_sum,
+          loc_suggested_to_add_sum: existing.loc_suggested_to_add_sum + activity.loc_suggested_to_add_sum,
+          loc_suggested_to_delete_sum: existing.loc_suggested_to_delete_sum + activity.loc_suggested_to_delete_sum,
+        } : activity });
       }
       if (hasTraffic) {
         for (const client of traffic?.summary.clients ?? []) {
-          rows.set(client.client, { ...rows.get(client.client), ide: client.client, traffic: client });
+          const key = getClientRowKey(client.client);
+          const existing = rows.get(key);
+          rows.set(key, { ...existing, ide: key, traffic: {
+            reportedSessionCount: (existing?.traffic?.reportedSessionCount ?? 0) + client.reportedSessionCount,
+            requestCount: (existing?.traffic?.requestCount ?? 0) + client.requestCount,
+            promptTokens: (existing?.traffic?.promptTokens ?? 0) + client.promptTokens,
+            outputTokens: (existing?.traffic?.outputTokens ?? 0) + client.outputTokens,
+          } });
         }
       }
       return [...rows.values()].sort((a, b) =>

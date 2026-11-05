@@ -37,6 +37,61 @@ function selectSessions() {
 
 describe('ClientActivityChart traffic', () => {
   it.each([
+    ['copilot_app', 'github_app'],
+    ['github_app', 'copilot_app'],
+  ])('joins %s activity with %s traffic in one Copilot App row', (activityKey, trafficKey) => {
+    const activity = {
+      ide: activityKey, user_initiated_interaction_count: 7,
+      code_generation_activity_count: 20, code_acceptance_activity_count: 20,
+      loc_added_sum: 3648, loc_deleted_sum: 13,
+      loc_suggested_to_add_sum: 3648, loc_suggested_to_delete_sum: 13,
+    };
+    const appTraffic = { ...client(trafficKey, 4, 13), promptTokens: 1224866, outputTokens: 3130 };
+    const data = traffic([appTraffic, client('copilot_sdk', 2)]);
+    render(
+      <ClientActivityChart
+        traffic={data}
+        ideAggregates={[activity]}
+        days={[]}
+        reportStartDay="2026-10-22" reportEndDay="2026-10-24"
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0]).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
+      'Copilot App', '7', '20', '20', '4', '3,648', '13', '3,648', '13', '13', '1,224,866', '3,130',
+    ]);
+    expect(within(rows[1]).getByText('Copilot SDK')).toBeTruthy();
+    expect(activity.ide).toBe(activityKey);
+    expect(data.summary.clients[0].client).toBe(trafficKey);
+  });
+
+  it('preserves both App identities when they coexist in activity and traffic', () => {
+    const activity = {
+      ide: 'copilot_app', user_initiated_interaction_count: 7,
+      assumed_user_initiated_interaction_count: 2,
+      code_generation_activity_count: 20, code_acceptance_activity_count: 10,
+      loc_added_sum: 100, loc_deleted_sum: -3,
+      loc_suggested_to_add_sum: 200, loc_suggested_to_delete_sum: 5,
+    };
+    render(
+      <ClientActivityChart
+        traffic={traffic([client('github_app', 4, 13), client('copilot_app', 0, 6)])}
+        ideAggregates={[activity, { ...activity, ide: 'github_app' }]}
+        days={[]}
+        reportStartDay="2026-10-22" reportEndDay="2026-10-24"
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(1);
+    expect(within(rows[0]).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
+      'Copilot App', '18', '40', '20', '4', '200', '-6', '400', '10', '19', '40', '20',
+    ]);
+  });
+
+  it.each([
     ['legacy IDE interactions', 'ide'],
     ['assumed IDE interactions', 'assumed'],
     ['CLI prompts', 'cli'],
