@@ -55,7 +55,6 @@ const ALIAS_MAP = new Map<string, string>([
   ['rust', 'Rust'],
 
   // Report categories
-  ['unknown', 'Unknown'],
   ['others', 'Others'],
 
   // Python

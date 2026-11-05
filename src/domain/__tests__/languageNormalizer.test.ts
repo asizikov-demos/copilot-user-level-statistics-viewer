@@ -27,5 +27,6 @@ describe('normalizeLanguage', () => {
 
   it('trims but otherwise preserves unknown language names', () => {
     expect(normalizeLanguage('  Elixir  ')).toBe('Elixir');
+    expect(normalizeLanguage('unknown')).toBe('unknown');
   });
 });
