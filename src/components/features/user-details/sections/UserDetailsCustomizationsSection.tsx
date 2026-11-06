@@ -2,17 +2,80 @@
 
 import { useId, useState } from 'react';
 import { ChevronRightIcon } from '@primer/octicons-react';
-import type { CliCustomizationCategory, CliCustomizationDaySummary, CliCustomizationItemSummary, CliCustomizationSummary } from '../../../../types/cliCustomizations';
+import CompositionChartCard from '../../../charts/CompositionChartCard';
+import { getSequentialColor } from '../../../charts/utils/chartColors';
+import type { CompositionEntry } from '../../../charts/utils/compositionChart';
+import {
+  CLI_CUSTOMIZATION_CATEGORIES,
+  type CliCustomizationCategory,
+  type CliCustomizationDaySummary,
+  type CliCustomizationItemSummary,
+  type CliCustomizationSummary,
+} from '../../../../types/cliCustomizations';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 
-const CATEGORY_LABELS: Record<CliCustomizationCategory, { title: string; measure: string }> = {
-  skill: { title: 'Skills', measure: 'Reported invocations' },
-  custom_agent: { title: 'Custom agents', measure: 'Reported starts' },
-  mcp: { title: 'MCP servers', measure: 'Connection attempts' },
-  slash_cmd: { title: 'Slash commands', measure: 'Reported invocations' },
+const CATEGORY_LABELS: Record<CliCustomizationCategory, {
+  title: string;
+  measure: string;
+  unit: string;
+  breakdownLabel: string;
+  zeroState: string;
+}> = {
+  skill: {
+    title: 'Skills',
+    measure: 'Reported invocations',
+    unit: 'invocations',
+    breakdownLabel: 'Invocations by skill',
+    zeroState: 'No invocations reported',
+  },
+  custom_agent: {
+    title: 'Custom agents',
+    measure: 'Reported starts',
+    unit: 'starts',
+    breakdownLabel: 'Starts by custom agent',
+    zeroState: 'No starts reported',
+  },
+  mcp: {
+    title: 'MCP servers',
+    measure: 'Connection attempts',
+    unit: 'connection attempts',
+    breakdownLabel: 'Connection attempts by MCP server',
+    zeroState: 'No connection attempts reported',
+  },
+  slash_cmd: {
+    title: 'Slash commands',
+    measure: 'Reported invocations',
+    unit: 'invocations',
+    breakdownLabel: 'Invocations by slash command',
+    zeroState: 'No invocations reported',
+  },
 };
 
 type CustomizationSummary = CliCustomizationSummary | CliCustomizationDaySummary;
+
+function getCustomizationItemLabel(name: string): string {
+  if (name === 'other') return 'other (custom)';
+  if (name === 'custom') return 'custom (names hidden)';
+  return name;
+}
+
+function getInvocationEntries(summary?: CustomizationSummary): CompositionEntry[] | undefined {
+  if (!summary || summary.observedInteractions === null) return undefined;
+
+  const items = summary.items.filter(
+    (item): item is CliCustomizationItemSummary & { interactionCount: number } => item.interactionCount !== null,
+  );
+  if (items.length !== summary.items.length) return undefined;
+  if (items.reduce((total, item) => total + item.interactionCount, 0) !== summary.observedInteractions) {
+    return undefined;
+  }
+
+  return items.map((item, index) => ({
+    label: getCustomizationItemLabel(item.name),
+    value: item.interactionCount,
+    color: getSequentialColor(index),
+  }));
+}
 
 function getDistinctCount(summary: CustomizationSummary): number | null {
   return 'distinctItems' in summary ? summary.distinctItems : summary.summedDailyDistinctItems;
@@ -118,6 +181,33 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
   );
 }
 
+function CustomizationInvocationCharts({ summaries }: { summaries: CustomizationSummary[] }) {
+  return (
+    <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-4">
+      {CLI_CUSTOMIZATION_CATEGORIES.map(category => {
+        const categoryLabels = CATEGORY_LABELS[category];
+        const summary = summaries.find(item => item.category === category);
+        const entries = getInvocationEntries(summary);
+        const emptyState = summary?.observedInteractions === 0 && entries !== undefined
+          ? categoryLabels.zeroState
+          : 'Reported counts unavailable';
+
+        return (
+          <CompositionChartCard
+            key={category}
+            title={categoryLabels.title}
+            description="Totals and shares cover reported per-record top-five items only, not all activity."
+            emptyState={emptyState}
+            entries={entries ?? []}
+            unit={categoryLabels.unit}
+            label={categoryLabels.breakdownLabel}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 type UserDetailsCustomizationsSectionProps = {
   sectionId: string;
 } & (
@@ -128,17 +218,24 @@ type UserDetailsCustomizationsSectionProps = {
 export default function UserDetailsCustomizationsSection(props: UserDetailsCustomizationsSectionProps) {
   const { sectionId } = props;
   const reportedSummaries = props.summaries.filter(summary => getDistinctCount(summary) != null);
-  if (reportedSummaries.length === 0) return null;
+  const hasReportedDistinctCounts = reportedSummaries.length > 0;
+  const hasCustomizationData = props.summaries.some(summary =>
+    getDistinctCount(summary) !== null || summary.observedInteractions !== null,
+  );
+  if (!hasCustomizationData) return null;
 
   return (
     <section id={sectionId} aria-labelledby={`${sectionId}-title`} className="scroll-mt-28">
       <h2 id={`${sectionId}-title`} className="text-xl font-semibold text-default">Customizations</h2>
       <p className="mt-1 text-sm text-muted">
-        {props.mode === 'day'
-          ? 'Distinct items used on this day.'
-          : 'Sum of reported daily distinct counts, not unique items across the period.'}
+        {hasReportedDistinctCounts
+          ? props.mode === 'day'
+            ? 'Distinct items used on this day.'
+            : 'Sum of reported daily distinct counts, not unique items across the period.'
+          : 'Reported invocations, agent starts, and MCP connection attempts by item.'}
       </p>
-      <CustomizationsTable summaries={reportedSummaries} />
+      <CustomizationInvocationCharts summaries={props.summaries} />
+      {reportedSummaries.length > 0 && <CustomizationsTable summaries={reportedSummaries} />}
     </section>
   );
 }

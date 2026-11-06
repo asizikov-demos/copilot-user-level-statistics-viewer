@@ -381,11 +381,12 @@ describe('DayDetailsModal', () => {
           makeCustomizationDaySummary('slash_cmd', null),
         ],
       }));
+      const tableMarkup = markup.slice(markup.indexOf('<table'), markup.indexOf('</table>') + '</table>'.length);
 
       expect(markup).toContain('>0</td>');
       expect(markup).toContain('>2</td>');
-      expect(markup).not.toContain('MCP servers');
-      expect(markup).not.toContain('Slash commands');
+      expect(tableMarkup).not.toContain('MCP servers');
+      expect(tableMarkup).not.toContain('Slash commands');
       expect(markup).not.toContain('Not reported');
       expect(markup).not.toContain('aria-expanded');
     });

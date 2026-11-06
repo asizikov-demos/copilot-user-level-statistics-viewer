@@ -1,8 +1,7 @@
 'use client';
 
 import type { ModelSelectionMode, ModelSelectionRequests } from '../../types/metrics';
-import ChartContainer from '../ui/ChartContainer';
-import CompositionChart from './CompositionChart';
+import CompositionChartCard from './CompositionChartCard';
 import { chartColors, modelCategoryColors } from './utils/chartColors';
 
 const MODE_LABELS: Record<ModelSelectionMode, string> = {
@@ -32,23 +31,17 @@ export default function ModelSelectionModeCharts({ data }: { data: ModelSelectio
           }));
 
           return (
-            <ChartContainer
+            <CompositionChartCard
               key={mode}
               title={label}
               description="Model types by request count."
-              chartHeight="h-auto"
-              isEmpty={!entries.some(entry => entry.value > 0)}
               emptyState={data.reportedRecords === 0
                 ? 'Client model traffic not reported'
                 : `No ${label.toLowerCase()} model requests reported`}
-            >
-              <CompositionChart
-                variant="doughnut"
-                entries={entries}
-                unit="requests"
-                label={`${label} model types`}
-              />
-            </ChartContainer>
+              entries={entries}
+              unit="requests"
+              label={`${label} model types`}
+            />
           );
         })}
       </div>

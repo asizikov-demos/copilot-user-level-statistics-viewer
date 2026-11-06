@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { CompositionChartProps } from '../../../charts/CompositionChart';
 import type { UserDetailsViewModel } from '../../../../read-models/userDetails';
 import type { CliCustomizationSummary } from '../../../../types/cliCustomizations';
 import { NavigationProvider } from '../../../../state/NavigationContext';
@@ -18,6 +19,17 @@ import {
   makeUserDetails,
   makeUserDetailsViewModel,
 } from './helpers/userDetailsFixtures';
+
+const { compositionChart } = vi.hoisted(() => ({
+  compositionChart: vi.fn<(props: CompositionChartProps) => void>(),
+}));
+
+vi.mock('../../../charts/CompositionChart', () => ({
+  default: (props: CompositionChartProps) => {
+    compositionChart(props);
+    return <div>{props.label}</div>;
+  },
+}));
 
 let renderer: ReactTestRenderer | undefined;
 
@@ -98,7 +110,77 @@ describe('UserDetailsCustomizationsSection', () => {
       expect(markup.match(/>7<\/td>/g)).toHaveLength(2);
       expect(markup).toContain('>14</td>');
       expect(markup).toContain('>3</td>');
-      expect(markup).not.toContain('<h3');
+      expect(markup.match(/<h3/g)).toHaveLength(4);
+    });
+
+    it('renders invocation doughnuts for all four customization categories', () => {
+      const summaries = [
+        ['skill', 4],
+        ['custom_agent', 3],
+        ['mcp', 2],
+        ['slash_cmd', 1],
+      ] as const;
+      const data = summaries.map(([category, count]) => ({
+        ...makeCustomizationSummary(category, 1, [makeCustomizationItem('reported-item', count)]),
+        observedInteractions: count,
+      }));
+      compositionChart.mockClear();
+
+      const markup = renderToStaticMarkup(renderPeriod(data));
+
+      expect(compositionChart).toHaveBeenCalledTimes(4);
+      expect(markup.match(/Totals and shares cover reported per-record top-five items only, not all activity\./g)).toHaveLength(4);
+      expect(compositionChart.mock.calls.map(([props]) => ({
+        label: props.label,
+        unit: props.unit,
+        entries: props.entries.map(entry => ({ label: entry.label, value: entry.value })),
+      }))).toEqual([
+        { label: 'Invocations by skill', unit: 'invocations', entries: [{ label: 'reported-item', value: 4 }] },
+        { label: 'Starts by custom agent', unit: 'starts', entries: [{ label: 'reported-item', value: 3 }] },
+        { label: 'Connection attempts by MCP server', unit: 'connection attempts', entries: [{ label: 'reported-item', value: 2 }] },
+        { label: 'Invocations by slash command', unit: 'invocations', entries: [{ label: 'reported-item', value: 1 }] },
+      ]);
+      for (const title of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
+        expect(markup).toContain(title);
+      }
+    });
+
+    it('shows invocation charts when distinct-item counts are unavailable', () => {
+      const summary = {
+        ...makeCustomizationSummary('skill', null, [makeCustomizationItem('review', 5)]),
+        observedInteractions: 5,
+      };
+      compositionChart.mockClear();
+
+      const markup = renderToStaticMarkup(renderPeriod([summary]));
+
+      expect(markup).toContain('id="customizations"');
+      expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
+      expect(markup).not.toContain('<table');
+      expect(markup).toContain('Totals and shares cover reported per-record top-five items only, not all activity.');
+      expect(compositionChart).toHaveBeenCalledTimes(1);
+      expect(compositionChart.mock.calls[0][0]).toMatchObject({
+        label: 'Invocations by skill',
+        unit: 'invocations',
+        entries: [{ label: 'review', value: 5 }],
+      });
+    });
+
+    it('distinguishes known-zero totals from unavailable interaction counts', () => {
+      const knownZero = {
+        ...makeCustomizationSummary('skill', 1, [makeCustomizationItem('unused', 0)]),
+        observedInteractions: 0,
+      };
+      const unknown = makeCustomizationSummary('mcp', 1, [
+        makeCustomizationItem('server', 4, { interactionCount: null }),
+      ]);
+      compositionChart.mockClear();
+
+      const markup = renderToStaticMarkup(renderPeriod([knownZero, unknown]));
+
+      expect(markup).toContain('No invocations reported');
+      expect(markup).toContain('Reported counts unavailable');
+      expect(compositionChart).not.toHaveBeenCalled();
     });
 
     it('renders reported zero counts and omits categories with missing counts', () => {
@@ -108,10 +190,11 @@ describe('UserDetailsCustomizationsSection', () => {
         makeCustomizationSummary('mcp', null),
         makeCustomizationSummary('slash_cmd', null),
       ]));
+      const tableMarkup = markup.slice(markup.indexOf('<table'), markup.indexOf('</table>') + '</table>'.length);
 
       expect(markup.match(/>0<\/td>/g)).toHaveLength(2);
-      expect(markup).not.toContain('MCP servers');
-      expect(markup).not.toContain('Slash commands');
+      expect(tableMarkup).not.toContain('MCP servers');
+      expect(tableMarkup).not.toContain('Slash commands');
       expect(markup).not.toContain('Not reported');
       expect(markup).not.toContain('aria-expanded');
     });

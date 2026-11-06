@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Dialog, FormControl, IconButton, Label, Select } from '@primer/react';
+import { Dialog, FormControl, IconButton, Select } from '@primer/react';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
 import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
@@ -10,7 +10,7 @@ import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
 import { getModelIcon } from '../../../icons/ModelIcons';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 import EmptyState from '../../../ui/EmptyState';
-import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
+import FeaturesUsed, { type FeaturePill } from '../FeaturesUsed';
 import DayImpactCard from './DayImpactCard';
 import DayFeatureBreakdown from './DayFeatureBreakdown';
 import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
@@ -70,11 +70,6 @@ const cellLeft = 'px-4 py-3 text-sm font-medium text-default';
 const cellRight = 'px-4 py-3 text-sm text-default text-right';
 const headerLeft = 'px-4 py-3 text-left';
 const headerRight = 'px-4 py-3 text-right';
-
-interface FeaturePill {
-  label: string;
-  feature: FeatureLabelKey;
-}
 
 function hasCopilotAppActivity(dayMetrics: UserDayData): boolean {
   const appTotals = dayMetrics.totals_by_copilot_app;
@@ -375,15 +370,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
         />
       ) : (
         <div className="space-y-6">
-          {/* Features used pills */}
-          {featurePills.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-muted uppercase tracking-wider">Features used:</span>
-              {featurePills.map((pill) => (
-                <Label key={pill.label} variant={FEATURE_LABEL_VARIANT[pill.feature]}>{pill.label}</Label>
-              ))}
-            </div>
-          )}
+          <FeaturesUsed features={featurePills} />
 
           {/* Clients & Impact cards */}
           <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions || hasClientRequests ? ' md:grid-cols-2' : ''}`}>
