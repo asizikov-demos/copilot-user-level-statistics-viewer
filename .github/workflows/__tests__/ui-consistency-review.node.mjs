@@ -5,7 +5,7 @@ import { URL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 
 const workflow = readFileSync(new URL('../ui-consistency-review.md', import.meta.url), 'utf8');
-const scriptBlock = workflow.match(/          script: \|\n((?: {12}[^\n]*\n|\n)+)/);
+const scriptBlock = workflow.match(/ {10}script: \|\n((?: {12}[^\n]*\n|\n)+)/);
 assert.ok(scriptBlock, 'The workflow must contain the PR preparation script');
 const script = scriptBlock[1].replace(/^ {12}/gm, '');
 
