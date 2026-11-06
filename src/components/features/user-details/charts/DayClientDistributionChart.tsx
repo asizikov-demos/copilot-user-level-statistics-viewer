@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import CompositionChart from '../../../charts/CompositionChart';
-import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
+import CompositionChartCard from '../../../charts/CompositionChartCard';
+import type { CompositionEntry } from '../../../charts/utils/compositionChart';
 import { getIdeColor } from '../../../charts/utils/chartColors';
-import ChartContainer from '../../../ui/ChartContainer';
 import { formatIDEName } from '../../../icons/IDEIcons';
 import { sortBySelector } from '../../../../utils/sorting';
 import type { UserDayData } from '../../../../types/metrics';
@@ -43,23 +42,17 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
   }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure]);
 
   return (
-    <ChartContainer
+    <CompositionChartCard
       title="Clients"
       description={measure === 'requests'
         ? 'Share of reported model requests across clients on this day.'
         : 'Share of recorded and assumed interactions across clients on this day.'}
-      chartHeight="h-auto"
       className="h-full"
-      isEmpty={!hasCompositionData(entries)}
       emptyState="No client activity recorded"
-    >
-      <CompositionChart
-        variant="doughnut"
-        entries={entries}
-        unit={measure}
-        label={measure === 'requests' ? 'Requests by client' : 'Interactions by client'}
-        legendPlacement="right"
-      />
-    </ChartContainer>
+      entries={entries}
+      unit={measure}
+      label={measure === 'requests' ? 'Requests by client' : 'Interactions by client'}
+      legendPlacement="right"
+    />
   );
 }

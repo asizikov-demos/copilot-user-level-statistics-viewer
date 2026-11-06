@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import CompositionChart from './CompositionChart';
-import { hasCompositionData, type CompositionEntry } from './utils/compositionChart';
+import CompositionChartCard from './CompositionChartCard';
+import type { CompositionEntry } from './utils/compositionChart';
 import { getIdeColor } from './utils/chartColors';
-import ChartContainer from '../ui/ChartContainer';
 import { formatIDEName } from '../icons/IDEIcons';
 import { sortBySelector } from '../../utils/sorting';
 import type { IDEStatsData } from '../../types/metrics';
@@ -26,23 +25,16 @@ export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistribu
   }, [ideStats, cliUsers]);
 
   return (
-    <ChartContainer
+    <CompositionChartCard
       title="Client Distribution"
       description="Unique users per client. Users may appear in multiple segments if they use more than one client."
-      chartHeight="h-auto"
-      isEmpty={!hasCompositionData(entries)}
       emptyState="No IDE or CLI usage data available"
-    >
-      {/* Users of several clients count in each segment, so the segments do not sum to a user total. */}
-      <CompositionChart
-        variant="doughnut"
-        entries={entries}
-        unit="users"
-        label="Users by client"
-        legendPlacement="right"
-        showTotal={false}
-        className="flex min-h-80 flex-col justify-center print:min-h-0"
-      />
-    </ChartContainer>
+      entries={entries}
+      unit="users"
+      label="Users by client"
+      legendPlacement="right"
+      showTotal={false}
+      chartClassName="flex min-h-80 flex-col justify-center print:min-h-0"
+    />
   );
 }
