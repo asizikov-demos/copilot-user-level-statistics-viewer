@@ -1,18 +1,16 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import CompositionChart from '../../../charts/CompositionChart';
+import { useState } from 'react';
+import CompositionChartCard from '../../../charts/CompositionChartCard';
 import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
-import ChartContainer from '../../../ui/ChartContainer';
-import EmptyState from '../../../ui/EmptyState';
-import { GraphIcon } from '@primer/octicons-react';
-import { FormControl, Label, Select } from '@primer/react';
-import { FEATURE_LABEL_VARIANT } from '../../../ui/featureLabels';
+import { FormControl, Select } from '@primer/react';
+import FeaturesUsed, { type FeaturePill } from '../FeaturesUsed';
 
 interface UserSummaryChartProps {
   usedChat: boolean;
   usedAgent: boolean;
   usedCli: boolean;
+  usedCopilotApp: boolean;
   usedCodingAgent: boolean;
   usedCodeReview: boolean;
   usedAutoMode: boolean;
@@ -22,35 +20,6 @@ interface UserSummaryChartProps {
   languageDistribution?: CompositionEntry[];
   modelDistribution?: CompositionEntry[];
   modelRequestDistribution?: CompositionEntry[];
-}
-
-interface CompositionTileProps {
-  title: string;
-  entries?: CompositionEntry[];
-  unit: string;
-  /** Accessible name for the tile's breakdown list */
-  label: string;
-  controls?: ReactNode;
-}
-
-function CompositionTile({ title, entries, unit, label, controls }: CompositionTileProps) {
-  return (
-    <div className="bg-muted rounded-lg p-4 flex min-w-0 flex-col">
-      <div className="mb-4 flex min-h-8 flex-wrap items-center justify-between gap-2">
-        <h4 className="text-sm font-medium text-default">{title}</h4>
-        {controls}
-      </div>
-      {entries && hasCompositionData(entries) ? (
-        <CompositionChart variant="doughnut" entries={entries} unit={unit} label={label} surface="muted" />
-      ) : (
-        <div className="flex h-52 items-center justify-center">
-          <div className="w-full">
-            <EmptyState icon={GraphIcon} heading="No data available" headingAs="h5" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 function SelectableCompositionTile({ kind, interactions, requests }: {
@@ -67,12 +36,12 @@ function SelectableCompositionTile({ kind, interactions, requests }: {
   const title = kind === 'client' ? 'Clients' : 'Models';
 
   return (
-    <CompositionTile
+    <CompositionChartCard
       title={title}
-      entries={isRequests ? requests : interactions}
+      entries={(isRequests ? requests : interactions) ?? []}
       unit={measure}
       label={`${isRequests ? 'Requests' : 'Interactions'} by ${kind}`}
-      controls={(
+      headerActions={(
         <>
           <span className="hidden text-xs text-muted print:inline">{isRequests ? 'Model requests' : 'Interactions'}</span>
           <div className="print:hidden">
@@ -103,6 +72,7 @@ export default function UserSummaryChart({
   usedChat,
   usedAgent,
   usedCli,
+  usedCopilotApp,
   usedCodingAgent,
   usedCodeReview,
   usedAutoMode,
@@ -113,38 +83,33 @@ export default function UserSummaryChart({
   modelDistribution,
   modelRequestDistribution,
 }: UserSummaryChartProps) {
-  return (
-    <ChartContainer title="Summary" chartHeight="h-auto">
-      {/* Features Used */}
-      <div className="mb-6">
-        <h4 className="text-sm font-medium text-default mb-3">Features Used</h4>
-        <div className="flex flex-wrap gap-2">
-          {usedChat && <Label size="large" variant={FEATURE_LABEL_VARIANT.chat}>Chat</Label>}
-          {usedAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.ideAgent}>IDE Agent Mode</Label>}
-          {usedCli && <Label size="large" variant={FEATURE_LABEL_VARIANT.cli}>CLI</Label>}
-          {usedCodingAgent && <Label size="large" variant={FEATURE_LABEL_VARIANT.cloudAgent}>Cloud Agent</Label>}
-          {usedCodeReview && <Label size="large" variant={FEATURE_LABEL_VARIANT.codeReview}>Code Review</Label>}
-          {usedAutoMode && <Label size="large" variant={FEATURE_LABEL_VARIANT.autoMode}>Auto Mode</Label>}
-          {usedLocalByok && <Label size="large" variant={FEATURE_LABEL_VARIANT.localByok}>Local BYOK</Label>}
-          {!usedChat && !usedAgent && !usedCli && !usedCodingAgent && !usedCodeReview && !usedAutoMode && !usedLocalByok && (
-            <Label size="large" variant={FEATURE_LABEL_VARIANT.completions}>Completion Only</Label>
-          )}
-        </div>
-      </div>
+  const features: FeaturePill[] = [];
+  if (usedChat) features.push({ label: 'Chat', feature: 'chat' });
+  if (usedAgent) features.push({ label: 'IDE Agent Mode', feature: 'ideAgent' });
+  if (usedCli) features.push({ label: 'CLI', feature: 'cli' });
+  if (usedCopilotApp) features.push({ label: 'Copilot App', feature: 'copilotApp' });
+  if (usedCodingAgent) features.push({ label: 'Cloud Agent', feature: 'cloudAgent' });
+  if (usedCodeReview) features.push({ label: 'Code Review', feature: 'codeReview' });
+  if (usedAutoMode) features.push({ label: 'Auto Mode', feature: 'autoMode' });
+  if (usedLocalByok) features.push({ label: 'Local BYOK', feature: 'localByok' });
+  if (features.length === 0) features.push({ label: 'Completion Only', feature: 'completions' });
 
-      {/* Charts Grid */}
+  return (
+    <section aria-label="User usage summary" className="space-y-6">
+      <FeaturesUsed features={features} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SelectableCompositionTile
           kind="client"
           interactions={ideDistribution}
           requests={clientRequestDistribution}
         />
-        <CompositionTile
+        <CompositionChartCard
           title="Languages"
-          entries={languageDistribution}
+          entries={languageDistribution ?? []}
           unit="generations"
           label="Generations by language"
-          controls={<span className="text-xs text-muted">Generations</span>}
+          headerActions={<span className="text-xs text-muted">Generations</span>}
         />
         <SelectableCompositionTile
           kind="model"
@@ -152,6 +117,6 @@ export default function UserSummaryChart({
           requests={modelRequestDistribution}
         />
       </div>
-    </ChartContainer>
+    </section>
   );
 }

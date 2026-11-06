@@ -18,6 +18,7 @@ const features = {
   usedChat: true,
   usedAgent: false,
   usedCli: false,
+  usedCopilotApp: false,
   usedCodingAgent: false,
   usedCodeReview: false,
   usedAutoMode: false,
@@ -55,14 +56,14 @@ describe('UserSummaryChart', () => {
         entries: ideDistribution,
         unit: 'interactions',
         label: 'Interactions by client',
-        surface: 'muted',
+        surface: 'default',
       },
       {
         variant: 'doughnut',
         entries: modelDistribution,
         unit: 'interactions',
         label: 'Interactions by model',
-        surface: 'muted',
+        surface: 'default',
       },
     ]);
   });
@@ -80,6 +81,24 @@ describe('UserSummaryChart', () => {
 
     expect(compositionChart).toHaveBeenCalledTimes(3);
     expect(markup).not.toContain('No data available');
+  });
+
+  it('keeps the summary unboxed and gives each doughnut its own white card', () => {
+    const entries = [{ label: 'Reported', value: 1, color: 'rgb(0, 0, 1)' }];
+    const { container } = render(
+      <UserSummaryChart
+        {...features}
+        ideDistribution={entries}
+        languageDistribution={entries}
+        modelDistribution={entries}
+      />,
+    );
+    const summary = container.querySelector('[aria-label="User usage summary"]');
+
+    expect(summary).toBeTruthy();
+    expect(summary?.className).not.toContain('bg-default');
+    expect(summary?.querySelectorAll('[data-component="ChartContainer"]')).toHaveLength(3);
+    expect(screen.queryByRole('heading', { name: 'Summary' })).toBeNull();
   });
 
   it('labels the fallback model composition as requests', () => {
@@ -191,7 +210,7 @@ describe('UserSummaryChart', () => {
       />,
     );
 
-    expect(markup).toContain('Features Used');
+    expect(markup).toContain('Features used:');
     expect(markup).toContain('Clients');
     expect(markup).toContain('Languages');
     expect(markup).toContain('Models');
@@ -206,5 +225,23 @@ describe('UserSummaryChart', () => {
 
     expect(markup).toContain('Local BYOK');
     expect(markup).not.toContain('Completion Only');
+  });
+
+  it('uses the modal feature row while preserving summary labels and the completion-only fallback', () => {
+    const { rerender } = render(
+      <UserSummaryChart
+        usedChat usedAgent usedCli usedCopilotApp usedCodingAgent usedCodeReview usedAutoMode usedLocalByok
+      />,
+    );
+    const featureRow = screen.getByText('Features used:').parentElement!;
+    expect(Array.from(featureRow.children).slice(1).map(label => label.textContent)).toEqual([
+      'Chat', 'IDE Agent Mode', 'CLI', 'Copilot App', 'Cloud Agent', 'Code Review', 'Auto Mode', 'Local BYOK',
+    ]);
+    expect(screen.queryByRole('heading', { name: /features used/i })).toBeNull();
+    expect(screen.queryByText('Completion Only')).toBeNull();
+
+    rerender(<UserSummaryChart {...features} usedChat={false} />);
+    expect(screen.getByText('Completion Only').parentElement).toBe(featureRow);
+    expect(screen.queryByText('Chat')).toBeNull();
   });
 });

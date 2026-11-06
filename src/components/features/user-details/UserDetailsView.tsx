@@ -302,13 +302,13 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   }, [userDetails.days]);
   const [
     overviewSection,
+    summarySection,
     aiCreditsSection,
     customizationsSection,
     combinedImpactSection,
     impactBreakdownSection,
     agentActivitySection,
     thirdPartyAgentActivitySection,
-    summarySection,
     clientActivitySection,
     featureActivitySection,
     languageActivitySection,
@@ -344,6 +344,25 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         editModeInteractions={editModeInteractions}
         completionInteractions={completionInteractions}
       />
+
+      <div id={summarySection.id} className="scroll-mt-28">
+        <UserSummaryChart
+          key={userId}
+          usedChat={usedChat}
+          usedAgent={usedAgent}
+          usedCli={usedCli}
+          usedCopilotApp={userSummary.used_copilot_app}
+          usedCodingAgent={usedCodingAgent}
+          usedCodeReview={usedCodeReview}
+          usedAutoMode={usedAutoMode}
+          usedLocalByok={usedLocalByok}
+          ideDistribution={ideDistribution}
+          clientRequestDistribution={clientRequestDistribution}
+          languageDistribution={languageDistribution}
+          modelDistribution={modelDistribution}
+          modelRequestDistribution={modelRequestDistribution}
+        />
+      </div>
 
       <div id={aiCreditsSection.id} className="scroll-mt-28">
         <AiCreditsChart
@@ -410,24 +429,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           />
         </div>
       ) : null}
-
-      <div id={summarySection.id} className="scroll-mt-28">
-        <UserSummaryChart
-          key={userId}
-          usedChat={usedChat}
-          usedAgent={usedAgent}
-          usedCli={usedCli}
-          usedCodingAgent={usedCodingAgent}
-          usedCodeReview={usedCodeReview}
-          usedAutoMode={usedAutoMode}
-          usedLocalByok={usedLocalByok}
-          ideDistribution={ideDistribution}
-          clientRequestDistribution={clientRequestDistribution}
-          languageDistribution={languageDistribution}
-          modelDistribution={modelDistribution}
-          modelRequestDistribution={modelRequestDistribution}
-        />
-      </div>
 
       {showCloudAgentsUsage && (
         <CloudAgentsUsageChart data={cloudAgentsUsageData} />

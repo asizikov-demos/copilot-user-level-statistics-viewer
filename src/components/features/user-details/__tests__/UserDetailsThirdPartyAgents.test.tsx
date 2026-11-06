@@ -33,14 +33,19 @@ const activity: ThirdPartyAgentActivity = {
 };
 
 describe('user profile third-party agent activity', () => {
-  it('places the chart below agent-native activity and above usage summary', () => {
+  it('places usage summary below the activity overview and before later activity sections', () => {
     const markup = profile(activity);
+    const overview = markup.indexOf('id="user-details-overview"');
+    const summary = markup.indexOf('id="user-details-summary"');
+    const aiCredits = markup.indexOf('id="user-details-ai-credits"');
     const native = markup.indexOf('id="user-details-agent-activity"');
     const thirdParty = markup.indexOf('id="user-details-third-party-agent-activity"');
-    const summary = markup.indexOf('id="user-details-summary"');
+    expect(overview).toBeGreaterThan(-1);
+    expect(summary).toBeGreaterThan(overview);
+    expect(aiCredits).toBeGreaterThan(summary);
     expect(native).toBeGreaterThan(-1);
+    expect(native).toBeGreaterThan(summary);
     expect(thirdParty).toBeGreaterThan(native);
-    expect(summary).toBeGreaterThan(thirdParty);
     expect(markup).toContain('Daily third-party agent activity');
   });
 
