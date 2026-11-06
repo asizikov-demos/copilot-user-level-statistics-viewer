@@ -27,7 +27,7 @@ Manual runs bypass draft/state/relevance filtering, but still reject fork PRs
 and cross-repository URLs. **They publish a real comment**, including on historical
 PRs; they are not dry runs. Historical reviews compare the PR's changes and
 base-revision reuse candidates under today's trusted default-branch policies.
-Later changes to the PR head supersede an in-flight review.
+Later changes to the PR head supersede an in-flight review: a guard job re-reads the PR head before publication and skips the comment if it moved.
 
 ## Scope and limitations
 

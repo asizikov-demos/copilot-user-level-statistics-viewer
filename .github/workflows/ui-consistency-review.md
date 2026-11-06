@@ -128,8 +128,35 @@ jobs:
     needs: [prepare]
     if: needs.prepare.outputs.should_review == 'true'
 
+  head_guard:
+    needs: [prepare, agent]
+    if: (!cancelled()) && needs.agent.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      current: ${{ steps.check.outputs.current }}
+    steps:
+      - name: Confirm the reviewed head is still current
+        id: check
+        uses: actions/github-script@v9
+        env:
+          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+          REVIEWED_SHA: ${{ needs.prepare.outputs.head_sha }}
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              ...context.repo, pull_number: Number(process.env.PR_NUMBER),
+            });
+            const current = pr.head.sha === process.env.REVIEWED_SHA;
+            if (!current) {
+              core.notice(`PR head moved to ${pr.head.sha}; not publishing the stale review.`);
+            }
+            core.setOutput('current', String(current));
+
   safe_outputs:
-    needs: [prepare]
+    needs: [prepare, head_guard]
+    if: needs.head_guard.outputs.current == 'true'
 
 steps:
   - name: Checkout trusted review policies
