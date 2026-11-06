@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormControl, Pagination, Select, TextInput } from '@primer/react';
+import { Button, Checkbox, FormControl, Pagination, Select, TextInput } from '@primer/react';
 import { FilterIcon, SearchIcon } from '@primer/octicons-react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../charts/utils/chartSetup';
@@ -154,10 +154,10 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
             {CUSTOMIZATION_TYPES.map(c => <Select.Option key={c} value={c}>{CUSTOMIZATION_META[c].title}</Select.Option>)}
           </Select>
         </FormControl>
-        <label className="flex items-center gap-2 pb-2 text-sm text-default">
-          <input type="checkbox" checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />
-          Include unnamed buckets
-        </label>
+        <FormControl id="includeUnnamed" className="pb-2">
+          <Checkbox checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />
+          <FormControl.Label>Include unnamed buckets</FormControl.Label>
+        </FormControl>
         <Button onClick={() => { setQuery(''); setCategory('all'); setIncludeUnnamed(false); }} disabled={!hasFilters}>Clear</Button>
       </div>
       <p className="m-0 text-sm text-muted">Showing {sortedItems.length.toLocaleString()} of {all.filter(r => includeUnnamed || !r.unnamed).length.toLocaleString()} items</p>

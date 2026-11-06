@@ -1,5 +1,7 @@
 'use client';
 
+import { ProgressBar } from '@primer/react';
+import type { CSSProperties } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../charts/utils/chartSetup';
 import { createHorizontalBarChartOptions } from '../../charts/utils/chartOptions';
@@ -7,7 +9,7 @@ import { createBarDataset } from '../../charts/utils/chartStyles';
 import ChartContainer from '../../ui/ChartContainer';
 import type { CustomizationsReadModel } from '../../../read-models/customizations';
 import { CUSTOMIZATION_META, CUSTOMIZATION_ORDER } from './meta';
-import { Card, ShareBar, formatNumber, formatPercent } from './shared';
+import { Card, formatNumber, formatPercent } from './shared';
 
 registerChartJS();
 
@@ -28,7 +30,13 @@ export function CustomizationsSummaryCards({ model }: { model: CustomizationsRea
             <div className="text-xs font-medium text-muted">{meta.title}</div>
             <div className="mt-1 text-2xl font-semibold tabular-nums text-default">{formatPercent(adoption * 100)}</div>
             <div className="mb-2 text-xs text-muted">{formatNumber(stats.users)} of {formatNumber(totalUsers)} users</div>
-            <ShareBar fraction={adoption} color={meta.color.solid} />
+            <ProgressBar>
+              <ProgressBar.Item
+                progress={Math.max(0, Math.min(1, adoption)) * 100}
+                style={{ '--progress-bg': meta.color.solid } as CSSProperties}
+                aria-label={`${meta.title} adoption`}
+              />
+            </ProgressBar>
             <dl className="m-0 mt-3 grid grid-cols-2 gap-y-1 text-xs">
               <dt className="text-muted">Named {meta.singular.toLowerCase()}s</dt>
               <dd className="m-0 text-right tabular-nums text-default">{formatNumber(named)}</dd>

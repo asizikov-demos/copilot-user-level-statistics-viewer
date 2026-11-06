@@ -15,14 +15,6 @@ export function Sparkline({ values, width = 96, height = 24, color }: { values: 
   );
 }
 
-export function ShareBar({ fraction, color }: { fraction: number; color: string }) {
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bgColor-muted)]" aria-hidden="true">
-      <div className="h-full rounded-full" style={{ width: `${Math.max(0, Math.min(1, fraction)) * 100}%`, background: color }} />
-    </div>
-  );
-}
-
 export function Card({ title, description, children, className }: { title?: string; description?: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={`rounded-lg border border-solid border-[var(--borderColor-default)] bg-[var(--bgColor-default)] p-4 ${className ?? ''}`}>
