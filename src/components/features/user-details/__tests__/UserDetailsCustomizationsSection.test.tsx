@@ -129,6 +129,7 @@ describe('UserDetailsCustomizationsSection', () => {
       const markup = renderToStaticMarkup(renderPeriod(data));
 
       expect(compositionChart).toHaveBeenCalledTimes(4);
+      expect(markup.match(/Totals and shares cover reported per-record top-five items only, not all activity\./g)).toHaveLength(4);
       expect(compositionChart.mock.calls.map(([props]) => ({
         label: props.label,
         unit: props.unit,
@@ -156,6 +157,7 @@ describe('UserDetailsCustomizationsSection', () => {
       expect(markup).toContain('id="customizations"');
       expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
       expect(markup).not.toContain('<table');
+      expect(markup).toContain('Totals and shares cover reported per-record top-five items only, not all activity.');
       expect(compositionChart).toHaveBeenCalledTimes(1);
       expect(compositionChart.mock.calls[0][0]).toMatchObject({
         label: 'Invocations by skill',

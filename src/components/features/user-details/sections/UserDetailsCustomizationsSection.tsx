@@ -196,6 +196,7 @@ function CustomizationInvocationCharts({ summaries }: { summaries: Customization
           <CompositionChartCard
             key={category}
             title={categoryLabels.title}
+            description="Totals and shares cover reported per-record top-five items only, not all activity."
             emptyState={emptyState}
             entries={entries ?? []}
             unit={categoryLabels.unit}
