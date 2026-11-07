@@ -179,16 +179,21 @@ describe('Users feature sections', () => {
     expect(within(table).queryByRole('columnheader', { name: /generations/i })).toBeNull();
     const [, tableBody] = within(table).getAllByRole('rowgroup');
     for (const chip of ['Cloud Agent', 'Code Review', 'Auto Mode']) {
-      expect(within(tableBody).getAllByText(chip).length).toBe(500);
+      expect(within(tableBody).getAllByText(chip).length).toBe(200);
     }
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
 
     const pagination = screen.getByRole('navigation', { name: 'Pagination' });
     expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('1');
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
 
-    expect(screen.getByText('Showing 501-501 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 201-400 of 501 users')).toBeTruthy();
     expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('2');
+    expect(within(tableBody).getAllByRole('row')).toHaveLength(200);
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
+    expect(screen.getByText('Showing 401-501 of 501 users')).toBeTruthy();
+    expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('3');
+    expect(within(tableBody).getAllByRole('row')).toHaveLength(101);
     expect(window.location.hash).toBe('');
 
     cleanup();
@@ -215,10 +220,10 @@ describe('Users feature sections', () => {
 
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['CLI']);
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['Chat']);
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
   });
 
   it('keeps controls and the single-page range inside the card without navigation', () => {

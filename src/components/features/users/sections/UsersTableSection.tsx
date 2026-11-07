@@ -29,7 +29,7 @@ interface UsersTableSectionProps {
 
 type SortField = 'user_login' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 
-const USERS_PER_PAGE = 500;
+const USERS_PER_PAGE = 200;
 
 const USER_FEATURE_LABELS: ReadonlyArray<{
   key: FeatureLabelKey;
