@@ -16,6 +16,7 @@ export interface ClientsReadModel {
 }
 
 export interface ClientVersionsReadModel {
+  reportingQuality: AggregatedMetrics['clients']['reportingQuality'];
   telemetryWarnings: AggregatedMetrics['clients']['telemetryWarnings'];
   pluginVersionData: AggregatedMetrics['clients']['pluginVersionData'];
   reportStartDay: string;
@@ -53,6 +54,7 @@ export function selectClientVersionsReadModel(
   metrics: AggregatedMetrics
 ): ClientVersionsReadModel {
   return {
+    reportingQuality: metrics.clients.reportingQuality,
     telemetryWarnings: metrics.clients.telemetryWarnings,
     pluginVersionData: metrics.clients.pluginVersionData,
     reportStartDay: metrics.overview.stats.reportStartDay,

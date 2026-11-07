@@ -54,6 +54,52 @@ describe('metricsWorker protocol', () => {
   });
 
   describe('parseAndAggregate', () => {
+    it('returns reporting quality through worker parsing without exposing new profile projections', async () => {
+      const { send, find } = await loadWorker();
+      await send({
+        type: 'parseAndAggregate',
+        id: 'quality',
+        files: [metricFile('quality.ndjson', {
+          user_id: 7,
+          day: '2026-11-02',
+          report_start_day: '2026-11-01',
+          report_end_day: '2026-11-03',
+          client_telemetry_present: false,
+          usage_metrics_requirements: { met: [], unmet: ['vscode/copilot-chat'], unknown: ['1.138.0:'] },
+        })],
+      });
+      const result = find('parseAndAggregateResult');
+      expect(result?.result.clients.reportingQuality).toMatchObject({
+        summary: { missingTelemetryUsers: 1, belowMinimumUsers: 1 },
+        components: [
+          { component: 'vscode/copilot-chat', unmetUsers: 1, unknownUsers: 0 },
+          { component: '1.138.0:', unmetUsers: 0, unknownUsers: 1 },
+        ],
+        affectedUsers: [{ userId: 7, missingTelemetryDays: 1, belowMinimumDays: 1 }],
+      });
+      expect(result?.result.clients.reportingQuality.daily.map(day => day.missingTelemetryUsers)).toEqual([null, 1, null]);
+      await send({ type: 'computeUserDetails', id: 'quality-details', userId: 7 });
+      expect(find('userDetailsResult')?.result).not.toHaveProperty('telemetryWarnings');
+      expect(find('userDetailsResult')?.result).toMatchObject({
+        reportingQuality: {
+          uploadedDays: 1, telemetryReportedDays: 1, serverOnlyDays: 1,
+          daily: [{
+            telemetryStatus: 'missing',
+            requirementCounts: { met: 0, unmet: 1, unknown: 1 },
+            requirements: [
+              { component: 'vscode/copilot-chat', status: 'unmet' },
+              { component: '1.138.0:', status: 'unknown' },
+            ],
+          }],
+        },
+        days: [{
+          client_telemetry_present: false,
+          usage_metrics_requirements: { met: [], unmet: ['vscode/copilot-chat'], unknown: ['1.138.0:'] },
+        }],
+      });
+      expect(find('error')).toBeUndefined();
+    });
+
     it('returns client traffic through aggregation and on-demand detail messages', async () => {
       const { send, find } = await loadWorker();
       await send({

@@ -1,6 +1,7 @@
 'use client';
 
 import type { UserDayData } from '../../../../types/metrics';
+import type { UserReportingQuality } from '../../../../types/reportingQuality';
 import type { ActivityCalendarData } from '../../../../domain/calculators/activityCalendarCalculator';
 import ActivityCalendar from '../day-details/ActivityCalendar';
 import FeatureAdoptionRadarChart from '../charts/FeatureAdoptionRadarChart';
@@ -11,6 +12,7 @@ interface UserDetailsOverviewSectionProps {
   reportStartDay: string;
   reportEndDay: string;
   activityCalendar: ActivityCalendarData;
+  reportingQuality: UserReportingQuality;
   onDayClick: (date: string, dayData?: UserDayData) => void;
   agentInteractions: number;
   planInteractions: number;
@@ -26,6 +28,7 @@ export default function UserDetailsOverviewSection({
   reportStartDay,
   reportEndDay,
   activityCalendar,
+  reportingQuality,
   onDayClick,
   agentInteractions,
   planInteractions,
@@ -43,6 +46,7 @@ export default function UserDetailsOverviewSection({
           reportEndDay={reportEndDay}
           title="Activity Calendar"
           activity={activityCalendar}
+          reportingQuality={reportingQuality}
           onDayClick={onDayClick}
         />
       </div>

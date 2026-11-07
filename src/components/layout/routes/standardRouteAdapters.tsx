@@ -27,7 +27,7 @@ import ExecutiveSummaryView from '../../ExecutiveSummaryView';
 import ModelDetailsView from '../../ModelDetailsView';
 import { AiAdoptionPhaseView } from '../../features/ai-adoption-phases';
 import { CopilotAdoptionView } from '../../features/adoption';
-import { ClientVersionsView } from '../../features/client-versions';
+import { FleetHealthView } from '../../features/client-versions';
 import { CopilotImpactView } from '../../features/impact';
 import { LanguagesView } from '../../features/languages';
 import { OverviewDashboard } from '../../features/overview';
@@ -84,10 +84,12 @@ export const AboutRouteAdapter: StandardRouteAdapter = () => <AboutView />;
 
 export function ClientVersionsRouteAdapter({
   aggregatedMetrics,
+  onUserSelect,
 }: StandardRouteContext) {
   return (
-    <ClientVersionsView
+    <FleetHealthView
       model={selectClientVersionsReadModel(aggregatedMetrics)}
+      onUserClick={onUserSelect}
     />
   );
 }

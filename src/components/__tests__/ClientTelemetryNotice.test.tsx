@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { makeAggregatedMetrics } from '../../__tests__/factories/aggregatedMetrics';
 import {
   CLIENT_TELEMETRY_ANNOUNCEMENT_URL,
@@ -8,8 +8,7 @@ import {
 } from '../../domain/calculators/clientTelemetryCalculator';
 import { selectClientVersionsReadModel } from '../../read-models/clients';
 import ClientTelemetryNotice from '../ClientTelemetryNotice';
-import ClientVersionsView from '../features/client-versions/ClientVersionsView';
-import { CLIENT_VERSIONS_SECTIONS } from '../layout/contextSections';
+import FleetHealthView from '../features/client-versions/FleetHealthView';
 
 function makeWarning(overrides: Partial<ClientTelemetryWarning> = {}): ClientTelemetryWarning {
   return {
@@ -41,15 +40,6 @@ describe('client telemetry notice', () => {
     expect(markup).toContain('rel="noopener noreferrer"');
   });
 
-  it('omits user counts when requested', () => {
-    const markup = renderToStaticMarkup(
-      <ClientTelemetryNotice warnings={[makeWarning({ userCount: 3 })]} showUserCounts={false} />,
-    );
-
-    expect(markup).toContain('VS Code IDE 1.138.0');
-    expect(markup).not.toContain('users)');
-  });
-
   it('renders nothing when there are no detected risks', () => {
     expect(renderToStaticMarkup(<ClientTelemetryNotice warnings={[]} />)).toBe('');
   });
@@ -73,15 +63,40 @@ describe('client telemetry notice', () => {
     }
   });
 
-  it('is placed above the Client Versions dashboard', () => {
+  it('keeps October inference separate as disclosed historical guidance for older exports', () => {
     const metrics = makeAggregatedMetrics({ clients: { telemetryWarnings: [makeWarning()] } });
     const markup = renderToStaticMarkup(
-      <ClientVersionsView model={selectClientVersionsReadModel(metrics)} />,
+      <FleetHealthView model={selectClientVersionsReadModel(metrics)} onUserClick={vi.fn()} />,
     );
 
-    expect(markup.indexOf(noticeLabel)).toBeGreaterThanOrEqual(0);
-    expect(markup.indexOf(noticeLabel)).toBeLessThan(
-      markup.indexOf(`id="${CLIENT_VERSIONS_SECTIONS[0].id}"`),
+    expect(markup).not.toContain(noticeLabel);
+    expect(markup).not.toContain('client upgrades may be needed');
+    expect(markup).toContain('Historical October guidance for older exports');
+    expect(markup).toContain('October version inference, not API-confirmed reporting issues');
+    expect(markup.indexOf('aria-label="Historical client version guidance"')).toBeGreaterThan(markup.indexOf('id="client-version-health"'));
+  });
+
+  it('does not show October upgrade inference when API signals are reported', () => {
+    const defaults = makeAggregatedMetrics();
+    const metrics = makeAggregatedMetrics({
+      clients: {
+        telemetryWarnings: [makeWarning()],
+        reportingQuality: {
+          ...defaults.clients.reportingQuality,
+          summary: {
+            recordCount: 1, telemetryReportedRecords: 1, requirementsReportedRecords: 0,
+            missingTelemetryUsers: 1, belowMinimumUsers: null,
+          },
+        },
+      },
+    });
+    const markup = renderToStaticMarkup(
+      <FleetHealthView model={selectClientVersionsReadModel(metrics)} onUserClick={vi.fn()} />,
     );
+    expect(markup).toContain('Users missing client telemetry');
+    expect(markup).not.toContain('Historical October guidance');
+    expect(markup).not.toContain('Update VS Code to');
+    expect(markup).not.toContain(noticeLabel);
+    expect(markup).toContain('An outdated version is not proof');
   });
 });

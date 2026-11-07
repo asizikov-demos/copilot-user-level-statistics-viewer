@@ -54,6 +54,10 @@ export const AI_ADOPTION_PHASE_SECTIONS: ContextSection[] = [
 ];
 
 export const CLIENT_VERSIONS_SECTIONS: ContextSection[] = [
+  { id: 'client-reporting-quality', label: 'Reporting Quality' },
+  { id: 'client-reporting-trend', label: 'Reporting Trend' },
+  { id: 'client-requirements', label: 'Requirements' },
+  { id: 'client-affected-users', label: 'Affected Users' },
   { id: 'client-version-health', label: 'Fleet Health' },
   { id: 'client-version-drift', label: 'Version Drift' },
   { id: 'client-version-methodology', label: 'Evaluation Method' },

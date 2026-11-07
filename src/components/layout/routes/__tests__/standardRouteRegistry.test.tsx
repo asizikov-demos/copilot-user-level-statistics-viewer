@@ -98,7 +98,7 @@ vi.mock('../../../features/adoption', () => ({
   CopilotAdoptionView: mocks.stubView('CopilotAdoptionView'),
 }));
 vi.mock('../../../features/client-versions', () => ({
-  ClientVersionsView: mocks.stubView('ClientVersionsView'),
+  FleetHealthView: mocks.stubView('FleetHealthView'),
 }));
 vi.mock('../../../features/impact', () => ({
   CopilotImpactView: mocks.stubView('CopilotImpactView'),
@@ -156,8 +156,9 @@ const ADAPTER_CASES: AdapterCase[] = [
   { mode: VIEW_MODES.ABOUT, view: 'AboutView' },
   {
     mode: VIEW_MODES.CLIENT_VERSIONS,
-    view: 'ClientVersionsView',
+    view: 'FleetHealthView',
     selector: 'selectClientVersionsReadModel',
+    extraProps: ({ onUserSelect }) => ({ onUserClick: onUserSelect }),
   },
   {
     mode: VIEW_MODES.USERS,

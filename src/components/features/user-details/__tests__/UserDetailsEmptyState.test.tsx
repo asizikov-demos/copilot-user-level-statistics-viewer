@@ -3,6 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { NavigationProvider } from '../../../../state/NavigationContext';
 import { makeUserSummary } from '../../../../__tests__/factories/aggregatedMetrics';
+import { makeMetric } from '../../../../__tests__/factories/metrics';
+import { aggregateMetrics } from '../../../../domain/metricsAggregator';
+import { computeSingleUserDetailedMetrics } from '../../../../domain/calculators/userDetailCalculator';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import type { UserSummary } from '../../../../types/metrics';
 import UserDetailsView from '../UserDetailsView';
@@ -41,6 +44,22 @@ function render(details: Partial<UserDetailedMetrics> = {}, summary: Partial<Use
 }
 
 describe('user profile empty state', () => {
+  it('keeps ordinary plugin-version reporting without showing historical upgrade inference', () => {
+    const { userDetailAccumulator } = aggregateMetrics([makeMetric({
+      totals_by_ide: [{
+        ...metrics,
+        ide: 'vscode',
+        last_known_ide_version: { ide_version: '1.138.0', sampled_at: '2026-10-07T00:00:00Z' },
+        last_known_plugin_version: { plugin: 'copilot', plugin_version: '0.37.0', sampled_at: '2026-10-07T00:00:00Z' },
+      }],
+    })]);
+    const details = computeSingleUserDetailedMetrics(userDetailAccumulator, 1)!;
+    const markup = render(details);
+    expect(markup).not.toContain('Copilot agent telemetry: client upgrades may be needed');
+    expect(markup).not.toContain('Copilot client telemetry warning');
+    expect(markup).toContain('0.37.0');
+  });
+
   it('shows when all detail aggregates are empty', () => {
     expect(render()).toContain(EMPTY_STATE_TEST_ID);
   });

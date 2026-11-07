@@ -58,6 +58,12 @@ export interface LocalByokUsageTotals extends CopilotClientUsageTotals {
 }
 
 export interface CopilotMetrics extends CliCustomizationFields {
+  client_telemetry_present?: boolean | null;
+  usage_metrics_requirements?: {
+    met: string[];
+    unmet: string[];
+    unknown: string[];
+  } | null;
   totals_by_3rd_party_agent?: Array<{
     agent_id: string;
     agent_name: string;
@@ -331,7 +337,7 @@ export interface ModelBreakdownData {
 // Per-user detailed aggregated types
 // ==========================================
 
-export interface UserDayData {
+export interface UserDayData extends Pick<CopilotMetrics, 'client_telemetry_present' | 'usage_metrics_requirements'> {
   totals_by_client?: ClientUsageTotals[] | null;
   day: string;
   cliCustomizations?: CliCustomizationDaySummary[];
@@ -371,10 +377,6 @@ export interface UserDayData {
     loc_deleted_sum: number;
     loc_suggested_to_add_sum: number;
     loc_suggested_to_delete_sum: number;
-    last_known_ide_version?: {
-      sampled_at: string;
-      ide_version: string;
-    };
     last_known_plugin_version?: {
       sampled_at: string;
       plugin: string;

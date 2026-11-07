@@ -59,20 +59,25 @@ describe('userDetailCalculator IDE and client aggregates', () => {
     expect(details.days[0].totals_by_ide.reduce((sum, ide) => sum + (ide.assumed_user_initiated_interaction_count ?? 0), 0)).toBe(44);
   });
 
-  it('computes client telemetry warnings per user, keeping historical risk after an upgrade', () => {
+  it('retains plugin versions without collecting historical IDE telemetry risks for profiles', () => {
     const ideVersion = (ide_version: string) => ({ ide_version, sampled_at: '2026-10-07T00:00:00Z' });
     const acc = accumulateUserDays([
-      { user_id: 1, totals_by_ide: [ideTotals('vscode', { last_known_ide_version: ideVersion('1.138.0') })] },
-      { user_id: 1, totals_by_ide: [ideTotals('vscode', { last_known_ide_version: ideVersion('1.139.0') })] },
-      { user_id: 2, totals_by_ide: [ideTotals('vscode', { last_known_ide_version: ideVersion('1.138.0') })] },
-      { user_id: 3, totals_by_ide: [ideTotals('vscode', { last_known_ide_version: ideVersion('1.139.0') })] },
+      { totals_by_ide: [ideTotals('vscode', {
+        last_known_ide_version: ideVersion('1.138.0'),
+        last_known_plugin_version: { plugin: 'copilot', plugin_version: '1.5.0', sampled_at: '2026-10-07T00:00:00Z' },
+      })] },
+      { totals_by_ide: [ideTotals('vscode', {
+        last_known_ide_version: ideVersion('1.139.0'),
+        last_known_plugin_version: { plugin: 'copilot', plugin_version: '1.6.0', sampled_at: '2026-10-08T00:00:00Z' },
+      })] },
     ]);
     const details = computeSingleUserDetailedMetrics(acc, 1)!;
-    expect(details.telemetryWarnings).toEqual([
-      expect.objectContaining({ ide: 'vscode', version: '1.138.0', userCount: 1 }),
-    ]);
-    expect(details.days[0].totals_by_ide[0].last_known_ide_version).toEqual(ideVersion('1.138.0'));
-    expect(computeSingleUserDetailedMetrics(acc, 3)!.telemetryWarnings).toEqual([]);
+    expect(acc.users.get(1)).not.toHaveProperty('telemetry');
+    expect(details).not.toHaveProperty('telemetryWarnings');
+    for (const day of details.days) {
+      expect(day.totals_by_ide[0]).not.toHaveProperty('last_known_ide_version');
+    }
+    expect(details.pluginVersions.map(version => version.plugin_version)).toEqual(['1.6.0', '1.5.0']);
   });
 
   it('computes agent activity from the selected user\'s client totals only, ignoring flags and feature counts', () => {

@@ -5,6 +5,12 @@ import type { DailyCliTokenData } from '../domain/calculators/metricCalculators'
 import { mapReportRangeData } from '../utils/timeSeries';
 import { generateDateRange } from '../utils/formatters';
 import { normalizeIDEKey } from '../utils/ideMetadata';
+import type { DayReportingQuality } from '../types/reportingQuality';
+
+export function selectDayReportingQuality(userDetails: UserDetailedMetrics, day: string): DayReportingQuality {
+  return userDetails.reportingQuality.daily.find(entry => entry.day === day)
+    ?? { day, telemetryStatus: 'unreported', requirements: null, requirementCounts: null };
+}
 
 export interface UserInteractionRank {
   rank: number;
@@ -37,7 +43,6 @@ export interface UserDetailsViewModel {
 }
 
 export interface UserDetailsHeaderReadModel {
-  telemetryWarnings: UserDetailedMetrics['telemetryWarnings'];
   daysActive: number;
   reportDays: number;
   activeDaysPercent: number;
@@ -193,7 +198,6 @@ export function selectUserDetailsHeaderReadModel(
 
   return {
     daysActive: userSummary.days_active,
-    telemetryWarnings: userDetails.telemetryWarnings,
     reportDays,
     activeDaysPercent: reportDays > 0 ? Math.round((userSummary.days_active / reportDays) * 100) : 0,
     interactions: userSummary.total_user_initiated_interactions,

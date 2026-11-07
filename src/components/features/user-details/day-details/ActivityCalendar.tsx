@@ -1,8 +1,13 @@
 'use client';
 
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { AnchoredOverlay } from '@primer/react';
+import { ServerIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
+import type { UserReportingQuality } from '../../../../types/reportingQuality';
 import type { ActivityCalendarData } from '../../../../domain/calculators/activityCalendarCalculator';
 import { formatShortDate } from '../../../../utils/formatters';
+import CalendarReportingCard from './CalendarReportingCard';
 
 interface ActivityCalendarProps {
   days: UserDayData[];
@@ -10,6 +15,7 @@ interface ActivityCalendarProps {
   reportEndDay: string;
   title?: string;
   activity: ActivityCalendarData;
+  reportingQuality?: UserReportingQuality;
   onDayClick: (date: string, dayData?: UserDayData) => void;
 }
 
@@ -32,7 +38,31 @@ const ACTIVITY_LEGEND_CLASSES: readonly string[] = [
   'bg-[var(--contribution-default-bgColor-4)] border-[var(--contribution-default-borderColor-4)]',
 ];
 
-export default function ActivityCalendar({ days, activity, reportStartDay, reportEndDay, title = 'Activity Calendar', onDayClick }: ActivityCalendarProps) {
+export default function ActivityCalendar({ days, activity, reportingQuality, reportStartDay, reportEndDay, title = 'Activity Calendar', onDayClick }: ActivityCalendarProps) {
+  const [previewDay, setPreviewDay] = useState<string | null>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cardId = useId();
+  const qualityMap = useMemo(() => new Map(reportingQuality?.daily.map(day => [day.day, day])), [reportingQuality]);
+  const cancelClose = () => {
+    if (closeTimer.current != null) clearTimeout(closeTimer.current);
+  };
+  const closePreview = () => {
+    cancelClose();
+    setPreviewDay(null);
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    if (document.activeElement !== anchorRef.current) closeTimer.current = setTimeout(() => setPreviewDay(null), 150);
+  };
+  const openPreview = (day: string, anchor: HTMLElement) => {
+    cancelClose();
+    anchorRef.current = anchor;
+    setPreviewDay(day);
+  };
+  useEffect(() => () => {
+    if (closeTimer.current != null) clearTimeout(closeTimer.current);
+  }, []);
   const startDate = new Date(reportStartDay);
   const endDate = new Date(reportEndDay);
 
@@ -120,6 +150,7 @@ export default function ActivityCalendar({ days, activity, reportStartDay, repor
 
   const handleDayClick = (date: Date) => {
     if (date.getTime() === 0) return; // Don't handle placeholder dates
+    closePreview();
     
     const dateKey = formatDateKey(date);
     const dayMetrics = metricsMap.get(dateKey);
@@ -155,13 +186,14 @@ export default function ActivityCalendar({ days, activity, reportStartDay, repor
                 const activityLevel = getActivityLevel(dateKey);
                 const isPlaceholder = date.getTime() === 0;
                 const hasData = metricsMap.has(dateKey);
+                const serverOnly = qualityMap.get(dateKey)?.telemetryStatus === 'missing';
                 const isMonthStart = !isPlaceholder && hasMultipleMonths && date.getUTCDate() === 1;
                 
                 return (
                   <div
                     key={`${weekIndex}-${dayIndex}`}
                     className={`
-                      h-8 text-xs flex items-center justify-center border-r border-b border-default
+                      h-8 text-xs flex items-center justify-center border-r border-b border-default relative
                       focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]
                       ${isMonthStart ? 'border-l-4 border-l-[var(--fgColor-default)] font-semibold' : ''}
                       ${isPlaceholder 
@@ -175,23 +207,29 @@ export default function ActivityCalendar({ days, activity, reportStartDay, repor
                     role={isPlaceholder ? undefined : 'button'}
                     tabIndex={isPlaceholder ? undefined : 0}
                     aria-label={isPlaceholder ? undefined : formatShortDate(dateKey)}
+                    aria-describedby={previewDay === dateKey ? cardId : undefined}
+                    data-day={isPlaceholder ? undefined : dateKey}
+                    onMouseEnter={isPlaceholder ? undefined : event => openPreview(dateKey, event.currentTarget)}
+                    onMouseLeave={isPlaceholder ? undefined : scheduleClose}
+                    onFocus={isPlaceholder ? undefined : event => openPreview(dateKey, event.currentTarget)}
+                    onBlur={isPlaceholder ? undefined : closePreview}
                     onKeyDown={isPlaceholder ? undefined : (event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
                         handleDayClick(date);
+                      } else if (event.key === 'Escape') {
+                        closePreview();
                       }
                     }}
-                    title={
-                      !isPlaceholder && hasData 
-                        ? `${formatShortDate(formatDateKey(date))} - Click to view details`
-                        : !isPlaceholder 
-                        ? `${formatShortDate(formatDateKey(date))} - No activity`
-                        : undefined
-                    }
                   >
                     {isMonthStart
                       ? `${date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })} 1`
                       : !isPlaceholder && date.getUTCDate()}
+                    {serverOnly && (
+                      <span className="pointer-events-none absolute right-1 top-1 flex" aria-hidden="true" data-testid="server-only-day">
+                        <ServerIcon size={10} />
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -209,7 +247,40 @@ export default function ActivityCalendar({ days, activity, reportStartDay, repor
           </div>
           <span>More activity</span>
         </div>
+        {reportingQuality && (
+          <div className="space-y-1 text-xs text-muted">
+            {reportingQuality.telemetryReportedDays > 0 ? (
+              <p className="flex items-center gap-1">
+                <ServerIcon size={12} aria-hidden="true" />
+                Server-side telemetry only · {reportingQuality.serverOnlyDays} {reportingQuality.serverOnlyDays === 1 ? 'day' : 'days'}
+              </p>
+            ) : <p>Telemetry status was not reported for this upload.</p>}
+            <p>Status available for {reportingQuality.telemetryReportedDays} of {reportingQuality.uploadedDays} uploaded days. Unreported dates are not classified as healthy.</p>
+          </div>
+        )}
       </div>
+      {previewDay && <AnchoredOverlay
+        key={previewDay}
+        renderAnchor={null}
+        anchorRef={anchorRef}
+        open={previewDay != null}
+        onClose={closePreview}
+        width="medium"
+        side="outside-bottom"
+        align="center"
+        focusTrapSettings={{ disabled: true }}
+        focusZoneSettings={{ disabled: true }}
+        overlayProps={{
+          id: cardId,
+          role: 'tooltip',
+          preventFocusOnOpen: true,
+          preventFocusOnClose: true,
+          onMouseEnter: cancelClose,
+          onMouseLeave: scheduleClose,
+        }}
+      >
+        <CalendarReportingCard day={previewDay} quality={qualityMap.get(previewDay)} />
+      </AnchoredOverlay>}
     </div>
   );
 }

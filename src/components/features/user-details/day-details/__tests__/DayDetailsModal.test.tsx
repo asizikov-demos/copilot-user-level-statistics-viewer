@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import DayDetailsModal from '../DayDetailsModal';
+import { computeUserReportingQuality } from '../../../../../domain/calculators/reportingQualityCalculator';
 import {
   makeCustomizationDaySummary,
   makeCustomizationItem,
@@ -53,6 +54,7 @@ function renderDay(dayMetrics?: UserDayData, extraProps: { userLogin?: string } 
       onClose={vi.fn()}
       date={dayMetrics?.day ?? '2024-01-15'}
       dayMetrics={dayMetrics}
+      reportingQuality={dayMetrics ? computeUserReportingQuality([dayMetrics]).daily[0] : undefined}
       onNavigateDay={vi.fn()}
       canNavigateNextDay
       canNavigatePrevDay
@@ -113,6 +115,60 @@ describe('DayDetailsModal', () => {
     cleanup();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  describe('day-local reporting quality', () => {
+    it('reports missing telemetry independently of met/unmet/unknown requirements, preserving component identities', () => {
+      renderDay(makeUserDay({
+        client_telemetry_present: false,
+        usage_metrics_requirements: {
+          met: ['vscode'], unmet: ['vscode/copilot-chat'], unknown: ['1.138.0:'],
+        },
+      }));
+      const quality = within(screen.getByRole('region', { name: 'Day reporting quality' }));
+      expect(quality.getByText('Missing')).toBeTruthy();
+      expect(quality.getByText(/Check IDE telemetry settings, connectivity, and any reported version failures/)).toBeTruthy();
+      expect(quality.getByRole('cell', { name: 'Meets minimum' })).toBeTruthy();
+      expect(quality.getByRole('cell', { name: 'Below minimum' })).toBeTruthy();
+      expect(quality.getByRole('cell', { name: 'Unknown' })).toBeTruthy();
+      expect(quality.getByText('VS Code / copilot-chat')).toBeTruthy();
+      expect(quality.getByText('vscode/copilot-chat')).toBeTruthy();
+      expect(quality.getByText('1.138.0:')).toBeTruthy();
+      expect(quality.queryByText(/October|upgrade|uploaded period/i)).toBeNull();
+    });
+
+    it.each([undefined, null])('shows compact unavailable states for legacy/null input: %s', value => {
+      renderDay(makeUserDay({ client_telemetry_present: value, usage_metrics_requirements: value }));
+      const quality = within(screen.getByRole('region', { name: 'Day reporting quality' }));
+      expect(quality.getByText('Not reported')).toBeTruthy();
+      expect(quality.getByText('Version requirements were not reported for this day.')).toBeTruthy();
+      expect(quality.queryByRole('table')).toBeNull();
+      expect(quality.queryByText('Meets minimum')).toBeNull();
+    });
+
+    it('keeps received telemetry independent of unmet requirements and distinguishes reported empty arrays', () => {
+      const first = makeUserDay({ client_telemetry_present: true, usage_metrics_requirements: { met: [], unmet: ['goland/copilot-intellij'], unknown: [] } });
+      const second = makeUserDay({ day: '2024-01-16', client_telemetry_present: null, usage_metrics_requirements: { met: [], unmet: [], unknown: [] } });
+      const modal = (day: UserDayData, userLogin: string) => withTheme(
+        <DayDetailsModal isOpen onClose={vi.fn()} date={day.day} dayMetrics={day} userLogin={userLogin}
+          reportingQuality={computeUserReportingQuality([day]).daily[0]} />,
+      );
+      const { rerender } = render(modal(first, 'first-user'));
+      let quality = within(screen.getByRole('region', { name: 'Day reporting quality' }));
+      expect(quality.getByText('Received')).toBeTruthy();
+      expect(quality.getByText('Below minimum')).toBeTruthy();
+      expect(quality.getByText('GoLand / copilot-intellij')).toBeTruthy();
+      rerender(modal(second, 'first-user'));
+      quality = within(screen.getByRole('region', { name: 'Day reporting quality' }));
+      expect(quality.getByText('Not reported')).toBeTruthy();
+      expect(quality.getByText(/No components were listed in the reported requirements/)).toBeTruthy();
+      expect(quality.queryByRole('table')).toBeNull();
+      rerender(modal(makeUserDay({ day: second.day }), 'second-user'));
+      quality = within(screen.getByRole('region', { name: 'Day reporting quality' }));
+      expect(quality.getByText('Version requirements were not reported for this day.')).toBeTruthy();
+      expect(quality.queryByText(/No components were listed/)).toBeNull();
+      expect(quality.queryByText('Below minimum')).toBeNull();
+    });
   });
 
   describe('daily client and model measures', () => {
@@ -387,7 +443,7 @@ describe('DayDetailsModal', () => {
       expect(markup).toContain('>2</td>');
       expect(tableMarkup).not.toContain('MCP servers');
       expect(tableMarkup).not.toContain('Slash commands');
-      expect(markup).not.toContain('Not reported');
+      expect(tableMarkup).not.toContain('Not reported');
       expect(markup).not.toContain('aria-expanded');
     });
   });
@@ -415,7 +471,7 @@ describe('DayDetailsModal', () => {
       expect(markup).toContain('>0<');
       expect(markup).not.toContain('Used VS Code Agents');
       expect(markup).not.toContain('User messages');
-      expect(markup).not.toContain('Not reported');
+      expect(screen.getByText('VS Code Agents').closest('div')?.textContent).not.toContain('Not reported');
     });
   });
 
