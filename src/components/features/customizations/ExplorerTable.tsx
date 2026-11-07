@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, FormControl, Pagination, Select, TextInput } from '@primer/react';
+import { Button, Checkbox, FormControl, Select, TextInput } from '@primer/react';
 import { FilterIcon, SearchIcon } from '@primer/octicons-react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../charts/utils/chartSetup';
@@ -10,6 +10,8 @@ import { createBarDataset } from '../../charts/utils/chartStyles';
 import { formatShortDate } from '../../../utils/formatters';
 import { useSortableTable } from '../../../hooks/useSortableTable';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
+import TableCard from '../../ui/TableCard';
+import TablePagination from '../../ui/TablePagination';
 import EmptyState from '../../ui/EmptyState';
 import type { CustomizationsReadModel } from '../../../read-models/customizations';
 import { CUSTOMIZATION_TYPES, type CustomizationItemStats, type CustomizationType } from '../../../types/customizationsOverview';
@@ -88,8 +90,6 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   const { sortField, sortDirection, sortedItems, handleSort } = useSortableTable<ExplorerRow, SortField>(filtered, 'totalEvents', 'desc');
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
   const paged = useMemo(() => sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sortedItems, page]);
-  const pageStart = sortedItems.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const pageEnd = Math.min(page * PAGE_SIZE, sortedItems.length);
   const rowKey = (r: ExplorerRow) => `${r.category}:${r.name}`;
 
   useEffect(() => { setPage(1); setExpanded(null); }, [query, category, includeUnnamed, sortField, sortDirection, model]);
@@ -137,31 +137,44 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   ];
 
   return (
-    <section aria-labelledby="explorer-heading" className="space-y-4 border-t border-default pt-6">
-      <div>
-        <h2 id="explorer-heading" className="m-0 text-xl font-semibold text-default">Explorer</h2>
-        <p className="mt-1 text-sm text-muted">Every reported customization. Click a row for its daily activity and heaviest users.</p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.3fr)_auto_auto] md:items-end">
-        <FormControl id="customizationSearch">
-          <FormControl.Label>Search by name</FormControl.Label>
-          <TextInput block type="search" leadingVisual={SearchIcon} value={query} onChange={e => setQuery(e.target.value)} placeholder="Start typing a name..." />
-        </FormControl>
-        <FormControl id="customizationType">
-          <FormControl.Label>Type</FormControl.Label>
-          <Select block value={category} onChange={e => setCategory(e.target.value as CustomizationType | 'all')}>
-            <Select.Option value="all">All types</Select.Option>
-            {CUSTOMIZATION_TYPES.map(c => <Select.Option key={c} value={c}>{CUSTOMIZATION_META[c].title}</Select.Option>)}
-          </Select>
-        </FormControl>
-        <FormControl id="includeUnnamed" className="pb-2">
-          <Checkbox checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />
-          <FormControl.Label>Include unnamed buckets</FormControl.Label>
-        </FormControl>
-        <Button onClick={() => { setQuery(''); setCategory('all'); setIncludeUnnamed(false); }} disabled={!hasFilters}>Clear</Button>
-      </div>
-      <p className="m-0 text-sm text-muted">Showing {sortedItems.length.toLocaleString()} of {all.filter(r => includeUnnamed || !r.unnamed).length.toLocaleString()} items</p>
-      <div className="overflow-x-auto border border-default bg-default">
+    <TableCard
+      title="Explorer"
+      headingAs="h2"
+      description="Every reported customization. Click a row for its daily activity and heaviest users."
+      toolbar={
+        <>
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.3fr)_auto_auto] md:items-end">
+            <FormControl id="customizationSearch">
+              <FormControl.Label>Search by name</FormControl.Label>
+              <TextInput block type="search" leadingVisual={SearchIcon} value={query} onChange={e => setQuery(e.target.value)} placeholder="Start typing a name..." />
+            </FormControl>
+            <FormControl id="customizationType">
+              <FormControl.Label>Type</FormControl.Label>
+              <Select block value={category} onChange={e => setCategory(e.target.value as CustomizationType | 'all')}>
+                <Select.Option value="all">All types</Select.Option>
+                {CUSTOMIZATION_TYPES.map(c => <Select.Option key={c} value={c}>{CUSTOMIZATION_META[c].title}</Select.Option>)}
+              </Select>
+            </FormControl>
+            <FormControl id="includeUnnamed" className="pb-2">
+              <Checkbox checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />
+              <FormControl.Label>Include unnamed buckets</FormControl.Label>
+            </FormControl>
+            <Button onClick={() => { setQuery(''); setCategory('all'); setIncludeUnnamed(false); }} disabled={!hasFilters}>Clear</Button>
+          </div>
+          <p className="m-0 text-sm text-muted">Showing {sortedItems.length.toLocaleString()} of {all.filter(r => includeUnnamed || !r.unnamed).length.toLocaleString()} items</p>
+        </>
+      }
+      footer={sortedItems.length > 0 && (
+        <TablePagination
+          itemCount={sortedItems.length}
+          currentPage={page}
+          itemLabel="items"
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+        />
+      )}
+    >
+      <div className="overflow-x-auto">
         <MetricsTable<ExplorerRow>
           data={paged}
           columns={columns}
@@ -173,17 +186,9 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
           theadClassName="bg-muted"
           onRowClick={r => setExpanded(prev => (prev === rowKey(r) ? null : rowKey(r)))}
           renderExpandedRow={r => (expanded === rowKey(r) ? <ItemDetails row={r} days={model.dates} /> : null)}
+          emptyState={<EmptyState icon={FilterIcon} heading="No items match the filters" description="Try a different search or clear the filters." />}
         />
       </div>
-      {sortedItems.length > PAGE_SIZE && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="m-0 text-sm text-muted">Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedItems.length.toLocaleString()} items</p>
-          <Pagination pageCount={totalPages} currentPage={page} onPageChange={(e, p) => { e.preventDefault(); setPage(p); }} />
-        </div>
-      )}
-      {sortedItems.length === 0 && (
-        <EmptyState icon={FilterIcon} heading="No items match the filters" description="Try a different search or clear the filters." />
-      )}
-    </section>
+    </TableCard>
   );
 }

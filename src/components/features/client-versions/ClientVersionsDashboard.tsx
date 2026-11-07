@@ -7,6 +7,7 @@ import type { PluginVersion } from '../../../hooks/usePluginVersions';
 import { getIDEIcon } from '../../icons/IDEIcons';
 import EmptyState from '../../ui/EmptyState';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
+import TableCard from '../../ui/TableCard';
 import TablePagination, { TABLE_PAGE_SIZE } from '../../ui/TablePagination';
 import type {
   ClientPlatformHealth,
@@ -320,52 +321,56 @@ function VersionDriftTable({
   ];
 
   return (
-    <section id={sectionId} className="scroll-mt-28">
-      <div className="mb-3">
-        <h2 className="text-base font-semibold text-default">Version drift</h2>
-        <p className="mt-1 text-sm text-muted">
-          Outdated version cohorts, ordered by the number of affected users.
-        </p>
-      </div>
+    <TableCard
+      id={sectionId}
+      className="scroll-mt-28"
+      title="Version drift"
+      headingAs="h2"
+      description={<p>Outdated version cohorts, ordered by the number of affected users.</p>}
+      footer={rows.length > 0 ? (
+        <TablePagination itemCount={rows.length} currentPage={currentPage} itemLabel="outdated versions" onPageChange={setPage} />
+      ) : null}
+    >
       {!hasVersionData ? (
-        <EmptyState
-          border
-          heading="No version cohorts available"
-          description="This report does not include JetBrains or VS Code version data."
-        />
-      ) : rows.length > 0 ? (
-        <div className="space-y-4">
-          <MetricsTable
-            data={pagedRows}
-            columns={columns}
-            tableClassName="min-w-[900px] w-full text-left text-sm"
-            tableContainerClassName="overflow-x-auto rounded-md border border-default bg-default"
-            theadClassName="bg-muted text-xs text-muted"
-            rowClassName={() => 'hover:bg-muted'}
-            getRowKey={(row) => `${row.scope}-${row.version}`}
+        <div className="px-6 py-4">
+          <EmptyState
+            heading="No version cohorts available"
+            description="This report does not include JetBrains or VS Code version data."
           />
-          <TablePagination itemCount={rows.length} currentPage={currentPage} itemLabel="outdated versions" onPageChange={setPage} />
         </div>
-      ) : unclassifiedPlatforms.length > 0 ? (
-        <EmptyState
-          border
-          heading="No outdated versions identified"
-          description={
-            <>
-              Classification is unavailable for {unclassifiedPlatforms.map(({ platform }) => platform).join(' and ')};
-              no healthy status is inferred without release metadata.
-            </>
-          }
+      ) : rows.length > 0 ? (
+        <MetricsTable
+          data={pagedRows}
+          columns={columns}
+          tableClassName="min-w-[900px] w-full text-left text-sm"
+          tableContainerClassName="overflow-x-auto"
+          theadClassName="bg-muted text-xs text-muted"
+          rowClassName={() => 'hover:bg-muted'}
+          getRowKey={(row) => `${row.scope}-${row.version}`}
         />
+      ) : unclassifiedPlatforms.length > 0 ? (
+        <div className="px-6 py-4">
+          <EmptyState
+            heading="No outdated versions identified"
+            description={
+              <>
+                Classification is unavailable for {unclassifiedPlatforms.map(({ platform }) => platform).join(' and ')};
+                no healthy status is inferred without release metadata.
+              </>
+            }
+          />
+        </div>
       ) : (
-        <Banner variant="success">
-          <Banner.Title as="h3">No outdated versions detected</Banner.Title>
-          <Banner.Description>
-            All clients with available release metadata are within their current version window.
-          </Banner.Description>
-        </Banner>
+        <div className="px-6 py-4">
+          <Banner variant="success">
+            <Banner.Title as="h3">No outdated versions detected</Banner.Title>
+            <Banner.Description>
+              All clients with available release metadata are within their current version window.
+            </Banner.Description>
+          </Banner>
+        </div>
       )}
-    </section>
+    </TableCard>
   );
 }
 

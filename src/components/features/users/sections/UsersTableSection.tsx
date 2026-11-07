@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormControl, Label, Pagination, TextInput } from '@primer/react';
+import { Button, FormControl, Label, TextInput } from '@primer/react';
 import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
 import {
@@ -13,6 +13,8 @@ import { formatAiCreditCost } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
 import { getIDEIcon } from '../../../icons/IDEIcons';
 import MetricsTable, { TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
+import TablePagination from '../../../ui/TablePagination';
 import EmptyState from '../../../ui/EmptyState';
 import InitialAvatar from '../../../ui/InitialAvatar';
 import { FEATURE_LABEL_VARIANT, type FeatureLabelKey } from '../../../ui/featureLabels';
@@ -27,7 +29,7 @@ interface UsersTableSectionProps {
 
 type SortField = 'user_login' | 'total_ai_credits_used' | 'days_active' | 'net_loc_contribution' | 'cloud_agent_days' | 'code_review_days' | 'top_client';
 
-const USERS_PER_PAGE = 500;
+const USERS_PER_PAGE = 200;
 
 const USER_FEATURE_LABELS: ReadonlyArray<{
   key: FeatureLabelKey;
@@ -97,8 +99,6 @@ export default function UsersTableSection({
     const start = (currentPage - 1) * USERS_PER_PAGE;
     return sortedUsers.slice(start, start + USERS_PER_PAGE);
   }, [currentPage, sortedUsers]);
-  const pageStart = sortedUsers.length === 0 ? 0 : (currentPage - 1) * USERS_PER_PAGE + 1;
-  const pageEnd = Math.min(currentPage * USERS_PER_PAGE, sortedUsers.length);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -222,43 +222,61 @@ export default function UsersTableSection({
   ];
 
   return (
-    <div id={sectionId} className="@container/users mt-6 pt-6 border-t border-default">
-      <div className="mb-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
-        <FormControl id="userSearch">
-          <FormControl.Label>Search by user login</FormControl.Label>
-          <TextInput
-            block
-            type="search"
-            leadingVisual={SearchIcon}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Start typing a username..."
-          />
-        </FormControl>
-        <UserFilterSelectPanel
-          id="clientFilter"
-          label="Clients used"
-          placeholder="All clients"
-          options={clientFilterOptions}
-          selectedValues={selectedClients}
-          onSelectionChange={setSelectedClients}
+    <TableCard
+      id={sectionId}
+      className="@container/users mt-6"
+      title="Users"
+      description="Search and filter users by their Copilot activity. Click a row for user details."
+      toolbar={
+        <>
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(180px,0.35fr)_minmax(180px,0.35fr)_auto] md:items-end">
+            <FormControl id="userSearch">
+              <FormControl.Label>Search by user login</FormControl.Label>
+              <TextInput
+                block
+                type="search"
+                leadingVisual={SearchIcon}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Start typing a username..."
+              />
+            </FormControl>
+            <UserFilterSelectPanel
+              id="clientFilter"
+              label="Clients used"
+              placeholder="All clients"
+              options={clientFilterOptions}
+              selectedValues={selectedClients}
+              onSelectionChange={setSelectedClients}
+            />
+            <UserFilterSelectPanel
+              id="featureFilter"
+              label="Feature used"
+              placeholder="All features"
+              options={USER_FEATURE_FILTERS}
+              selectedValues={selectedFeatures}
+              onSelectionChange={setSelectedFeatures}
+            />
+            <Button onClick={clearFilters} disabled={!hasActiveFilters}>
+              Clear
+            </Button>
+          </div>
+          <p className="m-0 text-sm text-muted">
+            Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
+          </p>
+        </>
+      }
+      footer={sortedUsers.length > 0 && (
+        <TablePagination
+          itemCount={sortedUsers.length}
+          currentPage={currentPage}
+          itemLabel="users"
+          pageSize={USERS_PER_PAGE}
+          onPageChange={setCurrentPage}
         />
-        <UserFilterSelectPanel
-          id="featureFilter"
-          label="Feature used"
-          placeholder="All features"
-          options={USER_FEATURE_FILTERS}
-          selectedValues={selectedFeatures}
-          onSelectionChange={setSelectedFeatures}
-        />
-        <Button onClick={clearFilters} disabled={!hasActiveFilters}>
-          Clear
-        </Button>
-      </div>
-      <p className="mb-3 text-sm text-muted">
-        Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
-      </p>
-      <div className="overflow-x-auto border border-default">
+      )}
+    >
+      <div className="overflow-x-auto">
         <MetricsTable<UserSummary>
           data={pagedUsers}
           columns={columns}
@@ -268,34 +286,17 @@ export default function UsersTableSection({
           tableClassName="w-full divide-y divide-default"
           theadClassName="bg-muted"
           onRowClick={(user) => handleUserClick(user)}
+          emptyState={users.length === 0 ? (
+            <EmptyState icon={PeopleIcon} heading="No user data available" />
+          ) : (
+            <EmptyState
+              icon={FilterIcon}
+              heading="No users match the selected filters"
+              description="Try a different search or clear the filters."
+            />
+          )}
         />
       </div>
-      {sortedUsers.length > USERS_PER_PAGE && (
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted">
-            Showing {pageStart.toLocaleString()}-{pageEnd.toLocaleString()} of {sortedUsers.length.toLocaleString()} users
-          </p>
-          <Pagination
-            pageCount={totalPages}
-            currentPage={currentPage}
-            onPageChange={(event, page) => {
-              event.preventDefault();
-              setCurrentPage(page);
-            }}
-          />
-        </div>
-      )}
-
-      {users.length === 0 && (
-        <EmptyState icon={PeopleIcon} heading="No user data available" />
-      )}
-      {users.length > 0 && sortedUsers.length === 0 && (
-        <EmptyState
-          icon={FilterIcon}
-          heading="No users match the selected filters"
-          description="Try a different search or clear the filters."
-        />
-      )}
-    </div>
+    </TableCard>
   );
 }

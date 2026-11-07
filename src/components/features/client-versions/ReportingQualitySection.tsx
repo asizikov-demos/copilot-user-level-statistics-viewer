@@ -8,6 +8,7 @@ import { useSortableTable } from '../../../hooks/useSortableTable';
 import { MetricTile } from '../../ui/MetricTile';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
 import EmptyState from '../../ui/EmptyState';
+import TableCard from '../../ui/TableCard';
 import ReportingQualityTrendChart from '../../charts/ReportingQualityTrendChart';
 import { formatReportDay } from './versionSectionUtils';
 import RequirementComponent from '../../ui/RequirementComponent';
@@ -29,7 +30,7 @@ const numericColumn = {
   className: 'px-6 py-4 text-sm text-default text-right tabular-nums whitespace-nowrap',
 };
 
-function RequirementsTable({ quality }: { quality: ReportingQualityMetrics }) {
+function RequirementsTable({ quality, sectionId }: { quality: ReportingQualityMetrics; sectionId: string }) {
   const [page, setPage] = useState(1);
   const { sortField, sortDirection, sortedItems, handleSort } = useSortableTable<ReportingQualityComponent, keyof ReportingQualityComponent>(quality.components, 'unmetUsers');
   const pageCount = Math.max(1, Math.ceil(sortedItems.length / TABLE_PAGE_SIZE));
@@ -43,7 +44,22 @@ function RequirementsTable({ quality }: { quality: ReportingQualityMetrics }) {
     { id: 'unknownUsers', header: 'Users observed unknown', accessor: 'unknownUsers', sortable: true, ...numericColumn },
   ];
   return (
-    <div className="space-y-4">
+    <TableCard
+      id={sectionId}
+      className="scroll-mt-28"
+      title="Reported requirements by component"
+      headingAs="h2"
+      description={
+        <p>
+          Distinct users observed in each status across the period. IDE and extension identifiers stay separate.
+          Unknown means unverifiable, not below minimum. A user can appear in both statuses across dates;
+          counts across components or statuses are not additive.
+        </p>
+      }
+      footer={sortedItems.length > 0 ? (
+        <TablePagination itemCount={sortedItems.length} currentPage={currentPage} itemLabel="components" onPageChange={setPage} />
+      ) : null}
+    >
       <MetricsTable
         data={pagedComponents}
         columns={columns}
@@ -52,28 +68,31 @@ function RequirementsTable({ quality }: { quality: ReportingQualityMetrics }) {
           if (field === 'component' || field === 'unmetUsers' || field === 'unknownUsers') handleSort(field);
         }}
         getRowKey={row => row.component}
-        tableContainerClassName="overflow-x-auto border border-default"
+        tableContainerClassName="overflow-x-auto"
         tableClassName="w-full divide-y divide-default"
         theadClassName="bg-muted"
         emptyState={
-          <EmptyState heading={quality.summary.requirementsReportedRecords === 0 ? 'Requirements were not reported' : 'No components were reported'} headingAs="h3"
-            description={quality.summary.requirementsReportedRecords === 0
-              ? 'Missing or null requirements cannot establish component status.'
-              : 'Reported requirements lists are empty; this is not proof of complete telemetry.'}
-          />
+          <div className="px-6 py-4">
+            <EmptyState heading={quality.summary.requirementsReportedRecords === 0 ? 'Requirements were not reported' : 'No components were reported'} headingAs="h3"
+              description={quality.summary.requirementsReportedRecords === 0
+                ? 'Missing or null requirements cannot establish component status.'
+                : 'Reported requirements lists are empty; this is not proof of complete telemetry.'}
+            />
+          </div>
         }
       />
-      <TablePagination itemCount={sortedItems.length} currentPage={currentPage} itemLabel="components" onPageChange={setPage} />
-    </div>
+    </TableCard>
   );
 }
 
 function AffectedUsersTable({
   quality,
   onUserClick,
+  sectionId,
 }: {
   quality: ReportingQualityMetrics;
   onUserClick: (userLogin: string, userId: number) => void;
+  sectionId: string;
 }) {
   const [filter, setFilter] = useState<IssueFilter>('either');
   const [page, setPage] = useState(1);
@@ -132,21 +151,37 @@ function AffectedUsersTable({
     },
   ];
   return (
-    <div className="space-y-4">
-      <FormControl>
-        <FormControl.Label>Filter affected users</FormControl.Label>
-        <Select
-          value={filter}
-          onChange={event => {
-            const value = event.target.value;
-            if (value === 'either' || value === 'missing' || value === 'below') setFilter(value);
-          }}
-        >
-          <Select.Option value="either">Either issue</Select.Option>
-          <Select.Option value="missing">Missing telemetry</Select.Option>
-          <Select.Option value="below">Below minimum</Select.Option>
-        </Select>
-      </FormControl>
+    <TableCard
+      id={sectionId}
+      className="scroll-mt-28"
+      title="Affected users"
+      headingAs="h2"
+      description={
+        <p>
+          Days are distinct observed dates per issue. Components apply only to reported unmet requirements,
+          not to missing telemetry. Last dates describe observations, not unresolved current faults.
+        </p>
+      }
+      headerActions={
+        <FormControl>
+          <FormControl.Label>Filter affected users</FormControl.Label>
+          <Select
+            value={filter}
+            onChange={event => {
+              const value = event.target.value;
+              if (value === 'either' || value === 'missing' || value === 'below') setFilter(value);
+            }}
+          >
+            <Select.Option value="either">Either issue</Select.Option>
+            <Select.Option value="missing">Missing telemetry</Select.Option>
+            <Select.Option value="below">Below minimum</Select.Option>
+          </Select>
+        </FormControl>
+      }
+      footer={sortedItems.length > 0 ? (
+        <TablePagination itemCount={sortedItems.length} currentPage={currentPage} itemLabel="affected users" onPageChange={setPage} />
+      ) : null}
+    >
       <MetricsTable
         data={pagedUsers}
         columns={columns}
@@ -157,17 +192,18 @@ function AffectedUsersTable({
             || field === 'lastMissingTelemetryDay' || field === 'lastBelowMinimumDay') handleSort(field);
         }}
         getRowKey={user => user.userId}
-        tableContainerClassName="overflow-x-auto border border-default"
+        tableContainerClassName="overflow-x-auto"
         tableClassName="w-full divide-y divide-default"
         theadClassName="bg-muted"
         emptyState={
-          <EmptyState heading={quality.summary.telemetryReportedRecords + quality.summary.requirementsReportedRecords === 0 ? 'Reporting signals were not reported' : 'No affected users match this filter'} headingAs="h3"
-            description="Only explicit missing-telemetry or unmet-requirement observations identify affected users."
-          />
+          <div className="px-6 py-4">
+            <EmptyState heading={quality.summary.telemetryReportedRecords + quality.summary.requirementsReportedRecords === 0 ? 'Reporting signals were not reported' : 'No affected users match this filter'} headingAs="h3"
+              description="Only explicit missing-telemetry or unmet-requirement observations identify affected users."
+            />
+          </div>
         }
       />
-      <TablePagination itemCount={sortedItems.length} currentPage={currentPage} itemLabel="affected users" onPageChange={setPage} />
-    </div>
+    </TableCard>
   );
 }
 
@@ -223,23 +259,8 @@ export default function ReportingQualitySection({
       <section id={sectionIds.trend} className="scroll-mt-28">
         <ReportingQualityTrendChart daily={quality.daily} />
       </section>
-      <section id={sectionIds.requirements} className="space-y-3 scroll-mt-28">
-        <h2 className="text-lg font-semibold text-default">Reported requirements by component</h2>
-        <p className="text-sm text-muted">
-          Distinct users observed in each status across the period. IDE and extension identifiers stay separate.
-          Unknown means unverifiable, not below minimum. A user can appear in both statuses across dates;
-          counts across components or statuses are not additive.
-        </p>
-        <RequirementsTable quality={quality} />
-      </section>
-      <section id={sectionIds.users} className="space-y-3 scroll-mt-28">
-        <h2 className="text-lg font-semibold text-default">Affected users</h2>
-        <p className="text-sm text-muted">
-          Days are distinct observed dates per issue. Components apply only to reported unmet requirements,
-          not to missing telemetry. Last dates describe observations, not unresolved current faults.
-        </p>
-        <AffectedUsersTable quality={quality} onUserClick={onUserClick} />
-      </section>
+      <RequirementsTable quality={quality} sectionId={sectionIds.requirements} />
+      <AffectedUsersTable quality={quality} onUserClick={onUserClick} sectionId={sectionIds.users} />
     </>
   );
 }

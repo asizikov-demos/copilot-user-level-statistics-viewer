@@ -5,6 +5,7 @@ import AiCreditsChart from './charts/AiCreditsChart';
 import { ViewPanel } from './ui';
 import EmptyState from './ui/EmptyState';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
+import TableCard from './ui/TableCard';
 import TopEntriesList from './ui/TopEntriesList';
 import InitialAvatar from './ui/InitialAvatar';
 import AiCreditsStatementCard from './AiCreditsStatementCard';
@@ -249,49 +250,49 @@ export default function AiCreditsView({ model }: AiCreditsViewProps) {
         </div>
       )}
 
-      <div id="ai-credits-top-users" className="space-y-3 scroll-mt-28">
-        <div>
-          <h3 className="text-base font-semibold text-default">Top 5 Users by AI Credits Consumption</h3>
-          <p className="text-sm text-muted">Users with the highest AI credit usage and their share of total credits consumed.</p>
-        </div>
+      <TableCard
+        id="ai-credits-top-users"
+        className="scroll-mt-28"
+        title="Top 5 Users by AI Credits Consumption"
+        description="Users with the highest AI credit usage and their share of total credits consumed."
+      >
         {topUsers.length > 0 ? (
           <MetricsTable
             data={topUsers}
             columns={columns}
             getRowKey={(user) => user.user_id}
-            tableContainerClassName="overflow-x-auto border border-default rounded-lg"
+            tableContainerClassName="overflow-x-auto"
             tableClassName="min-w-full"
           />
         ) : (
           <EmptyState
             heading="No AI credit consumption was recorded during the reporting period."
             headingAs="h4"
-            border
           />
         )}
-      </div>
+      </TableCard>
 
-      <div id="ai-credits-usage-distribution" className="space-y-3 scroll-mt-28">
-        <div>
-          <h3 className="text-base font-semibold text-default">Usage Distribution</h3>
-          <p className="text-sm text-muted">Users segmented by AI credit consumption. Averages are calculated per user within each segment.</p>
-        </div>
+      <TableCard
+        id="ai-credits-usage-distribution"
+        className="scroll-mt-28"
+        title="Usage Distribution"
+        description="Users segmented by AI credit consumption. Averages are calculated per user within each segment."
+      >
         {hasDistributionData ? (
           <MetricsTable<UsageDistributionBucket>
             data={usageDistributionData}
             columns={distributionColumns}
             getRowKey={(bucket) => bucket.id}
-            tableContainerClassName="overflow-x-auto border border-default rounded-lg"
+            tableContainerClassName="overflow-x-auto"
             tableClassName="min-w-full"
           />
         ) : (
           <EmptyState
             heading="No AI credit consumption was recorded during the reporting period."
             headingAs="h4"
-            border
           />
         )}
-      </div>
+      </TableCard>
     </ViewPanel>
   );
 }

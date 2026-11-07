@@ -179,21 +179,28 @@ describe('Users feature sections', () => {
     expect(within(table).queryByRole('columnheader', { name: /generations/i })).toBeNull();
     const [, tableBody] = within(table).getAllByRole('rowgroup');
     for (const chip of ['Cloud Agent', 'Code Review', 'Auto Mode']) {
-      expect(within(tableBody).getAllByText(chip).length).toBe(500);
+      expect(within(tableBody).getAllByText(chip).length).toBe(200);
     }
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
 
     const pagination = screen.getByRole('navigation', { name: 'Pagination' });
     expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('1');
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
 
-    expect(screen.getByText('Showing 501-501 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 201-400 of 501 users')).toBeTruthy();
     expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('2');
+    expect(within(tableBody).getAllByRole('row')).toHaveLength(200);
+    fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
+    expect(screen.getByText('Showing 401-501 of 501 users')).toBeTruthy();
+    expect(within(pagination).getByRole('link', { current: 'page' }).textContent).toContain('3');
+    expect(within(tableBody).getAllByRole('row')).toHaveLength(101);
     expect(window.location.hash).toBe('');
 
     cleanup();
-    renderTable([]);
+    const { container } = renderTable([]);
     expect(screen.getByText('No user data available')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(container.querySelector('footer')).toBeNull();
   });
 
   it('resets pagination when selecting additional feature filters', () => {
@@ -213,16 +220,25 @@ describe('Users feature sections', () => {
 
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['CLI']);
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['Chat']);
-    expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
+    expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
   });
 
-  it('hides pagination when all users fit on one page', () => {
-    renderTable([makeUser()]);
+  it('keeps controls and the single-page range inside the card without navigation', () => {
+    const onUserClick = vi.fn();
+    const { container } = renderTable([makeUser()], onUserClick);
+    const card = screen.getByRole('region', { name: 'Users' });
 
+    expect(within(card).getByLabelText('Search by user login')).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Clients used All clients' })).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
+    expect(container.querySelector('header')?.textContent).toContain('Click a row for user details.');
+    expect(container.querySelector('footer')?.textContent).toContain('Showing 1-1 of 1 users');
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+    fireEvent.click(within(card).getByText('octocat'));
+    expect(onUserClick).toHaveBeenCalledWith('octocat', 1);
   });
 
   it('uses table container width for secondary activity and feature columns', () => {

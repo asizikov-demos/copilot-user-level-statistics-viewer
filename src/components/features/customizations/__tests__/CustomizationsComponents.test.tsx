@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { chartColors } from '../../../charts/utils/chartColors';
 import type { CustomizationsReadModel } from '../../../../read-models/customizations';
 import type { CustomizationTypeStats } from '../../../../types/customizationsOverview';
 import { CustomizationsSummaryCards } from '../CustomizationsOverview';
 import ExplorerTable from '../ExplorerTable';
+
+vi.mock('react-chartjs-2', () => ({
+  Bar: () => <div data-testid="daily-activity-chart" />,
+}));
 
 function makeModel(): CustomizationsReadModel {
   const emptyType = (type: CustomizationTypeStats['type']): CustomizationTypeStats => ({
@@ -61,5 +65,58 @@ describe('customizations components', () => {
 
     expect(screen.getByText('Showing 2 of 2 items')).toBeTruthy();
     expect(screen.getByText('other')).toBeTruthy();
+  });
+
+  it('places controls and a single-page range in the card and keeps empty results inside it', () => {
+    const { container } = render(<ExplorerTable model={makeModel()} />);
+    const card = screen.getByRole('region', { name: 'Explorer' });
+
+    expect(within(card).getByLabelText('Search by name')).toBeTruthy();
+    expect(within(card).getByLabelText('Type')).toBeTruthy();
+    expect(container.querySelector('footer')?.textContent).toContain('Showing 1-1 of 1 items');
+    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Search by name'), { target: { value: 'missing' } });
+    expect(within(card).getByText('No items match the filters')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(container.querySelector('footer')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(screen.getByText('named-skill')).toBeTruthy();
+    expect(container.querySelector('footer')?.textContent).toContain('Showing 1-1 of 1 items');
+  });
+
+  it('preserves 20-row paging, sorting, expansion, and type filtering', () => {
+    const model = makeModel();
+    model.types.skill.items = Array.from({ length: 21 }, (_, index) => ({
+      name: `skill-${String(index).padStart(2, '0')}`,
+      unnamed: false,
+      totalEvents: index + 1,
+      users: 1,
+      activeDays: 1,
+      dailyEvents: [index + 1],
+      topUsers: [],
+    }));
+    render(<ExplorerTable model={model} />);
+
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(21);
+    expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
+    fireEvent.click(screen.getByText('skill-20'));
+    expect(screen.getByTestId('daily-activity-chart')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Next Page' }));
+    expect(screen.getByText('Showing 21-21 of 21 items')).toBeTruthy();
+    expect(screen.getByText('skill-00')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Name/ }));
+    expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
+    expect(screen.queryByTestId('daily-activity-chart')).toBeNull();
+    expect(within(screen.getByRole('table')).getAllByRole('row')[1].textContent).toContain('skill-20');
+    fireEvent.click(screen.getByRole('button', { name: /Name/ }));
+    expect(within(screen.getByRole('table')).getAllByRole('row')[1].textContent).toContain('skill-00');
+
+    fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'mcp' } });
+    expect(screen.getByText('No items match the filters')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
   });
 });

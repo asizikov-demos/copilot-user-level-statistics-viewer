@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { rankBySelector, sortBySelector } from '../../../../utils/sorting';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
+import TablePagination from '../../../ui/TablePagination';
 import {
   formatAcceptanceRate,
   LANGUAGES_PER_PAGE,
@@ -29,6 +31,15 @@ export default function NetProductivityImpactSection({
   const netImpactRankMap = useMemo(
     () => rankBySelector(languages, lang => lang.language, lang => lang.locAdded - lang.locDeleted),
     [languages],
+  );
+
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [languagesByNetLocImpact]);
+  const pageCount = Math.max(1, Math.ceil(languagesByNetLocImpact.length / LANGUAGES_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedLanguages = languagesByNetLocImpact.slice(
+    (currentPage - 1) * LANGUAGES_PER_PAGE,
+    currentPage * LANGUAGES_PER_PAGE,
   );
 
   const languagesByNetImpactColumns: TableColumn<LanguageStats>[] = [
@@ -89,21 +100,29 @@ export default function NetProductivityImpactSection({
 
   return (
     <div id={sectionId} className="mt-6 pt-6 border-t border-default scroll-mt-28">
-      <h3 className="text-lg font-semibold text-default mb-2">Net Productivity Impact by Language</h3>
-      <p className="text-sm text-muted mb-4">
-        Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted.
-      </p>
-      <MetricsTable
-        data={languagesByNetLocImpact}
-        columns={languagesByNetImpactColumns}
-        rowClassName={tableRowClassName}
-        tableClassName="w-full divide-y divide-default"
-        tableContainerClassName="overflow-x-auto border border-default"
-        theadClassName="bg-muted"
-        pageSize={LANGUAGES_PER_PAGE}
-        itemLabel="languages by net impact"
-        getRowKey={lang => lang.language}
-      />
+      <TableCard
+        title="Net Productivity Impact by Language"
+        description="Net LOC impact estimates how much accepted code Copilot is changing per language, combining lines of code added and deleted."
+        footer={languagesByNetLocImpact.length > 0 ? (
+          <TablePagination
+            itemCount={languagesByNetLocImpact.length}
+            currentPage={currentPage}
+            pageSize={LANGUAGES_PER_PAGE}
+            itemLabel="languages"
+            onPageChange={setPage}
+          />
+        ) : null}
+      >
+        <MetricsTable
+          data={pagedLanguages}
+          columns={languagesByNetImpactColumns}
+          rowClassName={tableRowClassName}
+          tableClassName="w-full divide-y divide-default"
+          tableContainerClassName="overflow-x-auto"
+          theadClassName="bg-muted"
+          getRowKey={lang => lang.language}
+        />
+      </TableCard>
     </div>
   );
 }
