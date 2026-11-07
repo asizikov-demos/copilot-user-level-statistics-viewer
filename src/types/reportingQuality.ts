@@ -6,6 +6,20 @@ export interface ComponentRequirement {
   status: ComponentRequirementStatus;
 }
 
+export interface DayReportingQuality {
+  day: string;
+  telemetryStatus: ClientTelemetryStatus;
+  requirements: ComponentRequirement[] | null;
+  requirementCounts: { met: number; unmet: number; unknown: number } | null;
+}
+
+export interface UserReportingQuality {
+  daily: DayReportingQuality[];
+  uploadedDays: number;
+  telemetryReportedDays: number;
+  serverOnlyDays: number;
+}
+
 export interface ReportingQualityCounts {
   recordCount: number;
   telemetryReportedRecords: number;

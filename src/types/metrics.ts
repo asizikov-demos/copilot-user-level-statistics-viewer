@@ -337,7 +337,7 @@ export interface ModelBreakdownData {
 // Per-user detailed aggregated types
 // ==========================================
 
-export interface UserDayData {
+export interface UserDayData extends Pick<CopilotMetrics, 'client_telemetry_present' | 'usage_metrics_requirements'> {
   totals_by_client?: ClientUsageTotals[] | null;
   day: string;
   cliCustomizations?: CliCustomizationDaySummary[];

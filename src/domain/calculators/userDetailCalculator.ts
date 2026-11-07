@@ -8,6 +8,7 @@ import {
 } from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
 import { computeActivityCalendar } from './activityCalendarCalculator';
+import { computeUserReportingQuality } from './reportingQualityCalculator';
 import { accumulateClientTraffic, computeClientTraffic, createClientTrafficAccumulator } from './clientTrafficCalculator';
 import {
   accumulateThirdPartyAgentActivity,
@@ -328,6 +329,16 @@ export function accumulateUserDetail(
   }
 
   state.days.push({
+    ...('client_telemetry_present' in metric ? { client_telemetry_present: metric.client_telemetry_present } : {}),
+    ...('usage_metrics_requirements' in metric ? {
+      usage_metrics_requirements: metric.usage_metrics_requirements == null
+        ? metric.usage_metrics_requirements
+        : {
+            met: [...metric.usage_metrics_requirements.met],
+            unmet: [...metric.usage_metrics_requirements.unmet],
+            unknown: [...metric.usage_metrics_requirements.unknown],
+          },
+    } : {}),
     totals_by_client: metric.totals_by_client?.map(client => ({
       ...client,
       token_usage: { ...client.token_usage },
@@ -447,6 +458,7 @@ export function computeSingleUserDetailedMetrics(
 
   return {
     activityCalendar: computeActivityCalendar(state.days),
+    reportingQuality: computeUserReportingQuality(state.days),
     clientTraffic: computeClientTraffic(clientTrafficAccumulator),
     totalModelRequests: state.totalModelRequests,
     telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),

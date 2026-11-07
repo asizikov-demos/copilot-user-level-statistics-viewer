@@ -1,5 +1,5 @@
-import type { CopilotMetrics } from '../../types/metrics';
-import type { ClientTelemetryStatus, ComponentRequirement, ReportingQualityCounts, ReportingQualityMetrics } from '../../types/reportingQuality';
+import type { CopilotMetrics, UserDayData } from '../../types/metrics';
+import type { ClientTelemetryStatus, ComponentRequirement, DayReportingQuality, ReportingQualityCounts, ReportingQualityMetrics, UserReportingQuality } from '../../types/reportingQuality';
 import { generateDateRange } from '../../utils/formatters';
 
 export function getClientTelemetryStatus(value: boolean | null | undefined): ClientTelemetryStatus {
@@ -11,6 +11,42 @@ function requirementRows(value: CopilotMetrics['usage_metrics_requirements']): C
   return (['unmet', 'unknown', 'met'] as const).flatMap(status =>
     Array.from(new Set(value[status])).map(component => ({ component, status }))
   );
+}
+
+export function computeUserReportingQuality(days: UserDayData[]): UserReportingQuality {
+  const byDay = new Map<string, { telemetryStatus: ClientTelemetryStatus; requirements: Map<string, ComponentRequirement> | null }>();
+  for (const day of days) {
+    let entry = byDay.get(day.day);
+    if (!entry) {
+      entry = { telemetryStatus: 'unreported', requirements: null };
+      byDay.set(day.day, entry);
+    }
+    const status = getClientTelemetryStatus(day.client_telemetry_present);
+    if (status === 'missing' || (status === 'received' && entry.telemetryStatus !== 'missing')) {
+      entry.telemetryStatus = status;
+    }
+    const rows = requirementRows(day.usage_metrics_requirements);
+    if (rows != null) {
+      entry.requirements ??= new Map();
+      for (const row of rows) entry.requirements.set(`${row.status}:${row.component}`, row);
+    }
+  }
+  const statusOrder = { unmet: 0, unknown: 1, met: 2 };
+  const daily: DayReportingQuality[] = Array.from(byDay, ([day, entry]) => {
+    const requirements = entry.requirements == null ? null
+      : Array.from(entry.requirements.values()).sort((a, b) => statusOrder[a.status] - statusOrder[b.status] || a.component.localeCompare(b.component));
+    const requirementCounts = requirements == null ? null : { met: 0, unmet: 0, unknown: 0 };
+    if (requirementCounts) {
+      for (const row of requirements ?? []) requirementCounts[row.status]++;
+    }
+    return { day, telemetryStatus: entry.telemetryStatus, requirements, requirementCounts };
+  }).sort((a, b) => a.day.localeCompare(b.day));
+  return {
+    daily,
+    uploadedDays: daily.length,
+    telemetryReportedDays: daily.filter(day => day.telemetryStatus !== 'unreported').length,
+    serverOnlyDays: daily.filter(day => day.telemetryStatus === 'missing').length,
+  };
 }
 
 interface CountsAccumulator {

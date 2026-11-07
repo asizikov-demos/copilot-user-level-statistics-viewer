@@ -5,6 +5,12 @@ import type { DailyCliTokenData } from '../domain/calculators/metricCalculators'
 import { mapReportRangeData } from '../utils/timeSeries';
 import { generateDateRange } from '../utils/formatters';
 import { normalizeIDEKey } from '../utils/ideMetadata';
+import type { DayReportingQuality } from '../types/reportingQuality';
+
+export function selectDayReportingQuality(userDetails: UserDetailedMetrics, day: string): DayReportingQuality {
+  return userDetails.reportingQuality.daily.find(entry => entry.day === day)
+    ?? { day, telemetryStatus: 'unreported', requirements: null, requirementCounts: null };
+}
 
 export interface UserInteractionRank {
   rank: number;

@@ -10,6 +10,8 @@ import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizati
 import UserDetailsAgentUsageSection from '../sections/UserDetailsAgentUsageSection';
 import UserSummaryChart from '../charts/UserSummaryChart';
 import UserDetailsView from '../UserDetailsView';
+import ActivityCalendar from '../day-details/ActivityCalendar';
+import DayDetailsModal from '../day-details/DayDetailsModal';
 import {
   makeAgentActivity,
   makeCustomizationDaySummary,
@@ -30,6 +32,7 @@ vi.mock('../../../charts/CompositionChart', () => ({
     return <div>{props.label}</div>;
   },
 }));
+vi.mock('../day-details/DayDetailsModal', () => ({ default: () => null }));
 
 let renderer: ReactTestRenderer | undefined;
 
@@ -291,6 +294,29 @@ describe('UserDetailsCustomizationsSection', () => {
   });
 
   describe('on the user profile', () => {
+    it('projects day-local reporting on navigation and closes/reset calendar state when users change', async () => {
+      const firstDay = makeUserDay({ client_telemetry_present: false, usage_metrics_requirements: { met: [], unmet: ['vscode'], unknown: [] } });
+      const secondDay = makeUserDay({ day: '2024-01-16', client_telemetry_present: true, usage_metrics_requirements: { met: [], unmet: [], unknown: ['raw-component'] } });
+      const profile = (userId: number) => renderProfile(makeUserDetailsViewModel({
+        userId, userLogin: `user-${userId}`,
+        userDetails: makeUserDetails({ days: userId === 1 ? [firstDay, secondDay] : [makeUserDay()] }),
+      }));
+      const root = (await mount(profile(1))).root;
+      const modal = () => root.findByType(DayDetailsModal);
+      await act(async () => { root.findByType(ActivityCalendar).props.onDayClick(firstDay.day, firstDay); });
+      expect(modal().props.isOpen).toBe(true);
+      expect(modal().props.reportingQuality).toMatchObject({ day: firstDay.day, telemetryStatus: 'missing', requirementCounts: { unmet: 1, unknown: 0 } });
+      await act(async () => { modal().props.onNavigateDay(1); });
+      expect(modal().props.dayMetrics).toBe(secondDay);
+      expect(modal().props.reportingQuality).toMatchObject({ day: secondDay.day, telemetryStatus: 'received', requirementCounts: { unmet: 0, unknown: 1 } });
+      await act(async () => { modal().props.onNavigateDay(1); });
+      expect(modal().props.reportingQuality).toMatchObject({ telemetryStatus: 'unreported', requirements: null });
+      await act(async () => { renderer!.update(profile(2)); });
+      expect(modal().props.isOpen).toBe(false);
+      expect(modal().props.dayMetrics).toBeUndefined();
+      expect(root.findByType(ActivityCalendar).props.reportingQuality.serverOnlyDays).toBe(0);
+    });
+
     it('keeps section keys unique and resets section state when switching users', async () => {
       const profile = (userId: number) => renderProfile(makeUserDetailsViewModel({
         userId,

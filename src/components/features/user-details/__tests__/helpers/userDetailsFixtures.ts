@@ -13,6 +13,7 @@ import type {
   CliCustomizationSummary,
 } from '../../../../../types/cliCustomizations';
 import type { UserDayData } from '../../../../../types/metrics';
+import { computeUserReportingQuality } from '../../../../../domain/calculators/reportingQualityCalculator';
 
 const REPORT_START_DAY = '2024-01-01';
 const REPORT_END_DAY = '2024-01-31';
@@ -61,6 +62,7 @@ export function makeUserDetails(
 ): UserDetailedMetrics {
   return {
     activityCalendar: { daily: [], activeDays: 0 },
+    reportingQuality: computeUserReportingQuality(overrides.days ?? []),
     telemetryWarnings: [],
     clientTraffic: {
       summary: { recordCount: 0, reportedRecords: 0, activeUsers: 0, clients: [] },

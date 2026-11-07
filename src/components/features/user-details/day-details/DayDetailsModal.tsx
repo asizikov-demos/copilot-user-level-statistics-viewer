@@ -4,6 +4,8 @@ import React from 'react';
 import { Dialog, FormControl, IconButton, Select } from '@primer/react';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
+import type { DayReportingQuality } from '../../../../types/reportingQuality';
+import DayReportingQualitySection from './DayReportingQualitySection';
 import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
 import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
 import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
@@ -25,6 +27,7 @@ interface DayDetailsModalProps {
   onClose: VoidCallback;
   date: string;
   dayMetrics?: UserDayData;
+  reportingQuality?: DayReportingQuality;
   userLogin?: string;
   onNavigateDay?: (direction: -1 | 1) => void;
   canNavigatePrevDay?: boolean;
@@ -194,7 +197,7 @@ const modelRequestColumns: TableColumn<ModelRequestRow>[] = [
   { id: 'outputTokens', header: 'Output tokens', headerClassName: headerRight, className: cellRight, renderCell: row => row.token_usage.output_tokens_sum.toLocaleString() },
 ];
 
-export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {
+export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, reportingQuality, userLogin, onNavigateDay, canNavigatePrevDay = false, canNavigateNextDay = false }: DayDetailsModalProps) {
   // Focus the title on open: focusing an IconButton would open its tooltip, which swallows the first Escape.
   const titleRef = React.useRef<HTMLHeadingElement>(null);
   const [selection, setSelection] = React.useState<{
@@ -371,6 +374,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, use
       ) : (
         <div className="space-y-6">
           <FeaturesUsed features={featurePills} />
+          <DayReportingQualitySection quality={reportingQuality} />
 
           {/* Clients & Impact cards */}
           <div className={`grid grid-cols-1 gap-4 items-stretch${hasClientInteractions || hasClientRequests ? ' md:grid-cols-2' : ''}`}>

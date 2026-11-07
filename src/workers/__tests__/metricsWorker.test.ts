@@ -78,6 +78,24 @@ describe('metricsWorker protocol', () => {
         affectedUsers: [{ userId: 7, missingTelemetryDays: 1, belowMinimumDays: 1 }],
       });
       expect(result?.result.clients.reportingQuality.daily.map(day => day.missingTelemetryUsers)).toEqual([null, 1, null]);
+      await send({ type: 'computeUserDetails', id: 'quality-details', userId: 7 });
+      expect(find('userDetailsResult')?.result).toMatchObject({
+        reportingQuality: {
+          uploadedDays: 1, telemetryReportedDays: 1, serverOnlyDays: 1,
+          daily: [{
+            telemetryStatus: 'missing',
+            requirementCounts: { met: 0, unmet: 1, unknown: 1 },
+            requirements: [
+              { component: 'vscode/copilot-chat', status: 'unmet' },
+              { component: '1.138.0:', status: 'unknown' },
+            ],
+          }],
+        },
+        days: [{
+          client_telemetry_present: false,
+          usage_metrics_requirements: { met: [], unmet: ['vscode/copilot-chat'], unknown: ['1.138.0:'] },
+        }],
+      });
       expect(find('error')).toBeUndefined();
     });
 

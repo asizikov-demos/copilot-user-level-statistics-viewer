@@ -44,6 +44,7 @@ import { isCliFeature } from '../../../domain/featureCategories';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
 import { USER_DETAILS_SECTIONS } from './userDetailsSections';
 import ClientTelemetryNotice from '../../ClientTelemetryNotice';
+import { selectDayReportingQuality } from '../../../read-models/userDetails';
 
 registerChartJS();
 
@@ -76,19 +77,25 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const filledCliImpact = useMemo(() => fillDateRange(userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCliImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
 
   const [modalState, setModalState] = useState<{
+    userId: number;
     isOpen: boolean;
     selectedDate: string;
     selectedMetrics?: UserDayData;
   }>({
+    userId,
     isOpen: false,
     selectedDate: '',
     selectedMetrics: undefined,
   });
+  if (modalState.userId !== userId) {
+    setModalState({ userId, isOpen: false, selectedDate: '', selectedMetrics: undefined });
+  }
 
   const [isImpactBreakdownExpanded, setIsImpactBreakdownExpanded] = useState(false);
 
   const handleDayClick = (date: string, dayData?: UserDayData) => {
     setModalState({
+      userId,
       isOpen: true,
       selectedDate: date,
       selectedMetrics: dayData,
@@ -97,6 +104,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
 
   const handleCloseModal = () => {
     setModalState({
+      userId,
       isOpen: false,
       selectedDate: '',
       selectedMetrics: undefined,
@@ -125,6 +133,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       if (nextIdx < 0 || nextIdx >= reportDateRange.length) return prev;
       const nextDate = reportDateRange[nextIdx];
       return {
+        ...prev,
         isOpen: true,
         selectedDate: nextDate,
         selectedMetrics: dayMetricsMap.get(nextDate),
@@ -331,11 +340,13 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     >
       <ClientTelemetryNotice warnings={headerSummary.telemetryWarnings} showUserCounts={false} />
       <UserDetailsOverviewSection
+        key={userId}
         sectionId={overviewSection.id}
         days={userDetails.days}
         reportStartDay={userDetails.reportStartDay}
         reportEndDay={userDetails.reportEndDay}
         activityCalendar={userDetails.activityCalendar}
+        reportingQuality={userDetails.reportingQuality}
         onDayClick={handleDayClick}
         agentInteractions={agentInteractions}
         planInteractions={planInteractions}
@@ -493,6 +504,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         onClose={handleCloseModal}
         date={modalState.selectedDate}
         dayMetrics={modalState.selectedMetrics}
+        reportingQuality={selectDayReportingQuality(userDetails, modalState.selectedDate)}
         userLogin={userLogin}
         onNavigateDay={handleNavigateDay}
         canNavigatePrevDay={canNavigatePrevDay}
