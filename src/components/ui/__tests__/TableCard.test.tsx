@@ -11,6 +11,7 @@ describe('TableCard', () => {
         description={<p>Successful model calls by client.</p>}
         headingAs="h3"
         headerActions={<button type="button">Filter</button>}
+        toolbar={<label>Search<input type="search" /></label>}
         footer={<p>Showing 1-3 of 3 clients</p>}
       >
         <table><tbody><tr><td>Editor</td></tr></tbody></table>
@@ -25,6 +26,10 @@ describe('TableCard', () => {
     expect(markup).toContain('Successful model calls by client.');
     expect(markup).toContain('<button type="button">Filter</button>');
     expect(markup).toContain('<td>Editor</td>');
+    const toolbarIndex = markup.indexOf('<label>Search');
+    expect(toolbarIndex).toBeGreaterThan(markup.indexOf('</header>'));
+    expect(toolbarIndex).toBeLessThan(markup.indexOf('<table>'));
+    expect(markup.indexOf('<footer')).toBeGreaterThan(markup.indexOf('</table>'));
     expect(markup).toContain('<footer');
     expect(markup).toContain('Showing 1-3 of 3 clients');
   });

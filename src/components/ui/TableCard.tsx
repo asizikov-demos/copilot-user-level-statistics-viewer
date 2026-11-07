@@ -9,6 +9,7 @@ export interface TableCardProps {
   description?: ReactNode;
   headingAs?: TableCardHeading;
   headerActions?: ReactNode;
+  toolbar?: ReactNode;
   footer?: ReactNode;
   className?: string;
   children: ReactNode;
@@ -20,6 +21,7 @@ export default function TableCard({
   description,
   headingAs = 'h3',
   headerActions,
+  toolbar,
   footer,
   className,
   children,
@@ -44,6 +46,9 @@ export default function TableCard({
           <div className="space-y-2 text-sm text-muted">{description}</div>
         )}
       </header>
+      {toolbar != null && toolbar !== false && (
+        <div className="px-6 py-4 border-b border-default space-y-3">{toolbar}</div>
+      )}
       <div>{children}</div>
       {footer != null && footer !== false && (
         <footer className="border-t border-default px-6 py-4">{footer}</footer>

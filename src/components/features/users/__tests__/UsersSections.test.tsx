@@ -192,8 +192,10 @@ describe('Users feature sections', () => {
     expect(window.location.hash).toBe('');
 
     cleanup();
-    renderTable([]);
+    const { container } = renderTable([]);
     expect(screen.getByText('No user data available')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+    expect(container.querySelector('footer')).toBeNull();
   });
 
   it('resets pagination when selecting additional feature filters', () => {
@@ -219,10 +221,19 @@ describe('Users feature sections', () => {
     expect(screen.getByText('Showing 1-500 of 501 users')).toBeTruthy();
   });
 
-  it('hides pagination when all users fit on one page', () => {
-    renderTable([makeUser()]);
+  it('keeps controls and the single-page range inside the card without navigation', () => {
+    const onUserClick = vi.fn();
+    const { container } = renderTable([makeUser()], onUserClick);
+    const card = screen.getByRole('region', { name: 'Users' });
 
+    expect(within(card).getByLabelText('Search by user login')).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Clients used All clients' })).toBeTruthy();
+    expect(within(card).getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
+    expect(container.querySelector('header')?.textContent).toContain('Click a row for user details.');
+    expect(container.querySelector('footer')?.textContent).toContain('Showing 1-1 of 1 users');
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+    fireEvent.click(within(card).getByText('octocat'));
+    expect(onUserClick).toHaveBeenCalledWith('octocat', 1);
   });
 
   it('uses table container width for secondary activity and feature columns', () => {
