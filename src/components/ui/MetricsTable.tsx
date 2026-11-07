@@ -1,17 +1,9 @@
 'use client';
 
-import { Fragment, Key, ReactNode } from 'react';
-import { Button } from '@primer/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
+import { Fragment, Key, ReactNode, useState } from 'react';
 import type { SortDirection } from '../../types/sort';
-import type { ToggleCallback } from '../../types/events';
 import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
-import {
-  useExpandableList,
-  type ExpandableLabelResolver,
-  type ExpandButtonAlignment,
-  resolveExpandableToggleLabel,
-} from '../../hooks/useExpandableList';
+import TablePagination from './TablePagination';
 import { cn } from '../../utils/cn';
 import styles from './MetricsTable.module.css';
 
@@ -45,17 +37,9 @@ export interface MetricsTableProps<T> {
   onRowClick?: (item: T, index: number) => void;
   getRowKey?: (item: T, index: number) => Key;
   renderExpandedRow?: (item: T, index: number) => ReactNode;
-  /** When set, enables progressive disclosure: only this many rows are shown initially. */
-  initialCount?: number;
-  defaultExpanded?: boolean;
-  buttonCollapsedLabel?: ExpandableLabelResolver;
-  buttonExpandedLabel?: ExpandableLabelResolver;
-  buttonClassName?: string;
-  buttonContainerClassName?: string;
-  buttonAlignment?: ExpandButtonAlignment;
-  buttonAriaLabel?: string;
-  buttonTestId?: string;
-  onToggle?: ToggleCallback;
+  /** When set, paginates rows and resets to the first page when data changes. */
+  pageSize?: number;
+  itemLabel?: string;
   /** Content rendered when data is empty. */
   emptyState?: ReactNode;
 }
@@ -73,36 +57,27 @@ export function MetricsTable<T>({
   onRowClick,
   getRowKey,
   renderExpandedRow,
-  initialCount,
-  defaultExpanded = false,
-  buttonCollapsedLabel,
-  buttonExpandedLabel,
-  buttonClassName,
-  buttonContainerClassName,
-  buttonAlignment = 'center',
-  buttonAriaLabel,
-  buttonTestId,
-  onToggle,
+  pageSize,
+  itemLabel = 'items',
   emptyState,
 }: MetricsTableProps<T>) {
   const headerBaseClass = 'px-6 py-3 text-left';
   const cellBaseClass = cn(styles.defaultCell, 'px-6 py-4 whitespace-nowrap');
 
-  const resolvedInitialCount = initialCount ?? data.length;
-  const {
-    visibleItems,
-    isExpanded,
-    canExpand,
-    totalCount,
-    toggleExpanded,
-  } = useExpandableList(data as T[], resolvedInitialCount, { defaultExpanded, onToggle });
-
-  const toggleLabel = resolveExpandableToggleLabel(
-    isExpanded,
-    totalCount,
-    buttonCollapsedLabel,
-    buttonExpandedLabel,
-  );
+  const [pagination, setPagination] = useState({ data, pageSize, page: 1 });
+  if (pageSize !== undefined && (!Number.isSafeInteger(pageSize) || pageSize < 1)) {
+    throw new Error('Table page size must be a positive safe integer.');
+  }
+  const dataChanged = pagination.data !== data || pagination.pageSize !== pageSize;
+  if (dataChanged) {
+    setPagination({ data, pageSize, page: 1 });
+  }
+  const pageCount = pageSize === undefined ? 1 : Math.max(1, Math.ceil(data.length / pageSize));
+  const currentPage = dataChanged ? 1 : Math.min(pagination.page, pageCount);
+  const pageStart = pageSize === undefined ? 0 : (currentPage - 1) * pageSize;
+  const visibleItems = pageSize === undefined
+    ? data
+    : data.slice(pageStart, pageStart + pageSize);
 
   if (data.length === 0 && emptyState) {
     return <>{emptyState}</>;
@@ -152,7 +127,8 @@ export function MetricsTable<T>({
           </tr>
         </thead>
         <tbody className={tbodyClassName ?? styles.defaultBody}>
-          {visibleItems.map((item, index) => {
+          {visibleItems.map((item, visibleIndex) => {
+            const index = pageStart + visibleIndex;
             const rowClass = rowClassName?.(item, index) ?? '';
             const rowKey = getRowKey?.(item, index) ?? index;
             const expandedRow = renderExpandedRow?.(item, index);
@@ -209,22 +185,15 @@ export function MetricsTable<T>({
           {table}
         </div>
       ) : table}
-      {canExpand && (
-        <div
-          className={cn(styles.expandContainer, buttonContainerClassName ?? 'mt-4')}
-          data-align={buttonAlignment}
-        >
-          <Button
-            type="button"
-            onClick={toggleExpanded}
-            className={buttonClassName}
-            trailingVisual={isExpanded ? ChevronUpIcon : ChevronDownIcon}
-            aria-expanded={isExpanded}
-            aria-label={buttonAriaLabel ?? toggleLabel}
-            data-testid={buttonTestId}
-          >
-            {toggleLabel}
-          </Button>
+      {pageSize !== undefined && data.length > 0 && (
+        <div className="mt-4">
+          <TablePagination
+            itemCount={data.length}
+            currentPage={currentPage}
+            itemLabel={itemLabel}
+            pageSize={pageSize}
+            onPageChange={page => setPagination({ data, pageSize, page })}
+          />
         </div>
       )}
     </>

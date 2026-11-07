@@ -14,7 +14,7 @@ Stop `npm run dev` before running `npm run build` because both use `.next`.
 
 ## UX Patterns
 
-- **Progressive disclosure** for data tables: show top N items by default, expand to see all
+- **Pagination** for long data tables: choose a page size appropriate to the table; do not add show-all row actions. Group disclosures and row/column details remain separate.
 
 ## UI Conventions
 

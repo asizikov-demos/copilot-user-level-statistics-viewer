@@ -127,10 +127,9 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
         data={summary.items}
         columns={columns}
         getRowKey={item => item.name}
-        initialCount={5}
+        pageSize={5}
+        itemLabel={`${CATEGORY_LABELS[summary.category].title.toLowerCase()} items`}
         tableContainerClassName="overflow-x-auto"
-        buttonCollapsedLabel={total => `Show all ${total.toLocaleString()} reported items`}
-        buttonExpandedLabel="Show fewer items"
       />
     </div>
   );

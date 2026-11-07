@@ -6,6 +6,7 @@ import type { CompositionChartProps } from '../../../charts/CompositionChart';
 import type { UserDetailsViewModel } from '../../../../read-models/userDetails';
 import type { CliCustomizationSummary } from '../../../../types/cliCustomizations';
 import { NavigationProvider } from '../../../../state/NavigationContext';
+import TablePagination from '../../../ui/TablePagination';
 import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
 import UserDetailsAgentUsageSection from '../sections/UserDetailsAgentUsageSection';
 import UserSummaryChart from '../charts/UserSummaryChart';
@@ -219,7 +220,7 @@ describe('UserDetailsCustomizationsSection', () => {
       await act(async () => { root.findByType('button').props.onClick(); });
       const region = root.findByProps({ role: 'region' });
       expect(cellText(region.findByType('tbody').findByType('tr')).slice(1)).toEqual(['-', '-', '-']);
-      expect(region.findByType('p').children.join('')).toContain('Missing interaction counts');
+      expect(region.findAllByType('p').map(p => p.children.join('')).join(' ')).toContain('Missing interaction counts');
     });
 
     it('expands category rows independently and labels each item region', async () => {
@@ -256,7 +257,7 @@ describe('UserDetailsCustomizationsSection', () => {
       expect(buttons[0].props['aria-expanded']).toBe(false);
     });
 
-    it('progressively discloses item rows and preserves reported zero values', async () => {
+    it('paginates nested item rows and preserves reported zero values and category disclosure', async () => {
       const items = ['a', 'b', 'c', 'd', 'e'].map(name => makeCustomizationItem(name, 1));
       const root = (await mount(renderPeriod([
         makeCustomizationSummary('skill', 5, [...items, makeCustomizationItem('zero', 0)]),
@@ -267,12 +268,15 @@ describe('UserDetailsCustomizationsSection', () => {
       const rows = () => region.findByType('tbody').findAllByType('tr');
       expect(rows()).toHaveLength(5);
 
-      await act(async () => { region.findByType('button').props.onClick(); });
-      expect(rows()).toHaveLength(6);
-      expect(cellText(rows()[5]).slice(1)).toEqual(['0', '0', '-']);
+      await act(async () => { region.findByType(TablePagination).props.onPageChange(2); });
+      expect(rows()).toHaveLength(1);
+      expect(cellText(rows()[0]).slice(1)).toEqual(['0', '0', '-']);
 
-      await act(async () => { region.findByType('button').props.onClick(); });
+      await act(async () => { region.findByType(TablePagination).props.onPageChange(1); });
       expect(rows()).toHaveLength(5);
+      expect(region.findAllByType('button')).toHaveLength(0);
+      await act(async () => { root.findByType('button').props.onClick(); });
+      expect(root.findAllByProps({ role: 'region' })).toHaveLength(0);
     });
 
     it('uses day-local copy in the daily view', async () => {
@@ -288,7 +292,7 @@ describe('UserDetailsCustomizationsSection', () => {
       expect(root.findAllByType('td')[1].children.join('')).toBe('6');
 
       await act(async () => { root.findByType('button').props.onClick(); });
-      expect(root.findByProps({ role: 'region' }).findByType('p').children.join(''))
+      expect(root.findByProps({ role: 'region' }).findAllByType('p').map(p => p.children.join('')).join(' '))
         .toContain('Reported top items for this day.');
     });
   });

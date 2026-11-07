@@ -207,6 +207,52 @@ describe('DayDetailsModal', () => {
       expect(screen.queryByRole('columnheader', { name: 'Language' })).toBeNull();
     });
 
+    it('paginates both day measures with five client and ten model rows, resetting on date changes', () => {
+      const client = requestDay.totals_by_client![0];
+      const model = client.totals_by_model[0];
+      const day = makeUserDay({
+        totals_by_ide: Array.from({ length: 6 }, (_, index) =>
+          makeIdeTotal(`client-${index}`, { user_initiated_interaction_count: 1 })),
+        totals_by_language_model: Array.from({ length: 11 }, (_, index) => ({
+          ...ZERO_TOTALS, language: `language-${index}`, model: 'gpt-4o', code_generation_activity_count: 1,
+        })),
+        totals_by_client: Array.from({ length: 6 }, (_, index) => ({
+          ...client, client: `client-${index}`,
+          totals_by_model: index === 0
+            ? Array.from({ length: 11 }, (_, modelIndex) => ({ ...model, model: `model-${modelIndex}` }))
+            : [],
+        })),
+      });
+      const modal = (date: string) => withTheme(
+        <DayDetailsModal isOpen onClose={vi.fn()} date={date} dayMetrics={day} />,
+      );
+      const { rerender } = render(modal(day.day));
+      for (const measure of ['interactions', 'requests']) {
+        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: measure } });
+        fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: measure } });
+        const tables = screen.getAllByRole('table');
+        expect(within(tables[0]).getAllByRole('row')).toHaveLength(6);
+        expect(within(tables[1]).getAllByRole('row')).toHaveLength(11);
+        const pagers = screen.getAllByRole('group', { name: /^Pagination for day/ });
+        fireEvent.click(within(pagers[0]).getByRole('link', { name: 'Next Page' }));
+        expect(within(tables[0]).getAllByRole('row')).toHaveLength(2);
+        expect(within(tables[1]).getAllByRole('row')).toHaveLength(11);
+        fireEvent.click(within(pagers[1]).getByRole('link', { name: 'Next Page' }));
+        expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
+        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), {
+          target: { value: measure === 'interactions' ? 'requests' : 'interactions' },
+        });
+        expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
+        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: measure } });
+        expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
+      }
+      rerender(modal('2024-01-16'));
+      const tables = screen.getAllByRole('table');
+      expect(within(tables[0]).getAllByRole('row')).toHaveLength(6);
+      expect(within(tables[1]).getAllByRole('row')).toHaveLength(11);
+      expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
+    });
+
     it('switches client and model measures independently and permits unavailable legacy views', () => {
       renderDay(requestDay);
       fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: 'interactions' } });

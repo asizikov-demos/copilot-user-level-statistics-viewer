@@ -195,11 +195,14 @@ describe('ClientActivityChart traffic', () => {
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 5, 0]);
   });
 
-  it('expands large client lists and falls back to interactions when traffic becomes unavailable', () => {
+  it('paginates large client lists and falls back to interactions when traffic becomes unavailable', () => {
     const { rerender } = render(chart(traffic(Array.from({ length: 12 }, (_, i) => client(`client_${i}`, i)))));
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(11);
-    fireEvent.click(screen.getByRole('button', { name: 'Show all 12 clients' }));
-    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(13);
+    fireEvent.click(screen.getByRole('link', { name: 'Next Page' }));
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
     selectSessions();
     rerender(chart(traffic([], 0)));
     expect(screen.queryByRole('combobox')).toBeNull();
