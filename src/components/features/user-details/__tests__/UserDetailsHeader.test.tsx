@@ -4,7 +4,6 @@ import UserDetailsHeader from '../sections/UserDetailsHeader';
 import type { UserDetailsHeaderReadModel } from '../../../../read-models/userDetails';
 
 const summary: UserDetailsHeaderReadModel = {
-  telemetryWarnings: [],
   daysActive: 1,
   reportDays: 28,
   activeDaysPercent: 4,

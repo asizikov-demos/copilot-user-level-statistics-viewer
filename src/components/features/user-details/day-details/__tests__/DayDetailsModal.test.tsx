@@ -471,7 +471,7 @@ describe('DayDetailsModal', () => {
       expect(markup).toContain('>0<');
       expect(markup).not.toContain('Used VS Code Agents window');
       expect(markup).not.toContain('User messages');
-      expect(screen.getByText('VS Code Agents').closest('div')?.textContent).not.toContain('Not reported');
+      expect(screen.getByText('VS Code Agents window').closest('div')?.textContent).not.toContain('Not reported');
     });
   });
 
