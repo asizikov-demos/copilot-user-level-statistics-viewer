@@ -5,6 +5,7 @@ import type { ClientTrafficSummary } from '../types/clientTraffic';
 import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
+import TableCard from './ui/TableCard';
 import TablePagination, { TABLE_PAGE_SIZE } from './ui/TablePagination';
 import { ViewPanel } from './ui';
 import { useSortableTable } from '../hooks/useSortableTable';
@@ -228,47 +229,51 @@ export default function ClientsView({ model }: IDEViewProps) {
       contentClassName="space-y-8"
     >
       <div className="space-y-8">
-        <section id={trafficSection.id} aria-labelledby="client-traffic-title" className="bg-default rounded-md border border-default scroll-mt-28">
-          <div className="px-6 py-4 border-b border-default space-y-2">
-            <h3 id="client-traffic-title" className="text-lg font-semibold text-default">Model traffic by client</h3>
-            <p className="text-sm text-muted">
-              Successful model calls, not prompts or editor interactions. Active users made at least one
-              model request; users can appear under multiple clients.
-            </p>
-            <p className="text-sm text-muted">
-              Coverage: {trafficSummary.reportedRecords.toLocaleString()} of {trafficSummary.recordCount.toLocaleString()} user-day
-              records report client traffic.
-              {reportedDays.length > 0 && ` Reported dates: ${reportedDays[0].day} to ${reportedDays[reportedDays.length - 1].day} (${reportedDays.length} observed days).`}
-              {' '}Missing records are not zero usage. Zero reported sessions do not imply no traffic.
-            </p>
-          </div>
+        <TableCard
+          id={trafficSection.id}
+          className="scroll-mt-28"
+          title="Model traffic by client"
+          headingAs="h3"
+          description={
+            <>
+              <p>
+                Successful model calls, not prompts or editor interactions. Active users made at least one
+                model request; users can appear under multiple clients.
+              </p>
+              <p>
+                Coverage: {trafficSummary.reportedRecords.toLocaleString()} of {trafficSummary.recordCount.toLocaleString()} user-day
+                records report client traffic.
+                {reportedDays.length > 0 && ` Reported dates: ${reportedDays[0].day} to ${reportedDays[reportedDays.length - 1].day} (${reportedDays.length} observed days).`}
+                {' '}Missing records are not zero usage. Zero reported sessions do not imply no traffic.
+              </p>
+            </>
+          }
+          footer={trafficSummary.reportedRecords > 0 && sortedTraffic.length > 0 ? (
+            <TablePagination itemCount={sortedTraffic.length} currentPage={currentTrafficPage} itemLabel="clients" onPageChange={setTrafficPage} />
+          ) : null}
+        >
           {trafficSummary.reportedRecords === 0 ? (
             <p className="px-6 py-4 text-sm text-muted">Client model traffic is not reported in this upload. Editor and CLI activity remain available below.</p>
           ) : sortedTraffic.length === 0 ? (
             <p className="px-6 py-4 text-sm text-muted">No client model traffic was reported in the available records.</p>
           ) : (
-            <>
-              <MetricsTable<ClientTrafficSummary>
-                data={pagedTraffic}
-                columns={trafficColumns}
-                sortState={{ field: trafficSortField ?? 'requestCount', direction: trafficSortDirection }}
-                onSortChange={({ field }) => {
-                  if (field === 'client') handleTrafficSort('client');
-                  else {
-                    const key = TRAFFIC_METRIC_COLUMNS.find(([key]) => key === field)?.[0];
-                    if (key) handleTrafficSort(key);
-                  }
-                }}
-                getRowKey={client => client.client}
-                tableContainerClassName="overflow-x-auto"
-                rowClassName={() => 'hover:bg-muted'}
-              />
-              <div className="border-t border-default px-6 py-4">
-                <TablePagination itemCount={sortedTraffic.length} currentPage={currentTrafficPage} itemLabel="clients" onPageChange={setTrafficPage} />
-              </div>
-            </>
+            <MetricsTable<ClientTrafficSummary>
+              data={pagedTraffic}
+              columns={trafficColumns}
+              sortState={{ field: trafficSortField ?? 'requestCount', direction: trafficSortDirection }}
+              onSortChange={({ field }) => {
+                if (field === 'client') handleTrafficSort('client');
+                else {
+                  const key = TRAFFIC_METRIC_COLUMNS.find(([key]) => key === field)?.[0];
+                  if (key) handleTrafficSort(key);
+                }
+              }}
+              getRowKey={client => client.client}
+              tableContainerClassName="overflow-x-auto"
+              rowClassName={() => 'hover:bg-muted'}
+            />
           )}
-        </section>
+        </TableCard>
 
         <div id={distributionSection.id} className="grid grid-cols-1 lg:grid-cols-2 gap-6 scroll-mt-28">
           <IDEDistributionChart ideStats={ideStats} cliUsers={cliUsers} />
@@ -298,10 +303,16 @@ export default function ClientsView({ model }: IDEViewProps) {
           </div>
         </div>
 
-        <section id={usersSection.id} aria-labelledby="client-users-title" className="bg-default rounded-md border border-default scroll-mt-28">
-          <div className="px-6 py-4 border-b border-default">
-            <h3 id="client-users-title" className="text-lg font-semibold text-default">Clients Ordered by Number of Users</h3>
-          </div>
+        <TableCard
+          id={usersSection.id}
+          className="scroll-mt-28"
+          title="Clients Ordered by Number of Users"
+          headingAs="h3"
+          description={<p>Compare clients by user count, with generation, acceptance, and code-change totals for context.</p>}
+          footer={sortedIdesByUsers.length > 0 ? (
+            <TablePagination itemCount={sortedIdesByUsers.length} currentPage={currentUsersPage} itemLabel="clients" onPageChange={setUsersPage} />
+          ) : null}
+        >
           <MetricsTable<IDEStats>
             data={pagedIdesByUsers}
             columns={usersColumns}
@@ -311,17 +322,18 @@ export default function ClientsView({ model }: IDEViewProps) {
             tableContainerClassName="overflow-x-auto"
             getRowKey={ide => ide.ide}
           />
-          {sortedIdesByUsers.length > 0 && (
-            <div className="border-t border-default px-6 py-4">
-              <TablePagination itemCount={sortedIdesByUsers.length} currentPage={currentUsersPage} itemLabel="clients" onPageChange={setUsersPage} />
-            </div>
-          )}
-        </section>
+        </TableCard>
 
-        <section id={engagementsSection.id} aria-labelledby="client-engagements-title" className="bg-default rounded-md border border-default scroll-mt-28">
-          <div className="px-6 py-4 border-b border-default">
-            <h3 id="client-engagements-title" className="text-lg font-semibold text-default">Clients Ordered by Number of Engagements</h3>
-          </div>
+        <TableCard
+          id={engagementsSection.id}
+          className="scroll-mt-28"
+          title="Clients Ordered by Number of Engagements"
+          headingAs="h3"
+          description={<p>Compare clients by engagement count, alongside generation, acceptance, and code-change totals.</p>}
+          footer={sortedIdesByEngagements.length > 0 ? (
+            <TablePagination itemCount={sortedIdesByEngagements.length} currentPage={currentEngagementsPage} itemLabel="clients" onPageChange={setEngagementsPage} />
+          ) : null}
+        >
           <MetricsTable<IDEStats>
             data={pagedIdesByEngagements}
             columns={engagementsColumns}
@@ -331,12 +343,7 @@ export default function ClientsView({ model }: IDEViewProps) {
             tableContainerClassName="overflow-x-auto"
             getRowKey={ide => ide.ide}
           />
-          {sortedIdesByEngagements.length > 0 && (
-            <div className="border-t border-default px-6 py-4">
-              <TablePagination itemCount={sortedIdesByEngagements.length} currentPage={currentEngagementsPage} itemLabel="clients" onPageChange={setEngagementsPage} />
-            </div>
-          )}
-        </section>
+        </TableCard>
       </div>
     </ViewPanel>
   );
