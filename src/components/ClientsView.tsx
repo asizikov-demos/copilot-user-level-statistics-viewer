@@ -5,6 +5,7 @@ import type { ClientTrafficSummary } from '../types/clientTraffic';
 import type { IDEStatsData } from '../types/metrics';
 import { getIDEIcon, formatIDEName } from './icons/IDEIcons';
 import MetricsTable, { TableColumn } from './ui/MetricsTable';
+import TablePagination, { TABLE_PAGE_SIZE } from './ui/TablePagination';
 import { ViewPanel } from './ui';
 import { useSortableTable } from '../hooks/useSortableTable';
 import IDEDistributionChart from './charts/IDEDistributionChart';
@@ -68,6 +69,15 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleEngagementsSort,
   } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
+  const [usersPage, setUsersPage] = React.useState(1);
+  const [engagementsPage, setEngagementsPage] = React.useState(1);
+  React.useEffect(() => { setUsersPage(1); }, [sortedIdesByUsers]);
+  React.useEffect(() => { setEngagementsPage(1); }, [sortedIdesByEngagements]);
+  const currentUsersPage = Math.min(usersPage, Math.max(1, Math.ceil(sortedIdesByUsers.length / TABLE_PAGE_SIZE)));
+  const currentEngagementsPage = Math.min(engagementsPage, Math.max(1, Math.ceil(sortedIdesByEngagements.length / TABLE_PAGE_SIZE)));
+  const pagedIdesByUsers = sortedIdesByUsers.slice((currentUsersPage - 1) * TABLE_PAGE_SIZE, currentUsersPage * TABLE_PAGE_SIZE);
+  const pagedIdesByEngagements = sortedIdesByEngagements.slice((currentEngagementsPage - 1) * TABLE_PAGE_SIZE, currentEngagementsPage * TABLE_PAGE_SIZE);
+
   const headerClass = 'px-6 py-3 text-left';
   const headerRightClass = 'px-6 py-3 text-right';
   const cellClass = 'px-6 py-4 whitespace-nowrap text-sm text-default text-right';
@@ -76,6 +86,10 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleTrafficSort } = useSortableTable<ClientTrafficSummary, TrafficSortField>(
       model.traffic.summary.clients, 'requestCount', 'desc'
     );
+  const [trafficPage, setTrafficPage] = React.useState(1);
+  React.useEffect(() => { setTrafficPage(1); }, [sortedTraffic]);
+  const currentTrafficPage = Math.min(trafficPage, Math.max(1, Math.ceil(sortedTraffic.length / TABLE_PAGE_SIZE)));
+  const pagedTraffic = sortedTraffic.slice((currentTrafficPage - 1) * TABLE_PAGE_SIZE, currentTrafficPage * TABLE_PAGE_SIZE);
   const trafficColumns: TableColumn<ClientTrafficSummary>[] = [
     {
       id: 'client', header: 'Client', sortable: true,
@@ -233,24 +247,26 @@ export default function ClientsView({ model }: IDEViewProps) {
           ) : sortedTraffic.length === 0 ? (
             <p className="px-6 py-4 text-sm text-muted">No client model traffic was reported in the available records.</p>
           ) : (
-            <MetricsTable<ClientTrafficSummary>
-              data={sortedTraffic}
-              columns={trafficColumns}
-              sortState={{ field: trafficSortField ?? 'requestCount', direction: trafficSortDirection }}
-              onSortChange={({ field }) => {
-                if (field === 'client') handleTrafficSort('client');
-                else {
-                  const key = TRAFFIC_METRIC_COLUMNS.find(([key]) => key === field)?.[0];
-                  if (key) handleTrafficSort(key);
-                }
-              }}
-              getRowKey={client => client.client}
-              initialCount={10}
-              buttonCollapsedLabel={total => `Show all ${total} clients`}
-              buttonExpandedLabel="Show fewer clients"
-              tableContainerClassName="overflow-x-auto"
-              rowClassName={() => 'hover:bg-muted'}
-            />
+            <>
+              <MetricsTable<ClientTrafficSummary>
+                data={pagedTraffic}
+                columns={trafficColumns}
+                sortState={{ field: trafficSortField ?? 'requestCount', direction: trafficSortDirection }}
+                onSortChange={({ field }) => {
+                  if (field === 'client') handleTrafficSort('client');
+                  else {
+                    const key = TRAFFIC_METRIC_COLUMNS.find(([key]) => key === field)?.[0];
+                    if (key) handleTrafficSort(key);
+                  }
+                }}
+                getRowKey={client => client.client}
+                tableContainerClassName="overflow-x-auto"
+                rowClassName={() => 'hover:bg-muted'}
+              />
+              <div className="border-t border-default px-6 py-4">
+                <TablePagination itemCount={sortedTraffic.length} currentPage={currentTrafficPage} itemLabel="clients" onPageChange={setTrafficPage} />
+              </div>
+            </>
           )}
         </section>
 
@@ -282,33 +298,45 @@ export default function ClientsView({ model }: IDEViewProps) {
           </div>
         </div>
 
-        <div id={usersSection.id} className="bg-default rounded-md border border-default scroll-mt-28">
+        <section id={usersSection.id} aria-labelledby="client-users-title" className="bg-default rounded-md border border-default scroll-mt-28">
           <div className="px-6 py-4 border-b border-default">
-            <h3 className="text-lg font-semibold text-default">Clients Ordered by Number of Users</h3>
+            <h3 id="client-users-title" className="text-lg font-semibold text-default">Clients Ordered by Number of Users</h3>
           </div>
           <MetricsTable<IDEStats>
-            data={sortedIdesByUsers}
+            data={pagedIdesByUsers}
             columns={usersColumns}
             sortState={{ field: usersSortField as string, direction: usersSortDirection }}
             onSortChange={({ field }) => handleUsersSort(field as keyof IDEStats)}
             rowClassName={() => 'hover:bg-muted'}
             tableContainerClassName="overflow-x-auto"
+            getRowKey={ide => ide.ide}
           />
-        </div>
+          {sortedIdesByUsers.length > 0 && (
+            <div className="border-t border-default px-6 py-4">
+              <TablePagination itemCount={sortedIdesByUsers.length} currentPage={currentUsersPage} itemLabel="clients" onPageChange={setUsersPage} />
+            </div>
+          )}
+        </section>
 
-        <div id={engagementsSection.id} className="bg-default rounded-md border border-default scroll-mt-28">
+        <section id={engagementsSection.id} aria-labelledby="client-engagements-title" className="bg-default rounded-md border border-default scroll-mt-28">
           <div className="px-6 py-4 border-b border-default">
-            <h3 className="text-lg font-semibold text-default">Clients Ordered by Number of Engagements</h3>
+            <h3 id="client-engagements-title" className="text-lg font-semibold text-default">Clients Ordered by Number of Engagements</h3>
           </div>
           <MetricsTable<IDEStats>
-            data={sortedIdesByEngagements}
+            data={pagedIdesByEngagements}
             columns={engagementsColumns}
             sortState={{ field: engagementsSortField as string, direction: engagementsSortDirection }}
             onSortChange={({ field }) => handleEngagementsSort(field as keyof IDEStats)}
             rowClassName={() => 'hover:bg-muted'}
             tableContainerClassName="overflow-x-auto"
+            getRowKey={ide => ide.ide}
           />
-        </div>
+          {sortedIdesByEngagements.length > 0 && (
+            <div className="border-t border-default px-6 py-4">
+              <TablePagination itemCount={sortedIdesByEngagements.length} currentPage={currentEngagementsPage} itemLabel="clients" onPageChange={setEngagementsPage} />
+            </div>
+          )}
+        </section>
       </div>
     </ViewPanel>
   );
