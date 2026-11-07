@@ -135,7 +135,6 @@ export interface UserDetailedMetrics {
   reportingQuality: UserReportingQuality;
   activityCalendar: ActivityCalendarData;
   clientTraffic: ClientTrafficMetrics;
-  telemetryWarnings: ClientTelemetryWarning[];
   agentActivity: AgentActivity;
   thirdPartyAgentActivity?: ThirdPartyAgentActivity;
   cliCustomizations: CliCustomizationSummary[];

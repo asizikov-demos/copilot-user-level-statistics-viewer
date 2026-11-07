@@ -43,7 +43,6 @@ import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { isCliFeature } from '../../../domain/featureCategories';
 import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
 import { USER_DETAILS_SECTIONS } from './userDetailsSections';
-import ClientTelemetryNotice from '../../ClientTelemetryNotice';
 import { selectDayReportingQuality } from '../../../read-models/userDetails';
 
 registerChartJS();
@@ -338,7 +337,6 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       )}
       contentClassName="space-y-8"
     >
-      <ClientTelemetryNotice warnings={headerSummary.telemetryWarnings} showUserCounts={false} />
       <UserDetailsOverviewSection
         key={userId}
         sectionId={overviewSection.id}

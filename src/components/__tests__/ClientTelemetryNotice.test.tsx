@@ -40,15 +40,6 @@ describe('client telemetry notice', () => {
     expect(markup).toContain('rel="noopener noreferrer"');
   });
 
-  it('omits user counts when requested', () => {
-    const markup = renderToStaticMarkup(
-      <ClientTelemetryNotice warnings={[makeWarning({ userCount: 3 })]} showUserCounts={false} />,
-    );
-
-    expect(markup).toContain('VS Code IDE 1.138.0');
-    expect(markup).not.toContain('users)');
-  });
-
   it('renders nothing when there are no detected risks', () => {
     expect(renderToStaticMarkup(<ClientTelemetryNotice warnings={[]} />)).toBe('');
   });

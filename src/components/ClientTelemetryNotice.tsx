@@ -11,13 +11,11 @@ import { useExpandableList } from '../hooks/useExpandableList';
 
 interface ClientTelemetryNoticeProps {
   warnings: ClientTelemetryWarning[];
-  showUserCounts?: boolean;
   historicalGuidance?: boolean;
 }
 
 export default function ClientTelemetryNotice({
   warnings,
-  showUserCounts = true,
   historicalGuidance = false,
 }: ClientTelemetryNoticeProps) {
   const listId = useId();
@@ -48,7 +46,7 @@ export default function ClientTelemetryNotice({
           {visibleItems.map(warning => (
             <li key={`${warning.ide}-${warning.versionKind}-${warning.version}`}>
               <strong>{formatIDEName(warning.ide)} {warning.versionKind === 'ide' ? 'IDE' : 'plugin'} {warning.version}</strong>
-              {showUserCounts && ` (${warning.userCount} ${warning.userCount === 1 ? 'user' : 'users'})`}
+              {` (${warning.userCount} ${warning.userCount === 1 ? 'user' : 'users'})`}
               {' — '}{historicalGuidance ? 'October guidance (verify applicability): ' : warning.action === 'verify' ? 'Verify whether this release is affected. ' : ''}
               {warning.recommendation}
             </li>

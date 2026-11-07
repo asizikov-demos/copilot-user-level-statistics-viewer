@@ -79,6 +79,7 @@ describe('metricsWorker protocol', () => {
       });
       expect(result?.result.clients.reportingQuality.daily.map(day => day.missingTelemetryUsers)).toEqual([null, 1, null]);
       await send({ type: 'computeUserDetails', id: 'quality-details', userId: 7 });
+      expect(find('userDetailsResult')?.result).not.toHaveProperty('telemetryWarnings');
       expect(find('userDetailsResult')?.result).toMatchObject({
         reportingQuality: {
           uploadedDays: 1, telemetryReportedDays: 1, serverOnlyDays: 1,

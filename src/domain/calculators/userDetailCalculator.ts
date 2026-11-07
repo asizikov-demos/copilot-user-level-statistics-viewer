@@ -1,11 +1,5 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
-import {
-  accumulateClientTelemetry,
-  computeClientTelemetryWarnings,
-  createClientTelemetryAccumulator,
-  type ClientTelemetryAccumulator,
-} from './clientTelemetryCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
 import { computeActivityCalendar } from './activityCalendarCalculator';
 import { computeUserReportingQuality } from './reportingQualityCalculator';
@@ -112,7 +106,6 @@ interface CliVersionEntry {
 
 interface UserAccState {
   thirdPartyAgents: ThirdPartyAgentActivityAccumulator;
-  telemetry: ClientTelemetryAccumulator;
   cliCustomizations: CliCustomizationAccumulator;
   totalModelRequests: number;
   totalAiCreditsUsed: number;
@@ -144,7 +137,6 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
   if (!state) {
     state = {
       thirdPartyAgents: createThirdPartyAgentActivityAccumulator(),
-      telemetry: createClientTelemetryAccumulator(),
       cliCustomizations: createCliCustomizationAccumulator(),
       totalModelRequests: 0,
       totalAiCreditsUsed: 0,
@@ -212,16 +204,10 @@ function coalesceTableProDayRows(
     }
 
     accumulateInteractionAggMetricTotals(tablePro, row);
-    for (const key of ['last_known_plugin_version', 'last_known_ide_version'] as const) {
-      const incoming = row[key];
-      const existing = tablePro[key];
-      if (incoming && (!existing || Date.parse(incoming.sampled_at) > Date.parse(existing.sampled_at))) {
-        if (key === 'last_known_plugin_version') {
-          tablePro.last_known_plugin_version = row.last_known_plugin_version;
-        } else {
-          tablePro.last_known_ide_version = row.last_known_ide_version;
-        }
-      }
+    const incoming = row.last_known_plugin_version;
+    const existing = tablePro.last_known_plugin_version;
+    if (incoming && (!existing || Date.parse(incoming.sampled_at) > Date.parse(existing.sampled_at))) {
+      tablePro.last_known_plugin_version = incoming;
     }
   }
   return result;
@@ -300,7 +286,6 @@ export function accumulateUserDetail(
   }
 
   for (const ide of metric.totals_by_ide) {
-    accumulateClientTelemetry(state.telemetry, userId, ide);
     if (ide.last_known_plugin_version) {
       const pv = ide.last_known_plugin_version;
       const key = `${pv.plugin}-${pv.plugin_version}`;
@@ -380,9 +365,6 @@ export function accumulateUserDetail(
       last_known_plugin_version: ide.last_known_plugin_version
         ? { ...ide.last_known_plugin_version }
         : undefined,
-      last_known_ide_version: ide.last_known_ide_version
-        ? { ...ide.last_known_ide_version }
-        : undefined,
     })),
     totals_by_language_feature: metric.totals_by_language_feature.map((lf) => ({ ...lf })),
     totals_by_language_model: metric.totals_by_language_model.map((lm) => ({ ...lm })),
@@ -461,7 +443,6 @@ export function computeSingleUserDetailedMetrics(
     reportingQuality: computeUserReportingQuality(state.days),
     clientTraffic: computeClientTraffic(clientTrafficAccumulator),
     totalModelRequests: state.totalModelRequests,
-    telemetryWarnings: computeClientTelemetryWarnings(state.telemetry),
     agentActivity: computeAgentActivity(state.days),
     thirdPartyAgentActivity: computeThirdPartyAgentActivity(state.thirdPartyAgents),
     cliCustomizations: computeCliCustomizations(state.cliCustomizations),

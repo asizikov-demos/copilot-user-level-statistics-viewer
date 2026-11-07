@@ -63,7 +63,6 @@ export function makeUserDetails(
   return {
     activityCalendar: { daily: [], activeDays: 0 },
     reportingQuality: computeUserReportingQuality(overrides.days ?? []),
-    telemetryWarnings: [],
     clientTraffic: {
       summary: { recordCount: 0, reportedRecords: 0, activeUsers: 0, clients: [] },
       daily: [],
