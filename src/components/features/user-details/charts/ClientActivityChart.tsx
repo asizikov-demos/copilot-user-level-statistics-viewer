@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from 'react';
-import { Button, FormControl, Select } from '@primer/react';
+import { FormControl, Select } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import type { ScriptableContext, TooltipItem } from 'chart.js';
 import { ClientChartLegend, ClientPatternControl, useClientPatterns } from '../../../charts/ClientChartLegend';
@@ -131,7 +131,6 @@ export default function ClientActivityChart({
   cliVersions,
 }: ClientActivityChartProps) {
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
   const { patterned, setPatterned, getFill } = useClientPatterns();
   const [hiddenClients, setHiddenClients] = useState<ReadonlySet<string>>(new Set());
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
@@ -337,22 +336,15 @@ export default function ClientActivityChart({
   const footer = (
     <>
       {clientRows.length > 0 && (
-        <>
-          <div className="mb-4">
-            <Button aria-expanded={showDetails} onClick={() => setShowDetails(value => !value)}>
-              {showDetails ? 'Hide metric details' : 'Show metric details'}
-            </Button>
-          </div>
-          <MetricsTable
+        <MetricsTable
           data={clientRows}
           columns={[...clientColumns, ...(hasTraffic ? [sessionColumn] : []),
-            ...(showDetails ? [...detailColumns, ...(hasTraffic ? trafficDetailColumns : [])] : [])]}
+            ...detailColumns, ...(hasTraffic ? trafficDetailColumns : [])]}
           tableContainerClassName="overflow-x-auto"
           getRowKey={(client) => client.ide}
           pageSize={10}
           itemLabel="clients"
         />
-        </>
       )}
       {hasTraffic && (
         <p className="mt-4 text-xs text-muted">
