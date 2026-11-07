@@ -58,6 +58,12 @@ export interface LocalByokUsageTotals extends CopilotClientUsageTotals {
 }
 
 export interface CopilotMetrics extends CliCustomizationFields {
+  client_telemetry_present?: boolean | null;
+  usage_metrics_requirements?: {
+    met: string[];
+    unmet: string[];
+    unknown: string[];
+  } | null;
   totals_by_3rd_party_agent?: Array<{
     agent_id: string;
     agent_name: string;

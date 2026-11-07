@@ -12,6 +12,15 @@ function isCount(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
+function isUsageMetricsRequirements(value: unknown): boolean {
+  return isRecord(value)
+    && ['met', 'unmet', 'unknown'].every(key => {
+      const components = value[key];
+      return Array.isArray(components)
+        && components.every(component => typeof component === 'string');
+    });
+}
+
 function hasValidTrafficTotals(value: Record<string, unknown>): boolean {
   const tokens = value.token_usage;
   return isCount(value.request_count)
@@ -151,6 +160,16 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
       return null;
     }
     const parsedRaw = parsedUnknown as Record<string, unknown>;
+    const clientTelemetryPresent = parsedRaw.client_telemetry_present;
+    if (clientTelemetryPresent != null && typeof clientTelemetryPresent !== 'boolean') {
+      console.warn('Skipping line with invalid client_telemetry_present');
+      return null;
+    }
+    const usageMetricsRequirements = parsedRaw.usage_metrics_requirements;
+    if (usageMetricsRequirements != null && !isUsageMetricsRequirements(usageMetricsRequirements)) {
+      console.warn('Skipping line with invalid usage_metrics_requirements');
+      return null;
+    }
     const clientTotals = parsedRaw.totals_by_client;
     if (
       clientTotals != null

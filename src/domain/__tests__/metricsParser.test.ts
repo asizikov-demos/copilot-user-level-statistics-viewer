@@ -71,6 +71,95 @@ function makeClientTotal(): ClientUsageTotals {
 
 describe('metricsParser', () => {
   describe('parseMetricsLine', () => {
+    it.each([undefined, null, false, true])('preserves client telemetry state: %j', (telemetry) => {
+      const result = parseMetricsLine(makeParserMetricLine({ client_telemetry_present: telemetry }));
+
+      expect(result).not.toBeNull();
+      expect(result?.client_telemetry_present).toBe(telemetry);
+      expect(result).not.toHaveProperty('usage_metrics_requirements');
+      if (telemetry === undefined) {
+        expect(result).not.toHaveProperty('client_telemetry_present');
+      }
+    });
+
+    it.each([
+      undefined,
+      null,
+      { met: [], unmet: [], unknown: [] },
+      {
+        met: ['vscode', 'vscode/copilot-chat'],
+        unmet: ['goland/copilot-intellij'],
+        unknown: ['1.138.0:', ' Future/Component: ', 'future/component', 'future/component'],
+      },
+    ])('preserves unavailable, empty, or open-ended requirements: %j', (requirements) => {
+      const result = parseMetricsLine(
+        makeParserMetricLine({ usage_metrics_requirements: requirements }),
+        new StringPool(),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.usage_metrics_requirements).toEqual(requirements);
+      expect(result).not.toHaveProperty('client_telemetry_present');
+      if (requirements === undefined) {
+        expect(result).not.toHaveProperty('usage_metrics_requirements');
+      }
+    });
+
+    it.each([false, true])('keeps telemetry %j independent of unmet requirements and activity', (telemetry) => {
+      const requirements = { met: [], unmet: ['vscode/copilot-chat'], unknown: [] };
+      const result = parseMetricsLine(makeParserMetricLine({
+        client_telemetry_present: telemetry,
+        usage_metrics_requirements: requirements,
+      }));
+
+      expect(result?.client_telemetry_present).toBe(telemetry);
+      expect(result?.usage_metrics_requirements).toEqual(requirements);
+      expect(result?.user_initiated_interaction_count).toBe(10);
+      expect(result?.used_chat).toBe(true);
+    });
+
+    it.each([0, 1, 'false', 'true', [], {}])('rejects malformed client telemetry with a warning: %j', (telemetry) => {
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const result = parseMetricsLine(JSON.stringify({
+          ...makeParserMetric(),
+          client_telemetry_present: telemetry,
+        }));
+        expect(result).toBeNull();
+        expect(warning).toHaveBeenCalledWith('Skipping line with invalid client_telemetry_present');
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
+    it.each([
+      false,
+      1,
+      'not-an-object',
+      [],
+      {},
+      { unmet: [], unknown: [] },
+      { met: [], unknown: [] },
+      { met: [], unmet: [] },
+      ...['met', 'unmet', 'unknown'].flatMap(key =>
+        [null, 'vscode', {}, [null], [1], [false], [{}], [[]], ['vscode', 1]].map(value =>
+          ({ met: [], unmet: [], unknown: [], [key]: value })
+        )
+      ),
+    ])('rejects malformed requirements with a warning: %j', (requirements) => {
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const result = parseMetricsLine(JSON.stringify({
+          ...makeParserMetric(),
+          usage_metrics_requirements: requirements,
+        }));
+        expect(result).toBeNull();
+        expect(warning).toHaveBeenCalledWith('Skipping line with invalid usage_metrics_requirements');
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
     it('preserves client traffic without inferring legacy activity or adding IDE rows', () => {
       const clients = [makeClientTotal(), {
         ...makeClientTotal(),
