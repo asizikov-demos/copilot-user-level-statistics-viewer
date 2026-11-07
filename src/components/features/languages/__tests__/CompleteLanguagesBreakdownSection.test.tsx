@@ -2,6 +2,7 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { describe, expect, it } from 'vitest';
 import type { LanguageStats } from '../../../../domain/calculators/languageCalculator';
 import CompleteLanguagesBreakdownSection from '../sections/CompleteLanguagesBreakdownSection';
+import TablePagination from '../../../ui/TablePagination';
 
 function makeLanguage(language: string, overrides: Partial<LanguageStats> = {}): LanguageStats {
   return {
@@ -73,7 +74,7 @@ describe('Complete Languages Breakdown view toggle', () => {
         ['kotlin', '50', '400', '8.0', '40%'],
         ['typescript', '150', '600', '4.0', '60%'],
       ]);
-      const copy = root.findByType('p').children.join('');
+      const copy = root.findAllByType('p').map(textContent).join(' ');
       expect(copy).toContain('uploaded period');
       expect(copy).toContain('zero-activity entries');
       expect(copy).toContain('not weekly rates or productivity');
@@ -108,7 +109,7 @@ describe('Complete Languages Breakdown view toggle', () => {
     });
   });
 
-  it('preserves top-ten disclosure and all-row shares across sorting and view changes', async () => {
+  it('paginates languages without changing shares and resets on sorting and view changes', async () => {
     const languages = Array.from({ length: 12 }, (_, index) => makeLanguage(`language-${index}`, {
       totalGenerations: 10, totalEngagements: 10, uniqueUsers: 1, generationsPerUser: 10, generationShare: 1 / 12,
     }));
@@ -117,14 +118,16 @@ describe('Complete Languages Breakdown view toggle', () => {
       await click(root, 'Normalized');
       expect(rows(root)).toHaveLength(10);
       expect(rows(root).every(row => row[4] === '8.3%')).toBe(true);
-      await click(root, 'Show All 12 Languages');
-      expect(rows(root)).toHaveLength(12);
+      await act(async () => { root.findByType(TablePagination).props.onPageChange(2); });
+      expect(rows(root)).toHaveLength(2);
+      expect(rows(root).every(row => row[4] === '8.3%')).toBe(true);
       await click(root, 'Language');
-      expect(rows(root)).toHaveLength(12);
-      await click(root, 'Totals');
-      expect(rows(root)).toHaveLength(12);
-      await click(root, 'Show Less');
       expect(rows(root)).toHaveLength(10);
+      await act(async () => { root.findByType(TablePagination).props.onPageChange(2); });
+      expect(rows(root)).toHaveLength(2);
+      await click(root, 'Totals');
+      expect(rows(root)).toHaveLength(10);
+      expect(root.findAllByType('button').some(button => /Show All|Show Less/.test(textContent(button)))).toBe(false);
     });
   });
 

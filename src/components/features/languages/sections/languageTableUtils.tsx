@@ -1,6 +1,6 @@
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 
-export const MAX_LANGUAGES_TO_SHOW = 10;
+export const LANGUAGES_PER_PAGE = 10;
 
 export const tableRowClassName = () => 'hover:bg-muted';
 

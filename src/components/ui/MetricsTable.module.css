@@ -61,16 +61,3 @@
   outline: var(--focus-outline);
   outline-offset: var(--base-size-2);
 }
-
-.expandContainer {
-  display: flex;
-  justify-content: center;
-}
-
-.expandContainer[data-align='left'] {
-  justify-content: flex-start;
-}
-
-.expandContainer[data-align='right'] {
-  justify-content: flex-end;
-}

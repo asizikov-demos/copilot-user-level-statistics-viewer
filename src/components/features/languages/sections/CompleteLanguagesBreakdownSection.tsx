@@ -7,7 +7,7 @@ import EmptyState from '../../../ui/EmptyState';
 import MetricsTable, { type SortState as TableSortState, type TableColumn } from '../../../ui/MetricsTable';
 import {
   formatAcceptanceRate,
-  MAX_LANGUAGES_TO_SHOW,
+  LANGUAGES_PER_PAGE,
   tableRowClassName,
   wideCellRightClassName,
   wideHeaderRightClassName,
@@ -208,9 +208,9 @@ export default function CompleteLanguagesBreakdownSection({
         tableClassName="w-full divide-y divide-default"
         tableContainerClassName="overflow-x-auto border border-default"
         theadClassName="bg-muted"
-        initialCount={MAX_LANGUAGES_TO_SHOW}
-        buttonCollapsedLabel={(total) => `Show All ${total} Languages`}
-        buttonExpandedLabel="Show Less"
+        pageSize={LANGUAGES_PER_PAGE}
+        itemLabel="languages in breakdown"
+        getRowKey={lang => lang.language}
       />
 
       {languages.length === 0 && (

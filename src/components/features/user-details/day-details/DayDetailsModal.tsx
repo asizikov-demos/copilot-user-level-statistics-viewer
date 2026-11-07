@@ -227,8 +227,6 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, canNavigatePrevDay, canNavigateNextDay, onNavigateDay]);
 
-  if (!isOpen) return null;
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       timeZone: 'UTC',
@@ -240,20 +238,18 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
   };
 
   const hasData = !!dayMetrics;
-  const cliDayTotals = computeCliDayTotals(dayMetrics);
-  const cliClientRow = createCliClientActivityRow(cliDayTotals,
-    dayMetrics?.totals_by_cli != null
-    || dayMetrics?.totals_by_feature.some(feature => isCliFeature(feature.feature))
-  );
+  const cliDayTotals = React.useMemo(() => computeCliDayTotals(dayMetrics), [dayMetrics]);
   const hasCliActivity = cliDayTotals.interactionCount > 0;
   const cliInteractionCount = cliDayTotals.interactionCount;
   const hasClientInteractions = cliInteractionCount > 0
     || dayMetrics?.totals_by_ide.some(ide => getTotalUserInitiatedInteractionCount(ide) > 0);
-  const clientRequestRows = [...(dayMetrics?.totals_by_client ?? [])]
-    .sort((a, b) => b.request_count - a.request_count || a.client.localeCompare(b.client));
-  const modelRequestRows = clientRequestRows.flatMap(client =>
+  const clientRequestRows = React.useMemo(() => [...(dayMetrics?.totals_by_client ?? [])]
+    .sort((a, b) => b.request_count - a.request_count || a.client.localeCompare(b.client)),
+  [dayMetrics?.totals_by_client]);
+  const modelRequestRows = React.useMemo(() => clientRequestRows.flatMap(client =>
     client.totals_by_model.map(model => ({ ...model, client: client.client }))
-  ).sort((a, b) => b.request_count - a.request_count || a.model.localeCompare(b.model));
+  ).sort((a, b) => b.request_count - a.request_count || a.model.localeCompare(b.model)),
+  [clientRequestRows]);
   const hasClientRequests = clientRequestRows.some(row => row.request_count > 0);
   const hasLegacyModels = dayMetrics?.totals_by_language_model.some(row => [
     row.code_generation_activity_count, row.code_acceptance_activity_count,
@@ -267,42 +263,47 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
     || dayMetrics?.totals_by_vscode_agent?.total_user_messages != null;
 
   const featurePills = hasData ? buildFeaturePills(dayMetrics!, hasCliActivity) : [];
-  const ideClientRows = hasData ? mapIdeClientActivityRows(
-    dayMetrics!.totals_by_ide.filter((ide) => ide.ide !== 'copilot_app')
-  ) : [];
-  const ideVersionByClient = hasData
-    ? new Map(dayMetrics!.totals_by_ide.map((ide) => [
+  const clientRows = React.useMemo<ClientRow[]>(() => {
+    if (!dayMetrics) return [];
+    const cliClientRow = createCliClientActivityRow(cliDayTotals,
+      dayMetrics.totals_by_cli != null
+      || dayMetrics.totals_by_feature.some(feature => isCliFeature(feature.feature))
+    );
+    const ideClientRows = mapIdeClientActivityRows(
+      dayMetrics.totals_by_ide.filter((ide) => ide.ide !== 'copilot_app')
+    );
+    const ideVersionByClient = new Map(dayMetrics.totals_by_ide.map((ide) => [
       ide.ide,
       ide.last_known_plugin_version
         ? `${ide.last_known_plugin_version.plugin} v${ide.last_known_plugin_version.plugin_version}`
         : 'Unknown',
-    ]))
-    : new Map<string, string>();
-
-  const clientRows: ClientRow[] = hasData ? [
-    ...ideClientRows.map((client) => ({
-      name: formatIDEName(client.ide),
-      iconName: client.ide,
-      user_initiated_interaction_count: client.user_initiated_interaction_count,
-      code_generation_activity_count: client.code_generation_activity_count,
-      code_acceptance_activity_count: client.code_acceptance_activity_count,
-      loc_added_sum: client.loc_added_sum,
-      loc_deleted_sum: client.loc_deleted_sum,
-      plugin_version: ideVersionByClient.get(client.ide) ?? 'Unknown',
-    })),
-    ...(cliClientRow ? [{
-      name: formatIDEName(cliClientRow.ide),
-      iconName: cliClientRow.ide,
-      user_initiated_interaction_count: cliClientRow.user_initiated_interaction_count,
-      code_generation_activity_count: cliClientRow.code_generation_activity_count,
-      code_acceptance_activity_count: cliClientRow.code_acceptance_activity_count,
-      loc_added_sum: cliClientRow.loc_added_sum,
-      loc_deleted_sum: cliClientRow.loc_deleted_sum,
-      plugin_version: dayMetrics!.totals_by_cli?.last_known_cli_version
-        ? `v${dayMetrics!.totals_by_cli.last_known_cli_version.cli_version}`
-        : 'Unknown',
-    }] : []),
-  ] : [];
+    ]));
+    return [
+      ...ideClientRows.map((client) => ({
+        name: formatIDEName(client.ide),
+        iconName: client.ide,
+        user_initiated_interaction_count: client.user_initiated_interaction_count,
+        code_generation_activity_count: client.code_generation_activity_count,
+        code_acceptance_activity_count: client.code_acceptance_activity_count,
+        loc_added_sum: client.loc_added_sum,
+        loc_deleted_sum: client.loc_deleted_sum,
+        plugin_version: ideVersionByClient.get(client.ide) ?? 'Unknown',
+      })),
+      ...(cliClientRow ? [{
+        name: formatIDEName(cliClientRow.ide),
+        iconName: cliClientRow.ide,
+        user_initiated_interaction_count: cliClientRow.user_initiated_interaction_count,
+        code_generation_activity_count: cliClientRow.code_generation_activity_count,
+        code_acceptance_activity_count: cliClientRow.code_acceptance_activity_count,
+        loc_added_sum: cliClientRow.loc_added_sum,
+        loc_deleted_sum: cliClientRow.loc_deleted_sum,
+        plugin_version: dayMetrics.totals_by_cli?.last_known_cli_version
+          ? `v${dayMetrics.totals_by_cli.last_known_cli_version.cli_version}`
+          : 'Unknown',
+      }] : []),
+    ];
+  }, [dayMetrics, cliDayTotals]);
+  if (!isOpen) return null;
   const copilotAppUsage = hasData && hasCopilotAppActivity(dayMetrics!)
     ? dayMetrics!.totals_by_copilot_app
     : undefined;
@@ -472,16 +473,19 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
                 <>
                   <p className="text-sm text-muted mb-4">Reported model calls and tokens for this day, separate from legacy interactions and LOC.</p>
                   <MetricsTable
+                    key={`${date}:${userLogin}:client-requests`}
                     data={clientRequestRows}
                     columns={requestColumns}
                     tableContainerClassName="overflow-x-auto"
                     getRowKey={(_, idx) => idx}
-                    initialCount={5}
+                    pageSize={5}
+                    itemLabel="day client requests"
                     emptyState={<p className="text-sm text-muted">No client model requests reported for this day.</p>}
                   />
                 </>
               ) : clientRows.length > 0 ? (
                 <MetricsTable
+                  key={`${date}:${userLogin}:client-activity`}
                   data={clientRows}
                   columns={clientColumns}
                   tableClassName="w-full divide-y divide-default"
@@ -490,7 +494,8 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
                   tbodyClassName="bg-default divide-y divide-default"
                   rowClassName={() => 'hover:bg-muted'}
                   getRowKey={(_, idx) => idx}
-                  initialCount={5}
+                  pageSize={5}
+                  itemLabel="day client activity"
                 />
               ) : <p className="text-sm text-muted">No legacy client activity reported for this day.</p>}
             </div>
@@ -510,16 +515,19 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
                 <>
                   <p className="text-sm text-muted mb-4">Reported model calls by client and selection mode. Request records do not include language or feature attribution.</p>
                   <MetricsTable
+                    key={`${date}:${userLogin}:model-requests`}
                     data={modelRequestRows}
                     columns={modelRequestColumns}
                     tableContainerClassName="overflow-x-auto"
                     getRowKey={(_, idx) => idx}
-                    initialCount={10}
+                    pageSize={10}
+                    itemLabel="day model requests"
                     emptyState={<p className="text-sm text-muted">No model requests reported for this day.</p>}
                   />
                 </>
               ) : dayMetrics.totals_by_language_model.length > 0 ? (
                 <MetricsTable
+                  key={`${date}:${userLogin}:language-model`}
                   data={dayMetrics.totals_by_language_model}
                   columns={languageModelColumns}
                   tableClassName="w-full divide-y divide-default"
@@ -528,7 +536,8 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
                   tbodyClassName="bg-default divide-y divide-default"
                   rowClassName={() => 'hover:bg-muted'}
                   getRowKey={(_, idx) => idx}
-                  initialCount={10}
+                  pageSize={10}
+                  itemLabel="day language-model entries"
                 />
               ) : <p className="text-sm text-muted">No legacy language and model activity reported for this day.</p>}
             </div>

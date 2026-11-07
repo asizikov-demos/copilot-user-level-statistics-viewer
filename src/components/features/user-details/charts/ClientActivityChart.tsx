@@ -320,7 +320,7 @@ export default function ClientActivityChart({
     ? 'Daily Client Interactions'
     : measure === 'sessions' ? 'Daily Reported Client Sessions' : 'Daily Client Model Requests';
   const hasCliVersions = cliVersions && cliVersions.length > 0;
-  const allVersions = [
+  const allVersions = useMemo(() => [
     ...(pluginVersions || []).map(p => ({
       name: p.plugin,
       version: p.plugin_version,
@@ -331,7 +331,7 @@ export default function ClientActivityChart({
       version: c.cli_version,
       sampled_at: c.sampled_at,
     })),
-  ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime());
+  ].sort((a, b) => new Date(b.sampled_at).getTime() - new Date(a.sampled_at).getTime()), [pluginVersions, cliVersions]);
   const isEmpty = clientRows.length === 0 && !hasCliVersions && allVersions.length === 0 && !hasTraffic;
 
   const footer = (
@@ -349,9 +349,8 @@ export default function ClientActivityChart({
             ...(showDetails ? [...detailColumns, ...(hasTraffic ? trafficDetailColumns : [])] : [])]}
           tableContainerClassName="overflow-x-auto"
           getRowKey={(client) => client.ide}
-          initialCount={10}
-          buttonCollapsedLabel={total => `Show all ${total} clients`}
-          buttonExpandedLabel="Show fewer clients"
+          pageSize={10}
+          itemLabel="clients"
         />
         </>
       )}
@@ -373,9 +372,8 @@ export default function ClientActivityChart({
             columns={versionColumns}
             tableContainerClassName="overflow-x-auto border border-default"
             getRowKey={(_, i) => i}
-            initialCount={1}
-            buttonCollapsedLabel={(total) => `Show All ${total} Client Versions`}
-            buttonExpandedLabel="Show Less"
+            pageSize={5}
+            itemLabel="client versions"
           />
         </div>
       )}
