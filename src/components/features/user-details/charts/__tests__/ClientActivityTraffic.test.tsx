@@ -56,7 +56,6 @@ describe('ClientActivityChart traffic', () => {
         reportStartDay="2026-10-22" reportEndDay="2026-10-24"
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(2);
     expect(within(rows[0]).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
@@ -83,7 +82,6 @@ describe('ClientActivityChart traffic', () => {
         reportStartDay="2026-10-22" reportEndDay="2026-10-24"
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(1);
     expect(within(rows[0]).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
@@ -200,8 +198,8 @@ describe('ClientActivityChart traffic', () => {
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(11);
     fireEvent.click(screen.getByRole('link', { name: 'Next Page' }));
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
-    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
-    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
+    expect(within(screen.getByRole('table')).getByRole('columnheader', { name: 'LOC Added' })).toBeTruthy();
+    expect(within(screen.getByRole('table')).getByRole('columnheader', { name: 'Prompt tokens' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
     selectSessions();
     rerender(chart(traffic([], 0)));
@@ -220,7 +218,7 @@ describe('ClientActivityChart traffic', () => {
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 0, null]);
   });
 
-  it('joins canonical client rows without combining sessions and legacy activity, and expands metric details', () => {
+  it('joins canonical client rows and always shows available metric details', () => {
     const activity = {
       ide: 'copilot_cli', user_initiated_interaction_count: 7,
       code_generation_activity_count: 4, code_acceptance_activity_count: 2,
@@ -239,18 +237,42 @@ describe('ClientActivityChart traffic', () => {
     const rows = within(table).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(5);
     const cli = rows.find(row => row.textContent?.includes('Copilot CLI'))!;
-    expect(within(cli).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['Copilot CLI', '7', '4', '2', '5']);
+    expect(within(cli).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['Copilot CLI', '7', '4', '2', '5', '9', '1', '12', '3', '10', '20', '10']);
     const openCode = rows.find(row => row.textContent?.includes('OpenCode'))!;
-    expect(within(openCode).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['OpenCode', 'Not reported', 'Not reported', 'Not reported', '0']);
+    expect(within(openCode).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['OpenCode', 'Not reported', 'Not reported', 'Not reported', '0', 'Not reported', 'Not reported', 'Not reported', 'Not reported', '10', '20', '10']);
     const vscode = rows.find(row => row.textContent?.includes('VS Code'))!;
     expect(within(vscode).getAllByRole('cell').at(-1)?.textContent).toBe('Not reported');
-    expect(screen.queryByRole('columnheader', { name: 'LOC Added' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Show metric details' }));
-    expect(screen.getByRole('columnheader', { name: 'LOC Added' })).toBeTruthy();
-    expect(screen.getByRole('columnheader', { name: 'Prompt tokens' })).toBeTruthy();
+    expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
+      'Client', 'Interactions', 'Generation', 'Acceptance', 'Reported sessions', 'LOC Added', 'LOC Deleted',
+      'Suggested Add', 'Suggested Delete', 'Model requests', 'Prompt tokens', 'Output tokens',
+    ]);
+    expect(screen.queryByRole('button', { name: /metric details/i })).toBeNull();
     selectSessions();
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 5, null]);
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'interactions' } });
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([7, 0, 0]);
+  });
+
+  it('shows LOC details without traffic while omitting traffic-specific columns', () => {
+    render(
+      <ClientActivityChart
+        ideAggregates={[{
+          ide: 'vscode', user_initiated_interaction_count: 7,
+          code_generation_activity_count: 4, code_acceptance_activity_count: 2,
+          loc_added_sum: 9, loc_deleted_sum: 1,
+          loc_suggested_to_add_sum: 12, loc_suggested_to_delete_sum: 3,
+        }]}
+        days={[]}
+        reportStartDay="2026-10-22" reportEndDay="2026-10-24"
+      />,
+    );
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('columnheader').map(header => header.textContent)).toEqual([
+      'Client', 'Interactions', 'Generation', 'Acceptance', 'LOC Added', 'LOC Deleted', 'Suggested Add', 'Suggested Delete',
+    ]);
+    expect(within(table).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
+      'VS Code', '7', '4', '2', '9', '1', '12', '3',
+    ]);
+    expect(screen.queryByRole('button', { name: /metric details/i })).toBeNull();
   });
 });
