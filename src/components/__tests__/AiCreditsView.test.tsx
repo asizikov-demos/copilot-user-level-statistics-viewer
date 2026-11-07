@@ -37,6 +37,12 @@ describe('AiCreditsView empty states', () => {
       expect(section.querySelector('table')).toBeNull();
       expect(section.querySelector('[data-testid="ai-credits-chart"]')).toBeNull();
     });
+    expect(sections[1].querySelector('header')?.textContent).toContain('Top 5 Users by AI Credits Consumption');
+    expect(sections[1].querySelector('header')?.textContent).toContain('share of total credits consumed.');
+    expect(sections[2].querySelector('header')?.textContent).toContain('Usage Distribution');
+    expect(sections[2].querySelector('header')?.textContent).toContain('Averages are calculated per user');
+    expect(sections[1].querySelector('footer')).toBeNull();
+    expect(sections[2].querySelector('footer')).toBeNull();
   });
 
   it('keeps the empty states for zero-credit daily entries, users, and empty buckets', () => {
