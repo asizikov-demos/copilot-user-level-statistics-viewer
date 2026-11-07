@@ -1,6 +1,7 @@
 import { translateFeature } from '../../../../domain/featureTranslations';
 import type { LanguageFeatureImpactData, LanguageFeatureImpactRow } from '../../../../types/metrics';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
 
 interface LanguageFeatureImpactSectionProps {
   languageFeatureImpactData: LanguageFeatureImpactData;
@@ -43,16 +44,17 @@ export default function LanguageFeatureImpactSection({
 
   return (
     <div className="mt-6 pt-6 border-t border-default">
-      <h3 className="text-lg font-semibold text-default mb-2">LOC Impact by Language and Feature</h3>
-      <p className="text-sm text-muted mb-4">
-        Lines of code impacted (added + deleted) for top 10 languages, broken down by Copilot feature.
-      </p>
-      <MetricsTable
-        data={languageFeatureImpactData.rows}
-        columns={columns}
-        tableContainerClassName="overflow-x-auto border border-default"
-        getRowKey={(row) => row.language}
-      />
+      <TableCard
+        title="LOC Impact by Language and Feature"
+        description="Lines of code impacted (added + deleted) for top 10 languages, broken down by Copilot feature."
+      >
+        <MetricsTable
+          data={languageFeatureImpactData.rows}
+          columns={columns}
+          tableContainerClassName="overflow-x-auto"
+          getRowKey={(row) => row.language}
+        />
+      </TableCard>
     </div>
   );
 }

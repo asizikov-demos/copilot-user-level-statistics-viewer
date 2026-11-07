@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { rankBySelector, sortBySelector } from '../../../../utils/sorting';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
+import TablePagination from '../../../ui/TablePagination';
 import {
   formatAcceptanceRate,
   LANGUAGES_PER_PAGE,
@@ -39,6 +41,23 @@ export default function TopLanguageListsSection({
   const userRankMap = useMemo(
     () => rankBySelector(languages, lang => lang.language, lang => lang.uniqueUsers),
     [languages],
+  );
+
+  const [generationsPage, setGenerationsPage] = useState(1);
+  const [usersPage, setUsersPage] = useState(1);
+  useEffect(() => { setGenerationsPage(1); }, [languagesByGenerations]);
+  useEffect(() => { setUsersPage(1); }, [languagesByUsers]);
+  const generationsPageCount = Math.max(1, Math.ceil(languagesByGenerations.length / LANGUAGES_PER_PAGE));
+  const usersPageCount = Math.max(1, Math.ceil(languagesByUsers.length / LANGUAGES_PER_PAGE));
+  const currentGenerationsPage = Math.min(generationsPage, generationsPageCount);
+  const currentUsersPage = Math.min(usersPage, usersPageCount);
+  const pagedLanguagesByGenerations = languagesByGenerations.slice(
+    (currentGenerationsPage - 1) * LANGUAGES_PER_PAGE,
+    currentGenerationsPage * LANGUAGES_PER_PAGE,
+  );
+  const pagedLanguagesByUsers = languagesByUsers.slice(
+    (currentUsersPage - 1) * LANGUAGES_PER_PAGE,
+    currentUsersPage * LANGUAGES_PER_PAGE,
   );
 
   const languagesByGenerationsColumns: TableColumn<LanguageStats>[] = [
@@ -126,35 +145,53 @@ export default function TopLanguageListsSection({
 
   return (
     <div id={sectionId} className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 pt-6 border-t border-default scroll-mt-28">
-      <div>
-        <h3 className="text-lg font-semibold text-default mb-4">Languages by Code Generations</h3>
+      <TableCard
+        title="Languages by Code Generations"
+        description="Ranked by total code generations."
+        footer={languagesByGenerations.length > 0 ? (
+          <TablePagination
+            itemCount={languagesByGenerations.length}
+            currentPage={currentGenerationsPage}
+            pageSize={LANGUAGES_PER_PAGE}
+            itemLabel="languages"
+            onPageChange={setGenerationsPage}
+          />
+        ) : null}
+      >
         <MetricsTable
-          data={languagesByGenerations}
+          data={pagedLanguagesByGenerations}
           columns={languagesByGenerationsColumns}
           rowClassName={tableRowClassName}
           tableClassName="w-full divide-y divide-default"
-          tableContainerClassName="overflow-x-auto border border-default"
+          tableContainerClassName="overflow-x-auto"
           theadClassName="bg-muted"
-          pageSize={LANGUAGES_PER_PAGE}
-          itemLabel="languages by generations"
           getRowKey={lang => lang.language}
         />
-      </div>
+      </TableCard>
 
-      <div>
-        <h3 className="text-lg font-semibold text-default mb-4">Languages by Number of Users</h3>
+      <TableCard
+        title="Languages by Number of Users"
+        description="Ranked by unique user count."
+        footer={languagesByUsers.length > 0 ? (
+          <TablePagination
+            itemCount={languagesByUsers.length}
+            currentPage={currentUsersPage}
+            pageSize={LANGUAGES_PER_PAGE}
+            itemLabel="languages"
+            onPageChange={setUsersPage}
+          />
+        ) : null}
+      >
         <MetricsTable
-          data={languagesByUsers}
+          data={pagedLanguagesByUsers}
           columns={languagesByUsersColumns}
           rowClassName={tableRowClassName}
           tableClassName="w-full divide-y divide-default"
-          tableContainerClassName="overflow-x-auto border border-default"
+          tableContainerClassName="overflow-x-auto"
           theadClassName="bg-muted"
-          pageSize={LANGUAGES_PER_PAGE}
-          itemLabel="languages by users"
           getRowKey={lang => lang.language}
         />
-      </div>
+      </TableCard>
     </div>
   );
 }

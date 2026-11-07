@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SegmentedControl } from '@primer/react';
 import { CodeIcon } from '@primer/octicons-react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { sortByField } from '../../../../utils/sorting';
 import EmptyState from '../../../ui/EmptyState';
 import MetricsTable, { type SortState as TableSortState, type TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
+import TablePagination from '../../../ui/TablePagination';
 import {
   formatAcceptanceRate,
   LANGUAGES_PER_PAGE,
@@ -41,6 +43,14 @@ export default function CompleteLanguagesBreakdownSection({
   const sortedLanguages = useMemo(() => {
     return sortByField(languages, tableSortState.field as SortField, tableSortState.direction);
   }, [languages, tableSortState]);
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [sortedLanguages]);
+  const pageCount = Math.max(1, Math.ceil(sortedLanguages.length / LANGUAGES_PER_PAGE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedLanguages = sortedLanguages.slice(
+    (currentPage - 1) * LANGUAGES_PER_PAGE,
+    currentPage * LANGUAGES_PER_PAGE,
+  );
 
   const handleTableSortChange = (next: TableSortState) => {
     if (mode === 'totals') {
@@ -177,45 +187,62 @@ export default function CompleteLanguagesBreakdownSection({
 
   return (
     <div id={sectionId} className="mt-6 pt-6 border-t border-default scroll-mt-28">
-      <h3 className="text-lg font-semibold text-default mb-4">Complete Languages Breakdown</h3>
-      <div className="mb-4 max-w-full overflow-x-auto">
-        <SegmentedControl
-          aria-label="Language breakdown view"
-          onChange={(selectedIndex) => setMode(BREAKDOWN_MODES[selectedIndex] ?? 'totals')}
-        >
-          {BREAKDOWN_MODES.map((view) => (
-            <SegmentedControl.Button key={view} selected={mode === view}>
-              {view === 'totals' ? 'Totals' : 'Normalized'}
-            </SegmentedControl.Button>
-          ))}
-        </SegmentedControl>
-      </div>
-      {mode === 'normalized' && (
-        <p className="text-sm text-muted mb-4">
-          Across the uploaded period, generations are divided by distinct users with a reported
-          language-feature entry, including zero-activity entries. Users can appear in multiple languages;
-          these are not all developers coding that language. Share uses generations across all reported
-          language rows, including hidden rows. A dash means the denominator is zero.
-          These describe recorded activity, not weekly rates or productivity.
-        </p>
-      )}
-      <MetricsTable
-        data={sortedLanguages}
-        columns={mode === 'totals' ? completeLanguagesColumns : normalizedColumns}
-        sortState={tableSortState}
-        onSortChange={handleTableSortChange}
-        rowClassName={tableRowClassName}
-        tableClassName="w-full divide-y divide-default"
-        tableContainerClassName="overflow-x-auto border border-default"
-        theadClassName="bg-muted"
-        pageSize={LANGUAGES_PER_PAGE}
-        itemLabel="languages in breakdown"
-        getRowKey={lang => lang.language}
-      />
+      <TableCard
+        title="Complete Languages Breakdown"
+        headerActions={
+          <div className="max-w-full overflow-x-auto">
+            <SegmentedControl
+              aria-label="Language breakdown view"
+              onChange={(selectedIndex) => setMode(BREAKDOWN_MODES[selectedIndex] ?? 'totals')}
+            >
+              {BREAKDOWN_MODES.map((view) => (
+                <SegmentedControl.Button key={view} selected={mode === view}>
+                  {view === 'totals' ? 'Totals' : 'Normalized'}
+                </SegmentedControl.Button>
+              ))}
+            </SegmentedControl>
+          </div>
+        }
+        description={
+          <>
+            <p>Switch between language totals and normalized per-user metrics.</p>
+            {mode === 'normalized' && (
+              <p>
+                Across the uploaded period, generations are divided by distinct users with a reported
+                language-feature entry, including zero-activity entries. Users can appear in multiple languages;
+                these are not all developers coding that language. Share uses generations across all reported
+                language rows, including hidden rows. A dash means the denominator is zero.
+                These describe recorded activity, not weekly rates or productivity.
+              </p>
+            )}
+          </>
+        }
+        footer={sortedLanguages.length > 0 ? (
+          <TablePagination
+            itemCount={sortedLanguages.length}
+            currentPage={currentPage}
+            pageSize={LANGUAGES_PER_PAGE}
+            itemLabel="languages"
+            onPageChange={setPage}
+          />
+        ) : null}
+      >
+        <MetricsTable
+          data={pagedLanguages}
+          columns={mode === 'totals' ? completeLanguagesColumns : normalizedColumns}
+          sortState={tableSortState}
+          onSortChange={handleTableSortChange}
+          rowClassName={tableRowClassName}
+          tableClassName="w-full divide-y divide-default"
+          tableContainerClassName="overflow-x-auto"
+          theadClassName="bg-muted"
+          getRowKey={lang => lang.language}
+        />
 
-      {languages.length === 0 && (
-        <EmptyState icon={CodeIcon} heading="No language data available" headingAs="h4" />
-      )}
+        {languages.length === 0 && (
+          <EmptyState icon={CodeIcon} heading="No language data available" headingAs="h4" />
+        )}
+      </TableCard>
     </div>
   );
 }
