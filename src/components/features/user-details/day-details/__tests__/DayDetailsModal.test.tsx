@@ -382,7 +382,7 @@ describe('DayDetailsModal', () => {
       expect(markup).toContain('Impact card');
       for (const absent of [
         'id="day-details-cli-customizations"',
-        'VS Code Agents',
+        'VS Code Agents window',
         'Activity by Feature',
         'Activity by Client',
         'Activity by Language',
@@ -456,7 +456,7 @@ describe('DayDetailsModal', () => {
       const markup = renderDay(makeUserDay(fields));
 
       expect(markup).toContain('Dedicated Agents-window activity');
-      expect(markup).toContain('Used VS Code Agents');
+      expect(markup).toContain('Used VS Code Agents window');
       for (const value of expected) expect(markup).toContain(value);
       expect(markup).not.toContain('IDE Agent');
     });
@@ -466,10 +466,10 @@ describe('DayDetailsModal', () => {
         totals_by_vscode_agent: { session_count: 0, total_user_messages: null },
       }));
 
-      expect(markup).toContain('VS Code Agents');
+      expect(markup).toContain('VS Code Agents window');
       expect(markup).toContain('Sessions');
       expect(markup).toContain('>0<');
-      expect(markup).not.toContain('Used VS Code Agents');
+      expect(markup).not.toContain('Used VS Code Agents window');
       expect(markup).not.toContain('User messages');
       expect(screen.getByText('VS Code Agents').closest('div')?.textContent).not.toContain('Not reported');
     });

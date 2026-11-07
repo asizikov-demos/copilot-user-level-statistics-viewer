@@ -43,7 +43,7 @@ describe('VSCodeAgentUsageChart', () => {
         [{ date: '2024-01-15', sessionCount: 0, sessionsReportedRecords: 1 }],
       ), 'user');
 
-      expect(bar.mock.lastCall![0]['aria-label']).toBe('Daily VS Code Agents: sessions.');
+      expect(bar.mock.lastCall![0]['aria-label']).toBe('Daily VS Code Agents window: sessions.');
       expect(markup).toContain('>0<');
       expect(markup).not.toContain('Distinct active users');
       expect(markup).not.toContain('User messages');
@@ -56,7 +56,7 @@ describe('VSCodeAgentUsageChart', () => {
         [{ date: '2024-01-15', activeUsers: 1, sessionCount: 2, userMessages: 7 }],
       ), 'user');
 
-      expect(bar.mock.lastCall![0]['aria-label']).toBe('Daily VS Code Agents: sessions, user messages.');
+      expect(bar.mock.lastCall![0]['aria-label']).toBe('Daily VS Code Agents window: sessions, user messages.');
       expect(line).not.toHaveBeenCalled();
       expect(markup).toContain('Usage bar chart');
       expect(markup).toContain('User messages');
@@ -72,7 +72,7 @@ describe('VSCodeAgentUsageChart', () => {
     it('renders unavailable metrics as an explicit empty state', () => {
       const markup = renderChart(makeVSCodeAgentUsage({}));
 
-      expect(markup).toContain('VS Code Agents metrics are not reported');
+      expect(markup).toContain('VS Code Agents window metrics are not reported');
       expect(markup).not.toContain('Usage chart');
     });
 

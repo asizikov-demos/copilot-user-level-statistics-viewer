@@ -39,6 +39,9 @@ describe('AI adoption phase sections', () => {
 
     expect(markup).toContain('id="phase-assignment"');
     expect(markup).toContain('How phases are assigned');
+    expect(markup).toContain('Chat-first users');
+    expect(markup).toContain('qualifying feature usage on at least two days in the 28-day period');
+    expect(markup).toContain('This does not mean they used only chat.');
     expect(markup).toContain('Phase 3');
     expect(markup).toContain('github.blog/changelog/2026-05-29-copilot-usage-metrics-api-adds-cohorts-for-ai-adoption');
   });
@@ -55,6 +58,8 @@ describe('AI adoption phase sections', () => {
     expect(markup).toContain('1,248</span> people used Copilot.');
     expect(markup).toContain('450</span> reached GitHub agent surfaces.');
     expect(markup).toContain('>56%<');
+    expect(markup).toContain('Chat-first users · <span class="tabular-nums">96</span>');
+    expect(markup).toContain('Chat-first users: 96 (8%)');
     expect(markup).toContain('Phase 3 · <span class="tabular-nums">132</span>');
     expect(markup).toContain('Two or more agent surfaces, or Copilot app');
     expect(markup).not.toContain('Completions ·');

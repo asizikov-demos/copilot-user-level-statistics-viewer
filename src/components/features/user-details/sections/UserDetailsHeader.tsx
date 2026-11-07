@@ -11,6 +11,7 @@ import {
   formatNumber,
 } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
+import { CHAT_FIRST_DESCRIPTION } from '../../ai-adoption-phases/aiAdoptionPhaseMetadata';
 
 interface UserDetailsHeaderProps {
   userLogin: string;
@@ -98,6 +99,9 @@ export default function UserDetailsHeader({
         <span aria-hidden="true" className="text-disabled">•</span>
         <span>{formatLastActive(summary.daysSinceLastActive)}</span>
       </p>
+      {aiAdoptionPhase?.phase_number === 0 && (
+        <p className="mt-1 text-xs text-muted">{CHAT_FIRST_DESCRIPTION}</p>
+      )}
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4 rounded-lg border border-default bg-default px-5 py-4 sm:grid-cols-3 lg:grid-cols-5">
         <HeaderStat
           label="Active days"

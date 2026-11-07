@@ -8,7 +8,7 @@ interface PhaseDepthHeaderProps {
 }
 
 const PHASE_SEGMENTS = [
-  { phaseNumber: 0, label: 'No cohort', summary: 'Below engagement criteria', fill: 'bg-[var(--borderColor-default)]', text: 'text-default' },
+  { phaseNumber: 0, label: 'Chat-first users', summary: 'Below engagement criteria', fill: 'bg-[var(--borderColor-default)]', text: 'text-default' },
   { phaseNumber: 1, label: 'Phase 1', summary: 'Completions or IDE agent mode', fill: 'bg-[var(--display-blue-scale-1)]', text: 'text-[var(--display-blue-scale-9)]' },
   { phaseNumber: 2, label: 'Phase 2', summary: 'One GitHub agent surface', fill: 'bg-[var(--display-blue-scale-4)]', text: 'text-white' },
   { phaseNumber: 3, label: 'Phase 3', summary: 'Two or more agent surfaces, or Copilot app', fill: 'bg-[var(--display-blue-scale-9)]', text: 'text-white' },
