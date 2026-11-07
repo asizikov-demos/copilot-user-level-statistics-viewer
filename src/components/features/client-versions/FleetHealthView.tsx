@@ -1,22 +1,25 @@
 "use client";
 
 import { useMemo } from 'react';
+import { Details } from '@primer/react';
 import { ViewPanel } from '../../ui';
 import { usePluginVersions } from '../../../hooks/usePluginVersions';
 import { CLIENT_VERSIONS_SECTIONS } from '../../layout/contextSections';
 import type { ClientVersionsReadModel } from '../../../read-models/clients';
 import ClientVersionsDashboard from './ClientVersionsDashboard';
 import ClientTelemetryNotice from '../../ClientTelemetryNotice';
+import ReportingQualitySection from './ReportingQualitySection';
 import {
   analyzeJetBrainsHealth,
   analyzeVsCodeHealth,
 } from './clientVersionAnalysis';
 
-interface ClientVersionsViewProps {
+interface FleetHealthViewProps {
   model: ClientVersionsReadModel;
+  onUserClick: (userLogin: string, userId: number) => void;
 }
 
-export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
+export default function FleetHealthView({ model, onUserClick }: FleetHealthViewProps) {
   const { pluginVersionData, reportStartDay } = model;
   const { versions: jetbrainsUpdates, isLoading: jbLoading, error: jbError } = usePluginVersions('jetbrains');
   const {
@@ -27,7 +30,7 @@ export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
     currentPreviewMinor,
     updatedAt: vsUpdatedAt,
   } = usePluginVersions('vscode');
-  const [healthSection, driftSection, methodologySection] = CLIENT_VERSIONS_SECTIONS;
+  const [reportingSection, trendSection, requirementsSection, usersSection, healthSection, driftSection, methodologySection] = CLIENT_VERSIONS_SECTIONS;
   const platforms = useMemo(
     () => [
       analyzeJetBrainsHealth({
@@ -65,12 +68,25 @@ export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
   return (
     <ViewPanel
       headerProps={{
-        title: 'Client Versions',
-        description: 'Prioritize plugin and extension upgrades that can affect Copilot feature availability and telemetry quality.',
+        title: 'Fleet Health',
+        description: 'Review reported telemetry and minimum requirements alongside observed plugin and extension versions.',
       }}
       contentClassName="space-y-6"
     >
-      <ClientTelemetryNotice warnings={model.telemetryWarnings} />
+      <ReportingQualitySection
+        quality={model.reportingQuality}
+        onUserClick={onUserClick}
+        sectionIds={{
+          summary: reportingSection.id,
+          trend: trendSection.id,
+          requirements: requirementsSection.id,
+          users: usersSection.id,
+        }}
+      />
+      <p className="text-sm text-muted">
+        The version comparison below uses release metadata, not API-reported minimum requirements.
+        An outdated version is not proof of missing telemetry or an unmet requirement.
+      </p>
       <ClientVersionsDashboard
         platforms={platforms}
         reportStartDay={reportStartDay}
@@ -81,6 +97,16 @@ export default function ClientVersionsView({ model }: ClientVersionsViewProps) {
           methodology: methodologySection.id,
         }}
       />
+      {model.reportingQuality.summary.telemetryReportedRecords === 0
+        && model.reportingQuality.summary.requirementsReportedRecords === 0
+        && model.telemetryWarnings.length > 0 && (
+          <Details className="rounded-md border border-default p-4">
+            <Details.Summary>Historical October guidance for older exports</Details.Summary>
+            <div className="mt-4">
+              <ClientTelemetryNotice warnings={model.telemetryWarnings} historicalGuidance />
+            </div>
+          </Details>
+        )}
     </ViewPanel>
   );
 }

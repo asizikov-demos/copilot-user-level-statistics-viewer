@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import ClientVersionsDashboard from '../ClientVersionsDashboard';
 import type { ClientPlatformHealth } from '../clientVersionAnalysis';
 
@@ -52,7 +54,72 @@ const platforms: ClientPlatformHealth[] = [
   },
 ];
 
+afterEach(cleanup);
+
 describe('ClientVersionsDashboard', () => {
+  it('paginates version drift into ten-row pages and resets for changed cohorts', () => {
+    const withCohorts = (count: number): ClientPlatformHealth[] => [{
+      ...platforms[0],
+      totalUsers: count,
+      currentUsers: 0,
+      outdatedUsers: count,
+      uniqueVersions: count,
+      usernames: Array.from({ length: count }, (_, index) => `synthetic-${index}`),
+      outdatedVersions: Array.from({ length: count }, (_, index) => ({
+        ...platforms[0].outdatedVersions[0],
+        version: `0.37.${index}`,
+        userCount: 1,
+        usernames: [`synthetic-${index}`],
+      })),
+    }];
+    const dashboard = (data: ClientPlatformHealth[]) => <ClientVersionsDashboard
+      platforms={data} reportStartDay="2026-03-05" vsCodeUpdatedAt="2026-03-05"
+      sectionIds={{ health: 'health', drift: 'drift', methodology: 'methodology' }} />;
+    const { rerender } = render(dashboard(withCohorts(25)));
+    const drift = within(screen.getByRole('heading', { name: 'Version drift' }).closest('section')!);
+    const table = drift.getByRole('table');
+    expect(within(table).getAllByRole('row')).toHaveLength(11);
+    expect(drift.getByText('Showing 1-10 of 25 outdated versions')).toBeTruthy();
+    expect(drift.queryByRole('button', { name: /Show all/ })).toBeNull();
+    fireEvent.click(drift.getByRole('link', { name: 'Page 2' }));
+    expect(within(table).getAllByRole('row')).toHaveLength(11);
+    expect(within(table).getAllByRole('row')[1].textContent).toContain('0.37.10');
+    expect(drift.getByText('Showing 11-20 of 25 outdated versions')).toBeTruthy();
+    fireEvent.click(drift.getByRole('link', { name: 'Page 3' }));
+    expect(within(table).getAllByRole('row')).toHaveLength(6);
+    expect(drift.getByText('Showing 21-25 of 25 outdated versions')).toBeTruthy();
+    rerender(dashboard(withCohorts(3)));
+    expect(drift.getByText('Showing 1-3 of 3 outdated versions')).toBeTruthy();
+    expect(within(table).getAllByRole('row')).toHaveLength(4);
+    expect(drift.queryByRole('link', { name: 'Page 3' })).toBeNull();
+    rerender(dashboard(withCohorts(0)));
+    expect(drift.queryByRole('group', { name: 'Pagination for outdated versions' })).toBeNull();
+  });
+
+  it.each(platforms)('shows the $platform icon beside its name in the version drift client column', (platform) => {
+    const markup = renderToStaticMarkup(
+      <ClientVersionsDashboard
+        platforms={[{
+          ...platform,
+          outdatedVersions: [{
+            ...platforms[0].outdatedVersions[0],
+            scope: platform.scope,
+            platform: platform.platform,
+          }],
+        }]}
+        reportStartDay="2026-03-05"
+        vsCodeUpdatedAt="2026-03-05"
+        sectionIds={{ health: 'health', drift: 'drift', methodology: 'methodology' }}
+      />,
+    );
+    const drift = markup.split('id="drift"')[1]?.split('</section>')[0] ?? '';
+    const clientCell = drift.match(/<td\b[^>]*>([\s\S]*?)<\/td>/)?.[1] ?? '';
+    expect(clientCell).toContain(platform.platform);
+    expect(clientCell).toContain('<svg');
+    expect(clientCell).toContain('aria-hidden="true"');
+    expect(clientCell).not.toMatch(/class="[^"]*\bborder\b/);
+  });
+
   it('leads with fleet health and consolidates outdated cohorts into one table', () => {
     const markup = renderToStaticMarkup(
       <ClientVersionsDashboard

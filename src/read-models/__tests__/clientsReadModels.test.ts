@@ -178,6 +178,7 @@ describe('client read models', () => {
     const metrics = makeClientMetrics();
 
     expect(selectClientVersionsReadModel(metrics)).toEqual({
+      reportingQuality: metrics.clients.reportingQuality,
       telemetryWarnings: metrics.clients.telemetryWarnings,
       pluginVersionData: metrics.clients.pluginVersionData,
       reportStartDay: '2026-01-15',

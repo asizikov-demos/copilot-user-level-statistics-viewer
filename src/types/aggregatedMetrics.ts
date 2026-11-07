@@ -39,6 +39,7 @@ import type { AgentActivity, ThirdPartyAgentActivity } from './agentActivity';
 import type { ExecutiveSummaryMetrics } from '../domain/calculators/executiveSummaryCalculator';
 import type { ClientTelemetryWarning } from '../domain/calculators/clientTelemetryCalculator';
 import type { ClientTrafficMetrics } from './clientTraffic';
+import type { ReportingQualityMetrics } from './reportingQuality';
 import type { ActivityCalendarData } from '../domain/calculators/activityCalendarCalculator';
 
 export interface OverviewMetricsSlice {
@@ -80,6 +81,7 @@ export interface LanguagesMetricsSlice {
 }
 
 export interface ClientsMetricsSlice {
+  reportingQuality: ReportingQualityMetrics;
   traffic: ClientTrafficMetrics;
   telemetryWarnings: ClientTelemetryWarning[];
   ideStats: IDEStatsData[];

@@ -33,6 +33,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
     'dailyLanguageLocData',
   ],
   clients: [
+    'reportingQuality',
     'traffic',
     'telemetryWarnings',
     'ideStats',

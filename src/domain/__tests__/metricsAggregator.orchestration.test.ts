@@ -266,6 +266,7 @@ describe('metrics aggregation contract', () => {
       },
     };
     const clientAggregation = {
+      reportingQuality: defaults.clients.reportingQuality,
       traffic: defaults.clients.traffic,
       telemetryWarnings: defaults.clients.telemetryWarnings,
       ideStats: [...defaults.clients.ideStats],

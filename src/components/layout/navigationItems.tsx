@@ -42,7 +42,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'AI Adoption Phases', view: VIEW_MODES.AI_ADOPTION_PHASES, icon: MilestoneIcon },
   { label: 'Model Usage', view: VIEW_MODES.MODEL_DETAILS, icon: AiModelIcon },
   { label: 'Languages', view: VIEW_MODES.LANGUAGES, icon: CodeIcon },
-  { label: 'Client Versions', view: VIEW_MODES.CLIENT_VERSIONS, icon: VersionsIcon },
+  { label: 'Fleet Health', view: VIEW_MODES.CLIENT_VERSIONS, icon: VersionsIcon },
   { label: 'AI Credits', view: VIEW_MODES.AI_CREDITS, icon: CreditCardIcon },
   { label: 'Executive Summary', view: VIEW_MODES.EXECUTIVE_SUMMARY, icon: FileIcon },
   { label: 'About', view: VIEW_MODES.ABOUT, icon: InfoIcon },

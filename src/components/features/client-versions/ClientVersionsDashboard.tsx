@@ -1,11 +1,13 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { Banner, Details, Label, Link } from '@primer/react';
 import { AlertIcon, CheckIcon, ChevronRightIcon, InfoIcon } from '@primer/octicons-react';
 import type { PluginVersion } from '../../../hooks/usePluginVersions';
 import { getIDEIcon } from '../../icons/IDEIcons';
 import EmptyState from '../../ui/EmptyState';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
+import TablePagination, { TABLE_PAGE_SIZE } from '../../ui/TablePagination';
 import type {
   ClientPlatformHealth,
   OutdatedClientVersion,
@@ -47,15 +49,15 @@ function StatusIcon({ kind }: { kind: keyof typeof STATUS_ICON }) {
   );
 }
 
-function PlatformMark({ scope }: { scope: ClientPlatformHealth['scope'] }) {
+function PlatformMark({ scope, compact = false }: { scope: ClientPlatformHealth['scope']; compact?: boolean }) {
   const Icon = getIDEIcon(scope);
 
   return (
     <span
-      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-default bg-muted"
+      className={compact ? 'shrink-0' : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-default bg-muted'}
       aria-hidden="true"
     >
-      <Icon size={24} />
+      <Icon size={compact ? 16 : 24} />
     </span>
   );
 }
@@ -258,9 +260,15 @@ function VersionDriftTable({
   platforms: ClientPlatformHealth[];
   sectionId: string;
 }) {
-  const rows = platforms
+  const [page, setPage] = useState(1);
+  const rows = useMemo(() => platforms
     .flatMap(({ outdatedVersions }) => outdatedVersions)
-    .sort((left, right) => right.userCount - left.userCount);
+    .sort((left, right) => right.userCount - left.userCount), [platforms]);
+  const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * TABLE_PAGE_SIZE;
+  const pagedRows = rows.slice(pageStart, pageStart + TABLE_PAGE_SIZE);
+  useEffect(() => { setPage(1); }, [rows]);
   const unclassifiedPlatforms = platforms.filter(
     ({ metadataState, totalUsers, unclassifiedUsers }) =>
       totalUsers > 0 && (metadataState !== 'ready' || (unclassifiedUsers ?? 0) > 0),
@@ -271,7 +279,12 @@ function VersionDriftTable({
       id: 'platform',
       header: 'Client',
       className: 'px-4 py-3 font-medium text-default whitespace-nowrap',
-      renderCell: ({ platform }) => platform,
+      renderCell: ({ scope, platform }) => (
+        <div className="flex items-center gap-2">
+          <PlatformMark scope={scope} compact />
+          <span>{platform}</span>
+        </div>
+      ),
     },
     {
       id: 'version',
@@ -321,18 +334,18 @@ function VersionDriftTable({
           description="This report does not include JetBrains or VS Code version data."
         />
       ) : rows.length > 0 ? (
-        <MetricsTable
-          data={rows}
-          columns={columns}
-          tableClassName="min-w-[900px] w-full text-left text-sm"
-          tableContainerClassName="overflow-x-auto rounded-md border border-default bg-default"
-          theadClassName="bg-muted text-xs text-muted"
-          rowClassName={() => 'hover:bg-muted'}
-          getRowKey={(row) => `${row.scope}-${row.version}`}
-          initialCount={6}
-          buttonCollapsedLabel={(total) => `Show all ${total} outdated versions`}
-          buttonExpandedLabel="Show fewer versions"
-        />
+        <div className="space-y-4">
+          <MetricsTable
+            data={pagedRows}
+            columns={columns}
+            tableClassName="min-w-[900px] w-full text-left text-sm"
+            tableContainerClassName="overflow-x-auto rounded-md border border-default bg-default"
+            theadClassName="bg-muted text-xs text-muted"
+            rowClassName={() => 'hover:bg-muted'}
+            getRowKey={(row) => `${row.scope}-${row.version}`}
+          />
+          <TablePagination itemCount={rows.length} currentPage={currentPage} itemLabel="outdated versions" onPageChange={setPage} />
+        </div>
       ) : unclassifiedPlatforms.length > 0 ? (
         <EmptyState
           border

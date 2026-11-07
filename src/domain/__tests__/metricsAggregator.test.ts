@@ -15,6 +15,124 @@ const vscodeAt = (version: string) => makeIdeTotal('vscode', 0, {
 });
 
 describe('metricsAggregator cross-family consistency', () => {
+  it('deduplicates reporting issues within each period, day, component and affected-user measure', () => {
+    const row = (userId: number, day: string, overrides = {}) => makeMetric({
+      user_id: userId,
+      user_login: `user-${userId}`,
+      report_start_day: '2026-11-01',
+      report_end_day: '2026-11-04',
+      day,
+      ...overrides,
+    });
+    const issue = {
+      client_telemetry_present: false,
+      usage_metrics_requirements: {
+        met: ['vscode'],
+        unmet: ['vscode/copilot-chat', 'vscode/copilot-chat', '1.138.0:'],
+        unknown: ['goland/copilot-intellij'],
+      },
+    };
+    const records = [
+      row(1, '2026-11-02', issue),
+      row(1, '2026-11-02', issue),
+      row(1, '2026-11-03', {
+        client_telemetry_present: true,
+        usage_metrics_requirements: { met: [], unmet: [], unknown: ['vscode/copilot-chat'] },
+      }),
+      row(2, '2026-11-02', { client_telemetry_present: false }),
+      row(2, '2026-11-03', {
+        client_telemetry_present: null,
+        usage_metrics_requirements: { met: [], unmet: ['vscode/copilot-chat'], unknown: [] },
+      }),
+      row(1, '2026-11-04', { client_telemetry_present: false, usage_metrics_requirements: null }),
+    ];
+    const original = structuredClone(records);
+    const quality = aggregateMetrics(records).aggregated.clients.reportingQuality;
+
+    expect(quality.summary).toEqual({
+      recordCount: 6, telemetryReportedRecords: 5, requirementsReportedRecords: 4,
+      missingTelemetryUsers: 2, belowMinimumUsers: 2,
+    });
+    expect(quality.daily.map(day => [day.day, day.missingTelemetryUsers, day.belowMinimumUsers])).toEqual([
+      ['2026-11-01', null, null],
+      ['2026-11-02', 2, 1],
+      ['2026-11-03', 0, 1],
+      ['2026-11-04', 1, null],
+    ]);
+    expect(quality.components).toEqual([
+      { component: 'vscode/copilot-chat', unmetUsers: 2, unknownUsers: 1 },
+      { component: '1.138.0:', unmetUsers: 1, unknownUsers: 0 },
+      { component: 'goland/copilot-intellij', unmetUsers: 0, unknownUsers: 1 },
+      { component: 'vscode', unmetUsers: 0, unknownUsers: 0 },
+    ]);
+    expect(quality.affectedUsers).toEqual([
+      {
+        userId: 1, userLogin: 'user-1', missingTelemetryDays: 2, belowMinimumDays: 1,
+        affectedComponents: ['1.138.0:', 'vscode/copilot-chat'],
+        lastMissingTelemetryDay: '2026-11-04', lastBelowMinimumDay: '2026-11-02', lastIssueDay: '2026-11-04',
+      },
+      {
+        userId: 2, userLogin: 'user-2', missingTelemetryDays: 1, belowMinimumDays: 1,
+        affectedComponents: ['vscode/copilot-chat'],
+        lastMissingTelemetryDay: '2026-11-02', lastBelowMinimumDay: '2026-11-03', lastIssueDay: '2026-11-03',
+      },
+    ]);
+    expect(records).toEqual(original);
+  });
+
+  it('keeps unavailable signals separate from reported zero issues and unverifiable components', () => {
+    const quality = aggregateMetrics([
+      makeMetric({
+        day: '2026-11-02', report_start_day: '2026-11-01', report_end_day: '2026-11-03',
+        client_telemetry_present: true,
+        usage_metrics_requirements: { met: [], unmet: [], unknown: [' Future/Component: '] },
+      }),
+      makeMetric({
+        day: '2026-11-02', report_start_day: '2026-11-01', report_end_day: '2026-11-03',
+        client_telemetry_present: null, usage_metrics_requirements: null,
+      }),
+    ]).aggregated.clients.reportingQuality;
+    expect(quality.summary).toEqual({
+      recordCount: 2, telemetryReportedRecords: 1, requirementsReportedRecords: 1,
+      missingTelemetryUsers: 0, belowMinimumUsers: 0,
+    });
+    expect(quality.components).toEqual([{ component: ' Future/Component: ', unmetUsers: 0, unknownUsers: 1 }]);
+    expect(quality.affectedUsers).toEqual([]);
+    expect(quality.daily[0]).toMatchObject({ recordCount: 0, missingTelemetryUsers: null, belowMinimumUsers: null });
+  });
+
+  it('supports legacy exports without treating October version inference as a reported issue', () => {
+    const quality = aggregateMetrics([makeMetric({
+      totals_by_ide: [vscodeAt('1.138.0')],
+    })]).aggregated.clients.reportingQuality;
+    expect(quality.summary).toMatchObject({
+      telemetryReportedRecords: 0, requirementsReportedRecords: 0,
+      missingTelemetryUsers: null, belowMinimumUsers: null,
+    });
+    expect(quality.components).toEqual([]);
+    expect(quality.affectedUsers).toEqual([]);
+  });
+
+  it('spans all uploaded report windows and observed dates, independently of first-file metadata', () => {
+    const quality = aggregateMetrics([
+      makeMetric({
+        day: '2026-11-04', report_start_day: '2026-11-03', report_end_day: '2026-11-05',
+        client_telemetry_present: false,
+      }),
+      makeMetric({
+        day: '2026-11-02', report_start_day: '2026-11-01', report_end_day: '2026-11-02',
+        usage_metrics_requirements: { met: [], unmet: [], unknown: [] },
+      }),
+    ]).aggregated.clients.reportingQuality;
+    expect(quality.reportStartDay).toBe('2026-11-01');
+    expect(quality.reportEndDay).toBe('2026-11-05');
+    expect(quality.daily.map(day => day.day)).toEqual([
+      '2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05',
+    ]);
+    expect(quality.daily[1]).toMatchObject({ missingTelemetryUsers: null, belowMinimumUsers: 0 });
+    expect(quality.daily[3]).toMatchObject({ missingTelemetryUsers: 1, belowMinimumUsers: null });
+  });
+
   it('unions TablePro aliases across users and days without changing uploaded records', () => {
     const metrics = [
       makeMetric({
