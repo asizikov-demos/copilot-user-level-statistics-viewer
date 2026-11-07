@@ -36,7 +36,7 @@ const USER_FEATURE_LABELS: ReadonlyArray<{
 }> = [
   { key: 'chat', label: 'Chat', isUsed: (user) => user.used_chat },
   { key: 'ideAgent', label: 'Agent', isUsed: (user) => user.used_agent },
-  { key: 'vscodeAgent', label: 'VS Code Agents', isUsed: (user) => Boolean(user.used_vscode_agent) },
+  { key: 'vscodeAgent', label: 'VS Code Agents window', isUsed: (user) => Boolean(user.used_vscode_agent) },
   { key: 'cli', label: 'CLI', isUsed: (user) => user.used_cli },
   { key: 'copilotApp', label: 'App', isUsed: (user) => user.used_copilot_app },
   { key: 'cloudAgent', label: 'Cloud Agent', isUsed: (user) => user.used_copilot_coding_agent },

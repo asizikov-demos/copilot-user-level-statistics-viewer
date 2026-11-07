@@ -121,11 +121,11 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
         { value: `${Math.round(chatRate)}%`, label: 'Chat', sublabel: `${data?.chatUsers || 0} users`, colorClass: 'text-accent' },
         { value: `${Math.round(agentRate)}%`, label: 'IDE Agent Mode', sublabel: `${data?.agentModeUsers || 0} users`, colorClass: 'text-danger' },
         { value: `${Math.round(cliRate)}%`, label: 'Copilot CLI', sublabel: `${data?.cliUsers || 0} users`, colorClass: 'text-sponsors' },
-        { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-accent' },
+        { value: `${Math.round(vscodeAgentRate)}%`, label: 'VS Code Agents window', sublabel: `${vscodeAgentUsers} users`, colorClass: 'text-accent' },
         { value: `${Math.round(appRate)}%`, label: 'Copilot App', sublabel: `${data?.appUsers || 0} users`, colorClass: 'text-default' },
         { value: `${Math.round(codingAgentRate)}%`, label: 'Cloud Agent', sublabel: `${data?.codingAgentUsers || 0} users`, colorClass: 'text-default' },
         { value: `${Math.round(codeReviewRate)}%`, label: 'Code Review', sublabel: `${data?.codeReviewUsers || 0} users`, colorClass: 'text-accent' },
-        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents + CLI + Cloud Agent)`, colorClass: 'text-done' },
+        { value: `${Math.round(advancedRate)}%`, label: 'Advanced Users', sublabel: `${advancedUsersCount} users (IDE Agent Mode + VS Code Agents window + CLI + Cloud Agent)`, colorClass: 'text-done' },
       ]}
       chartHeight="h-96"
       footer={
@@ -140,7 +140,7 @@ export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps
             </InsightsCard>
             <InsightsCard title="Advanced Features" variant="blue">
               <p>
-                IDE Agent Mode, VS Code Agents, Copilot CLI, and Copilot Cloud Agent are advanced features that drive significant productivity gains and are typically used by power users.
+                IDE Agent Mode, the VS Code Agents window, Copilot CLI, and Copilot Cloud Agent are advanced features that drive significant productivity gains and are typically used by power users.
                 {advancedRate > 15 ? ' High adoption suggests strong engagement among advanced users.' : ' Consider promoting these features to increase adoption among experienced developers.'}
               </p>
             </InsightsCard>

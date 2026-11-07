@@ -74,13 +74,14 @@ describe('formatters', () => {
 
   describe('AI adoption phase formatters', () => {
     it('formats known phase numbers using GitHub adoption labels', () => {
-      expect(formatAiAdoptionPhase({ phase_number: 0, phase: 'No Cohort', version: 'v1' })).toBe('Phase 0 — No cohort');
+      expect(formatAiAdoptionPhase({ phase_number: 0, phase: 'No Cohort', version: 'v1' })).toBe('Phase 0 — Chat-first users');
       expect(formatAiAdoptionPhase({ phase_number: 1, phase: 'Phase 1', version: 'v1' })).toBe('Phase 1 — Code first');
       expect(formatAiAdoptionPhase({ phase_number: 2, phase: 'Phase 2', version: 'v1' })).toBe('Phase 2 — Agent first');
       expect(formatAiAdoptionPhase({ phase_number: 3, phase: 'Phase 3', version: 'v1' })).toBe('Phase 3 — Multi-agent');
     });
 
     it('formats phase names without phase numbers for compact header display', () => {
+      expect(formatAiAdoptionPhaseName({ phase_number: 0, phase: 'No Cohort', version: 'v1' })).toBe('Chat-first users');
       expect(formatAiAdoptionPhaseName({ phase_number: 2, phase: 'Phase 2', version: 'v1' })).toBe('Agent first');
     });
 

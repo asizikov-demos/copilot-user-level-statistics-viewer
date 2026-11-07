@@ -5,11 +5,13 @@ export const AI_ADOPTION_PHASE_BLOG_URL = 'https://github.blog/changelog/2026-05
 /** Primer `Label` variant used wherever an AI adoption phase is shown. */
 export const PHASE_LABEL_VARIANT: LabelColorOptions = 'done';
 
+export const CHAT_FIRST_DESCRIPTION = 'Active users who did not meet any phase’s engagement criteria: qualifying feature usage on at least two days in the 28-day period. This does not mean they used only chat.';
+
 export const PHASE_DEFINITIONS = [
   {
     phaseNumber: 0,
-    phase: 'No cohort',
-    description: 'User did not meet the engagement criteria for any phase.',
+    phase: 'Chat-first users',
+    description: CHAT_FIRST_DESCRIPTION,
   },
   {
     phaseNumber: 1,

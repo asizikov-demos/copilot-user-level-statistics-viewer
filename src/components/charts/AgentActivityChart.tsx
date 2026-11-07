@@ -16,7 +16,7 @@ registerChartJS();
 const surfaces = [
   { key: 'cli', label: 'Copilot CLI', inputLabel: 'Prompts', color: chartColors.blue.solid },
   { key: 'app', label: 'Copilot App', inputLabel: 'Prompts', color: chartColors.black.solid },
-  { key: 'vscodeAgents', label: 'VS Code Agents', inputLabel: 'User messages', color: chartColors.green.solid },
+  { key: 'vscodeAgents', label: 'VS Code Agents window', inputLabel: 'User messages', color: chartColors.green.solid },
 ] as const satisfies ReadonlyArray<{ key: AgentSurface; label: string; inputLabel: string; color: string }>;
 
 function formatCount(value: number | null | undefined): string {
@@ -96,7 +96,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
           Only reported counts are included. Missing values are not zero.
           {' '}{isSessions
             ? 'Sessions are counted per surface, not deduplicated across surfaces.'
-            : 'CLI and App report prompts; VS Code Agents reports user messages. Counting definitions may differ.'}
+            : 'CLI and App report prompts; the VS Code Agents window reports user messages. Counting definitions may differ.'}
         </p>
       )}
     >

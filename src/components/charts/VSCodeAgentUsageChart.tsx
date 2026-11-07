@@ -47,7 +47,7 @@ export default function VSCodeAgentUsageChart({
     : measures;
   if (visibleMeasures.length === 0) return null;
 
-  const ariaLabel = `Daily VS Code Agents: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.`;
+  const ariaLabel = `Daily VS Code Agents window: ${visibleMeasures.map(measure => measure.label.toLowerCase()).join(', ')}.`;
   const chartInput = {
     data: data.daily,
     reportStartDay,
@@ -109,10 +109,10 @@ export default function VSCodeAgentUsageChart({
 
   return (
     <ChartContainer
-      title="VS Code Agents"
+      title="VS Code Agents window"
       description="Dedicated Agents-window activity, separate from editor Agent Mode."
       isEmpty={visibleMeasures.every(measure => summary[measure.key] === null)}
-      emptyState="VS Code Agents metrics are not reported in this data. Missing values do not mean zero usage."
+      emptyState="VS Code Agents window metrics are not reported in this data. Missing values do not mean zero usage."
       summaryStats={visibleMeasures.map(measure => ({
         label: measure.key === 'activeUsers' ? 'Distinct active users' : measure.label,
         value: formatCount(summary[measure.key]),

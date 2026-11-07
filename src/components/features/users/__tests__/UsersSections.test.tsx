@@ -408,7 +408,7 @@ describe('Users feature sections', () => {
   it('shows a filtered empty state when no users match', () => {
     renderTable([makeUser()]);
 
-    toggleFilterOptions('Feature used', ['VS Code Agents']);
+    toggleFilterOptions('Feature used', ['VS Code Agents window']);
 
     expect(screen.getByText('No users match the selected filters')).toBeTruthy();
   });
@@ -422,7 +422,7 @@ describe('Users feature sections', () => {
     },
     {
       filter: 'vscode_agent',
-      label: 'VS Code Agents',
+      label: 'VS Code Agents window',
       included: makeUser({ user_login: 'agents-window-user', used_agent: false, used_vscode_agent: true }),
       excluded: [
         makeUser({ user_id: 2, user_login: 'editor-only-user', used_vscode_agent: false }),
@@ -442,7 +442,7 @@ describe('Users feature sections', () => {
   it('labels explicit VS Code Agents usage with a feature chip', () => {
     renderTable([makeUser({ used_vscode_agent: true })]);
 
-    expect(within(screen.getByRole('table')).getByText('VS Code Agents')).toBeTruthy();
+    expect(within(screen.getByRole('table')).getByText('VS Code Agents window')).toBeTruthy();
   });
 
   it('labels and filters only users with explicit Local BYOK usage', () => {

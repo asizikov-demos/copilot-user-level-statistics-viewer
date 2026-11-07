@@ -7,7 +7,7 @@ export const USER_FEATURE_FILTERS = [
   { value: 'chat', label: 'Chat' },
   { value: 'completions', label: 'Completions' },
   { value: 'agent', label: 'Agent' },
-  { value: 'vscode_agent', label: 'VS Code Agents' },
+  { value: 'vscode_agent', label: 'VS Code Agents window' },
   { value: 'cli', label: 'CLI' },
   { value: 'app', label: 'App' },
   { value: 'cloud_agent', label: 'Cloud Agent' },

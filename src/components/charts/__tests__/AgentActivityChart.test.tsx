@@ -52,7 +52,7 @@ describe('AgentActivityChart', () => {
     expect(markup).toContain('Daily agent sessions');
     expect(markup).toContain('Missing values are not zero');
     expect(markup).not.toContain('Total Requests');
-    expect(lastBar()['aria-label']).toBe('Daily agent sessions: Copilot CLI, Copilot App, VS Code Agents.');
+    expect(lastBar()['aria-label']).toBe('Daily agent sessions: Copilot CLI, Copilot App, VS Code Agents window.');
   });
 
   it('renders missing report days as gaps and reported zeros as zero', () => {
@@ -68,7 +68,7 @@ describe('AgentActivityChart', () => {
   it.each([
     ['cli', 'Copilot CLI'],
     ['app', 'Copilot App'],
-    ['vscodeAgents', 'VS Code Agents'],
+    ['vscodeAgents', 'VS Code Agents window'],
   ] as const)('shows only the reported surface: %s', (surface, label) => {
     renderToStaticMarkup(
       <AgentActivityChart data={makeAgentActivity([{ date: '2024-01-15', [surface]: agentCounts(0) }])} {...range} />,
@@ -93,7 +93,7 @@ describe('AgentActivityChart', () => {
     expect(lastBar().data.datasets.map(dataset => dataset.label)).toEqual([
       'Copilot CLI prompts',
       'Copilot App prompts',
-      'VS Code Agents user messages',
+      'VS Code Agents window user messages',
     ]);
   });
 
@@ -103,7 +103,7 @@ describe('AgentActivityChart', () => {
     await selectMeasure('sessions');
 
     expect(heading()).toBe('Daily agent sessions');
-    expect(lastBar().data.datasets.map(dataset => dataset.label)).toEqual(['Copilot CLI', 'Copilot App', 'VS Code Agents']);
+    expect(lastBar().data.datasets.map(dataset => dataset.label)).toEqual(['Copilot CLI', 'Copilot App', 'VS Code Agents window']);
   });
 
   it('keeps the selector usable for message-only data without inventing sessions', async () => {
@@ -114,7 +114,7 @@ describe('AgentActivityChart', () => {
 
     await selectMeasure('userInputs');
 
-    expect(lastBar()['aria-label']).toBe('Daily agent prompts & messages: VS Code Agents.');
+    expect(lastBar()['aria-label']).toBe('Daily agent prompts & messages: VS Code Agents window.');
   });
 
   it('uses surface-specific tooltip lines and only includes requests for CLI and App', () => {
@@ -126,7 +126,7 @@ describe('AgentActivityChart', () => {
     expect([0, 1, 2].map(index => label.call(tooltip, item(index)))).toEqual([
       ['Copilot CLI', 'Sessions: 3', 'Prompts: 7', 'Requests: 13'],
       ['Copilot App', 'Sessions: 2', 'Prompts: 5', 'Requests: 40'],
-      ['VS Code Agents', 'Sessions: 1', 'User messages: 4'],
+      ['VS Code Agents window', 'Sessions: 1', 'User messages: 4'],
     ]);
   });
 });

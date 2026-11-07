@@ -11,7 +11,7 @@ import {
 
 describe('featureCategories taxonomy', () => {
   it('labels VS Code Agents without folding it into editor Agent Mode or other rollups', () => {
-    expect(translateFeature('vscode_agent')).toBe('VS Code Agents');
+    expect(translateFeature('vscode_agent')).toBe('VS Code Agents window');
     expect(isAgentFeature('vscode_agent')).toBe(false);
     expect(isChatFeature('vscode_agent')).toBe(false);
     expect(isCliFeature('vscode_agent')).toBe(false);

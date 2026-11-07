@@ -117,7 +117,7 @@ function buildFeaturePills(dayMetrics: UserDayData, hasCliActivity: boolean): Fe
 
   const pills: FeaturePill[] = [];
   if (dayMetrics.used_vscode_agent) {
-    pills.push({ label: 'VS Code Agents', feature: 'vscodeAgent' });
+    pills.push({ label: 'VS Code Agents window', feature: 'vscodeAgent' });
   }
   if (dayMetrics.used_copilot_coding_agent) {
     pills.push({ label: 'Cloud Agent', feature: 'cloudAgent' });
@@ -433,14 +433,14 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
 
           {hasVSCodeAgentData && (
             <div className="bg-default rounded-md border border-default p-6">
-              <h4 className="text-lg font-semibold text-default mb-1">VS Code Agents</h4>
+              <h4 className="text-lg font-semibold text-default mb-1">VS Code Agents window</h4>
               <p className="text-sm text-muted mb-4">
                 Dedicated Agents-window activity, separate from editor Agent Mode.
               </p>
               <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {dayMetrics.used_vscode_agent != null && (
                   <div>
-                    <dt className={usageStatLabelClass}>Used VS Code Agents</dt>
+                    <dt className={usageStatLabelClass}>Used VS Code Agents window</dt>
                     <dd className={usageStatValueClass}>{dayMetrics.used_vscode_agent ? 'Yes' : 'No'}</dd>
                   </div>
                 )}

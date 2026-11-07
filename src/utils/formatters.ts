@@ -191,7 +191,7 @@ export function formatModelDisplayName(modelName: string): string {
 }
 
 const AI_ADOPTION_PHASE_NAMES_BY_NUMBER: Partial<Record<number, string>> = {
-  0: 'No cohort',
+  0: 'Chat-first users',
   1: 'Code first',
   2: 'Agent first',
   3: 'Multi-agent',
