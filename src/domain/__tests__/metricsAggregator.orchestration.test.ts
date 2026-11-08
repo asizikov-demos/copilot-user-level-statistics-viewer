@@ -228,6 +228,7 @@ describe('metrics aggregation contract', () => {
       userSummaries: [...defaults.users.userSummaries],
     };
     const engagementAdoptionAggregation = {
+      workingPatterns: defaults.overview.workingPatterns,
       vscodeAgentUsage: defaults.adoption.vscodeAgentUsage,
       engagementData: [...defaults.overview.engagementData],
       chatUsersData: [...defaults.overview.chatUsersData],

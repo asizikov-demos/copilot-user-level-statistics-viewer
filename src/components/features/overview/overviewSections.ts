@@ -4,7 +4,7 @@ export interface OverviewSection {
 }
 
 export const OVERVIEW_SECTIONS: OverviewSection[] = [
-  { id: 'chart-daily-user-engagement', label: 'Daily User Engagement' },
-  { id: 'chart-daily-chat-users', label: 'Daily Chat Users Trends' },
-  { id: 'chart-daily-chat-requests', label: 'Daily Chat Requests' },
+  { id: 'overview-working-patterns', label: 'Copilot working patterns' },
+  { id: 'overview-client-reach', label: 'Where people work' },
+  { id: 'overview-workflow-reach', label: 'How Copilot is used' },
 ];

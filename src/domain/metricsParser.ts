@@ -215,6 +215,14 @@ export function parseMetricsLine(line: string, pool?: StringPool): CopilotMetric
       console.warn('Skipping line with invalid ai_credits_used:', line.substring(0, 200));
       return null;
     }
+    metric.workingPatternSources = {
+      cloudAgent: metric.used_copilot_cloud_agent != null,
+      codeReview: metric.used_copilot_code_review_active != null || metric.used_copilot_code_review_passive != null,
+      app: metric.used_copilot_app != null || metric.totals_by_copilot_app != null,
+      vscodeAgents: metric.used_vscode_agent != null || metric.totals_by_vscode_agent != null,
+      clientTraffic: metric.totals_by_client != null,
+      appUsage: metric.used_copilot_app === true || hasCopilotAppClientActivity(metric),
+    };
     metric.used_cli = metric.used_cli ?? false;
     metric.used_copilot_app = Boolean(
       metric.used_copilot_app

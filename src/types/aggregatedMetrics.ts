@@ -41,6 +41,8 @@ import type { ClientTelemetryWarning } from '../domain/calculators/clientTelemet
 import type { ClientTrafficMetrics } from './clientTraffic';
 import type { ReportingQualityMetrics, UserReportingQuality } from './reportingQuality';
 import type { ActivityCalendarData } from '../domain/calculators/activityCalendarCalculator';
+import type { ClientReach } from '../domain/calculators/clientReachCalculator';
+import type { WorkingPatternsSummary } from '../domain/calculators/workingPatternsCalculator';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -48,6 +50,8 @@ export interface OverviewMetricsSlice {
   chatUsersData: DailyChatUsersData[];
   chatRequestsData: DailyChatRequestsData[];
   executiveSummary: ExecutiveSummaryMetrics;
+  clientReachData: ClientReach[];
+  workingPatterns: WorkingPatternsSummary;
 }
 
 export interface UsersMetricsSlice {
