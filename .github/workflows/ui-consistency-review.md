@@ -100,7 +100,11 @@ jobs:
 
   agent:
     needs: [prepare]
-    if: needs.prepare.outputs.should_review == 'true'
+    # The compiler adds optional custom jobs to needs; skipped cleanup must not suppress a review.
+    if: >-
+      !cancelled() && needs.prepare.result == 'success' &&
+      needs.activation.result == 'success' &&
+      needs.prepare.outputs.should_review == 'true'
 
   clear_advice:
     needs: [prepare]

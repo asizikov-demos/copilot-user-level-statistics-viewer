@@ -230,3 +230,29 @@ test('cleanup refuses stale heads, changed bases, and closed PRs', async () => {
     assert.equal((await clearAdvice({ comments, ...changes })).length, 0);
   }
 });
+
+test('compiled agent runs when optional cleanup is skipped, but not when preparation fails or review is irrelevant', () => {
+  const lock = readFileSync(new URL('../ui-consistency-review.lock.yml', import.meta.url), 'utf8');
+  const agent = lock.match(/^ {2}agent:\n([\s\S]*?)^ {4}runs-on:/m);
+  assert.ok(agent, 'The compiled workflow must contain the review agent');
+  assert.match(agent[1], /- clear_advice/);
+  const conditionBlock = agent[1].match(/^ {4}if: ([^\n]+)(?:\n((?: {6}[^\n]*\n)+))?/m);
+  assert.ok(conditionBlock, 'The compiled agent must have a review condition');
+  const condition = conditionBlock[1] === '>'
+    ? conditionBlock[2].trim().replace(/\n\s*/g, ' ')
+    : conditionBlock[1];
+  assert.match(condition, /!cancelled\(\)/, 'An explicit status function must bypass the implicit success guard');
+  const needs = {
+    prepare: { result: 'success', outputs: { should_review: 'true' } },
+    activation: { result: 'success', outputs: { daily_ai_credits_exceeded: 'false' } },
+    clear_advice: { result: 'skipped' },
+  };
+  const evaluate = (overrides = {}, cancelled = false) =>
+    runInNewContext(condition, { needs: { ...needs, ...overrides }, cancelled: () => cancelled });
+  assert.equal(evaluate(), true);
+  assert.equal(evaluate({ prepare: { result: 'failure', outputs: { should_review: 'true' } } }), false);
+  assert.equal(evaluate({ activation: { result: 'skipped', outputs: {} } }), false);
+  assert.equal(evaluate({ prepare: { result: 'success', outputs: { should_review: 'false' } } }), false);
+  assert.equal(evaluate({ activation: { result: 'success', outputs: { daily_ai_credits_exceeded: 'true' } } }), false);
+  assert.equal(evaluate({}, true), false);
+});
