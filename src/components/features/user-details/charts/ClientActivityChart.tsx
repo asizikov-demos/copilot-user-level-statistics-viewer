@@ -2,8 +2,8 @@
 import { useMemo, useState } from 'react';
 import { FormControl, Select } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
-import type { ScriptableContext, TooltipItem } from 'chart.js';
-import { ClientChartLegend, ClientPatternControl, useClientPatterns } from '../../../charts/ClientChartLegend';
+import type { TooltipItem } from 'chart.js';
+import { ClientChartLegend } from '../../../charts/ClientChartLegend';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
 import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
@@ -131,7 +131,6 @@ export default function ClientActivityChart({
   cliVersions,
 }: ClientActivityChartProps) {
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
-  const { patterned, setPatterned, getFill } = useClientPatterns();
   const [hiddenClients, setHiddenClients] = useState<ReadonlySet<string>>(new Set());
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
   const { cliTotals, cliTotalsByDay } = useMemo(() => {
@@ -308,9 +307,7 @@ export default function ClientActivityChart({
         ...dataset,
         clientKey,
         hidden: hiddenClients.has(clientKey),
-        backgroundColor: patterned
-          ? (context: ScriptableContext<'bar'>) => getFill(context.chart.ctx, color, clientKey)
-          : color,
+        backgroundColor: color,
       };
     }),
   };
@@ -400,7 +397,6 @@ export default function ClientActivityChart({
       )}
       {chartData.datasets.length > 0 ? (
         <div className="mb-6">
-            <ClientPatternControl checked={patterned} onChange={setPatterned} />
             <h4 className="text-sm font-medium text-default mb-4 text-center">
               {chartTitle}
             </h4>
@@ -409,7 +405,6 @@ export default function ClientActivityChart({
             </div>
             <ClientChartLegend
               entries={clientKeys.map(clientKey => ({ clientKey, label: formatIDEName(clientKey), color: getIdeColor(clientKey) }))}
-              patterned={patterned}
               hiddenKeys={hiddenClients}
               onToggle={key => setHiddenClients(previous => {
                 const next = new Set(previous);

@@ -57,6 +57,14 @@ describe('ActivityCalendar', () => {
     vi.mocked(getAnchoredPosition).mockClear();
   });
 
+  it('fills its grid cell and separates the heading with a card-header divider', () => {
+    const markup = renderCalendar();
+
+    expect(markup).toMatch(/<div class="[^"]*h-full[^"]*">/);
+    expect(markup).toMatch(/<header class="[^"]*border-b[^"]*" role="presentation">/);
+    expect(markup).toContain('<h3 class="m-0');
+  });
+
   it('repositions the open card when hovering or focusing another date', async () => {
     render(<ActivityCalendar days={[]} activity={computeActivityCalendar([])}
       reportStartDay="2024-01-01" reportEndDay="2024-01-07" onDayClick={vi.fn()} />);

@@ -57,7 +57,13 @@ export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
   });
 
   return (
-    <ChartContainer title="CLI Adoption by IDE" chartHeight="h-80" isEmpty={sorted.length === 0} emptyState="No IDE usage data available">
+    <ChartContainer
+      title="CLI Adoption by IDE"
+      description="For each IDE, users are split into those who also use Copilot CLI and those who do not."
+      chartHeight="h-80"
+      isEmpty={sorted.length === 0}
+      emptyState="No IDE usage data available"
+    >
       <Bar data={data} options={options} />
     </ChartContainer>
   );
