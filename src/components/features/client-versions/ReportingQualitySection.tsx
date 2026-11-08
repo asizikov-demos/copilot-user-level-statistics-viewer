@@ -162,21 +162,29 @@ function AffectedUsersTable({
           not to missing telemetry. Last dates describe observations, not unresolved current faults.
         </p>
       }
-      headerActions={
-        <FormControl>
-          <FormControl.Label>Filter affected users</FormControl.Label>
-          <Select
-            value={filter}
-            onChange={event => {
-              const value = event.target.value;
-              if (value === 'either' || value === 'missing' || value === 'below') setFilter(value);
-            }}
-          >
-            <Select.Option value="either">Either issue</Select.Option>
-            <Select.Option value="missing">Missing telemetry</Select.Option>
-            <Select.Option value="below">Below minimum</Select.Option>
-          </Select>
-        </FormControl>
+      toolbar={
+        <>
+          <div className="grid gap-4 md:max-w-sm">
+            <FormControl id="affectedUsersFilter">
+              <FormControl.Label>Filter affected users</FormControl.Label>
+              <Select
+                block
+                value={filter}
+                onChange={event => {
+                  const value = event.target.value;
+                  if (value === 'either' || value === 'missing' || value === 'below') setFilter(value);
+                }}
+              >
+                <Select.Option value="either">Either issue</Select.Option>
+                <Select.Option value="missing">Missing telemetry</Select.Option>
+                <Select.Option value="below">Below minimum</Select.Option>
+              </Select>
+            </FormControl>
+          </div>
+          <p className="m-0 text-sm text-muted">
+            Showing {sortedItems.length.toLocaleString()} of {quality.affectedUsers.length.toLocaleString()} affected users
+          </p>
+        </>
       }
       footer={sortedItems.length > 0 ? (
         <TablePagination itemCount={sortedItems.length} currentPage={currentPage} itemLabel="affected users" onPageChange={setPage} />

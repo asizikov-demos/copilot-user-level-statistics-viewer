@@ -104,6 +104,7 @@ describe('Client Versions reporting quality', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Page 3' }));
     expect(screen.getByRole('button', { name: 'Open profile for user-32' })).toBeTruthy();
     fireEvent.change(screen.getByRole('combobox', { name: 'Filter affected users' }), { target: { value: 'either' } });
+    expect(screen.getByText('Showing 1-10 of 32 affected users')).toBeTruthy();
     expect(screen.getAllByRole('table')[1].querySelectorAll('tbody tr')).toHaveLength(10);
   });
 
