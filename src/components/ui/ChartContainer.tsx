@@ -54,9 +54,11 @@ export default function ChartContainer({
   if (isEmpty) {
     return (
       <div className={cn(styles.root, 'flex min-h-64 flex-col', className)} data-component="ChartContainer" data-empty="true">
-        <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
-          {title}
-        </Heading>
+        <header className={styles.header}>
+          <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
+            {title}
+          </Heading>
+        </header>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
             <EmptyState icon={GraphIcon} heading={emptyState} headingAs="h4" />
@@ -68,7 +70,7 @@ export default function ChartContainer({
 
   return (
     <div className={cn(styles.root, className)} data-component="ChartContainer">
-      <div className={styles.header}>
+      <header className={styles.header}>
         <div className={styles.headerText}>
           <Heading as="h3" variant="small" className={styles.title}>
             {title}
@@ -88,7 +90,7 @@ export default function ChartContainer({
           )}
           {headerActions}
         </div>
-      </div>
+      </header>
 
       {summaryStats && summaryStats.length > 0 && (
         <div className={styles.summary}>
