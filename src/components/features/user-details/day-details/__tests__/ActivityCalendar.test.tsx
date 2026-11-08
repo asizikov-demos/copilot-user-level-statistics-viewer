@@ -61,7 +61,7 @@ describe('ActivityCalendar', () => {
     const markup = renderCalendar();
 
     expect(markup).toMatch(/<div class="[^"]*h-full[^"]*">/);
-    expect(markup).toMatch(/<header class="[^"]*border-b[^"]*">/);
+    expect(markup).toMatch(/<header class="[^"]*border-b[^"]*" role="presentation">/);
     expect(markup).toContain('<h3 class="m-0');
   });
 

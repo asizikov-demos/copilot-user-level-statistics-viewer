@@ -159,7 +159,7 @@ export default function ActivityCalendar({ days, activity, reportingQuality, rep
 
   return (
     <div className="h-full bg-default rounded-md border border-default p-6">
-      <header className="-mx-6 -mt-6 mb-4 border-b border-default px-6 py-4">
+      <header className="-mx-6 -mt-6 mb-4 border-b border-default px-6 py-4" role="presentation">
         <h3 className="m-0 text-lg font-semibold text-default">
           {title}
           <span className="ml-2">{monthLabel}</span>

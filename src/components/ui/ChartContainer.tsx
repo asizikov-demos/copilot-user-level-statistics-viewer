@@ -54,7 +54,7 @@ export default function ChartContainer({
   if (isEmpty) {
     return (
       <div className={cn(styles.root, 'flex min-h-64 flex-col', className)} data-component="ChartContainer" data-empty="true">
-        <header className={styles.header}>
+        <header className={styles.header} role="presentation">
           <Heading as="h3" variant="small" className={cn(styles.title, styles.emptyTitle)}>
             {title}
           </Heading>
@@ -70,7 +70,7 @@ export default function ChartContainer({
 
   return (
     <div className={cn(styles.root, className)} data-component="ChartContainer">
-      <header className={styles.header}>
+      <header className={styles.header} role="presentation">
         <div className={styles.headerText}>
           <Heading as="h3" variant="small" className={styles.title}>
             {title}

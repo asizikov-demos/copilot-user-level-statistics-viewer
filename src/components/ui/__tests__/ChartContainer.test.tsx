@@ -18,7 +18,7 @@ describe('ChartContainer', () => {
     );
 
     expect(markup).toContain('data-component="ChartContainer"');
-    expect(markup).toContain('<header');
+    expect(markup).toMatch(/<header[^>]*role="presentation"/);
     expect(markup).toContain('</header>');
     expect(markup).toMatch(/<h3[^>]*>Engagement<\/h3>/);
     expect(markup).toContain('Daily activity');
@@ -49,7 +49,7 @@ describe('ChartContainer', () => {
     );
 
     expect(markup).toContain('data-empty="true"');
-    expect(markup).toContain('<header');
+    expect(markup).toMatch(/<header[^>]*role="presentation"/);
     expect(markup).toContain('Nothing yet');
     expect(markup).not.toContain('<canvas');
   });
