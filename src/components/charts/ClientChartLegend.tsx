@@ -66,9 +66,9 @@ export function ClientSwatch({ color, clientKey, patterned = false }: {
   );
 }
 
-export function ClientChartLegend({ entries, patterned, hiddenKeys, onToggle }: {
+export function ClientChartLegend({ entries, patterned = false, hiddenKeys, onToggle }: {
   entries: readonly { clientKey: string; label: string; color: string }[];
-  patterned: boolean;
+  patterned?: boolean;
   hiddenKeys: ReadonlySet<string>;
   onToggle: (key: string) => void;
 }) {

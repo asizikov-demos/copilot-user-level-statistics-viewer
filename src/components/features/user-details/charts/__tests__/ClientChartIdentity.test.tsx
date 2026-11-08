@@ -28,20 +28,17 @@ const day = {
 const props = () => bar.mock.calls.at(-1)?.[0];
 
 describe('client chart visual identity', () => {
-  it('uses fixed colors and a keyboard-operable legend with opt-in textures', () => {
+  it('uses fixed colors and a keyboard-operable legend without a pattern control', () => {
     render(<ClientActivityChart ideAggregates={day.totals_by_ide} days={[day]} reportStartDay={day.day} reportEndDay={day.day} />);
     expect(props().datasetIdKey).toBe('clientKey');
     expect(props().data.datasets).toMatchObject([
       { clientKey: 'azure_devops', backgroundColor: '#003B70', hidden: false },
       { clientKey: 'vscode', backgroundColor: '#006EDB', hidden: false },
     ]);
+    expect(screen.queryByRole('checkbox', { name: 'Show client patterns' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'VS Code', pressed: true }));
     expect(props().data.datasets[1].hidden).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'VS Code', pressed: false }));
     expect(props().data.datasets[1].hidden).toBe(false);
-    const before = props().data.datasets.map((dataset: { data: number[] }) => dataset.data);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Show client patterns' }));
-    expect(props().data.datasets[0].backgroundColor).toEqual(expect.any(Function));
-    expect(props().data.datasets.map((dataset: { data: number[] }) => dataset.data)).toEqual(before);
   });
 });
