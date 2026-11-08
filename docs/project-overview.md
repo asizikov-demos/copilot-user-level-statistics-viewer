@@ -142,3 +142,15 @@ These contracts prevent plausible-looking but misleading analysis. Detailed calc
 - Shared UI and charts cannot import feature modules or layout routes.
 
 Read models depend on the grouped contract and pure domain helpers; workers depend on the parser, domain aggregation, and message contracts. Tests may import lower-level helpers for fixtures and characterization.
+
+### Advisory UI review workflow
+
+`ui-consistency-review` reviews net changes to production `src/app` and `src/components` UI and direct UI dependencies. Tests, fixtures, generated files, pure moves, and unrelated source/dependency changes do not independently trigger review; manual historical reviews use the same relevance gate. Preparation supplies the complete file inventory without unrelated patches, plus merge-base/head-pinned UI patches and dependency deltas. Binary UI assets require visual review; missing/truncated patches, revision races, or limits (30 UI files, 20 KB per patch, 120 KB packet) fail explicitly rather than produce a partial clean review.
+
+The agent reads unchanged code only to resolve a changed-line candidate and reports at most three actionable findings in a 250-word advisory comment. Inventory and coverage stay in workflow summaries/logs. A no-findings run replaces previous advice with one sentence. File-content reads explicitly accept untrusted PR revisions, scoped to this repository; same-repository checks, read-only permissions, non-execution rules, threat detection, and head/base publication guards remain in place.
+
+When an open PR loses UI relevance, a deterministic, freshness-guarded job replaces existing workflow-bot advice without invoking an agent or creating a new comment. Binary renames are considered pure moves only after verifying equal merge-base/head blob SHAs. Test-only React tooling upgrades do not independently trigger a review.
+
+Preparation runs only for same-repository PRs (or manual dispatch) and loads its automation helper at the immutable workflow-source SHA, so workflow/helper changes work before merge. Review policies still come from the default branch; reviewed application code is never executed.
+
+Validate preparation and workflow wiring with `node --test scripts/tests/prepare-ui-review.mjs .github/workflows/__tests__/ui-consistency-review.node.mjs`; regenerate the lock with `gh aw compile ui-consistency-review --validate`, preserving `.gitattributes`' `merge=ours` rule.
