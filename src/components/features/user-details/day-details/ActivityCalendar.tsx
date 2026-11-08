@@ -158,14 +158,16 @@ export default function ActivityCalendar({ days, activity, reportingQuality, rep
   };
 
   return (
-    <div className="bg-default rounded-md border border-default p-6">
-      <h3 className="text-lg font-semibold text-default mb-4">
-        {title}
-        <span className="ml-2">{monthLabel}</span>
-        <span className="ml-2 text-sm font-normal text-muted">
-          · {activity.activeDays} active {activity.activeDays === 1 ? 'day' : 'days'}
-        </span>
-      </h3>
+    <div className="h-full bg-default rounded-md border border-default p-6">
+      <header className="-mx-6 -mt-6 mb-4 border-b border-default px-6 py-4">
+        <h3 className="m-0 text-lg font-semibold text-default">
+          {title}
+          <span className="ml-2">{monthLabel}</span>
+          <span className="ml-2 text-sm font-normal text-muted">
+            · {activity.activeDays} active {activity.activeDays === 1 ? 'day' : 'days'}
+          </span>
+        </h3>
+      </header>
       
       <div className="space-y-2">
         {/* Day headers */}

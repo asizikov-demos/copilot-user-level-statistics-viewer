@@ -4,6 +4,7 @@ import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
 import { translateFeature } from '../../../../domain/featureTranslations';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import TableCard from '../../../ui/TableCard';
 
 type FeatureAggregate = UserDetailedMetrics['featureAggregates'][number];
 
@@ -79,13 +80,17 @@ export default function UserDetailsFeatureActivitySection({
 }: UserDetailsFeatureActivitySectionProps) {
   return (
     <div id={sectionId} className="mt-8 pt-6 border-t border-default scroll-mt-28">
-      <h3 className="text-lg font-semibold text-default mb-4">Activity by Feature</h3>
-      <MetricsTable
-        data={featureAggregates}
-        columns={columns}
-        tableContainerClassName="overflow-x-auto border border-default"
-        getRowKey={(feature) => feature.feature}
-      />
+      <TableCard
+        title="Activity by Feature"
+        description="Interactions, code generation, acceptances, and suggested or actual LOC changes grouped by feature."
+      >
+        <MetricsTable
+          data={featureAggregates}
+          columns={columns}
+          tableContainerClassName="overflow-x-auto"
+          getRowKey={(feature) => feature.feature}
+        />
+      </TableCard>
     </div>
   );
 }

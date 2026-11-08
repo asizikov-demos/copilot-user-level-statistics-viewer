@@ -64,6 +64,13 @@ describe('user profile empty state', () => {
     expect(render()).toContain(EMPTY_STATE_TEST_ID);
   });
 
+  it('renders feature activity with the shared table-card header and explanation', () => {
+    const markup = render({ featureAggregates: [{ feature: 'chat_panel_agent_mode', ...metrics }] });
+
+    expect(markup).toContain('Activity by Feature');
+    expect(markup).toContain('Interactions, code generation, acceptances, and suggested or actual LOC changes grouped by feature.');
+  });
+
   describe('user profile client distribution', () => {
     function clientTraffic(requestCount = 176): UserDetailedMetrics['clientTraffic'] {
       return {
