@@ -131,7 +131,7 @@ describe('metricsWorker protocol', () => {
       expect(find('error')).toBeUndefined();
     });
 
-    it('loads the sample report with varied AI credit usage across days and phases', async () => {
+    it('loads the sample report with varied credits, App usage, client traffic, and recovery stories', async () => {
       const sample = readFileSync('public/data/sample-report.ndjson', 'utf8');
       const records = sample.trimEnd().split('\n').map(line => JSON.parse(line));
       const credits = records.map(record => record.ai_credits_used as number);
@@ -162,7 +162,7 @@ describe('metricsWorker protocol', () => {
       expect(medianCredits(record => record.loc_added_sum >= 100))
         .toBeGreaterThan(medianCredits(record => record.loc_added_sum <= 0));
 
-      const { send, find } = await loadWorker();
+      const { send, find, responses } = await loadWorker();
       await send({
         type: 'parseAndAggregate',
         id: 'sample',
@@ -178,6 +178,67 @@ describe('metricsWorker protocol', () => {
       expect(dailyCredits.every(day => day.aiCreditsUsed > 0 && day.users > 0)).toBe(true);
       expect(dailyCredits.reduce((total, day) => total + day.aiCreditsUsed, 0))
         .toBeCloseTo(credits.reduce((total, value) => total + value, 0), 5);
+
+      const appRecords = records.filter(record => record.used_copilot_app);
+      expect(new Set(appRecords.map(record => record.user_id)).size).toBeGreaterThan(50);
+      expect(result?.result.copilotApp.dailyAppSessionData.reduce((total, day) =>
+        total + day.sessionCount, 0
+      )).toBe(appRecords.reduce((total, record) =>
+        total + record.totals_by_copilot_app.session_count, 0
+      ));
+      expect(result?.result.clients.traffic.summary.reportedRecords)
+        .toBeLessThan(records.length);
+      expect(records.some(record => record.totals_by_client?.length === 0)).toBe(true);
+      expect(result?.result.clients.traffic.summary.clients.length).toBeGreaterThan(10);
+      expect(result?.result.models.selectionModeRequests.modes.every(mode =>
+        mode.categories.some(category => category.requestCount > 0)
+      )).toBe(true);
+      for (const record of records) {
+        for (const client of record.totals_by_client ?? []) {
+          expect(client.totals_by_model.reduce((total: number, model: { request_count: number }) =>
+            total + model.request_count, 0
+          )).toBe(client.request_count);
+          for (const model of client.totals_by_model) {
+            if (model.request_count === 0) {
+              expect(model.token_usage.output_tokens_sum).toBe(0);
+              expect(model.token_usage.prompt_tokens_sum).toBe(0);
+            }
+          }
+        }
+      }
+
+      await send({ type: 'computeUserDetails', id: 'app-story', userId: 429 });
+      const appDetails = find('userDetailsResult')?.result;
+      expect(appDetails?.dailyCopilotAppImpact.some(day => day.locAdded > 0)).toBe(true);
+      expect(appDetails?.clientTraffic.summary.clients.some(client =>
+        client.client === 'github_app' && client.requestCount > 0
+      )).toBe(true);
+
+      const recovery = result?.result.clients.reportingQuality.affectedUsers
+        .find(user => user.userId === 314);
+      expect(recovery?.missingTelemetryDays).toBeGreaterThan(0);
+      expect(recovery?.lastMissingTelemetryDay
+        && recovery.lastMissingTelemetryDay < '2026-06-04').toBe(true);
+      expect(recovery?.lastBelowMinimumDay
+        && recovery.lastBelowMinimumDay < '2026-06-08').toBe(true);
+
+      await send({ type: 'computeUserDetails', id: 'cli-story', userId: 117 });
+      await send({ type: 'computeUserDetails', id: 'multi-story', userId: 358 });
+      await send({ type: 'computeUserDetails', id: 'recovery-story', userId: 314 });
+      const stories = responses.filter((response): response is ResponseOf<'userDetailsResult'> =>
+        response.type === 'userDetailsResult'
+      );
+      const cliDetails = stories.find(response => response.id === 'cli-story')?.result;
+      expect(cliDetails?.cliCustomizations.every(category => category.items.length > 0)).toBe(true);
+      const multiDetails = stories.find(response => response.id === 'multi-story')?.result;
+      expect(multiDetails?.clientTraffic.summary.clients.length).toBeGreaterThan(4);
+      const recoveryDetails = stories.find(response => response.id === 'recovery-story')?.result;
+      expect(recoveryDetails?.reportingQuality.daily.some(day =>
+        day.day >= '2026-06-08'
+        && day.telemetryStatus === 'received'
+        && day.requirementCounts?.unmet === 0
+      )).toBe(true);
+      expect(find('error')).toBeUndefined();
     });
 
     it('accepts name-only customization entries and retains unavailable counts in user details', async () => {
