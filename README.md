@@ -96,6 +96,26 @@ for its proxy-aware `web-fetch` tool. Account policies can still restrict model 
 
 The application expects GitHub Copilot user-level metrics NDJSON files as provided by the GitHub Copilot Metrics Dashboard Export. See [`src/types/metrics.ts`](src/types/metrics.ts) for the full `CopilotMetrics` interface.
 
+### Demo sample
+
+[`public/data/sample-report.ndjson`](public/data/sample-report.ndjson) contains
+synthetic usage data for 797 users in the May 24-June 20, 2026 reporting window,
+including Copilot App usage, server-counted client traffic, and reporting-quality
+observations. The data demonstrates app capabilities, not historical API
+evidence. Client requests remain separate from legacy interactions and LOC.
+
+Search the Users table for these profiles:
+
+| Story | User | What to explore |
+|---|---|---|
+| App power user | `agile-crab-walnut` | App sessions, prompts, tokens, models, and impact from May 29 |
+| CLI customizer | `fearless-badger-apricot` | Existing skills, custom agents, MCPs, slash commands, and plugins; CLI/SDK traffic |
+| Multi-client user | `agile-cobra-almond` | App, CLI, editor, and rotating server-counted clients in daily details |
+| Fleet Health recovery | `agile-camel-sage` | Missing telemetry from May 27, received telemetry from June 4, and met requirements from June 8 |
+
+The sample includes both unreported and reported-empty client traffic. Recovery
+observations do not erase earlier issues. No third-party-agent scenario is added.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
