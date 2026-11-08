@@ -56,6 +56,7 @@ async function prepareUiReview({ github, context, core, input, directory }) {
   core.setOutput('base_sha', pr.base.sha);
   core.setOutput('historical', String(pr.state === 'closed'));
   core.setOutput('should_review', 'false');
+  core.setOutput('clear_advice', 'false');
   if (!manual && (pr.draft || pr.state !== 'open')) {
     await core.summary.addHeading('UI consistency review')
       .addRaw(`PR #${number}: skipped (draft or closed).`).write();
@@ -68,10 +69,39 @@ async function prepareUiReview({ github, context, core, input, directory }) {
   if (files.length !== pr.changed_files) {
     throw new Error('The PR file inventory is incomplete; refusing a partial review.');
   }
-  const binaryAsset = files.find(file => productionUi(file.filename) &&
-    /\.(png|jpe?g|gif|webp|avif|ico)$/.test(file.filename) && file.status !== 'renamed');
-  if (binaryAsset) {
-    throw new Error(`Binary UI asset ${binaryAsset.filename} needs a visual review; no source-only review was produced.`);
+  let mergeBase;
+  async function mergeBaseSha() {
+    if (!mergeBase) {
+      // PR file patches describe the net merge-base diff, not a concatenation of commits.
+      const { data: comparison } = await github.rest.repos.compareCommits({
+        owner, repo, base: pr.base.sha, head: pr.head.sha, per_page: 1,
+      });
+      mergeBase = comparison.merge_base_commit?.sha;
+      if (!mergeBase) throw new Error('The PR merge base is unavailable; refusing a partial review.');
+      core.setOutput('merge_base_sha', mergeBase);
+    }
+    return mergeBase;
+  }
+  const binaryAssets = files.filter(file =>
+    [file.filename, file.previous_filename || ''].some(filename =>
+      productionUi(filename) && /\.(png|jpe?g|gif|webp|avif|ico)$/.test(filename)));
+  for (const file of binaryAssets) {
+    if (file.status === 'renamed' && file.previous_filename) {
+      const base = await mergeBaseSha();
+      const [before, after] = await Promise.all([
+        github.rest.repos.getContent({ owner, repo, path: file.previous_filename, ref: base }),
+        github.rest.repos.getContent({ owner, repo, path: file.filename, ref: pr.head.sha }),
+      ]);
+      if (before.data.type === 'file' && after.data.type === 'file' &&
+          typeof before.data.sha === 'string' && before.data.sha &&
+          before.data.sha === after.data.sha) continue;
+    }
+    throw new Error(`Binary UI asset ${file.filename} needs a visual review; no source-only review was produced.`);
+  }
+  async function skipIrrelevant(reason) {
+    core.setOutput('clear_advice', String(pr.state === 'open'));
+    await core.summary.addHeading('UI consistency review')
+      .addRaw(`PR #${number}: skipped (${reason}).`).write();
   }
   const uiFiles = files.filter(file =>
     (productionUi(file.filename) || productionUi(file.previous_filename || '')) &&
@@ -79,18 +109,11 @@ async function prepareUiReview({ github, context, core, input, directory }) {
   const manifestsChanged = files.some(file =>
     ['package.json', 'package-lock.json'].includes(file.filename));
   if (!uiFiles.length && !manifestsChanged) {
-    await core.summary.addHeading('UI consistency review')
-      .addRaw(`PR #${number}: skipped (no production UI or UI dependency changes).`).write();
+    await skipIrrelevant('no production UI or UI dependency changes');
     return;
   }
 
-  // PR file patches describe the net merge-base diff, not a concatenation of commits.
-  const { data: comparison } = await github.rest.repos.compareCommits({
-    owner, repo, base: pr.base.sha, head: pr.head.sha, per_page: 1,
-  });
-  const mergeBase = comparison.merge_base_commit?.sha;
-  if (!mergeBase) throw new Error('The PR merge base is unavailable; refusing a partial review.');
-  core.setOutput('merge_base_sha', mergeBase);
+  await mergeBaseSha();
 
   async function jsonAt(filename, ref) {
     const { data } = await github.rest.repos.getContent({ owner, repo, path: filename, ref });
@@ -118,7 +141,7 @@ async function prepareUiReview({ github, context, core, input, directory }) {
         const to = after[scope]?.[name] || null;
         const resolvedFrom = from ? beforeLock?.packages?.[`node_modules/${name}`]?.version || null : null;
         const resolvedTo = to ? afterLock?.packages?.[`node_modules/${name}`]?.version || null : null;
-        const knownUi = /^(?:@primer\/|@tailwindcss\/|react(?:$|-)|chart\.js$|tailwindcss$|next$)/.test(name);
+        const knownUi = /^(?:@primer\/|@tailwindcss\/|react$|react-dom$|react-is$|react-chartjs-2$|chart\.js$|tailwindcss$|next$)/.test(name);
         const referenced = uiPatches.includes(`'${name}'`) || uiPatches.includes(`"${name}"`) ||
           uiPatches.includes(`'${name}/`) || uiPatches.includes(`"${name}/`);
         if ((from !== to || resolvedFrom !== resolvedTo) && (knownUi || referenced)) {
@@ -128,8 +151,7 @@ async function prepareUiReview({ github, context, core, input, directory }) {
     }
   }
   if (!uiFiles.length && !dependencies.length) {
-    await core.summary.addHeading('UI consistency review')
-      .addRaw(`PR #${number}: skipped (only non-UI dependency changes).`).write();
+    await skipIrrelevant('only non-UI dependency changes');
     return;
   }
   if (uiFiles.length > MAX_REVIEW_FILES) {

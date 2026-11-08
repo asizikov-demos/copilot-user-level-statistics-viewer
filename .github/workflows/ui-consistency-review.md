@@ -69,6 +69,7 @@ jobs:
       merge_base_sha: ${{ steps.resolve.outputs.merge_base_sha }}
       historical: ${{ steps.resolve.outputs.historical }}
       should_review: ${{ steps.resolve.outputs.should_review }}
+      clear_advice: ${{ steps.resolve.outputs.clear_advice }}
     steps:
       - name: Checkout version-matched workflow preparation code
         uses: actions/checkout@v7.0.1
@@ -100,6 +101,52 @@ jobs:
   agent:
     needs: [prepare]
     if: needs.prepare.outputs.should_review == 'true'
+
+  clear_advice:
+    needs: [prepare]
+    if: needs.prepare.outputs.clear_advice == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    concurrency:
+      group: ui-consistency-review-comment-${{ needs.prepare.outputs.pr_number }}
+      cancel-in-progress: false
+    steps:
+      - name: Clear obsolete UI advice without starting an agent
+        uses: actions/github-script@v9
+        env:
+          PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
+          REVIEWED_SHA: ${{ needs.prepare.outputs.head_sha }}
+          REVIEWED_BASE_SHA: ${{ needs.prepare.outputs.base_sha }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const number = Number(process.env.PR_NUMBER);
+            const marker = `<!-- gh-aw-workflow-call-id: ${owner}/${repo}/ui-consistency-review -->`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number: number, per_page: 100,
+            });
+            const previous = comments.filter(comment =>
+              comment.user?.login === 'github-actions[bot]' &&
+              comment.body?.includes(marker)).at(-1);
+            if (!previous) {
+              core.info('No previous UI review comment to clear.');
+              return;
+            }
+            const { data: pr } = await github.rest.pulls.get({
+              owner, repo, pull_number: number,
+            });
+            if (pr.state !== 'open' || pr.head.sha !== process.env.REVIEWED_SHA ||
+                pr.base.sha !== process.env.REVIEWED_BASE_SHA) {
+              core.notice('PR revisions or state changed; not clearing advice from a stale run.');
+              return;
+            }
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: previous.id,
+              body: `## UI consistency review\n\n**Advisory / non-blocking** · Reviewed head: \`${pr.head.sha}\`\n\nNo production UI or UI dependency changes remain in this PR; previous advice is superseded.\n\n${marker}`,
+            });
+            await core.summary.addHeading('UI consistency review')
+              .addRaw(`Cleared obsolete advice for PR #${number} without an agent run.`).write();
 
   head_guard:
     needs: [prepare, agent]

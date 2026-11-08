@@ -56,7 +56,9 @@ async function run(t, files, options = {}) {
         getContent: async args => {
           reads.push(args);
           const document = options.documents?.[`${args.ref}:${args.path}`];
-          assert.ok(document, `Unexpected contents read: ${args.ref}:${args.path}`);
+          const blob = options.blobs?.[`${args.ref}:${args.path}`];
+          assert.ok(document || blob, `Unexpected contents read: ${args.ref}:${args.path}`);
+          if (blob) return { data: { type: 'file', sha: blob } };
           return { data: {
             type: 'file', encoding: 'base64',
             content: Buffer.from(JSON.stringify(document)).toString('base64'),
@@ -87,6 +89,7 @@ test('worker-test and large fixture PR skips without fetching a diff or source',
     { filename: 'src/workers/__tests__/metricsWorker.test.ts', additions: 63, deletions: 2 },
   ]);
   assert.equal(result.outputs.should_review, 'false');
+  assert.equal(result.outputs.clear_advice, 'true');
   assert.equal(result.comparisons, 0);
   assert.deepEqual(result.reads, []);
 });
@@ -145,6 +148,23 @@ test('manifest-only non-UI dev upgrades skip the agent', async t => {
   assert.equal(result.outputs.should_review, 'false');
 });
 
+test('test-only React upgrades skip unless imported by changed production UI', async t => {
+  const options = {
+    documents: {
+      'merge-base:package.json': { devDependencies: { 'react-test-renderer': '^19.2' } },
+      'head:package.json': { devDependencies: { 'react-test-renderer': '^19.3' } },
+    },
+  };
+  const skipped = await run(t, [{ filename: 'package.json' }], options);
+  assert.equal(skipped.outputs.should_review, 'false');
+  assert.equal(skipped.outputs.clear_advice, 'true');
+  const imported = await run(t, [
+    { filename: 'package.json' },
+    { ...uiFile, patch: '@@ -1 +1 @@\n-old\n+import Test from "react-test-renderer";' },
+  ], options);
+  assert.equal(imported.packet.dependencies[0].name, 'react-test-renderer');
+});
+
 test('direct UI lock upgrades are included without reporting transitive changes', async t => {
   const manifest = { dependencies: { '@primer/react': '^38' } };
   const result = await run(t, [{ filename: 'package-lock.json' }], {
@@ -188,6 +208,31 @@ test('binary production UI changes require visual review instead of silently ski
   await run(t, [{
     filename: 'src/components/icons/tablepro.png', status: 'modified', additions: 0, deletions: 0,
   }], { error: /needs a visual review/ });
+});
+
+test('binary renames are exempt only when merge-base/head blob identity is verified', async t => {
+  const renamed = {
+    filename: 'src/components/icons/new.png', previous_filename: 'src/components/icons/old.png',
+    status: 'renamed', additions: 0, deletions: 0,
+  };
+  const blobs = {
+    'merge-base:src/components/icons/old.png': 'old-blob',
+    'head:src/components/icons/new.png': 'old-blob',
+  };
+  const pure = await run(t, [renamed], { blobs });
+  assert.equal(pure.outputs.should_review, 'false');
+  assert.deepEqual(pure.reads.map(({ ref, path }) => [ref, path]), [
+    ['merge-base', renamed.previous_filename], ['head', renamed.filename],
+  ]);
+  await run(t, [renamed], {
+    blobs: { ...blobs, 'head:src/components/icons/new.png': 'new-blob' },
+    error: /needs a visual review/,
+  });
+  await run(t, [renamed], {
+    blobs: { 'merge-base:src/components/icons/old.png': 'old-blob' },
+    documents: { 'head:src/components/icons/new.png': {} },
+    error: /needs a visual review/,
+  });
 });
 
 test('per-file, file-count, and total-packet limits reject incomplete delivery', async t => {
