@@ -57,6 +57,7 @@ timeout-minutes: 20
 
 jobs:
   prepare:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.id == github.repository_id
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -69,10 +70,10 @@ jobs:
       historical: ${{ steps.resolve.outputs.historical }}
       should_review: ${{ steps.resolve.outputs.should_review }}
     steps:
-      - name: Checkout trusted preparation code
+      - name: Checkout version-matched workflow preparation code
         uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.workflow_sha }}
           persist-credentials: false
           sparse-checkout: scripts
       - name: Resolve and validate the PR

@@ -149,4 +149,6 @@ Read models depend on the grouped contract and pure domain helpers; workers depe
 
 The agent reads unchanged code only to resolve a changed-line candidate and reports at most three actionable findings in a 250-word advisory comment. Inventory and coverage stay in workflow summaries/logs. A no-findings run replaces previous advice with one sentence. File-content reads explicitly accept untrusted PR revisions, scoped to this repository; same-repository checks, read-only permissions, non-execution rules, threat detection, and head/base publication guards remain in place.
 
+Preparation runs only for same-repository PRs (or manual dispatch) and loads its automation helper at the immutable workflow-source SHA, so workflow/helper changes work before merge. Review policies still come from the default branch; reviewed application code is never executed.
+
 Validate preparation with `node --test scripts/tests/prepare-ui-review.mjs`; regenerate the lock with `gh aw compile ui-consistency-review --validate`, preserving `.gitattributes`' `merge=ours` rule.
