@@ -28,20 +28,23 @@ describe('feature read models', () => {
     expect(model).toEqual({
       reportStartDay: metrics.overview.stats.reportStartDay,
       reportEndDay: metrics.overview.stats.reportEndDay,
-      engagementData: metrics.overview.engagementData,
-      chatUsersData: metrics.overview.chatUsersData,
-      chatRequestsData: metrics.overview.chatRequestsData,
+      clientReachData: metrics.overview.clientReachData,
+      featureAdoptionData: metrics.adoption.featureAdoptionData,
+      clientTrafficSummary: metrics.clients.traffic.summary,
+      workingPatterns: metrics.overview.workingPatterns,
       header: expect.any(Object),
     });
-    expect(model.engagementData).toBe(metrics.overview.engagementData);
-    expect(model.chatUsersData).toBe(metrics.overview.chatUsersData);
-    expect(model.chatRequestsData).toBe(metrics.overview.chatRequestsData);
+    expect(model.clientReachData).toBe(metrics.overview.clientReachData);
+    expect(model.featureAdoptionData).toBe(metrics.adoption.featureAdoptionData);
+    expect(model.clientTrafficSummary).toBe(metrics.clients.traffic.summary);
+    expect(model.workingPatterns).toBe(metrics.overview.workingPatterns);
     expect(Object.keys(model)).toEqual([
       'reportStartDay',
       'reportEndDay',
-      'engagementData',
-      'chatUsersData',
-      'chatRequestsData',
+      'clientReachData',
+      'featureAdoptionData',
+      'clientTrafficSummary',
+      'workingPatterns',
       'header',
     ]);
   });

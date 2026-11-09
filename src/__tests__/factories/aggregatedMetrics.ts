@@ -7,7 +7,7 @@ type AggregatedMetricsOverrides = {
 };
 
 export const AGGREGATED_METRICS_SLICE_KEYS = {
-  overview: ['stats', 'engagementData', 'chatUsersData', 'chatRequestsData', 'executiveSummary'],
+  overview: ['stats', 'engagementData', 'chatUsersData', 'chatRequestsData', 'executiveSummary', 'clientReachData', 'workingPatterns'],
   users: ['userSummaries'],
   adoption: [
     'vscodeAgentUsage',

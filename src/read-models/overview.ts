@@ -4,9 +4,10 @@ import { buildOverviewHeaderModel, type OverviewHeaderModel } from './overviewHe
 export interface OverviewReadModel {
   reportStartDay: string;
   reportEndDay: string;
-  engagementData: AggregatedMetrics['overview']['engagementData'];
-  chatUsersData: AggregatedMetrics['overview']['chatUsersData'];
-  chatRequestsData: AggregatedMetrics['overview']['chatRequestsData'];
+  clientReachData: AggregatedMetrics['overview']['clientReachData'];
+  featureAdoptionData: AggregatedMetrics['adoption']['featureAdoptionData'];
+  clientTrafficSummary: AggregatedMetrics['clients']['traffic']['summary'];
+  workingPatterns: AggregatedMetrics['overview']['workingPatterns'];
   header: OverviewHeaderModel;
 }
 
@@ -21,9 +22,10 @@ export function selectOverviewReadModel(metrics: AggregatedMetrics): OverviewRea
   return {
     reportStartDay: stats.reportStartDay,
     reportEndDay: stats.reportEndDay,
-    engagementData: metrics.overview.engagementData,
-    chatUsersData: metrics.overview.chatUsersData,
-    chatRequestsData: metrics.overview.chatRequestsData,
+    clientReachData: metrics.overview.clientReachData,
+    featureAdoptionData: metrics.adoption.featureAdoptionData,
+    clientTrafficSummary: metrics.clients.traffic.summary,
+    workingPatterns: metrics.overview.workingPatterns,
     header: buildOverviewHeaderModel({
       uniqueUsers: stats.uniqueUsers,
       enterpriseId: stats.enterpriseId,

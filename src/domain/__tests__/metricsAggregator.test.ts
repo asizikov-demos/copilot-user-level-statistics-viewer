@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import {
   makeFeatureTotal,
+  makeCliTotals,
   makeIdeTotal,
   makeModelFeatureTotal,
 } from '../../__tests__/factories/metricTotals';
@@ -15,6 +16,93 @@ const vscodeAt = (version: string) => makeIdeTotal('vscode', 0, {
 });
 
 describe('metricsAggregator cross-family consistency', () => {
+  it('ranks client reach by distinct users across historical and traffic evidence without mixing counters', () => {
+    const traffic = (client: string, requests: number) => ({
+      client,
+      request_count: requests,
+      session_count: 0,
+      token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      totals_by_model: [],
+    });
+    const records = [
+      makeMetric({
+        user_id: 1,
+        totals_by_ide: [makeIdeTotal('vscode', 2), makeIdeTotal('unused', 0)],
+        totals_by_client: [traffic('vscode', 5), traffic('opencode', 3)],
+        used_cli: true,
+      }),
+      makeMetric({
+        user_id: 1, day: '2024-01-16',
+        totals_by_ide: [makeIdeTotal('vscode', 4)],
+        totals_by_client: [traffic('opencode', 9)],
+      }),
+      makeMetric({ user_id: 2, totals_by_client: [traffic('opencode', 1), traffic('zero', 0)] }),
+      makeMetric({ user_id: 3, used_copilot_app: true }),
+      makeMetric({ user_id: 4, totals_by_cli: makeCliTotals({ session_count: 1 }) }),
+    ];
+    const original = structuredClone(records);
+    const aggregated = aggregateMetrics(records).aggregated;
+    expect(aggregated.overview.clientReachData).toEqual([
+      { client: 'copilot_cli', users: 2 },
+      { client: 'opencode', users: 2 },
+      { client: 'copilot_app', users: 1 },
+      { client: 'vscode', users: 1 },
+    ]);
+    expect(aggregated.overview.stats.uniqueUsers).toBe(4);
+    expect(aggregated.overview.stats.totalRecords).toBe(5);
+    expect(aggregateMetrics(records.toReversed()).aggregated.overview.clientReachData)
+      .toEqual(aggregated.overview.clientReachData);
+    expect(records).toEqual(original);
+  });
+
+  it('keeps distinct client IDs even when their display names match, and excludes zero-only IDE rows', () => {
+    const result = aggregateMetrics([
+      makeMetric({
+        totals_by_ide: [
+          makeIdeTotal('github_app', 1),
+          makeIdeTotal('copilot_app', 1),
+          makeIdeTotal('vscode', 0),
+        ],
+      }),
+    ]).aggregated;
+    expect(result.overview.clientReachData).toEqual([
+      { client: 'copilot_app', users: 1 },
+      { client: 'github_app', users: 1 },
+    ]);
+    expect(aggregateMetrics([]).aggregated.overview.clientReachData).toEqual([]);
+  });
+
+  it('excludes parser-inferred App presence without positive activity from client reach', () => {
+    const parsed = parseMetricsLines([
+      makeMetric({
+        user_id: 1,
+        used_copilot_app: undefined,
+        totals_by_copilot_app: makeCliTotals(),
+      }),
+      makeMetric({
+        user_id: 2,
+        used_copilot_app: undefined,
+        totals_by_feature: [makeFeatureTotal('copilot_app', 0)],
+      }),
+      makeMetric({ user_id: 3, used_copilot_app: true }),
+      makeMetric({
+        user_id: 4,
+        used_copilot_app: undefined,
+        totals_by_copilot_app: makeCliTotals({ session_count: 1 }),
+      }),
+      makeMetric({
+        user_id: 5,
+        used_copilot_app: undefined,
+        totals_by_feature: [makeFeatureTotal('copilot_app', 1)],
+      }),
+    ].map(metric => ({ line: JSON.stringify(metric) })));
+
+    expect(parsed.slice(0, 2).map(metric => metric.used_copilot_app)).toEqual([true, true]);
+    expect(aggregateMetrics(parsed).aggregated.overview.clientReachData).toEqual([
+      { client: 'copilot_app', users: 3 },
+    ]);
+  });
+
   it('deduplicates reporting issues within each period, day, component and affected-user measure', () => {
     const row = (userId: number, day: string, overrides = {}) => makeMetric({
       user_id: userId,

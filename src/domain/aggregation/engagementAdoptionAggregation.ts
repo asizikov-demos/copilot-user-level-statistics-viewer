@@ -4,6 +4,12 @@ import type {
 } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics } from '../../types/metrics';
 import {
+  accumulateWorkingPatterns,
+  computeWorkingPatterns,
+  createWorkingPatternsAccumulator,
+  type WorkingPatternsAccumulator,
+} from '../calculators/workingPatternsCalculator';
+import {
   accumulateVSCodeAgentUsage,
   computeVSCodeAgentUsage,
   createVSCodeAgentUsageAccumulator,
@@ -50,6 +56,7 @@ export interface EngagementAdoptionAggregationAccumulator {
   chat: ChatAccumulator;
   featureAdoption: FeatureAdoptionAccumulator;
   advancedAdoption: AdvancedAdoptionAccumulator;
+  workingPatterns: WorkingPatternsAccumulator;
 }
 
 export type EngagementAdoptionAggregationResult = Pick<
@@ -57,6 +64,7 @@ export type EngagementAdoptionAggregationResult = Pick<
   | 'engagementData'
   | 'chatUsersData'
   | 'chatRequestsData'
+  | 'workingPatterns'
 > & Pick<
   AdoptionMetricsSlice,
   | 'vscodeAgentUsage'
@@ -74,6 +82,7 @@ export function createEngagementAdoptionAggregationAccumulator(
     chat: createChatAccumulator(),
     featureAdoption: createFeatureAdoptionAccumulator(),
     advancedAdoption: createAdvancedAdoptionAccumulator(),
+    workingPatterns: createWorkingPatternsAccumulator(),
   };
 }
 
@@ -83,6 +92,7 @@ export function accumulateEngagementAdoptionAggregation(
   usedCopilotCloudAgent: boolean
 ): void {
   const date = metric.day;
+  accumulateWorkingPatterns(accumulator.workingPatterns, metric, usedCopilotCloudAgent);
   accumulateVSCodeAgentUsage(accumulator.vscodeAgentUsage, metric);
   const userId = metric.user_id;
   const usedActiveCodeReview = metric.used_copilot_code_review_active ?? false;
@@ -148,6 +158,7 @@ export function finalizeEngagementAdoptionAggregation(
 ): EngagementAdoptionAggregationResult {
   return {
     vscodeAgentUsage: computeVSCodeAgentUsage(accumulator.vscodeAgentUsage),
+    workingPatterns: computeWorkingPatterns(accumulator.workingPatterns),
     engagementData: computeEngagementData(accumulator.engagement, cliUsage),
     chatUsersData: computeChatUsersData(accumulator.chat, cliUsage),
     chatRequestsData: computeChatRequestsData(accumulator.chat, cliUsage),

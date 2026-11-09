@@ -8,6 +8,7 @@ import {
 import { getIDEMetadata } from '../utils/ideMetadata';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
 import { computeExecutiveSummary } from './calculators/executiveSummaryCalculator';
+import { computeClientReach } from './calculators/clientReachCalculator';
 import {
   accumulateCoreStatsAggregation,
   createCoreStatsAggregationAccumulator,
@@ -122,6 +123,8 @@ export function assembleAggregatedMetrics({
         userSummaryAggregation.userSummaries,
         engagementAdoptionAggregation.engagementData
       ),
+      clientReachData: computeClientReach(userSummaryAggregation.userSummaries),
+      workingPatterns: engagementAdoptionAggregation.workingPatterns,
     },
     users: userSummaryAggregation,
     adoption: {

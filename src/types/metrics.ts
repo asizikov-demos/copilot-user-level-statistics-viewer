@@ -58,6 +58,15 @@ export interface LocalByokUsageTotals extends CopilotClientUsageTotals {
 }
 
 export interface CopilotMetrics extends CliCustomizationFields {
+  // Internal parser provenance, captured before optional flags are normalized.
+  workingPatternSources?: {
+    cloudAgent: boolean;
+    codeReview: boolean;
+    app: boolean;
+    vscodeAgents: boolean;
+    clientTraffic: boolean;
+    appUsage: boolean;
+  };
   client_telemetry_present?: boolean | null;
   usage_metrics_requirements?: {
     met: string[];

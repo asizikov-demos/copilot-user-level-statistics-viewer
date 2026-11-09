@@ -87,7 +87,12 @@ describe('client traffic aggregation', () => {
     const legacy = aggregateMetrics([base]).aggregated;
     const { aggregated, userDetailAccumulator } = aggregateMetrics([{ ...base, totals_by_client: [traffic] }]);
     expect({ ...aggregated.clients, traffic: legacy.clients.traffic }).toEqual(legacy.clients);
-    expect(aggregated.overview).toEqual(legacy.overview);
+    expect({
+      ...aggregated.overview,
+      clientReachData: legacy.overview.clientReachData,
+      workingPatterns: legacy.overview.workingPatterns,
+    }).toEqual(legacy.overview);
+    expect(aggregated.overview.clientReachData).toEqual([{ client: 'opencode', users: 1 }]);
     expect(aggregated.users.userSummaries).toEqual(
       legacy.users.userSummaries.map(user => ({ ...user, clients_used: ['opencode'], top_client: 'opencode' })),
     );

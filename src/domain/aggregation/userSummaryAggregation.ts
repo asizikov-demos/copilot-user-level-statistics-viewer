@@ -91,9 +91,18 @@ function initializeUser(
   return userSummary;
 }
 
-function hasIDEActivity(
-  ideTotal: CopilotMetrics['totals_by_ide'][number]
-): boolean {
+type EditorActivityTotals = Pick<
+  CopilotMetrics['totals_by_ide'][number],
+  | 'user_initiated_interaction_count'
+  | 'code_generation_activity_count'
+  | 'code_acceptance_activity_count'
+  | 'loc_added_sum'
+  | 'loc_deleted_sum'
+  | 'loc_suggested_to_add_sum'
+  | 'loc_suggested_to_delete_sum'
+>;
+
+function hasEditorActivity(ideTotal: EditorActivityTotals): boolean {
   return [
     ideTotal.user_initiated_interaction_count,
     ideTotal.code_generation_activity_count,
@@ -118,6 +127,25 @@ function hasCLIActivity(metric: CopilotMetrics): boolean {
         cliTotals.token_usage.prompt_tokens_sum,
       ].some(value => value !== 0)
     );
+}
+
+function hasCopilotAppActivity(metric: CopilotMetrics): boolean {
+  if (metric.workingPatternSources?.appUsage ?? metric.used_copilot_app) return true;
+
+  const appTotals = metric.totals_by_copilot_app;
+  if (appTotals && [
+    appTotals.session_count,
+    appTotals.request_count,
+    appTotals.prompt_count,
+    appTotals.token_usage.prompt_tokens_sum,
+    appTotals.token_usage.output_tokens_sum,
+  ].some(value => value > 0)) return true;
+
+  return metric.totals_by_feature.some(feature =>
+    feature.feature === 'copilot_app' && hasEditorActivity(feature)
+  ) || metric.totals_by_ide.some(ide =>
+    ide.ide === 'copilot_app' && hasEditorActivity(ide)
+  );
 }
 
 export function accumulateUserSummaryAggregation(
@@ -199,7 +227,7 @@ export function accumulateUserSummaryAggregation(
   }
   for (const ideTotal of metric.totals_by_ide) {
     const normalizedClient = ideTotal.ide.trim();
-    if (normalizedClient && hasIDEActivity(ideTotal)) {
+    if (normalizedClient && hasEditorActivity(ideTotal)) {
       userClientsUsed.add(normalizedClient);
     }
     addClientCount(
@@ -208,7 +236,7 @@ export function accumulateUserSummaryAggregation(
       ideTotal.user_initiated_interaction_count || 0
     );
   }
-  if (metric.used_copilot_app) {
+  if (hasCopilotAppActivity(metric)) {
     userClientsUsed.add('copilot_app');
   }
   if (metric.totals_by_cli || metric.used_cli) {
