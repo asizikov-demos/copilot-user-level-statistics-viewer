@@ -111,7 +111,9 @@ export function accumulateWorkingPatterns(
   if (metric.used_cli || hasClientActivity(metric.totals_by_cli)) user.localSurfaces.add('cli');
   if ((sources?.appUsage ?? metric.used_copilot_app)
     || hasClientActivity(metric.totals_by_copilot_app)
-    || metric.totals_by_ide.some(ide => ide.ide === 'copilot_app' && hasEditorActivity(ide))) {
+    || metric.totals_by_ide.some(ide =>
+      (ide.ide === 'copilot_app' || ide.ide === 'github_app') && hasEditorActivity(ide)
+    )) {
     user.localSurfaces.add('app');
   }
   if (metric.used_vscode_agent === true

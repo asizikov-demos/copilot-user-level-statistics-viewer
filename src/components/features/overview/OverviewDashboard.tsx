@@ -20,7 +20,7 @@ const CLIENT_PREVIEW_SIZE = 6;
 interface ReachRow {
   key: string;
   label: string;
-  users: number;
+  users: number | null;
 }
 
 function ReachList({ rows, totalUsers, clients = false }: {
@@ -31,7 +31,7 @@ function ReachList({ rows, totalUsers, clients = false }: {
   return (
     <ul className="space-y-4" aria-label={clients ? 'Observed users by client' : 'Observed users by workflow'}>
       {rows.map(row => {
-        const percentage = totalUsers > 0 ? row.users / totalUsers * 100 : null;
+        const percentage = row.users !== null && totalUsers > 0 ? row.users / totalUsers * 100 : null;
         const Icon = clients ? getIDEIcon(row.key) : undefined;
         return (
           <li key={row.key}>
@@ -41,18 +41,24 @@ function ReachList({ rows, totalUsers, clients = false }: {
                 <span className="min-w-0 break-words" title={clients ? row.key : undefined}>{row.label}</span>
               </span>
               <span className="shrink-0 tabular-nums">
-                {formatNumber(row.users)} <span className="sr-only">users</span>
-                <span className="ml-2 text-xs text-muted">
-                  {percentage === null ? 'N/A' : formatPercentage(percentage)}
-                </span>
+                {row.users === null ? 'Not reported' : (
+                  <>
+                    {formatNumber(row.users)} <span className="sr-only">users</span>
+                    <span className="ml-2 text-xs text-muted">
+                      {percentage === null ? 'N/A' : formatPercentage(percentage)}
+                    </span>
+                  </>
+                )}
               </span>
             </div>
-            <div aria-hidden="true" className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className={`h-full rounded-full ${clients ? 'bg-[var(--data-blue-color-emphasis)]' : 'bg-[var(--data-purple-color-emphasis)]'}`}
-                style={{ width: `${percentage ?? 0}%` }}
-              />
-            </div>
+            {percentage !== null && (
+              <div aria-hidden="true" className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={`h-full rounded-full ${clients ? 'bg-[var(--data-blue-color-emphasis)]' : 'bg-[var(--data-purple-color-emphasis)]'}`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            )}
           </li>
         );
       })}
@@ -79,10 +85,26 @@ const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     { key: 'agent', label: 'Editor Agent Mode', users: featureAdoptionData.agentModeUsers },
     { key: 'ask', label: 'Ask Mode', users: featureAdoptionData.askModeUsers },
     { key: 'plan', label: 'Plan Mode', users: featureAdoptionData.planModeUsers },
-    { key: 'review', label: 'Code review', users: featureAdoptionData.codeReviewUsers },
-    { key: 'coding-agent', label: 'Coding agent', users: featureAdoptionData.codingAgentUsers },
-  ].sort((a, b) => b.users - a.users);
-  const hasWorkflowUsage = workflows.some(row => row.users > 0);
+    {
+      key: 'review',
+      label: 'Code review',
+      users: model.workingPatterns.recordCount > 0 && model.workingPatterns.coverage.codeReviewReportedRecords === 0
+        ? null
+        : featureAdoptionData.codeReviewUsers,
+    },
+    {
+      key: 'coding-agent',
+      label: 'Coding agent',
+      users: model.workingPatterns.recordCount > 0 && model.workingPatterns.coverage.cloudAgentReportedRecords === 0
+        ? null
+        : featureAdoptionData.codingAgentUsers,
+    },
+  ].sort((a, b) => {
+    if (a.users === null) return b.users === null ? 0 : 1;
+    if (b.users === null) return -1;
+    return b.users - a.users;
+  });
+  const hasWorkflowUsage = workflows.some(row => row.users === null || row.users > 0);
 
   return (
     <div className="space-y-6">

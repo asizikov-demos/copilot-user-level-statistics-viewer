@@ -9,6 +9,7 @@ import { selectOverviewReadModel, type OverviewReadModel } from '../../../../rea
 import { VIEW_MODES } from '../../../../types/navigation';
 import OverviewDashboard from '../OverviewDashboard';
 import { makeFeatureTotal } from '../../../../__tests__/factories/metricTotals';
+import { parseMetricsLines } from '../../../../domain/metricsParser';
 
 const { navigateTo } = vi.hoisted(() => ({ navigateTo: vi.fn() }));
 vi.mock('../../../../state/NavigationContext', () => ({
@@ -52,7 +53,8 @@ describe('Overview two lenses', () => {
     expect(within(clients).getByText('66.7%')).toBeTruthy();
     const workflows = screen.getByRole('list', { name: 'Observed users by workflow' });
     expect(within(workflows).getAllByText('33.3%')).toHaveLength(2);
-    expect(within(workflows).getAllByText('0.0%')).toHaveLength(4);
+    expect(within(workflows).getAllByText('0.0%')).toHaveLength(2);
+    expect(within(workflows).getAllByText('Not reported')).toHaveLength(2);
     expect(screen.queryByText('Daily Chat Users Trends')).toBeNull();
     expect(screen.queryByText('Daily Chat Requests')).toBeNull();
     expect(screen.queryByText('Daily User Engagement')).toBeNull();
@@ -88,6 +90,42 @@ describe('Overview two lenses', () => {
     expect(screen.queryByRole('list', { name: 'Observed users by workflow' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Explore Adoption' }));
     expect(navigateTo).toHaveBeenCalledWith(VIEW_MODES.COPILOT_ADOPTION);
+  });
+
+  it('distinguishes unreported workflow signals from reported zero adoption', () => {
+    const unavailable = aggregateMetrics(parseMetricsLines([{
+      line: JSON.stringify(makeMetric({
+        used_copilot_cloud_agent: undefined,
+        used_copilot_coding_agent: undefined,
+        used_copilot_code_review_active: undefined,
+        used_copilot_code_review_passive: undefined,
+        totals_by_feature: [makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 1 })],
+      })),
+    }])).aggregated;
+    renderOverview(selectOverviewReadModel(unavailable));
+
+    const workflows = screen.getByRole('list', { name: 'Observed users by workflow' });
+    expect(within(workflows).getAllByText('Not reported')).toHaveLength(2);
+    expect(within(workflows).getByText('100.0%')).toBeTruthy();
+  });
+
+  it('shows zero workflow reach when those signals were explicitly reported false', () => {
+    const reported = aggregateMetrics(parseMetricsLines([{
+      line: JSON.stringify(makeMetric({
+        used_copilot_cloud_agent: false,
+        used_copilot_code_review_active: false,
+        used_copilot_code_review_passive: false,
+        totals_by_feature: [makeFeatureTotal('code_completion', 0, { code_generation_activity_count: 1 })],
+      })),
+    }])).aggregated;
+    renderOverview(selectOverviewReadModel(reported));
+
+    const workflows = screen.getByRole('list', { name: 'Observed users by workflow' });
+    for (const label of ['Code review', 'Coding agent']) {
+      const row = within(workflows).getByText(label).closest('li')!;
+      expect(within(row).getByText('0.0%')).toBeTruthy();
+    }
+    expect(within(workflows).queryByText('Not reported')).toBeNull();
   });
 
   it('places an overlapping reach profile before the lenses and explains breadth rather than maturity', () => {

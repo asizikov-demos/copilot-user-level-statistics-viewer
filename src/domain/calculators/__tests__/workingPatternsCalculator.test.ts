@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
-import { makeCliTotals, makeFeatureTotal } from '../../../__tests__/factories/metricTotals';
+import { makeCliTotals, makeFeatureTotal, makeIdeTotal } from '../../../__tests__/factories/metricTotals';
 import type { ClientUsageTotals } from '../../../types/metrics';
 import { aggregateMetrics } from '../../metricsAggregator';
 import { parseMetricsLines } from '../../metricsParser';
@@ -94,6 +94,23 @@ describe('working-pattern reach', () => {
     expect(aggregateMetrics(parsed).aggregated.overview.workingPatterns).toMatchObject({
       localAgentUsers: 0, delegatedUsers: null, usersWithoutPatternEvidence: 1,
       coverage: { appReportedRecords: 1, cloudAgentReportedRecords: 0, codeReviewReportedRecords: 0 },
+    });
+  });
+
+  it('classifies active historical GitHub App IDE rows as the Copilot App surface', () => {
+    const parsed = parseMetricsLines([{
+      line: JSON.stringify(makeMetric({
+        used_copilot_app: undefined,
+        totals_by_ide: [makeIdeTotal('github_app', 1)],
+      })),
+    }]);
+    const aggregated = aggregateMetrics(parsed).aggregated;
+
+    expect(aggregated.overview.clientReachData).toEqual([{ client: 'github_app', users: 1 }]);
+    expect(aggregated.overview.workingPatterns).toMatchObject({
+      localAgentUsers: 1,
+      multipleLocalSurfaceUsers: 0,
+      usersWithoutPatternEvidence: 0,
     });
   });
 

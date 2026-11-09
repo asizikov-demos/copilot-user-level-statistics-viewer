@@ -72,6 +72,37 @@ describe('metricsAggregator cross-family consistency', () => {
     expect(aggregateMetrics([]).aggregated.overview.clientReachData).toEqual([]);
   });
 
+  it('excludes parser-inferred App presence without positive activity from client reach', () => {
+    const parsed = parseMetricsLines([
+      makeMetric({
+        user_id: 1,
+        used_copilot_app: undefined,
+        totals_by_copilot_app: makeCliTotals(),
+      }),
+      makeMetric({
+        user_id: 2,
+        used_copilot_app: undefined,
+        totals_by_feature: [makeFeatureTotal('copilot_app', 0)],
+      }),
+      makeMetric({ user_id: 3, used_copilot_app: true }),
+      makeMetric({
+        user_id: 4,
+        used_copilot_app: undefined,
+        totals_by_copilot_app: makeCliTotals({ session_count: 1 }),
+      }),
+      makeMetric({
+        user_id: 5,
+        used_copilot_app: undefined,
+        totals_by_feature: [makeFeatureTotal('copilot_app', 1)],
+      }),
+    ].map(metric => ({ line: JSON.stringify(metric) })));
+
+    expect(parsed.slice(0, 2).map(metric => metric.used_copilot_app)).toEqual([true, true]);
+    expect(aggregateMetrics(parsed).aggregated.overview.clientReachData).toEqual([
+      { client: 'copilot_app', users: 3 },
+    ]);
+  });
+
   it('deduplicates reporting issues within each period, day, component and affected-user measure', () => {
     const row = (userId: number, day: string, overrides = {}) => makeMetric({
       user_id: userId,
