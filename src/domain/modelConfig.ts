@@ -5,14 +5,14 @@ import { normalizeModelName } from './autoMode';
 
 export { isActiveAutoModeFeature, normalizeModelName } from './autoMode';
 
-export type ModelCategory = 'Lightweight' | 'Powerful' | 'Versatile';
+export type ModelCategory = 'Lightweight' | 'Powerful' | 'Versatile' | 'Image Generation';
 export type ModelVendor = 'Anthropic' | 'GitHub' | 'Google' | 'Microsoft' | 'Moonshot AI' | 'OpenAI' | 'xAI';
 export type ModelVendorGroup = ModelVendor | 'Unattributed';
 
 /**
- * Display order for model categories, from least to most capable, with unmapped models last.
+ * Display order: capability categories, image generation, then unmapped models.
  */
-export const MODEL_CATEGORY_ORDER = ['Lightweight', 'Versatile', 'Powerful', 'Uncategorized'] as const;
+export const MODEL_CATEGORY_ORDER = ['Lightweight', 'Versatile', 'Powerful', 'Image Generation', 'Uncategorized'] as const;
 export const MODEL_VENDOR_ORDER: readonly ModelVendorGroup[] = [
   'OpenAI',
   'Anthropic',
@@ -36,6 +36,7 @@ export class Model {
 /**
  * Canonical list of known models, retaining historical entries for older reports.
  * Current display names and categories: https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
+ * Models in the image generation table use the app's Image Generation category.
  */
 export const KNOWN_MODELS: Model[] = [
   new Model('goldeneye', 'Goldeneye', 'Powerful', 'GitHub'),
@@ -70,6 +71,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-6-sol', 'GPT-6 Sol', 'Powerful', 'OpenAI'),
   new Model('gpt-6.1-sol', 'GPT-6.1 Sol', 'Powerful', 'OpenAI'),
   new Model('gpt-6.1-terra', 'GPT-6.1 Terra', 'Versatile', 'OpenAI'),
+  new Model('gpt-image-2.5-flare', 'GPT Image 2.5 Flare', 'Image Generation', 'OpenAI'),
   new Model('grok-code-fast-1', 'Grok Code Fast 1', 'Lightweight', 'xAI'),
   new Model('grok-4', 'Grok 4', 'Versatile', 'xAI'),
   new Model('grok-4.5', 'Grok 4.5', 'Versatile', 'xAI'),
@@ -121,6 +123,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gemini-3.7-flash', 'Gemini 3.7 Flash', 'Versatile', 'Google'),
   new Model('gemini-3.8-flash', 'Gemini 3.8 Flash', 'Versatile', 'Google'),
   new Model('gemini-4-argon', 'Gemini 4 Argon', 'Powerful', 'Google'),
+  new Model('gemini-4-carbon', 'Gemini 4 Carbon', 'Powerful', 'Google'),
   new Model('mai-code-1-flash', 'MAI-Code-1-Flash', 'Lightweight', 'Microsoft'),
   new Model('mai-code-1.1-flash', 'MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'),
   new Model('kimi-k2.7-code', 'Kimi K2.7 Code', 'Versatile', 'Moonshot AI'),

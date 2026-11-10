@@ -281,7 +281,7 @@ export interface ModelDailyUsageEntry {
   users: number;
 }
 
-export type ModelUsageCategory = 'Lightweight' | 'Powerful' | 'Versatile' | 'Uncategorized';
+export type ModelUsageCategory = import('../domain/modelConfig').ModelCategory | 'Uncategorized';
 
 export interface ModelCategoryUsageEntry {
   category: ModelUsageCategory;

@@ -46,7 +46,8 @@ export default function ModelSelectionModeCharts({ data }: { data: ModelSelectio
         })}
       </div>
       <p className="text-xs text-muted">
-        Types follow the Copilot model catalog; unmapped models appear as Uncategorized.
+        Types follow the Copilot model catalog, with image models grouped as Image Generation;
+        unmapped models appear as Uncategorized.
         Unknown models reported by the code review client appear as Code Review Model.
       </p>
     </div>

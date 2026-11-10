@@ -78,4 +78,23 @@ describe('ModelSelectionModeCharts', () => {
     expect(markup).toContain('Code Review Model');
     expect(markup).toContain('Uncategorized');
   });
+
+  it('renders image generation requests with a category color and their own share', () => {
+    const data = makeAggregatedMetrics().models.selectionModeRequests;
+    data.recordCount = 1;
+    data.reportedRecords = 1;
+    data.modes[0].categories = [
+      { category: 'Image Generation', requestCount: 6 },
+      { category: 'Powerful', requestCount: 2 },
+    ];
+
+    const markup = renderToStaticMarkup(<ModelSelectionModeCharts data={data} />);
+
+    expect(doughnut).toHaveBeenCalledTimes(1);
+    const chart = doughnut.mock.lastCall![0].data;
+    expect(chart.labels).toEqual(['Image Generation', 'Powerful']);
+    expect(chart.datasets[0].data).toEqual([6, 2]);
+    expect(chart.datasets[0].backgroundColor).toEqual([expect.any(String), expect.any(String)]);
+    expect(markup).toContain('75.0%');
+  });
 });
