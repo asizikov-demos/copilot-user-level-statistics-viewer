@@ -41,16 +41,22 @@ describe('model aggregation', () => {
         client('vscode', [
           ['gpt-5', 'user_selected', 10],
           ['gpt-4o-mini', 'user_selected', 2],
+          ['GPT Image 2.5 Flare', 'user_selected', 7],
           ['gpt-5', 'auto', 3],
           ['unknown', 'product_selected', 4],
           ['gpt-5', 'other', 5],
           ['gpt-5', 'unknown', 6],
           ['gpt-5', 'future_mode', 7],
         ]),
-        client('opencode', [['gpt-5', 'user_selected', 8], ['new-model', 'auto', 9]]),
+        client('opencode', [['gpt-5', 'user_selected', 8], ['new-model', 'auto', 9], ['gpt-image-2.5-flare', 'auto', 5]]),
       ] },
       { day: '2024-01-16', totals_by_client: [
-        client('vscode', [['gpt-5', 'user_selected', 1], ['gpt-4o', 'product_selected', 2]]),
+        client('vscode', [
+          ['gpt-5', 'user_selected', 1],
+          ['gpt-4o', 'product_selected', 2],
+          ['gpt-image-2.5-flare', 'user_selected', 4],
+          ['gpt-image-2.5-flare', 'product_selected', 6],
+        ]),
       ] },
     ]);
 
@@ -63,6 +69,7 @@ describe('model aggregation', () => {
           { category: 'Lightweight', requestCount: 2 },
           { category: 'Versatile', requestCount: 0 },
           { category: 'Powerful', requestCount: 19 },
+          { category: 'Image Generation', requestCount: 11 },
           { category: 'Uncategorized', requestCount: 0 },
           { category: 'Code Review Model', requestCount: 0 },
         ] },
@@ -70,6 +77,7 @@ describe('model aggregation', () => {
           { category: 'Lightweight', requestCount: 0 },
           { category: 'Versatile', requestCount: 0 },
           { category: 'Powerful', requestCount: 3 },
+          { category: 'Image Generation', requestCount: 5 },
           { category: 'Uncategorized', requestCount: 9 },
           { category: 'Code Review Model', requestCount: 0 },
         ] },
@@ -77,6 +85,7 @@ describe('model aggregation', () => {
           { category: 'Lightweight', requestCount: 0 },
           { category: 'Versatile', requestCount: 2 },
           { category: 'Powerful', requestCount: 0 },
+          { category: 'Image Generation', requestCount: 6 },
           { category: 'Uncategorized', requestCount: 4 },
           { category: 'Code Review Model', requestCount: 0 },
         ] },
@@ -107,6 +116,7 @@ describe('model aggregation', () => {
         { category: 'Lightweight', requestCount: 0 },
         { category: 'Versatile', requestCount: 0 },
         { category: 'Powerful', requestCount: 3 },
+        { category: 'Image Generation', requestCount: 0 },
         { category: 'Uncategorized', requestCount: 15 },
         { category: 'Code Review Model', requestCount: 13 },
       ]);

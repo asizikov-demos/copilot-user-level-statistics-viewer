@@ -153,7 +153,10 @@ publishing; never classify blocked verification as no drift.
    example `GPT-5.6 Terra`, `MAI-Code-1.1-Flash`), is the canonical display name.
    Normalize it with the repository helper to obtain the identity key. Collapse duplicate default/long-context
    rows only when their normalized identity and category agree.
-6. Accept only `Lightweight`, `Powerful`, and `Versatile`. If there are conflicting
+6. Accept `Lightweight`, `Powerful`, and `Versatile` from category columns.
+   The separate image generation table has no category column: assign its models
+   the app's `Image Generation` category. Do not infer this category from model
+   names or prices. If there are conflicting
    rows, unknown categories, ambiguous identities, or incomplete evidence, report
    the concrete blocker with `missing_data` and stop without requesting a PR.
    Rows sharing a normalized identity must also agree on the cleaned display name.

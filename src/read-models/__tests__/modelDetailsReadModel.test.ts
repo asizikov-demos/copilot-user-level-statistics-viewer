@@ -29,6 +29,25 @@ describe('selectModelDetailsReadModel', () => {
     expect(selectModelDetailsReadModel(makeModelMetrics()).autoTotal).toBe(3.25);
   });
 
+  it('includes image models in category tables with canonical names and shares', () => {
+    const { categoryTables } = selectModelDetailsReadModel(makeModelsCliMetrics({
+      modelBreakdown: {
+        allModels: [makeModelEntry('gpt-image-2.5-flare', 3), makeModelEntry('gemini-4-carbon', 1)],
+        modelCategories: [
+          { category: 'Powerful', total: 1, dailyData: {}, users: 1 },
+          { category: 'Image Generation', total: 3, dailyData: {}, users: 1 },
+        ],
+        modelTotal: 4,
+      },
+    }));
+
+    expect(categoryTables.map(table => table.category)).toEqual(['Powerful', 'Image Generation']);
+    expect(categoryTables[1]).toMatchObject({
+      users: 1, interactions: 3, sharePercentage: 75,
+      rows: [{ model: 'gpt-image-2.5-flare', displayName: 'GPT Image 2.5 Flare', interactions: 3, sharePercentage: 75 }],
+    });
+  });
+
   it('groups models into category and vendor tables with their share of the model total', () => {
     const row = { model: 'gpt-5', displayName: 'GPT-5', interactions: 11, sharePercentage: 100, users: 1 };
 

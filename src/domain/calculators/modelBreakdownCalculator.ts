@@ -13,6 +13,7 @@ import {
   classifyModelRequest,
   getModelCategory,
   getModelVendor,
+  MODEL_CATEGORY_ORDER,
   MODEL_VENDOR_ORDER,
 } from '../modelConfig';
 import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
@@ -166,14 +167,7 @@ function buildModelEntries(
 function buildModelCategoryEntries(
   categoriesMap: Map<ModelUsageCategory, ModelAccEntry>
 ): ModelCategoryUsageEntry[] {
-  const categoryOrder: ModelUsageCategory[] = [
-    'Lightweight',
-    'Versatile',
-    'Powerful',
-    'Uncategorized',
-  ];
-
-  return categoryOrder.flatMap(category => {
+  return MODEL_CATEGORY_ORDER.flatMap(category => {
     const entry = categoriesMap.get(category);
     if (!entry) return [];
 

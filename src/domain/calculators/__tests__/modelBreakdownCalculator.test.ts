@@ -151,6 +151,27 @@ describe('modelBreakdownCalculator', () => {
   });
 
   describe('computeModelBreakdownData', () => {
+    it('keeps image interactions in category totals and deduplicates users across days', () => {
+      const acc = createModelBreakdownAccumulator();
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('GPT Image 2.5 Flare', 'copilot_app', 3));
+      accumulateModelBreakdown(acc, '2024-01-16', 1, makeModelFeature('gpt-image-2.5-flare', 'copilot_app', 2));
+      accumulateModelBreakdown(acc, '2024-01-16', 2, makeModelFeature('  GPT_IMAGE_2.5_FLARE  ', 'copilot_app', 4));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('gemini-4-carbon', 'chat_panel', 5));
+      accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('future-model', 'chat_panel', 1));
+
+      const data = computeModelBreakdownData(acc);
+      expect(data.modelCategories).toEqual([
+        { category: 'Powerful', total: 5, dailyData: { '2024-01-15': 5 }, users: 1 },
+        { category: 'Image Generation', total: 9, dailyData: { '2024-01-15': 3, '2024-01-16': 6 }, users: 2 },
+        { category: 'Uncategorized', total: 1, dailyData: { '2024-01-15': 1 }, users: 1 },
+      ]);
+      expect(data.modelTotal).toBe(15);
+      expect(data.modelCategories.reduce((sum, entry) => sum + entry.total, 0)).toBe(data.modelTotal);
+      expect(data.modelVendors).toContainEqual({
+        vendor: 'OpenAI', total: 9, dailyData: { '2024-01-15': 3, '2024-01-16': 6 }, users: 2,
+      });
+    });
+
     it('should attribute Grok 4 report interactions to xAI', () => {
       const acc = createModelBreakdownAccumulator();
       accumulateModelBreakdown(acc, '2024-01-15', 1, makeModelFeature('grok-4', 'chat_panel', 12));

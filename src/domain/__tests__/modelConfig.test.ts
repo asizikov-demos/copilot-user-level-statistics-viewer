@@ -52,6 +52,7 @@ describe('modelConfig', () => {
       ['Claude Fable 5.2', 'Powerful', 'Anthropic'],
       ['Gemini 3.8 Flash', 'Versatile', 'Google'],
       ['Gemini 4 Argon', 'Powerful', 'Google'],
+      ['Gemini 4 Carbon', 'Powerful', 'Google'],
       ['MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'],
       ['Grok 4.5', 'Versatile', 'xAI'],
       ['Grok 4.6', 'Versatile', 'xAI'],
@@ -108,7 +109,7 @@ describe('modelConfig', () => {
         }).toEqual({
           known: true,
           classification: { normalizedModel: normalizeModelName(model.name), isUnknown: false, isKnownModel: true },
-          category: expect.stringMatching(/^(Lightweight|Powerful|Versatile)$/),
+          category: expect.stringMatching(/^(Lightweight|Powerful|Versatile|Image Generation)$/),
           vendor: expectedVendor,
         });
         expect(getModelCategory(model.name)).toBe(model.category);
@@ -132,6 +133,12 @@ describe('modelConfig', () => {
       ['gemini-4-argon', 'gemini-4-argon', 'Powerful', 'Google'],
       ['Gemini 4 Argon', 'gemini-4-argon', 'Powerful', 'Google'],
       ['  GEMINI_4_ARGON  ', 'gemini-4-argon', 'Powerful', 'Google'],
+      ['gemini-4-carbon', 'gemini-4-carbon', 'Powerful', 'Google'],
+      ['Gemini 4 Carbon', 'gemini-4-carbon', 'Powerful', 'Google'],
+      ['  GEMINI_4_CARBON  ', 'gemini-4-carbon', 'Powerful', 'Google'],
+      ['gpt-image-2.5-flare', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
+      ['GPT Image 2.5 Flare', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
+      ['  GPT_IMAGE_2.5_FLARE  ', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
       ['  GROK_4.7  ', 'grok-4.7', 'Versatile', 'xAI'],
       ['grok-4', 'grok-4', 'Versatile', 'xAI'],
       ['  GROK_4  ', 'grok-4', 'Versatile', 'xAI'],
@@ -141,6 +148,11 @@ describe('modelConfig', () => {
       expect(classifyModelRequest(alias)).toEqual({ normalizedModel: canonical, isUnknown: false, isKnownModel: true });
       expect(getModelCategory(alias)).toBe(category);
       expect(getModelVendor(alias)).toBe(vendor);
+    });
+
+    it('uses the Image Generation category for the documented image model', () => {
+      expect(getModelCategory('GPT Image 2.5 Flare')).toBe('Image Generation');
+      expect(getModelDisplayName('gpt-image-2.5-flare')).toBe('GPT Image 2.5 Flare');
     });
 
     it.each(['auto', 'unknown', '', 'totally-made-up', 'legacy-model'])(

@@ -84,6 +84,7 @@ export const modelCategoryColors = {
   Lightweight: chartColors.green,
   Versatile: chartColors.blue,
   Powerful: chartColors.purple,
+  'Image Generation': chartColors.teal,
   Uncategorized: chartColors.gray,
 } as const;
 
