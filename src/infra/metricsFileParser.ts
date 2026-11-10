@@ -1,6 +1,6 @@
 import { CopilotMetrics } from '../types/metrics';
 import { StringPool } from '../utils/stringPool';
-import { appendParsedMetricsFromLines } from '../domain/metricsParser';
+import { consumeParsedMetricsFromLines } from '../domain/metricsParser';
 import { flushNdjsonRemainder, splitNdjsonChunk } from '../utils/ndjsonParser';
 
 interface StreamProcessingResult {
@@ -9,7 +9,7 @@ interface StreamProcessingResult {
 
 async function processFileStream(
   file: File,
-  metrics: CopilotMetrics[],
+  onMetric: (metric: CopilotMetrics) => void,
   pool: StringPool,
   onChunkProcessed?: (count: number) => void,
   initialCount: number = 0
@@ -30,7 +30,7 @@ async function processFileStream(
       remainder = chunkResult.remainder;
       nextLineNumber = chunkResult.nextLineNumber;
 
-      processedCount += appendParsedMetricsFromLines(chunkResult.lines, metrics, pool);
+      processedCount += consumeParsedMetricsFromLines(chunkResult.lines, onMetric, pool);
 
       if (onChunkProcessed) {
         onChunkProcessed(processedCount);
@@ -41,11 +41,11 @@ async function processFileStream(
     const finalChunkResult = splitNdjsonChunk(decoder.decode(), remainder, nextLineNumber);
     const countBeforeFlush = processedCount;
 
-    processedCount += appendParsedMetricsFromLines(finalChunkResult.lines, metrics, pool);
+    processedCount += consumeParsedMetricsFromLines(finalChunkResult.lines, onMetric, pool);
 
-    processedCount += appendParsedMetricsFromLines(
+    processedCount += consumeParsedMetricsFromLines(
       flushNdjsonRemainder(finalChunkResult.remainder, finalChunkResult.nextLineNumber),
-      metrics,
+      onMetric,
       pool
     );
 
@@ -64,7 +64,7 @@ export async function parseMetricsStream(file: File, onProgress?: (count: number
   const pool = new StringPool();
 
   try {
-    await processFileStream(file, metrics, pool, onProgress);
+    await processFileStream(file, metric => metrics.push(metric), pool, onProgress);
   } finally {
     pool.clear();
   }
@@ -89,6 +89,21 @@ export async function parseMultipleMetricsStreams(
   onProgress?: (progress: MultiFileProgress) => void
 ): Promise<MultiFileResult> {
   const allMetrics: CopilotMetrics[] = [];
+  const { errors } = await consumeMultipleMetricsStreams(files, metric => allMetrics.push(metric), onProgress);
+  return { metrics: allMetrics, errors };
+}
+
+class MetricConsumerError extends Error {
+  constructor(readonly consumerError: unknown) {
+    super('Metric consumer failed');
+  }
+}
+
+export async function consumeMultipleMetricsStreams(
+  files: File[],
+  onMetric: (metric: CopilotMetrics) => void,
+  onProgress?: (progress: MultiFileProgress) => void
+): Promise<{ recordCount: number; errors: MultiFileResult['errors'] }> {
   const errors: Array<{ fileIndex: number; fileName: string; error: string }> = [];
   const pool = new StringPool();
   let totalRecordsProcessed = 0;
@@ -98,9 +113,17 @@ export async function parseMultipleMetricsStreams(
       const file = files[fileIndex];
 
       try {
-        const result = await processFileStream(
+        await processFileStream(
           file,
-          allMetrics,
+          metric => {
+            try {
+              onMetric(metric);
+            } catch (error) {
+              // Consumer failures are fatal, not recoverable file read errors.
+              throw new MetricConsumerError(error);
+            }
+            totalRecordsProcessed++;
+          },
           pool,
           onProgress
             ? (count) => {
@@ -114,9 +137,8 @@ export async function parseMultipleMetricsStreams(
             : undefined,
           totalRecordsProcessed
         );
-
-        totalRecordsProcessed = result.count;
       } catch (err) {
+        if (err instanceof MetricConsumerError) throw err.consumerError;
         errors.push({
           fileIndex: fileIndex + 1,
           fileName: file.name,
@@ -128,5 +150,5 @@ export async function parseMultipleMetricsStreams(
     pool.clear();
   }
 
-  return { metrics: allMetrics, errors };
+  return { recordCount: totalRecordsProcessed, errors };
 }

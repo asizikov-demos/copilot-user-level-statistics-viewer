@@ -3,9 +3,32 @@ import {
   createUserDetailAccumulator,
   computeSingleUserDetailedMetrics,
 } from '../userDetailCalculator';
-import { accumulateUserDays, modelFeatureTotals, userDetails } from './helpers/userDetailFixtures';
+import { accumulateUserDays, featureTotals, ideTotals, languageFeatureTotals, modelFeatureTotals, userDetails } from './helpers/userDetailFixtures';
 
 describe('userDetailCalculator accumulator and totals', () => {
+  it('rebuilds independent period aggregates from retained days without mutating them', () => {
+    const days = [0, 1].map(index => ({
+      day: `2024-01-${15 + index}`,
+      totals_by_feature: [featureTotals('code_completion', { code_generation_activity_count: 3 })],
+      totals_by_ide: [ideTotals('vscode', { code_generation_activity_count: 3 })],
+      totals_by_language_feature: [languageFeatureTotals('typescript', 'code_completion', { loc_added_sum: 5 })],
+      totals_by_model_feature: [modelFeatureTotals('gpt-4o', 'code_completion', { code_generation_activity_count: 3 })],
+    }));
+    const accumulator = accumulateUserDays(days);
+    const retainedDays = structuredClone(accumulator.users.get(1)!.days);
+    const first = computeSingleUserDetailedMetrics(accumulator, 1)!;
+    const second = computeSingleUserDetailedMetrics(accumulator, 1)!;
+
+    expect(first.featureAggregates).toMatchObject([{ assumed_user_initiated_interaction_count: 6 }]);
+    expect(first.ideAggregates).toMatchObject([{ assumed_user_initiated_interaction_count: 6 }]);
+    expect(first.languageFeatureAggregates).toMatchObject([{ loc_added_sum: 10 }]);
+    expect(first.modelFeatureAggregates).toMatchObject([{ assumed_user_initiated_interaction_count: 6 }]);
+    expect(second).toEqual(first);
+    first.featureAggregates[0].loc_added_sum = 999;
+    expect(second.featureAggregates[0].loc_added_sum).toBe(0);
+    expect(accumulator.users.get(1)!.days).toEqual(retainedDays);
+  });
+
   it('starts with no users and an empty report range', () => {
     const acc = createUserDetailAccumulator();
     expect(acc.users.size).toBe(0);

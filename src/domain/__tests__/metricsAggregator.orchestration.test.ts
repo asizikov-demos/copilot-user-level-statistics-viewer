@@ -14,7 +14,10 @@ import {
 import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
 import {
   aggregateMetrics,
+  accumulateMetrics,
   assembleAggregatedMetrics,
+  createMetricsAggregationAccumulator,
+  finalizeMetricsAggregation,
 } from '../metricsAggregator';
 
 const feature = (
@@ -193,6 +196,29 @@ const emptyAggregateContract: Array<{
 ];
 
 describe('metrics aggregation contract', () => {
+  it('keeps independent streaming lifecycles and selects the first enterprise suffix', () => {
+    const first = createMetricsAggregationAccumulator();
+    const second = createMetricsAggregationAccumulator();
+    accumulateMetrics(first, makeMetric({ user_login: 'plain' }));
+    accumulateMetrics(first, makeMetric({ user_login: 'first_acme' }));
+    accumulateMetrics(first, makeMetric({ user_login: 'second_other' }));
+    accumulateMetrics(second, makeMetric({ user_login: 'another_other' }));
+
+    expect(finalizeMetricsAggregation(first)).toMatchObject({
+      recordCount: 3,
+      enterpriseName: 'acme',
+      aggregated: { overview: { stats: { totalRecords: 3 } } },
+    });
+    expect(finalizeMetricsAggregation(second)).toMatchObject({
+      recordCount: 1,
+      enterpriseName: 'other',
+    });
+    expect(finalizeMetricsAggregation(createMetricsAggregationAccumulator())).toMatchObject({
+      recordCount: 0,
+      enterpriseName: null,
+    });
+  });
+
   describe('empty input', () => {
     it.each(emptyAggregateContract)('finalizes the $slice slice to its defaults', ({ slice, expected }) => {
       expect(aggregateMetrics([]).aggregated[slice]).toMatchObject(expected);

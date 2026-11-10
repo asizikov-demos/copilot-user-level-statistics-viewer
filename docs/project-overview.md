@@ -17,7 +17,7 @@ Engineering leaders and Copilot administrators upload GitHub Copilot user-level 
 - **Static, client-side application.** Next.js App Router, TypeScript, Tailwind CSS, Primer, and Chart.js (`react-chartjs-2`). `output: 'export'` targets GitHub Pages; no SSR or API routes.
 - **Parsing and aggregation stay in a Web Worker.** The `parseAndAggregate` flow returns only compact, grouped aggregates. Raw `CopilotMetrics[]` never reaches view components or main-thread state.
 - **Worker bundling is explicit.** [build-worker.mjs](../scripts/build-worker.mjs) uses esbuild to produce the self-contained `public/workers/metricsWorker.js` IIFE before `next dev` and `next build`.
-- **User details are on demand.** The worker retains a compact user-detail accumulator, not raw records for the UI, and finalizes only the selected user's detail response.
+- **User details are on demand.** The worker retains day-level data needed by profile charts and the day dialog, plus customization/agent and version observations, not raw records or duplicate per-user dimensional period maps. It builds period maps only for the selected profile and memoizes at most one detail response, clearing it on a new upload.
 - **Each aggregate has one owner.** Metric-family accumulators own creation, record consumption, and finalization. The coordinator wires them together in one raw-record loop and assembles the grouped contract without duplicate aggregation.
 - **Read models are pure projections.** Selectors preserve nested references without copying, sorting, filtering, or mutation. Deterministic feature-specific scalar/date derivations are allowed; only the selected route computes its projection.
 
@@ -39,8 +39,8 @@ flowchart LR
 ```
 
 1. `useFileUpload` checks extensions and requests parsing through the typed worker client.
-2. [metricsFileParser.ts](../src/infra/metricsFileParser.ts) streams files with `File.stream()`, parses lines, and interns strings for memory efficiency.
-3. [metricsAggregator.ts](../src/domain/metricsAggregator.ts) coordinates the metric families, resolves shared signals once per record, and finalizes the grouped result. CLI sessions are accumulated once and shared through a narrow read-only dependency with engagement/adoption.
+2. [metricsFileParser.ts](../src/infra/metricsFileParser.ts) streams files with `File.stream()`, parses lines, interns strings, and passes each accepted record directly to aggregation without collecting an upload-wide raw array. Accepted records survive later file-read failures; consumer/aggregation failures remain fatal.
+3. [metricsAggregator.ts](../src/domain/metricsAggregator.ts) exposes create/accumulate/finalize stages, coordinates the metric families, resolves shared signals, and tracks record count and the first enterprise login suffix in the same pass. CLI sessions are accumulated once and shared through a narrow read-only dependency with engagement/adoption.
 4. The worker returns aggregates, enterprise name, record count, and per-file parse errors. Partial failures produce a non-fatal UI warning.
 5. `MetricsWorkerProvider` owns the lazy worker lifecycle, request/progress correlation, reusable reset cancellation, and permanent disposal on unmount.
 6. `ViewRouter` owns upload, fatal-error, and loading gates plus route selection. Standard adapters select narrow view models; `UserDetailsRoute` owns selection, request invalidation, stale-result rejection, retry, cleanup, and effect-only redirects. It preserves the grouped aggregate object as dataset identity.

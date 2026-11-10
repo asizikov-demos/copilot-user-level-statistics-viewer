@@ -257,12 +257,20 @@ export function appendParsedMetricsFromLines(
   metrics: CopilotMetrics[],
   pool: StringPool
 ): number {
+  return consumeParsedMetricsFromLines(lines, metric => metrics.push(metric), pool);
+}
+
+export function consumeParsedMetricsFromLines(
+  lines: Iterable<Pick<NdjsonLine, 'line'>>,
+  onMetric: (metric: CopilotMetrics) => void,
+  pool: StringPool
+): number {
   let appendedCount = 0;
 
   for (const { line } of lines) {
     const metric = parseMetricsLine(line, pool);
     if (metric) {
-      metrics.push(metric);
+      onMetric(metric);
       appendedCount++;
     }
   }
