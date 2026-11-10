@@ -46,6 +46,51 @@ interface JetBrainsHealthInput {
   error: string | null;
 }
 
+export function summarizeClientHealth(platforms: ClientPlatformHealth[]) {
+  const observed = new Set<string>();
+  const attention = new Set<string>();
+  const unclassified = new Set<string>();
+  let classifiedPlatforms = 0;
+  let outdatedVersionCount = 0;
+  let platformTotal = 0;
+  let hasUnclassifiedPlatform = false;
+  for (const platform of platforms) {
+    platformTotal += platform.totalUsers;
+    outdatedVersionCount += platform.outdatedVersions.length;
+    for (const username of platform.usernames) observed.add(username);
+    if (platform.metadataState === 'ready') {
+      classifiedPlatforms += 1;
+      for (const version of platform.outdatedVersions) {
+        for (const username of version.usernames) attention.add(username);
+      }
+    }
+    for (const username of platform.metadataState === 'ready'
+      ? platform.unclassifiedUsernames
+      : platform.usernames) {
+      unclassified.add(username);
+    }
+    hasUnclassifiedPlatform ||= platform.totalUsers > 0
+      && (platform.metadataState !== 'ready' || (platform.unclassifiedUsers ?? 0) > 0);
+  }
+  for (const username of attention) unclassified.delete(username);
+  const currentUserCount = Math.max(0, observed.size - attention.size - unclassified.size);
+  const hasData = platformTotal > 0;
+  const kind = !hasData || classifiedPlatforms === 0 || hasUnclassifiedPlatform
+    ? 'unknown'
+    : attention.size > 0 ? 'attention' : 'healthy';
+  return {
+    totalOutdatedUsers: attention.size,
+    outdatedVersionCount,
+    unclassifiedUserCount: unclassified.size,
+    hasUnclassifiedPlatform,
+    hasData,
+    kind,
+    coverage: observed.size === 0 || hasUnclassifiedPlatform
+      ? null
+      : Math.round(currentUserCount / observed.size * 1000) / 10,
+  } as const;
+}
+
 interface VsCodeHealthInput {
   versionAnalysis: PluginVersionEntry[];
   totalUsers: number;

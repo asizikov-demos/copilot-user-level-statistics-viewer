@@ -2,9 +2,56 @@ import { describe, expect, it } from 'vitest';
 import {
   analyzeJetBrainsHealth,
   analyzeVsCodeHealth,
+  summarizeClientHealth,
+  type ClientPlatformHealth,
 } from '../clientVersionAnalysis';
 
 describe('client version health analysis', () => {
+  function platform(overrides: Partial<ClientPlatformHealth> = {}): ClientPlatformHealth {
+    return {
+      scope: 'vscode', platform: 'VS Code', totalUsers: 3,
+      usernames: ['current', 'outdated', 'unknown'],
+      currentUsers: 1, outdatedUsers: 1, unclassifiedUsers: 1,
+      unclassifiedUsernames: ['unknown'], uniqueVersions: 3,
+      metadataState: 'ready', thresholdLabel: '', methodology: '',
+      outdatedVersions: [{
+        scope: 'vscode', platform: 'VS Code', version: '0.1.0', userCount: 1,
+        usernames: ['outdated'], releaseDate: null, reason: '',
+      }],
+      referenceReleases: [],
+      ...overrides,
+    };
+  }
+
+  it('deduplicates cross-platform health and gives known outdated evidence precedence', () => {
+    const platforms = [platform(), platform({
+      scope: 'jetbrains', metadataState: 'loading', totalUsers: 2,
+      usernames: ['outdated', 'unknown'], outdatedVersions: [],
+    })];
+    const before = structuredClone(platforms);
+
+    expect(summarizeClientHealth(platforms)).toEqual({
+      totalOutdatedUsers: 1, outdatedVersionCount: 1, unclassifiedUserCount: 1,
+      hasUnclassifiedPlatform: true, coverage: null, hasData: true, kind: 'unknown',
+    });
+    expect(platforms).toEqual(before);
+  });
+
+  it('computes unique-user coverage only for fully classified platforms', () => {
+    expect(summarizeClientHealth([
+      platform({ unclassifiedUsers: 0, unclassifiedUsernames: [] }),
+      platform({ unclassifiedUsers: 0, unclassifiedUsernames: [] }),
+    ])).toMatchObject({
+      totalOutdatedUsers: 1, outdatedVersionCount: 2, coverage: 66.7, kind: 'attention',
+    });
+    expect(summarizeClientHealth([])).toMatchObject({
+      hasData: false, kind: 'unknown', coverage: null,
+    });
+    expect(summarizeClientHealth([platform({
+      unclassifiedUsers: 0, unclassifiedUsernames: [], outdatedVersions: [],
+    })])).toMatchObject({ kind: 'healthy', coverage: 100 });
+  });
+
   it('does not classify JetBrains versions while release metadata is loading', () => {
     const analysis = analyzeJetBrainsHealth({
       versionAnalysis: [

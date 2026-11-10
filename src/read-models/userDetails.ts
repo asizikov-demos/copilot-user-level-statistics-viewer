@@ -147,9 +147,10 @@ export function selectUserDetailsRouteReadModel(
 
   const interactions = userSummary.total_user_initiated_interactions;
   const interactionRank: UserInteractionRank = {
-    rank: 1 + metrics.users.userSummaries.filter(
-      (summary) => summary.total_user_initiated_interactions > interactions
-    ).length,
+    rank: metrics.users.userSummaries.reduce(
+      (rank, summary) => rank + Number(summary.total_user_initiated_interactions > interactions),
+      1,
+    ),
     totalUsers: metrics.users.userSummaries.length,
   };
 

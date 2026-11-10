@@ -46,7 +46,7 @@ export const AGGREGATED_METRICS_SLICE_KEYS = {
   cli: ['dailyCliSessionData', 'dailyCliTokenData', 'dailyCliAdoptionTrend'],
   copilotApp: ['dailyAppSessionData', 'dailyAppTokenData', 'dailyAppAdoptionTrend'],
   customizations: ['dates', 'types'],
-  ai: ['aiAdoptionPhaseData', 'usageDistributionData', 'dailyAiCreditsData'],
+  ai: ['creditsSummary', 'aiAdoptionPhaseData', 'usageDistributionData', 'dailyAiCreditsData'],
   productivity: [
     'totalActiveUsers',
     'surfaceSummaries',

@@ -14,6 +14,7 @@ import type {
 } from '../../../../../types/cliCustomizations';
 import type { UserDayData } from '../../../../../types/metrics';
 import { computeUserReportingQuality } from '../../../../../domain/calculators/reportingQualityCalculator';
+import { computeUserPresentationSummary } from '../../../../../domain/calculators/userPresentationCalculator';
 
 const REPORT_START_DAY = '2024-01-01';
 const REPORT_END_DAY = '2024-01-31';
@@ -60,7 +61,7 @@ export function makeUserDay(overrides: Partial<UserDayData> = {}): UserDayData {
 export function makeUserDetails(
   overrides: Partial<UserDetailedMetrics> = {}
 ): UserDetailedMetrics {
-  return {
+  const details = {
     activityCalendar: { daily: [], activeDays: 0 },
     reportingQuality: computeUserReportingQuality(overrides.days ?? []),
     clientTraffic: {
@@ -100,6 +101,10 @@ export function makeUserDetails(
     reportStartDay: REPORT_START_DAY,
     reportEndDay: REPORT_END_DAY,
     ...overrides,
+  };
+  return {
+    ...details,
+    presentationSummary: overrides.presentationSummary ?? computeUserPresentationSummary(details),
   };
 }
 

@@ -9,40 +9,19 @@ import { getIDEIcon, formatIDEName } from '../../../icons/IDEIcons';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { createBaseChartOptions, yAxisFormatters } from '../../../charts/utils/chartOptions';
 import { createDailyReportRangeChartConfig } from '../../../charts/utils/dailyBarChart';
-import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../types/clientTraffic';
+import type { ClientTrafficMetrics } from '../../../../types/clientTraffic';
 import { getIdeColor } from '../../../charts/utils/chartColors';
-import { computeCliDayTotals, type CliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
-import {
-  createCliClientActivityRow,
-  mapIdeClientActivityRows,
-  type ClientActivityMetricsRow,
-} from '../../../../domain/calculators/clientActivityRows';
+import type { ClientActivityMetricsRow } from '../../../../domain/calculators/clientActivityRows';
+import type { UserClientActivitySummary, UserClientRow as ClientRow } from '../../../../domain/calculators/userPresentationCalculator';
 import { formatShortDate } from '../../../../utils/formatters';
-import { padReportRangeWithDefaults } from '../../../../utils/timeSeries';
 import ChartContainer from '../../../ui/ChartContainer';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
-import type { UserDayData } from '../../../../types/metrics';
-import { getTotalUserInitiatedInteractionCount } from '../../../../domain/assumedInteractions';
-import { isCliFeature } from '../../../../domain/featureCategories';
 
 registerChartJS();
 
-interface IDEAggregateItem {
-  ide: string;
-  user_initiated_interaction_count: number;
-  assumed_user_initiated_interaction_count?: number;
-  code_generation_activity_count: number;
-  code_acceptance_activity_count: number;
-  loc_added_sum: number;
-  loc_deleted_sum: number;
-  loc_suggested_to_add_sum: number;
-  loc_suggested_to_delete_sum: number;
-}
-
 interface ClientActivityChartProps {
   traffic?: ClientTrafficMetrics;
-  ideAggregates: IDEAggregateItem[];
-  days: UserDayData[];
+  activity: UserClientActivitySummary;
   title?: string;
   reportStartDay: string;
   reportEndDay: string;
@@ -58,7 +37,6 @@ interface ClientActivityChartProps {
 }
 
 type VersionEntry = { name: string; version: string; sampled_at: string };
-type ClientChartDay = Pick<UserDayData, 'day' | 'totals_by_ide'>;
 type ClientActivityMeasure = 'interactions' | 'sessions' | 'requests';
 
 const headerLeftClass = 'px-6 py-3 text-left';
@@ -80,16 +58,6 @@ function ClientName({ ide }: { ide: string }) {
       <span>{formatIDEName(ide)}</span>
     </div>
   );
-}
-
-interface ClientRow {
-  ide: string;
-  activity?: ClientActivityMetricsRow;
-  traffic?: Pick<ClientTrafficSummary, 'reportedSessionCount' | 'requestCount' | 'promptTokens' | 'outputTokens'>;
-}
-
-function getClientRowKey(client: string): string {
-  return client === 'github_app' ? 'copilot_app' : client;
 }
 
 const activityValue = (row: ClientRow, key: Exclude<keyof ClientActivityMetricsRow, 'ide'>) =>
@@ -122,8 +90,7 @@ const trafficDetailColumns: TableColumn<ClientRow>[] = [
 
 export default function ClientActivityChart({
   traffic,
-  ideAggregates,
-  days,
+  activity,
   title = 'Activity by Client',
   reportStartDay,
   reportEndDay,
@@ -133,73 +100,13 @@ export default function ClientActivityChart({
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
   const [hiddenClients, setHiddenClients] = useState<ReadonlySet<string>>(new Set());
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
-  const { cliTotals, cliTotalsByDay } = useMemo(() => {
-    const totals = {
-      promptCount: 0,
-      interactions: 0,
-      generations: 0,
-      acceptances: 0,
-      locAdded: 0,
-      locDeleted: 0,
-      locSuggestedToAdd: 0,
-      locSuggestedToDelete: 0,
-    };
-    const byDay = new Map<string, CliDayTotals>();
-
-    for (const day of days) {
-      const dayTotals = computeCliDayTotals(day);
-      byDay.set(day.day, dayTotals);
-
-      totals.promptCount += dayTotals.promptCount;
-      totals.interactions += dayTotals.interactions;
-      totals.generations += dayTotals.generations;
-      totals.acceptances += dayTotals.acceptances;
-      totals.locAdded += dayTotals.locAdded;
-      totals.locDeleted += dayTotals.locDeleted;
-      totals.locSuggestedToAdd += dayTotals.locSuggestedToAdd;
-      totals.locSuggestedToDelete += dayTotals.locSuggestedToDelete;
-    }
-
-    return { cliTotals: totals, cliTotalsByDay: byDay };
-  }, [days]);
-
-  const barChartData = useMemo(() => {
-    const allIDEs = Array.from(
-      new Set(days.flatMap(day => day.totals_by_ide.map(ide => ide.ide)))
-    ).sort();
-
-    const chartDays: ClientChartDay[] = days;
-    const paddedDays = padReportRangeWithDefaults<ClientChartDay>(
-      chartDays,
-      reportStartDay,
-      reportEndDay,
-      day => day.day,
-      day => ({ day, totals_by_ide: [] }),
-    );
-
-    const datasets = allIDEs.map((ide) => {
-      const data = paddedDays.map(dayData => {
-        const ideData = dayData.totals_by_ide.find(i => i.ide === ide);
-        return ideData ? getTotalUserInitiatedInteractionCount(ideData) : 0;
-      });
-
-      return { ...createBarDataset(getIdeColor(ide), formatIDEName(ide), data), clientKey: ide };
-    }).filter(dataset => dataset.data.some(value => value > 0));
-
-    // Add CLI dataset if any day has CLI data
-    const hasCliData = Array.from(cliTotalsByDay.values()).some(dayTotals => dayTotals.interactionCount > 0);
-    if (hasCliData) {
-      const cliData = paddedDays.map(dayData => {
-        return cliTotalsByDay.get(dayData.day)?.interactionCount ?? 0;
-      });
-      datasets.push({ ...createBarDataset(getIdeColor('copilot_cli'), 'Copilot CLI', cliData), clientKey: 'copilot_cli' });
-    }
-
-    return {
-      labels: paddedDays.map(day => formatShortDate(day.day)),
-      datasets: datasets,
-    };
-  }, [cliTotalsByDay, days, reportStartDay, reportEndDay]);
+  const barChartData = useMemo(() => ({
+    labels: activity.dates.map(formatShortDate),
+    datasets: activity.interactions.map(({ client, values }) => ({
+      ...createBarDataset(getIdeColor(client), formatIDEName(client), values),
+      clientKey: client,
+    })),
+  }), [activity]);
 
   const barChartOptions = useMemo(() => createBaseChartOptions({
     showLegend: false,
@@ -223,53 +130,8 @@ export default function ClientActivityChart({
   const measure = hasTraffic ? selectedMeasure ?? defaultMeasure : 'interactions';
   const measureLabel = measure === 'requests' ? 'Model requests' : 'Reported sessions';
 
-  const ideClientRows = useMemo(
-    () => mapIdeClientActivityRows(ideAggregates),
-    [ideAggregates],
-  );
-  const cliClientRow = useMemo(
-    () => createCliClientActivityRow(cliTotals, days.some(day =>
-      day.totals_by_cli != null || day.totals_by_feature.some(feature => isCliFeature(feature.feature))
-    )),
-    [cliTotals, days],
-  );
-  const clientRows = useMemo(
-    () => {
-      const rows = new Map<string, ClientRow>();
-      for (const activity of [...ideClientRows, ...(cliClientRow ? [cliClientRow] : [])]) {
-        const key = getClientRowKey(activity.ide);
-        const existing = rows.get(key)?.activity;
-        rows.set(key, { ide: key, activity: existing && key === 'copilot_app' ? {
-          ide: key,
-          user_initiated_interaction_count: existing.user_initiated_interaction_count + activity.user_initiated_interaction_count,
-          code_generation_activity_count: existing.code_generation_activity_count + activity.code_generation_activity_count,
-          code_acceptance_activity_count: existing.code_acceptance_activity_count + activity.code_acceptance_activity_count,
-          loc_added_sum: existing.loc_added_sum + activity.loc_added_sum,
-          loc_deleted_sum: existing.loc_deleted_sum + activity.loc_deleted_sum,
-          loc_suggested_to_add_sum: existing.loc_suggested_to_add_sum + activity.loc_suggested_to_add_sum,
-          loc_suggested_to_delete_sum: existing.loc_suggested_to_delete_sum + activity.loc_suggested_to_delete_sum,
-        } : activity });
-      }
-      if (hasTraffic) {
-        for (const client of traffic?.summary.clients ?? []) {
-          const key = getClientRowKey(client.client);
-          const existing = rows.get(key);
-          rows.set(key, { ...existing, ide: key, traffic: {
-            reportedSessionCount: (existing?.traffic?.reportedSessionCount ?? 0) + client.reportedSessionCount,
-            requestCount: (existing?.traffic?.requestCount ?? 0) + client.requestCount,
-            promptTokens: (existing?.traffic?.promptTokens ?? 0) + client.promptTokens,
-            outputTokens: (existing?.traffic?.outputTokens ?? 0) + client.outputTokens,
-          } });
-        }
-      }
-      return [...rows.values()].sort((a, b) =>
-        (b.activity?.user_initiated_interaction_count ?? 0) - (a.activity?.user_initiated_interaction_count ?? 0)
-        || (b.traffic?.reportedSessionCount ?? 0) - (a.traffic?.reportedSessionCount ?? 0)
-        || a.ide.localeCompare(b.ide));
-    },
-    [ideClientRows, cliClientRow, traffic, hasTraffic],
-  );
-  const trafficChart = createDailyReportRangeChartConfig({
+  const clientRows = activity.rows;
+  const trafficChart = useMemo(() => measure === 'interactions' ? null : createDailyReportRangeChartConfig({
     data: (traffic?.daily ?? []).map(day => ({ ...day, date: day.day })),
     reportStartDay,
     reportEndDay,
@@ -293,8 +155,8 @@ export default function ClientActivityChart({
       xAutoSkip: true,
       tooltipLabelCallback: context => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()} ${measureLabel.toLowerCase()}`,
     },
-  });
-  const chartData = measure === 'interactions' ? barChartData : trafficChart.chartData;
+  }), [measure, measureLabel, traffic, hasTraffic, reportStartDay, reportEndDay]);
+  const chartData = trafficChart?.chartData ?? barChartData;
   const clientKeys = measure === 'interactions'
     ? barChartData.datasets.map(dataset => dataset.clientKey)
     : (traffic?.summary.clients ?? []).map(client => client.client);
@@ -311,7 +173,7 @@ export default function ClientActivityChart({
       };
     }),
   };
-  const chartOptions = measure === 'interactions' ? barChartOptions : trafficChart.options;
+  const chartOptions = trafficChart?.options ?? barChartOptions;
   const chartTitle = measure === 'interactions'
     ? 'Daily Client Interactions'
     : measure === 'sessions' ? 'Daily Reported Client Sessions' : 'Daily Client Model Requests';

@@ -9,6 +9,31 @@ import {
 } from './helpers/userDetailFixtures';
 
 describe('userDetailCalculator CLI and Copilot App data', () => {
+  it('keeps prompt-based summary and feature-first daily CLI interactions separate', () => {
+    const details = userDetails([
+      {
+        day: '2024-01-10',
+        totals_by_cli: cliTotals({ prompt_count: 7 }),
+        totals_by_feature: [featureTotals('copilot_cli', {
+          user_initiated_interaction_count: 3, loc_added_sum: 20,
+        })],
+      },
+      { day: '2024-01-12', totals_by_cli: cliTotals({ prompt_count: 2 }) },
+    ]);
+    const summary = details.presentationSummary;
+
+    expect(summary.totalCliPrompts).toBe(9);
+    expect(summary.clientInteractions).toContainEqual({ key: 'copilot_cli', value: 9 });
+    expect(summary.clientActivity.rows).toMatchObject([{
+      ide: 'copilot_cli',
+      activity: { user_initiated_interaction_count: 3, loc_added_sum: 20 },
+    }]);
+    const series = summary.clientActivity.interactions.find(row => row.client === 'copilot_cli')!;
+    const index = summary.clientActivity.dates.indexOf('2024-01-10');
+    expect(series.values.slice(index, index + 3)).toEqual([3, 0, 2]);
+    expect(summary.clientActivity.dates).toHaveLength(31);
+  });
+
   it('stores Copilot App totals on the day entry', () => {
     const totals = {
       session_count: 1,

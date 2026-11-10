@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../../../__tests__/factories/metrics';
-import ClientActivityChart from '../ClientActivityChart';
+import ClientActivityChart from './helpers/PreparedClientActivityChart';
 
 const { bar } = vi.hoisted(() => ({ bar: vi.fn() }));
 vi.mock('react-chartjs-2', () => ({

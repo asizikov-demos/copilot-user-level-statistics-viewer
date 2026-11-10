@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeUserSummary } from '../../__tests__/factories/aggregatedMetrics';
 import { buildAiCreditsStatement } from '../aiCreditsStatement';
+import { computeAiCreditsSummary } from '../../domain/calculators/aiCreditsCalculator';
 
 function user(id: number, credits: number, days: number, phase?: number) {
   return makeUserSummary({
@@ -18,10 +19,10 @@ describe('buildAiCreditsStatement', () => {
     user(2, 200, 5, 1),
     ...Array.from({ length: 9 }, (_, index) => user(index + 3, 25, 5, 0)),
   ];
-  const statement = buildAiCreditsStatement(users, [
+  const statement = buildAiCreditsStatement(computeAiCreditsSummary(users, [
     { date: '2026-08-31', aiCreditsUsed: 400, users: 3 },
     { date: '2026-09-01', aiCreditsUsed: 625, users: 11 },
-  ]);
+  ]));
 
   it('summarises users, user-days, and credits', () => {
     expect(statement.activeUsers).toBe(11);
@@ -46,7 +47,7 @@ describe('buildAiCreditsStatement', () => {
   });
 
   it('handles an empty upload', () => {
-    const empty = buildAiCreditsStatement([], []);
+    const empty = buildAiCreditsStatement(computeAiCreditsSummary([], []));
 
     expect(empty).toMatchObject({ activeUsers: 0, activeUserDays: 0, avgDaysPerUser: 0, creditsPerActiveUser: 0 });
     expect(empty.monthlyCredits).toEqual([]);

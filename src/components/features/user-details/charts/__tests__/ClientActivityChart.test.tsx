@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import { makeMetric } from '../../../../../__tests__/factories/metrics';
-import ClientActivityChart from '../ClientActivityChart';
+import ClientActivityChart from './helpers/PreparedClientActivityChart';
 
 const activity = {
   user_initiated_interaction_count: 0,

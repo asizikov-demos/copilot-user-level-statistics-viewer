@@ -7,6 +7,40 @@ import {
 } from './helpers/userDetailFixtures';
 
 describe('userDetailCalculator feature aggregates', () => {
+  it('finalizes feature totals, ranked distributions, and signed daily credits for presentation', () => {
+    const details = userDetails([
+      {
+        day: '2024-01-20', ai_credits_used: -0.25,
+        totals_by_feature: [
+          featureTotals('code_completion', { code_generation_activity_count: 44 }),
+          featureTotals('chat_panel_agent_mode', { user_initiated_interaction_count: 3 }),
+        ],
+        totals_by_language_feature: [
+          languageFeatureTotals('typescript', 'code_completion', { code_generation_activity_count: 4 }),
+          languageFeatureTotals('typescript', 'chat_panel_agent_mode', { code_generation_activity_count: 2 }),
+          languageFeatureTotals('unknown', 'code_completion', { code_generation_activity_count: 100 }),
+        ],
+        totals_by_model_feature: [
+          modelFeatureTotals('gpt-5', 'chat_panel_agent_mode', { user_initiated_interaction_count: 3 }),
+          modelFeatureTotals('gpt-5', 'chat_panel_ask_mode', { user_initiated_interaction_count: 2 }),
+          modelFeatureTotals('', 'chat_panel_agent_mode', { user_initiated_interaction_count: 99 }),
+        ],
+      },
+      { day: '2024-01-10', ai_credits_used: 2.5 },
+      { day: '2024-01-20', ai_credits_used: 0.125 },
+    ]);
+
+    expect(details.presentationSummary.featureInteractions).toMatchObject({
+      code_completion: 44, chat_panel_agent_mode: 3,
+    });
+    expect(details.presentationSummary.languageGenerations).toEqual([{ key: 'typescript', value: 6 }]);
+    expect(details.presentationSummary.modelInteractions).toEqual([{ key: 'gpt-5', value: 5 }]);
+    expect(details.presentationSummary.dailyAiCredits).toEqual([
+      { date: '2024-01-10', aiCreditsUsed: 2.5, users: 1 },
+      { date: '2024-01-20', aiCreditsUsed: -0.125, users: 0 },
+    ]);
+  });
+
   it('exposes code completion generations as assumed user interactions', () => {
     const details = userDetails([{
       totals_by_feature: [

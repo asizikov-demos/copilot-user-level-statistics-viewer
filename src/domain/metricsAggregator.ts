@@ -278,7 +278,10 @@ export function aggregateMetrics(
   const impactAggregation = finalizeImpactAggregation(
     impactAggregationAccumulator
   );
-  const aiAggregation = finalizeAiAggregation(aiAggregationAccumulator);
+  const aiAggregation = finalizeAiAggregation(
+    aiAggregationAccumulator,
+    userSummaryAggregation.userSummaries,
+  );
   const surfaceProductivityAggregation =
     finalizeSurfaceProductivityAggregation(
       surfaceProductivityAggregationAccumulator

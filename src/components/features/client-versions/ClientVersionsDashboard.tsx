@@ -14,7 +14,7 @@ import type {
   OutdatedClientVersion,
 } from './clientVersionAnalysis';
 import {
-  countUniqueUsersAcrossPlatforms,
+  summarizeClientHealth,
 } from './clientVersionAnalysis';
 import {
   formatDate,
@@ -85,53 +85,10 @@ function HealthSummary({
   platforms: ClientPlatformHealth[];
   sectionIds: ClientVersionsDashboardProps['sectionIds'];
 }) {
-  const classifiedPlatforms = platforms.filter(({ metadataState }) => metadataState === 'ready');
-  const totalOutdatedUsers = countUniqueUsersAcrossPlatforms(
-    classifiedPlatforms,
-    ({ outdatedVersions }) => outdatedVersions,
-  );
-  const allVersionEntries = platforms.flatMap((platform) => [
-    ...platform.outdatedVersions,
-  ]);
-  const attentionUsernames = new Set(
-    classifiedPlatforms.flatMap(({ outdatedVersions }) =>
-      outdatedVersions.flatMap(({ usernames }) => usernames),
-    ),
-  );
-  const unclassifiedUsernames = new Set(
-    platforms.flatMap((platform) =>
-      platform.metadataState === 'ready'
-        ? platform.unclassifiedUsernames
-        : platform.usernames,
-    ),
-  );
-  for (const username of attentionUsernames) {
-    unclassifiedUsernames.delete(username);
-  }
-  const observedUsernames = new Set(
-    platforms.flatMap(({ usernames }) => usernames),
-  );
-  const platformTotal = platforms.reduce((sum, platform) => sum + platform.totalUsers, 0);
-  const currentUserCount = Math.max(
-    0,
-    observedUsernames.size - attentionUsernames.size - unclassifiedUsernames.size,
-  );
-  const hasUnclassifiedPlatform = platforms.some(
-    ({ metadataState, totalUsers, unclassifiedUsers }) =>
-      totalUsers > 0 && (metadataState !== 'ready' || (unclassifiedUsers ?? 0) > 0),
-  );
-  const unclassifiedUserCount = unclassifiedUsernames.size;
-  const coverage = observedUsernames.size === 0 || hasUnclassifiedPlatform
-    ? null
-    : Math.round((currentUserCount / observedUsernames.size) * 1000) / 10;
-  const hasData = platformTotal > 0;
-  const kind = !hasData || classifiedPlatforms.length === 0
-    ? 'unknown'
-    : hasUnclassifiedPlatform
-      ? 'unknown'
-      : totalOutdatedUsers > 0
-        ? 'attention'
-        : 'healthy';
+  const {
+    totalOutdatedUsers, outdatedVersionCount, unclassifiedUserCount,
+    hasUnclassifiedPlatform, coverage, hasData, kind,
+  } = useMemo(() => summarizeClientHealth(platforms), [platforms]);
 
   return (
     <section
@@ -167,7 +124,7 @@ function HealthSummary({
                     ? `${totalOutdatedUsers.toLocaleString()} ${totalOutdatedUsers === 1 ? 'user is' : 'users are'} on known outdated versions. Release metadata or version details are missing for ${unclassifiedUserCount.toLocaleString()} more ${unclassifiedUserCount === 1 ? 'user' : 'users'}.`
                     : `No outdated clients were found among classified users. Release metadata or version details are missing for ${unclassifiedUserCount.toLocaleString()} ${unclassifiedUserCount === 1 ? 'user' : 'users'}.`
                   : totalOutdatedUsers > 0
-                    ? `${allVersionEntries.length} outdated version ${allVersionEntries.length === 1 ? 'cohort was' : 'cohorts were'} detected across the organization.`
+                    ? `${outdatedVersionCount} outdated version ${outdatedVersionCount === 1 ? 'cohort was' : 'cohorts were'} detected across the organization.`
                     : 'No outdated client versions were detected in this report.'}
             </p>
           </div>
