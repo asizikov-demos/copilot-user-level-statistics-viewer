@@ -4,10 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, FormControl, Label, TextInput } from '@primer/react';
 import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
-import {
-  USER_FEATURE_FILTERS,
-  useUserFilters,
-} from '../../../../hooks/useUserFilters';
+import { useUserFilters } from '../../../../hooks/useUserFilters';
 import { useSortableTable } from '../../../../hooks/useSortableTable';
 import { formatAiCreditCost } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
@@ -75,6 +72,7 @@ export default function UsersTableSection({
     selectedFeatures,
     setSelectedFeatures,
     clientOptions,
+    featureOptions,
     hasActiveFilters,
     clearFilters,
     filteredUsers,
@@ -253,7 +251,7 @@ export default function UsersTableSection({
               id="featureFilter"
               label="Feature used"
               placeholder="All features"
-              options={USER_FEATURE_FILTERS}
+              options={featureOptions}
               selectedValues={selectedFeatures}
               onSelectionChange={setSelectedFeatures}
             />
