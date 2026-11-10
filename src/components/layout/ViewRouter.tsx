@@ -11,13 +11,14 @@ import { FileUploadArea } from '../features/file-upload';
 import { UserDetailsRoute } from '../features/user-details';
 import { StandardRouteOutlet } from './routes';
 import LoadingState from '../ui/LoadingState';
+import ViewErrorBoundary from './ViewErrorBoundary';
 
 const ViewRouter: React.FC = () => {
   const { 
     hasData, enterpriseName, aggregatedMetrics,
     isLoading, error, warning
   } = useMetrics();
-  const { currentView, selectUser } = useNavigation();
+  const { currentView, selectedUser, selectUser, navigateTo } = useNavigation();
   const { handleFileUpload, handleSampleLoad, uploadProgress } = useFileUpload();
   const resetAppState = useResetAppState();
 
@@ -55,7 +56,10 @@ const ViewRouter: React.FC = () => {
   }
 
   return (
-    <>
+    <ViewErrorBoundary
+      resetKeys={[currentView, selectedUser?.id, selectedUser?.login, aggregatedMetrics]}
+      onGoToOverview={() => navigateTo(VIEW_MODES.OVERVIEW)}
+    >
       <UserDetailsRoute />
       {currentView !== VIEW_MODES.USER_DETAILS && (
         <StandardRouteOutlet
@@ -66,7 +70,7 @@ const ViewRouter: React.FC = () => {
           onUserSelect={handleUserClick}
         />
       )}
-    </>
+    </ViewErrorBoundary>
   );
 };
 

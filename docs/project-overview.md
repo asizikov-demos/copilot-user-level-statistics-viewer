@@ -44,6 +44,7 @@ flowchart LR
 4. The worker returns aggregates, enterprise name, record count, and per-file parse errors. Partial failures produce a non-fatal UI warning.
 5. `MetricsWorkerProvider` owns the lazy worker lifecycle, request/progress correlation, reusable reset cancellation, and permanent disposal on unmount.
 6. `ViewRouter` owns upload, fatal-error, and loading gates plus route selection. Standard adapters select narrow view models; `UserDetailsRoute` owns selection, request invalidation, stale-result rejection, retry, cleanup, and effect-only redirects. It preserves the grouped aggregate object as dataset identity.
+7. `ViewErrorBoundary` contains active-view render failures without unmounting navigation, headers, or upload/reset controls. Its fallback offers retry and overview navigation, and resets when the view, selected user identity, or aggregate dataset reference changes. Processing and user-detail request errors retain their separate recovery flows.
 
 ## Code Map and Ownership
 

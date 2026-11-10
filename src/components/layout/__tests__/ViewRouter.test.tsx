@@ -1,9 +1,12 @@
+// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
 import { aggregateMetrics } from '../../../domain/metricsAggregator';
 import type { AggregatedMetrics } from '../../../types/aggregatedMetrics';
-import { VIEW_MODES, type ViewMode } from '../../../types/navigation';
+import { VIEW_MODES, type SelectedUser, type ViewMode } from '../../../types/navigation';
 import type { StandardViewMode } from '../routes';
 import ViewRouter from '../ViewRouter';
 
@@ -17,6 +20,7 @@ interface StandardRouteOutletProps {
 
 const mocks = vi.hoisted(() => ({
   currentView: 'userDetails' as ViewMode,
+  selectedUser: { login: 'octocat', id: 42 } as SelectedUser | null,
   hasData: true,
   enterpriseName: 'test-enterprise' as string | null,
   aggregatedMetrics: null as AggregatedMetrics | null,
@@ -50,6 +54,7 @@ vi.mock('../../MetricsContext', () => ({
 vi.mock('../../../state/NavigationContext', () => ({
   useNavigation: () => ({
     currentView: mocks.currentView,
+    selectedUser: mocks.selectedUser,
     navigateTo: mocks.navigateTo,
     selectUser: mocks.selectUser,
   }),
@@ -80,27 +85,35 @@ vi.mock('../../features/file-upload', () => ({
 vi.mock('../routes', () => ({
   StandardRouteOutlet: (props: StandardRouteOutletProps) => {
     mocks.standardRouteOutlet(props);
-    return null;
+    return <div>Standard dashboard</div>;
   },
 }));
 
 vi.mock('../../features/user-details', () => ({
   UserDetailsRoute: () => {
     mocks.userDetailsRoute();
-    return null;
+    return <div>User details dashboard</div>;
   },
 }));
 
 describe('ViewRouter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.standardRouteOutlet.mockReset();
+    mocks.userDetailsRoute.mockReset();
     mocks.currentView = VIEW_MODES.USER_DETAILS;
+    mocks.selectedUser = { login: 'octocat', id: 42 };
     mocks.hasData = true;
     mocks.enterpriseName = 'test-enterprise';
     mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
     mocks.isLoading = false;
     mocks.error = null;
     mocks.warning = null;
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
   });
 
   it('keeps metrics-wide fatal errors ahead of route delegation', () => {
@@ -179,4 +192,96 @@ describe('ViewRouter', () => {
       expect.objectContaining({ dataWarning: mocks.warning })
     );
   });
+
+  function throwInStandardView() {
+    mocks.currentView = VIEW_MODES.LANGUAGES;
+    mocks.standardRouteOutlet.mockImplementation(() => {
+      throw new Error('Dashboard render failed');
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  }
+
+  it.each([VIEW_MODES.LANGUAGES, VIEW_MODES.USER_DETAILS])(
+    'contains render failures in %s without losing controls outside the view',
+    (view) => {
+      throwInStandardView();
+      mocks.currentView = view;
+      if (view === VIEW_MODES.USER_DETAILS) {
+        mocks.userDetailsRoute.mockImplementation(() => {
+          throw new Error('User details render failed');
+        });
+      }
+
+      render(<><button>Reset uploaded data</button><ViewRouter /></>);
+
+      expect(screen.getByText('Unable to display this view')).toBeTruthy();
+      expect(screen.getByText('Your metrics are still loaded. Try again or choose another view.')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Reset uploaded data' })).toBeTruthy();
+      expect(mocks.resetAppState).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalled();
+    }
+  );
+
+  it('retries the failed view without discarding the dataset', () => {
+    throwInStandardView();
+    const dataset = mocks.aggregatedMetrics;
+    render(<ViewRouter />);
+
+    mocks.standardRouteOutlet.mockReset();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Try again' })[0]);
+
+    expect(screen.queryByText('Unable to display this view')).toBeNull();
+    expect(screen.getByText('Standard dashboard')).toBeTruthy();
+    expect(mocks.standardRouteOutlet).toHaveBeenCalledWith(
+      expect.objectContaining({ aggregatedMetrics: dataset })
+    );
+    expect(mocks.resetAppState).not.toHaveBeenCalled();
+  });
+
+  it('navigates to overview from the fallback', () => {
+    throwInStandardView();
+    render(<ViewRouter />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Go to overview' })[0]);
+
+    expect(mocks.navigateTo).toHaveBeenCalledWith(VIEW_MODES.OVERVIEW);
+  });
+
+  it('clears the fallback when the failing view is already the overview', () => {
+    throwInStandardView();
+    mocks.currentView = VIEW_MODES.OVERVIEW;
+    render(<ViewRouter />);
+
+    mocks.standardRouteOutlet.mockReset();
+    fireEvent.click(screen.getAllByRole('button', { name: 'Go to overview' })[0]);
+
+    expect(mocks.navigateTo).toHaveBeenCalledWith(VIEW_MODES.OVERVIEW);
+    expect(screen.queryByText('Unable to display this view')).toBeNull();
+    expect(screen.getByText('Standard dashboard')).toBeTruthy();
+  });
+
+  it.each(['view', 'user ID', 'user login', 'dataset'])(
+    'resets a failed view when the %s changes',
+    (change) => {
+      throwInStandardView();
+      const { rerender } = render(<ViewRouter />);
+      mocks.standardRouteOutlet.mockReset();
+
+      // An unrelated render must not retry a failing dashboard.
+      rerender(<ViewRouter />);
+      expect(screen.getByText('Unable to display this view')).toBeTruthy();
+      expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
+
+      if (change === 'view') mocks.currentView = VIEW_MODES.OVERVIEW;
+      if (change === 'user ID') mocks.selectedUser = { login: 'octocat', id: 43 };
+      if (change === 'user login') mocks.selectedUser = { login: 'renamed', id: 42 };
+      if (change === 'dataset') {
+        mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
+      }
+      rerender(<ViewRouter />);
+
+      expect(screen.queryByText('Unable to display this view')).toBeNull();
+      expect(screen.getByText('Standard dashboard')).toBeTruthy();
+    }
+  );
 });
