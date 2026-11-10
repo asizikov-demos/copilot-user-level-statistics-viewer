@@ -209,6 +209,7 @@ describe('modelBreakdownCalculator', () => {
         allModels: [],
         modelCategories: [],
         modelVendors: [],
+        customModelProviders: [],
         autoModels: [],
         cliModels: [],
         appModels: [],

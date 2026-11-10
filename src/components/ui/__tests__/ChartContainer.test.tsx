@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import ChartContainer from '../ChartContainer';
 
 describe('ChartContainer', () => {
+  it('omits empty header actions so they cannot wrap into a blank line', () => {
+    const markup = renderToStaticMarkup(
+      <ChartContainer title="Skills" description="Reported invocations" stats={[]}>
+        <canvas />
+      </ChartContainer>
+    );
+    expect(markup).not.toContain('aside');
+    expect(markup).toContain('Reported invocations');
+  });
+
   it('renders the title, description, stats, summary stats and chart slot', () => {
     const markup = renderToStaticMarkup(
       <ChartContainer

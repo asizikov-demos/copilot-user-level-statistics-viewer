@@ -18,6 +18,7 @@ describe('selectModelDetailsReadModel', () => {
       autoTotal: expect.any(Number),
       categoryTables: expect.any(Array),
       vendorTables: expect.any(Array),
+      customModelProviders: breakdown.customModelProviders,
       localByokUsage: metrics.models.localByokUsage,
       selectionModeRequests: metrics.models.selectionModeRequests,
       reportStartDay: metrics.overview.stats.reportStartDay,
@@ -46,6 +47,19 @@ describe('selectModelDetailsReadModel', () => {
       users: 1, interactions: 3, sharePercentage: 75,
       rows: [{ model: 'gpt-image-2.5-flare', displayName: 'GPT Image 2.5 Flare', interactions: 3, sharePercentage: 75 }],
     });
+  });
+
+  it('projects worker-computed custom provider totals without summing overlapping model users', () => {
+    const customModelProviders = [{
+      provider: 'Custom Provider', interactions: 8, users: 2,
+      models: [
+        { model: 'first', interactions: 5, users: 2 },
+        { model: 'second', interactions: 3, users: 1 },
+      ],
+    }];
+    const metrics = makeModelsCliMetrics({ modelBreakdown: { customModelProviders } });
+
+    expect(selectModelDetailsReadModel(metrics).customModelProviders).toBe(customModelProviders);
   });
 
   it('groups models into category and vendor tables with their share of the model total', () => {

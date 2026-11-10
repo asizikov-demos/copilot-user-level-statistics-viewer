@@ -1,5 +1,6 @@
 import type {
   AutoModeAdoptionTrendEntry,
+  CustomModelProviderUsage,
   ModelBreakdownData,
   ModelCategoryUsageEntry,
   ModelDailyUsageEntry,
@@ -26,10 +27,20 @@ interface ModelAccEntry {
   userIds: Set<number>;
 }
 
+interface CustomModelAccEntry {
+  interactions: number;
+  userIds: Set<number>;
+}
+
+interface CustomProviderAccEntry extends CustomModelAccEntry {
+  models: Map<string, CustomModelAccEntry>;
+}
+
 export interface ModelBreakdownAccumulator {
   allModels: Map<string, ModelAccEntry>;
   modelCategories: Map<ModelUsageCategory, ModelAccEntry>;
   modelVendors: Map<ModelVendorGroup, ModelAccEntry>;
+  customModelProviders: Map<string, CustomProviderAccEntry>;
   autoModels: Map<string, ModelAccEntry>;
   cliModels: Map<string, ModelAccEntry>;
   appModels: Map<string, ModelAccEntry>;
@@ -46,6 +57,7 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
     allModels: new Map(),
     modelCategories: new Map(),
     modelVendors: new Map(),
+    customModelProviders: new Map(),
     autoModels: new Map(),
     cliModels: new Map(),
     appModels: new Map(),
@@ -56,6 +68,61 @@ export function createModelBreakdownAccumulator(): ModelBreakdownAccumulator {
     unknownTotal: 0,
     allDates: new Set(),
   };
+}
+
+function accumulateCustomModelProvider(
+  providers: Map<string, CustomProviderAccEntry>,
+  rawModel: string,
+  interactions: number,
+  userId: number
+): void {
+  if (interactions <= 0) return;
+  const name = rawModel.trim();
+  const isUrl = /^https?:\/\//i.test(name);
+  const separator = isUrl ? name.indexOf('/', name.indexOf('://') + 3) : name.indexOf('/');
+  if (separator < 0) return;
+  let provider = name.slice(0, separator).trim();
+  if (isUrl) {
+    try {
+      provider = new URL(name).origin;
+    } catch (error) {
+      console.warn('Skipping custom model provider with an invalid URL:', error);
+      return;
+    }
+  }
+  const model = name.slice(separator + 1).trim();
+  if (!provider || !model) return;
+
+  let entry = providers.get(provider);
+  if (!entry) {
+    entry = { interactions: 0, userIds: new Set(), models: new Map() };
+    providers.set(provider, entry);
+  }
+  entry.interactions += interactions;
+  entry.userIds.add(userId);
+
+  let modelEntry = entry.models.get(model);
+  if (!modelEntry) {
+    modelEntry = { interactions: 0, userIds: new Set() };
+    entry.models.set(model, modelEntry);
+  }
+  modelEntry.interactions += interactions;
+  modelEntry.userIds.add(userId);
+}
+
+function buildCustomModelProviders(
+  providers: Map<string, CustomProviderAccEntry>
+): CustomModelProviderUsage[] {
+  return Array.from(providers, ([provider, entry]) => ({
+    provider,
+    interactions: entry.interactions,
+    users: entry.userIds.size,
+    models: Array.from(entry.models, ([model, modelEntry]) => ({
+      model,
+      interactions: modelEntry.interactions,
+      users: modelEntry.userIds.size,
+    })).sort((a, b) => b.interactions - a.interactions || a.model.localeCompare(b.model)),
+  })).sort((a, b) => b.interactions - a.interactions || a.provider.localeCompare(b.provider));
 }
 
 function accumulateModelEntry(
@@ -121,6 +188,13 @@ export function accumulateModelBreakdown(
   if (!interactionCount) {
     return;
   }
+
+  accumulateCustomModelProvider(
+    accumulator.customModelProviders,
+    modelFeature.model,
+    interactionCount,
+    userId
+  );
 
   accumulator.allDates.add(date);
   accumulator.modelTotal += interactionCount;
@@ -218,6 +292,7 @@ export function computeModelBreakdownData(
     allModels: buildModelEntries(accumulator.allModels),
     modelCategories: buildModelCategoryEntries(accumulator.modelCategories),
     modelVendors: buildModelVendorEntries(accumulator.modelVendors),
+    customModelProviders: buildCustomModelProviders(accumulator.customModelProviders),
     autoModels: buildModelEntries(accumulator.autoModels),
     cliModels: buildModelEntries(accumulator.cliModels),
     appModels: buildModelEntries(accumulator.appModels),
