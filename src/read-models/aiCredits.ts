@@ -4,7 +4,7 @@ export interface AiCreditsReadModel {
   reportStartDay: AggregatedMetrics['overview']['stats']['reportStartDay'];
   reportEndDay: AggregatedMetrics['overview']['stats']['reportEndDay'];
   dailyAiCreditsData: AggregatedMetrics['ai']['dailyAiCreditsData'];
-  userSummaries: AggregatedMetrics['users']['userSummaries'];
+  creditsSummary: AggregatedMetrics['ai']['creditsSummary'];
   usageDistributionData: AggregatedMetrics['ai']['usageDistributionData'];
   totalAiCreditsUsed: number;
   onUserClick: (userLogin: string, userId: number) => void;
@@ -17,19 +17,15 @@ export function selectAiCreditsReadModel(
   const {
     stats: { reportStartDay, reportEndDay },
   } = metrics.overview;
-  const { userSummaries } = metrics.users;
-  const { dailyAiCreditsData = [], usageDistributionData = [] } = metrics.ai;
+  const { creditsSummary, dailyAiCreditsData = [], usageDistributionData = [] } = metrics.ai;
 
   return {
     reportStartDay,
     reportEndDay,
     dailyAiCreditsData,
-    userSummaries,
+    creditsSummary,
     usageDistributionData,
-    totalAiCreditsUsed: userSummaries.reduce(
-      (total, user) => total + user.total_ai_credits_used,
-      0
-    ),
+    totalAiCreditsUsed: creditsSummary.totalAiCreditsUsed,
     onUserClick,
   };
 }

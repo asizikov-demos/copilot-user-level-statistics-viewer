@@ -16,7 +16,7 @@ import { formatIDEName, getIDEIcon } from './icons/IDEIcons';
 import AiAdoptionPhaseLabel from './features/ai-adoption-phases/AiAdoptionPhaseLabel';
 import { getModelIcon } from './icons/ModelIcons';
 import type { UsageDistributionBucket } from '../domain/calculators/metricCalculators';
-import type { UserSummary } from '../types/metrics';
+import type { TopAiCreditsUser } from '../domain/calculators/aiCreditsCalculator';
 
 interface AiCreditsViewProps {
   model: AiCreditsReadModel;
@@ -26,40 +26,22 @@ function formatAverage(value: number): string {
   return formatNumber(value, 1);
 }
 
-interface TopAiCreditsUser extends UserSummary {
-  creditsShare: number;
-}
-
-const TOP_USER_COUNT = 5;
-
 export default function AiCreditsView({ model }: AiCreditsViewProps) {
   const {
     reportStartDay,
     reportEndDay,
     dailyAiCreditsData,
-    userSummaries,
+    creditsSummary,
     usageDistributionData,
-    totalAiCreditsUsed,
     onUserClick,
   } = model;
   const hasAiCreditsData = dailyAiCreditsData.some(entry => entry.aiCreditsUsed > 0);
   const statement = useMemo(
-    () => buildAiCreditsStatement(userSummaries, dailyAiCreditsData),
-    [userSummaries, dailyAiCreditsData]
+    () => buildAiCreditsStatement(creditsSummary),
+    [creditsSummary]
   );
 
-  const topUsers = useMemo<TopAiCreditsUser[]>(() => {
-    return userSummaries
-      .filter(user => user.total_ai_credits_used > 0)
-      .sort((a, b) => b.total_ai_credits_used - a.total_ai_credits_used)
-      .slice(0, TOP_USER_COUNT)
-      .map(user => ({
-        ...user,
-        creditsShare: totalAiCreditsUsed > 0
-          ? (user.total_ai_credits_used / totalAiCreditsUsed) * 100
-          : 0,
-      }));
-  }, [totalAiCreditsUsed, userSummaries]);
+  const topUsers = creditsSummary.topUsers;
 
   const headerBaseClass = 'px-6 py-3 text-left';
   const headerRightClass = 'px-6 py-3 text-right';

@@ -5,6 +5,7 @@ import {
 } from '../../__tests__/factories/aggregatedMetrics';
 import type { AggregatedMetrics } from '../../types/aggregatedMetrics';
 import { selectAiCreditsReadModel } from '../aiCredits';
+import { computeAiCreditsSummary } from '../../domain/calculators/aiCreditsCalculator';
 
 function makeAiCreditsMetrics(): AggregatedMetrics {
   const defaults = makeAggregatedMetrics();
@@ -32,6 +33,10 @@ function makeAiCreditsMetrics(): AggregatedMetrics {
       ],
     },
     ai: {
+      creditsSummary: computeAiCreditsSummary([
+        makeUserSummary({ total_ai_credits_used: 2.5 }),
+        makeUserSummary({ total_ai_credits_used: -0.25 }),
+      ], []),
       dailyAiCreditsData: [
         { date: '2026-01-17', aiCreditsUsed: -0.25, users: 1 },
         { date: '2026-01-15', aiCreditsUsed: 2.5, users: 2 },
@@ -66,15 +71,15 @@ describe('AI Credits read model', () => {
       reportStartDay: '2026-01-15',
       reportEndDay: '2026-01-17',
       dailyAiCreditsData: metrics.ai.dailyAiCreditsData,
-      userSummaries: metrics.users.userSummaries,
+      creditsSummary: metrics.ai.creditsSummary,
       usageDistributionData: metrics.ai.usageDistributionData,
       totalAiCreditsUsed: 2.25,
       onUserClick,
     });
     expect(model.dailyAiCreditsData).toBe(metrics.ai.dailyAiCreditsData);
     expect(model.dailyAiCreditsData[0]).toBe(metrics.ai.dailyAiCreditsData[0]);
-    expect(model.userSummaries).toBe(metrics.users.userSummaries);
-    expect(model.userSummaries[0]).toBe(metrics.users.userSummaries[0]);
+    expect(model.creditsSummary).toBe(metrics.ai.creditsSummary);
+    expect(model.creditsSummary.topUsers).toBe(metrics.ai.creditsSummary.topUsers);
     expect(model.usageDistributionData).toBe(metrics.ai.usageDistributionData);
     expect(model.usageDistributionData[0]).toBe(
       metrics.ai.usageDistributionData[0]
@@ -96,7 +101,7 @@ describe('AI Credits read model', () => {
       'reportStartDay',
       'reportEndDay',
       'dailyAiCreditsData',
-      'userSummaries',
+      'creditsSummary',
       'usageDistributionData',
       'totalAiCreditsUsed',
       'onUserClick',
@@ -116,13 +121,13 @@ describe('AI Credits read model', () => {
       reportStartDay: '',
       reportEndDay: '',
       dailyAiCreditsData: [],
-      userSummaries: [],
+      creditsSummary: metrics.ai.creditsSummary,
       usageDistributionData: metrics.ai.usageDistributionData,
       totalAiCreditsUsed: 0,
       onUserClick,
     });
     expect(model.dailyAiCreditsData).toBe(metrics.ai.dailyAiCreditsData);
-    expect(model.userSummaries).toBe(metrics.users.userSummaries);
+    expect(model.creditsSummary).toBe(metrics.ai.creditsSummary);
     expect(model.usageDistributionData).toBe(metrics.ai.usageDistributionData);
   });
 
@@ -149,11 +154,11 @@ describe('AI Credits read model', () => {
 
   it('keeps signed and fractional totals without rounding or clamping', () => {
     const metrics = makeAggregatedMetrics({
-      users: {
-        userSummaries: [
+      ai: {
+        creditsSummary: computeAiCreditsSummary([
           makeUserSummary({ total_ai_credits_used: -4.75 }),
           makeUserSummary({ total_ai_credits_used: 1.125 }),
-        ],
+        ], []),
       },
     });
 
@@ -169,5 +174,14 @@ describe('AI Credits read model', () => {
     selectAiCreditsReadModel(metrics, vi.fn());
 
     expect(metrics).toEqual(before);
+  });
+
+  it('does not scan user summaries on the main thread', () => {
+    const metrics = makeAiCreditsMetrics();
+    Object.defineProperty(metrics.users, 'userSummaries', {
+      get: () => { throw new Error('Population scan'); },
+    });
+
+    expect(selectAiCreditsReadModel(metrics, vi.fn()).totalAiCreditsUsed).toBe(2.25);
   });
 });

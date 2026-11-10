@@ -1,5 +1,5 @@
 import type { AiMetricsSlice } from '../../types/aggregatedMetrics';
-import type { CopilotMetrics } from '../../types/metrics';
+import type { CopilotMetrics, UserSummary } from '../../types/metrics';
 import {
   accumulateAiAdoptionPhase,
   computeAiAdoptionPhaseData,
@@ -8,6 +8,7 @@ import {
 } from '../calculators/aiAdoptionPhaseCalculator';
 import {
   accumulateAiCredits,
+  computeAiCreditsSummary,
   computeDailyAiCreditsData,
   createAiCreditsAccumulator,
   type AiCreditsAccumulator,
@@ -39,11 +40,14 @@ export function accumulateAiAggregation(
 }
 
 export function finalizeAiAggregation(
-  accumulator: AiAggregationAccumulator
+  accumulator: AiAggregationAccumulator,
+  userSummaries: UserSummary[],
 ): AiAggregationResult {
+  const dailyAiCreditsData = computeDailyAiCreditsData(accumulator.credits);
   return {
+    creditsSummary: computeAiCreditsSummary(userSummaries, dailyAiCreditsData),
     aiAdoptionPhaseData: computeAiAdoptionPhaseData(accumulator.adoptionPhase),
     usageDistributionData: computeUsageDistributionData(accumulator.adoptionPhase),
-    dailyAiCreditsData: computeDailyAiCreditsData(accumulator.credits),
+    dailyAiCreditsData,
   };
 }

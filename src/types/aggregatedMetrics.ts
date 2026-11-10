@@ -43,6 +43,8 @@ import type { ReportingQualityMetrics, UserReportingQuality } from './reportingQ
 import type { ActivityCalendarData } from '../domain/calculators/activityCalendarCalculator';
 import type { ClientReach } from '../domain/calculators/clientReachCalculator';
 import type { WorkingPatternsSummary } from '../domain/calculators/workingPatternsCalculator';
+import type { AiCreditsSummary } from '../domain/calculators/aiCreditsCalculator';
+import type { UserPresentationSummary } from '../domain/calculators/userPresentationCalculator';
 
 export interface OverviewMetricsSlice {
   stats: MetricsStats;
@@ -115,6 +117,7 @@ export interface CopilotAppMetricsSlice {
 }
 
 export interface AiMetricsSlice {
+  creditsSummary: AiCreditsSummary;
   aiAdoptionPhaseData: AiAdoptionPhaseData[];
   usageDistributionData: UsageDistributionBucket[];
   dailyAiCreditsData: DailyAiCreditsData[];
@@ -136,6 +139,7 @@ export interface AggregatedMetrics {
 }
 
 export interface UserDetailedMetrics {
+  presentationSummary: UserPresentationSummary;
   reportingQuality: UserReportingQuality;
   activityCalendar: ActivityCalendarData;
   clientTraffic: ClientTrafficMetrics;

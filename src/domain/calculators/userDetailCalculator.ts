@@ -1,5 +1,6 @@
 import type { CopilotMetrics, UserDayData } from '../../types/metrics';
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
+import { computeUserPresentationSummary } from './userPresentationCalculator';
 import { computeAgentActivity } from './agentActivityCalculator';
 import { computeActivityCalendar } from './activityCalendarCalculator';
 import { computeUserReportingQuality } from './reportingQualityCalculator';
@@ -438,7 +439,7 @@ export function computeSingleUserDetailedMetrics(
     }
   }
 
-  return {
+  const details = {
     activityCalendar: computeActivityCalendar(state.days),
     reportingQuality: computeUserReportingQuality(state.days),
     clientTraffic: computeClientTraffic(clientTrafficAccumulator),
@@ -465,4 +466,5 @@ export function computeSingleUserDetailedMetrics(
     reportStartDay: accumulator.reportStartDay,
     reportEndDay: accumulator.reportEndDay,
   };
+  return { ...details, presentationSummary: computeUserPresentationSummary(details) };
 }

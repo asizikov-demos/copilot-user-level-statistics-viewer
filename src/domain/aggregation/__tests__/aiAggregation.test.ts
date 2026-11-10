@@ -12,13 +12,21 @@ import {
   createAiAggregationAccumulator,
   finalizeAiAggregation,
 } from '../aiAggregation';
+import {
+  accumulateUserSummaryAggregation,
+  createUserSummaryAggregationAccumulator,
+  finalizeUserSummaryAggregation,
+} from '../userSummaryAggregation';
 
 function finalizeAi(metrics: Partial<CopilotMetrics>[]) {
   const accumulator = createAiAggregationAccumulator();
+  const users = createUserSummaryAggregationAccumulator();
   for (const metric of metrics) {
-    accumulateAiAggregation(accumulator, makeMetric(metric));
+    const record = makeMetric(metric);
+    accumulateAiAggregation(accumulator, record);
+    accumulateUserSummaryAggregation(users, record, false);
   }
-  return finalizeAiAggregation(accumulator);
+  return finalizeAiAggregation(accumulator, finalizeUserSummaryAggregation(users).userSummaries);
 }
 
 const phase1 = { phase_number: 1, phase: 'Phase 1', version: 'v1' };
@@ -60,7 +68,7 @@ describe('AI aggregation', () => {
       ai_credits_used: 2,
     }));
 
-    const result = finalizeAiAggregation(accumulator);
+    const result = finalizeAiAggregation(accumulator, []);
 
     expect(result.aiAdoptionPhaseData.map(data => ({
       phase: data.phase.phase_number,
@@ -96,6 +104,9 @@ describe('AI aggregation', () => {
 
     expect(result.dailyAiCreditsData[0].aiCreditsUsed).toBeCloseTo(60);
     expect(result.dailyAiCreditsData[0].users).toBe(2);
+    expect(result.creditsSummary.totalAiCreditsUsed).toBeCloseTo(60);
+    expect(result.creditsSummary.activeUsers).toBe(2);
+    expect(result.creditsSummary.topUsers.map(user => user.user_id)).toEqual([1, 2]);
   });
 
   it('aggregates per-phase metrics and top dimensions per user phase', () => {

@@ -30,7 +30,6 @@ import { ViewPanel } from '../../ui';
 import { VIEW_MODES } from '../../../types/navigation';
 import { useNavigation } from '../../../state/NavigationContext';
 import type { ModeImpactData } from '../../../domain/calculators/metricCalculators';
-import type { DailyAiCreditsData } from '../../../domain/calculators/metricCalculators';
 import { registerChartJS } from '../../charts/utils/chartSetup';
 import {
   getIdeColor,
@@ -38,10 +37,8 @@ import {
   getSequentialColor,
 } from '../../charts/utils/chartColors';
 import type { CompositionEntry } from '../../charts/utils/compositionChart';
-import { sortBySelector } from '../../../utils/sorting';
 import { isActiveAutoModeFeature } from '../../../domain/autoMode';
 import { isCliFeature } from '../../../domain/featureCategories';
-import { getTotalUserInitiatedInteractionCount } from '../../../domain/assumedInteractions';
 import { USER_DETAILS_SECTIONS } from './userDetailsSections';
 import { selectDayReportingQuality } from '../../../read-models/userDetails';
 
@@ -168,7 +165,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     }
   };
 
-  const totalCliPrompts = userDetails.days.reduce((sum, day) => sum + (day.totals_by_cli?.prompt_count ?? 0), 0);
+  const { presentationSummary } = userDetails;
   const headerSummary = useMemo(() => selectUserDetailsHeaderReadModel(model), [model]);
   const usedAgent = userSummary.used_agent;
   const usedChat = userSummary.used_chat;
@@ -182,93 +179,45 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const { featureAggregates, ideAggregates, languageFeatureAggregates, modelFeatureAggregates } = userDetails;
   const usedAutoMode = userSummary.used_auto_mode ?? modelFeatureAggregates.some(isActiveAutoModeFeature);
 
-  const agentInteractions = featureAggregates
-    .filter(f => f.feature === 'chat_panel_agent_mode')
-    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
-  const planInteractions = featureAggregates
-    .filter(f => f.feature === 'chat_panel_plan_mode')
-    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
-  const askModeInteractions = featureAggregates
-    .filter(f => f.feature === 'chat_panel_ask_mode')
-    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
-  const editModeInteractions = featureAggregates
-    .filter(f => f.feature === 'chat_panel_edit_mode')
-    .reduce((sum, f) => sum + f.user_initiated_interaction_count, 0);
-  const completionInteractions = featureAggregates
-    .filter(f => f.feature === 'code_completion')
-    .reduce((sum, f) => sum + getTotalUserInitiatedInteractionCount(f), 0);
-  const cliInteractions = totalCliPrompts;
+  const agentInteractions = presentationSummary.featureInteractions.chat_panel_agent_mode ?? 0;
+  const planInteractions = presentationSummary.featureInteractions.chat_panel_plan_mode ?? 0;
+  const askModeInteractions = presentationSummary.featureInteractions.chat_panel_ask_mode ?? 0;
+  const editModeInteractions = presentationSummary.featureInteractions.chat_panel_edit_mode ?? 0;
+  const completionInteractions = presentationSummary.featureInteractions.code_completion ?? 0;
+  const cliInteractions = presentationSummary.totalCliPrompts;
 
   // Client identities keep their colors when ranks change.
   const { ideDistribution, clientRequestDistribution } = useMemo(() => {
-    const interactions = ideAggregates.map(ide => ({
-      ide: ide.ide,
-      label: formatIDEName(ide.ide),
-      value: getTotalUserInitiatedInteractionCount(ide),
-    }));
-
-    if (totalCliPrompts > 0) {
-      interactions.push({ ide: 'copilot_cli', label: 'Copilot CLI', value: totalCliPrompts });
-    }
-
-    const requests = userDetails.clientTraffic.summary.clients.map(client => ({
-        ide: client.client,
-        label: formatIDEName(client.client),
-        value: client.requestCount,
+    const toDistribution = (clients: typeof presentationSummary.clientInteractions): CompositionEntry[] =>
+      clients.map(({ key, value }) => ({
+        clientKey: key, label: formatIDEName(key), value, color: getIdeColor(key),
       }));
-
-    const toDistribution = (clients: typeof interactions): CompositionEntry[] => {
-      return sortBySelector(clients, client => client.value, 'desc').map(({ ide, label, value }) => {
-        return { clientKey: ide, label, value, color: getIdeColor(ide) };
-      });
-    };
     return {
-      ideDistribution: toDistribution(interactions),
-      clientRequestDistribution: toDistribution(requests),
+      ideDistribution: toDistribution(presentationSummary.clientInteractions),
+      clientRequestDistribution: toDistribution(presentationSummary.clientRequests),
     };
-  }, [ideAggregates, totalCliPrompts, userDetails.clientTraffic]);
+  }, [presentationSummary]);
 
   const languageDistribution = useMemo<CompositionEntry[]>(() => {
-    const generations = languageFeatureAggregates.reduce((acc, item) => {
-      if (item.language && item.language !== '' && item.language !== 'unknown') {
-        acc[item.language] = (acc[item.language] || 0) + item.code_generation_activity_count;
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-    return sortBySelector(Object.entries(generations), ([, value]) => value, 'desc').map(([language, value], rank) => ({
+    return presentationSummary.languageGenerations.map(({ key: language, value }, rank) => ({
       label: language,
       value,
       color: getLanguageColor(language, rank),
     }));
-  }, [languageFeatureAggregates]);
+  }, [presentationSummary]);
 
   const { modelDistribution, modelRequestDistribution } = useMemo(() => {
-    const interactions = modelFeatureAggregates.reduce((acc, item) => {
-      if (item.model && item.model !== '') {
-        acc[item.model] = (acc[item.model] || 0) + getTotalUserInitiatedInteractionCount(item);
-      }
-      return acc;
-    }, {} as Record<string, number>);
-
-    const requests: Record<string, number> = Object.create(null);
-    for (const client of userDetails.clientTraffic.summary.clients) {
-      for (const model of client.models) {
-        requests[model.model] = (requests[model.model] ?? 0) + model.requestCount;
-      }
-    }
-
-    const toDistribution = (totals: Record<string, number>): CompositionEntry[] =>
-      sortBySelector(Object.entries(totals), ([, value]) => value, 'desc').map(([model, value], rank) => ({
+    const toDistribution = (totals: typeof presentationSummary.modelInteractions): CompositionEntry[] =>
+      totals.map(({ key: model, value }, rank) => ({
         label: formatModelDisplayName(model),
         value,
         color: getSequentialColor(rank),
       }));
     return {
-      modelDistribution: toDistribution(interactions),
-      modelRequestDistribution: toDistribution(requests),
+      modelDistribution: toDistribution(presentationSummary.modelInteractions),
+      modelRequestDistribution: toDistribution(presentationSummary.modelRequests),
     };
-  }, [modelFeatureAggregates, userDetails.clientTraffic]);
+  }, [presentationSummary]);
 
   const cloudAgentsUsageData = useMemo(() => {
     return mapReportRangeData(
@@ -294,20 +243,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
     || languageFeatureAggregates.length > 0
     || modelFeatureAggregates.length > 0;
   const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
-  const dailyAiCreditsData = useMemo<DailyAiCreditsData[]>(() => {
-    const creditsByDay = new Map<string, number>();
-    for (const day of userDetails.days) {
-      creditsByDay.set(day.day, (creditsByDay.get(day.day) ?? 0) + day.ai_credits_used);
-    }
-
-    return Array.from(creditsByDay.entries())
-      .map(([date, aiCreditsUsed]) => ({
-        date,
-        aiCreditsUsed,
-        users: aiCreditsUsed > 0 ? 1 : 0,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-  }, [userDetails.days]);
+  const dailyAiCreditsData = presentationSummary.dailyAiCredits;
   const [
     overviewSection,
     summarySection,
@@ -458,8 +394,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           <ClientActivityChart
             key={userId}
             traffic={userDetails.clientTraffic}
-            ideAggregates={ideAggregates}
-            days={userDetails.days}
+            activity={presentationSummary.clientActivity}
             reportStartDay={userDetails.reportStartDay}
             reportEndDay={userDetails.reportEndDay}
             pluginVersions={userDetails.pluginVersions}

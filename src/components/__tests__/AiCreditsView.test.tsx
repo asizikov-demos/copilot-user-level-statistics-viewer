@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeAggregatedMetrics, makeUserSummary } from '../../__tests__/factories/aggregatedMetrics';
 import { selectAiCreditsReadModel } from '../../read-models/aiCredits';
 import AiCreditsView from '../AiCreditsView';
+import { computeAiCreditsSummary } from '../../domain/calculators/aiCreditsCalculator';
 
 vi.mock('../charts/AiCreditsChart', () => ({
   default: () => <div data-testid="ai-credits-chart" />,
@@ -48,7 +49,7 @@ describe('AiCreditsView empty states', () => {
   it('keeps the empty states for zero-credit daily entries, users, and empty buckets', () => {
     const model = selectAiCreditsReadModel(makeAggregatedMetrics(), vi.fn());
     model.dailyAiCreditsData = [{ date: '2026-10-01', aiCreditsUsed: 0, users: 0 }];
-    model.userSummaries = [makeUserSummary({ total_ai_credits_used: 0 })];
+    model.creditsSummary = computeAiCreditsSummary([makeUserSummary({ total_ai_credits_used: 0 })], model.dailyAiCreditsData);
 
     renderView(model).forEach(section => {
       expect(section.textContent).toContain(emptyMessage);
@@ -58,7 +59,7 @@ describe('AiCreditsView empty states', () => {
   it('replaces each empty state with its populated chart or table', () => {
     const model = selectAiCreditsReadModel(makeAggregatedMetrics(), vi.fn());
     model.dailyAiCreditsData = [{ date: '2026-10-01', aiCreditsUsed: 5, users: 1 }];
-    model.userSummaries = [makeUserSummary({ total_ai_credits_used: 5 })];
+    model.creditsSummary = computeAiCreditsSummary([makeUserSummary({ total_ai_credits_used: 5 })], model.dailyAiCreditsData);
     model.totalAiCreditsUsed = 5;
     model.usageDistributionData = model.usageDistributionData.map(bucket => ({
       ...bucket,

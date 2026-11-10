@@ -4,14 +4,20 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../../types/clientTraffic';
 import type { UserDayData } from '../../../../../types/metrics';
-import ClientActivityChart from '../ClientActivityChart';
+import ClientActivityChart from './helpers/PreparedClientActivityChart';
 import { makeMetric } from '../../../../../__tests__/factories/metrics';
+import { createDailyReportRangeChartConfig } from '../../../../charts/utils/dailyBarChart';
+
+vi.mock('../../../../charts/utils/dailyBarChart', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../../charts/utils/dailyBarChart')>();
+  return { ...actual, createDailyReportRangeChartConfig: vi.fn(actual.createDailyReportRangeChartConfig) };
+});
 
 const bar = vi.hoisted(() => vi.fn());
 vi.mock('react-chartjs-2', () => ({
   Bar: (props: unknown) => { bar(props); return <div data-testid="session-bars" />; },
 }));
-afterEach(() => { cleanup(); bar.mockClear(); });
+afterEach(() => { cleanup(); bar.mockClear(); vi.mocked(createDailyReportRangeChartConfig).mockClear(); });
 
 function client(name: string, sessions: number, requests = 10): ClientTrafficSummary {
   return { client: name, reportedSessionCount: sessions, requestCount: requests, promptTokens: 20,
@@ -124,6 +130,9 @@ describe('ClientActivityChart traffic', () => {
     );
     expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([0, 7, 0]);
+    expect(createDailyReportRangeChartConfig).not.toHaveBeenCalled();
+    selectSessions();
+    expect(createDailyReportRangeChartConfig).toHaveBeenCalledOnce();
   });
 
   it('defaults to model requests for traffic with zero sessions and preserves gaps and reported zeros', () => {

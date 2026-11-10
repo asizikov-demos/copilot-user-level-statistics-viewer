@@ -289,6 +289,7 @@ describe('metrics aggregation contract', () => {
     };
     const customizationsAggregation = { ...defaults.customizations };
     const aiAggregation = {
+      creditsSummary: defaults.ai.creditsSummary,
       aiAdoptionPhaseData: [...defaults.ai.aiAdoptionPhaseData],
       usageDistributionData: [...defaults.ai.usageDistributionData],
       dailyAiCreditsData: [...defaults.ai.dailyAiCreditsData],
