@@ -1,12 +1,89 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createChunkedFile, createFailingFile } from '../../__tests__/factories/files';
 import { makeMetric } from '../../__tests__/factories/metrics';
 import { parseMetricsLines } from '../../domain/metricsParser';
 import { splitNdjsonLines } from '../../utils/ndjsonParser';
 import type { MultiFileProgress } from '../metricsFileParser';
-import { parseMultipleMetricsStreams } from '../metricsFileParser';
+import { consumeMultipleMetricsStreams, parseMultipleMetricsStreams } from '../metricsFileParser';
+import { accumulateMetrics, aggregateMetrics, createMetricsAggregationAccumulator, finalizeMetricsAggregation } from '../../domain/metricsAggregator';
+import { computeSingleUserDetailedMetrics } from '../../domain/calculators/userDetailCalculator';
 
 describe('parseMultipleMetricsStreams', () => {
+  it('streams records into aggregation before reading the rest of the file', async () => {
+    const records = [
+      makeMetric({ user_id: 1, user_login: 'plain', ai_credits_used: 0.125 }),
+      makeMetric({ user_id: 1, user_login: 'user_acme', ai_credits_used: -0.025 }),
+    ];
+    const accumulator = createMetricsAggregationAccumulator();
+    let reads = 0;
+    const file = new File([], 'streamed.ndjson');
+    Object.defineProperty(file, 'stream', {
+      value: () => new ReadableStream<Uint8Array>({
+        pull(controller) {
+          expect(accumulator.recordCount).toBe(reads);
+          if (reads === records.length) {
+            controller.close();
+          } else {
+            controller.enqueue(new TextEncoder().encode(`${JSON.stringify(records[reads++])}\n`));
+          }
+        },
+      }, { highWaterMark: 0 }),
+    });
+
+    const result = await consumeMultipleMetricsStreams([file], metric => accumulateMetrics(accumulator, metric));
+    const streamed = finalizeMetricsAggregation(accumulator);
+    const batch = aggregateMetrics(parseMetricsLines(splitNdjsonLines(records.map(record => JSON.stringify(record)).join('\n'))));
+
+    expect(result).toEqual({ recordCount: 2, errors: [] });
+    expect(streamed).toMatchObject({ recordCount: 2, enterpriseName: 'acme' });
+    expect(streamed.aggregated).toEqual(batch.aggregated);
+    expect(computeSingleUserDetailedMetrics(streamed.userDetailAccumulator, 1))
+      .toEqual(computeSingleUserDetailedMetrics(batch.userDetailAccumulator, 1));
+  });
+
+  it('retains accepted records and cumulative counts after a mid-file failure', async () => {
+    const first = makeMetric({ user_id: 1 });
+    let reads = 0;
+    const broken = new File([], 'partial.ndjson');
+    Object.defineProperty(broken, 'stream', {
+      value: () => new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (reads++ === 0) {
+            controller.enqueue(new TextEncoder().encode(`${JSON.stringify(first)}\n`));
+          } else {
+            controller.error(new Error('read failed'));
+          }
+        },
+      }, { highWaterMark: 0 }),
+    });
+    const accepted: number[] = [];
+    const progress: MultiFileProgress[] = [];
+
+    const result = await consumeMultipleMetricsStreams(
+      [broken, createChunkedFile([JSON.stringify(makeMetric({ user_id: 2 }))], 'next.ndjson')],
+      metric => accepted.push(metric.user_id),
+      update => progress.push(update),
+    );
+
+    expect(accepted).toEqual([1, 2]);
+    expect(result).toEqual({
+      recordCount: 2,
+      errors: [{ fileIndex: 1, fileName: 'partial.ndjson', error: 'read failed' }],
+    });
+    expect(progress.map(update => update.recordsProcessed)).toEqual([1, 1, 2]);
+  });
+
+  it('propagates consumer failures instead of treating them as per-file errors', async () => {
+    const failure = new Error('aggregation failed');
+    const later = new File([], 'later.ndjson');
+    const laterStream = vi.spyOn(later, 'stream');
+    await expect(consumeMultipleMetricsStreams(
+      [createChunkedFile([`${JSON.stringify(makeMetric())}\n`]), later],
+      () => { throw failure; },
+    )).rejects.toBe(failure);
+    expect(laterStream).not.toHaveBeenCalled();
+  });
+
   it('matches whole-content parsing for equivalent NDJSON content across chunk boundaries', async () => {
     const baseRecord = makeMetric({
       user_id: 123,

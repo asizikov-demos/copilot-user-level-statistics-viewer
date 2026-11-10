@@ -7,6 +7,7 @@ import {
 } from './aggregation/copilotAppAggregation';
 import { getIDEMetadata } from '../utils/ideMetadata';
 import { resolveCopilotCloudAgentUsage } from './copilotCloudAgentUsage';
+import { extractEnterpriseNameFromLogin } from './enterpriseName';
 import { computeExecutiveSummary } from './calculators/executiveSummaryCalculator';
 import { computeClientReach } from './calculators/clientReachCalculator';
 import {
@@ -153,9 +154,7 @@ export function assembleAggregatedMetrics({
   };
 }
 
-export function aggregateMetrics(
-  metrics: CopilotMetrics[]
-): { aggregated: AggregatedMetrics; userDetailAccumulator: UserDetailAccumulator } {
+export function createMetricsAggregationAccumulator() {
   const coreStatsAggregationAccumulator =
     createCoreStatsAggregationAccumulator();
   const statsAccumulator = getStatsAccumulatorForDimensions(
@@ -179,74 +178,141 @@ export function aggregateMetrics(
   const userDetailAggregationAccumulator =
     createUserDetailAggregationAccumulator();
 
-  for (const rawMetric of metrics) {
-    // Normalize the new TablePro aliases before every family consumes them,
-    // preserving existing client identities and the uploaded records.
-    const hasTableProAlias = rawMetric.totals_by_ide.some(
-      total => total.ide !== 'tablepro'
-        && getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
-    );
-    const metric = hasTableProAlias
-      ? {
-          ...rawMetric,
-          totals_by_ide: rawMetric.totals_by_ide.map(total =>
-            getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
-              ? { ...total, ide: 'tablepro' }
-              : total
-          ),
-        }
-      : rawMetric;
-    const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
+  return {
+    coreStatsAggregationAccumulator,
+    statsAccumulator,
+    userSummaryAggregationAccumulator,
+    engagementAdoptionAggregationAccumulator,
+    clientAggregationAccumulator,
+    cliAggregationAccumulator,
+    copilotAppAccumulator,
+    customizationsAggregationAccumulator,
+    languageAggregationAccumulator,
+    modelAggregationAccumulator,
+    impactAggregationAccumulator,
+    aiAggregationAccumulator,
+    surfaceProductivityAggregationAccumulator,
+    userDetailAggregationAccumulator,
+    recordCount: 0,
+    enterpriseName: null as string | null,
+  };
+}
 
-    accumulateCoreStatsAggregation(
-      coreStatsAggregationAccumulator,
-      metric,
-      usedCopilotCloudAgent
-    );
-    accumulateUserSummaryAggregation(
-      userSummaryAggregationAccumulator,
-      metric,
-      usedCopilotCloudAgent
-    );
-    accumulateUserDetailAggregation(
-      userDetailAggregationAccumulator,
-      metric,
-      usedCopilotCloudAgent
-    );
-    accumulateAiAggregation(aiAggregationAccumulator, metric);
-    accumulateSurfaceProductivityAggregation(
-      surfaceProductivityAggregationAccumulator,
-      metric
-    );
-    accumulateEngagementAdoptionAggregation(
-      engagementAdoptionAggregationAccumulator,
-      metric,
-      usedCopilotCloudAgent
-    );
-    accumulateImpactAggregation(impactAggregationAccumulator, metric);
-    accumulateClientAggregation(
-      clientAggregationAccumulator,
-      statsAccumulator,
-      metric
-    );
-    accumulateCliAggregation(cliAggregationAccumulator, metric);
-    accumulateCopilotAppAggregation(copilotAppAccumulator, metric);
-    accumulateCustomizationsAggregation(
-      customizationsAggregationAccumulator,
-      metric
-    );
+export type MetricsAggregationAccumulator = ReturnType<typeof createMetricsAggregationAccumulator>;
 
-    accumulateLanguageAggregation(
-      languageAggregationAccumulator,
-      statsAccumulator,
-      metric
-    );
-    accumulateModelAggregation(
-      modelAggregationAccumulator,
-      statsAccumulator,
-      metric
-    );
-  }
+export function accumulateMetrics(
+  accumulator: MetricsAggregationAccumulator,
+  rawMetric: CopilotMetrics
+): void {
+  const {
+    coreStatsAggregationAccumulator,
+    statsAccumulator,
+    userSummaryAggregationAccumulator,
+    engagementAdoptionAggregationAccumulator,
+    clientAggregationAccumulator,
+    cliAggregationAccumulator,
+    copilotAppAccumulator,
+    customizationsAggregationAccumulator,
+    languageAggregationAccumulator,
+    modelAggregationAccumulator,
+    impactAggregationAccumulator,
+    aiAggregationAccumulator,
+    surfaceProductivityAggregationAccumulator,
+    userDetailAggregationAccumulator,
+  } = accumulator;
+  accumulator.recordCount++;
+  accumulator.enterpriseName ??= extractEnterpriseNameFromLogin(rawMetric.user_login);
+  // Normalize the new TablePro aliases before every family consumes them,
+  // preserving existing client identities and the uploaded records.
+  const hasTableProAlias = rawMetric.totals_by_ide.some(
+    total => total.ide !== 'tablepro'
+      && getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
+  );
+  const metric = hasTableProAlias
+    ? {
+        ...rawMetric,
+        totals_by_ide: rawMetric.totals_by_ide.map(total =>
+          getIDEMetadata(total.ide)?.canonicalKey === 'tablepro'
+            ? { ...total, ide: 'tablepro' }
+            : total
+        ),
+      }
+    : rawMetric;
+  const usedCopilotCloudAgent = resolveCopilotCloudAgentUsage(metric);
+
+  accumulateCoreStatsAggregation(
+    coreStatsAggregationAccumulator,
+    metric,
+    usedCopilotCloudAgent
+  );
+  accumulateUserSummaryAggregation(
+    userSummaryAggregationAccumulator,
+    metric,
+    usedCopilotCloudAgent
+  );
+  accumulateUserDetailAggregation(
+    userDetailAggregationAccumulator,
+    metric,
+    usedCopilotCloudAgent
+  );
+  accumulateAiAggregation(aiAggregationAccumulator, metric);
+  accumulateSurfaceProductivityAggregation(
+    surfaceProductivityAggregationAccumulator,
+    metric
+  );
+  accumulateEngagementAdoptionAggregation(
+    engagementAdoptionAggregationAccumulator,
+    metric,
+    usedCopilotCloudAgent
+  );
+  accumulateImpactAggregation(impactAggregationAccumulator, metric);
+  accumulateClientAggregation(
+    clientAggregationAccumulator,
+    statsAccumulator,
+    metric
+  );
+  accumulateCliAggregation(cliAggregationAccumulator, metric);
+  accumulateCopilotAppAggregation(copilotAppAccumulator, metric);
+  accumulateCustomizationsAggregation(
+    customizationsAggregationAccumulator,
+    metric
+  );
+
+  accumulateLanguageAggregation(
+    languageAggregationAccumulator,
+    statsAccumulator,
+    metric
+  );
+  accumulateModelAggregation(
+    modelAggregationAccumulator,
+    statsAccumulator,
+    metric
+  );
+}
+
+export function finalizeMetricsAggregation(
+  accumulator: MetricsAggregationAccumulator
+): {
+  aggregated: AggregatedMetrics;
+  userDetailAccumulator: UserDetailAccumulator;
+  recordCount: number;
+  enterpriseName: string | null;
+} {
+  const {
+    coreStatsAggregationAccumulator,
+    userSummaryAggregationAccumulator,
+    engagementAdoptionAggregationAccumulator,
+    clientAggregationAccumulator,
+    cliAggregationAccumulator,
+    copilotAppAccumulator,
+    customizationsAggregationAccumulator,
+    languageAggregationAccumulator,
+    modelAggregationAccumulator,
+    impactAggregationAccumulator,
+    aiAggregationAccumulator,
+    surfaceProductivityAggregationAccumulator,
+    userDetailAggregationAccumulator,
+  } = accumulator;
   const coreStatsAggregation = finalizeCoreStatsAggregation(
     coreStatsAggregationAccumulator
   );
@@ -303,5 +369,16 @@ export function aggregateMetrics(
       surfaceProductivityAggregation,
     }),
     userDetailAccumulator,
+    recordCount: accumulator.recordCount,
+    enterpriseName: accumulator.enterpriseName,
   };
+}
+
+export function aggregateMetrics(
+  metrics: CopilotMetrics[]
+): { aggregated: AggregatedMetrics; userDetailAccumulator: UserDetailAccumulator } {
+  const accumulator = createMetricsAggregationAccumulator();
+  for (const metric of metrics) accumulateMetrics(accumulator, metric);
+  const { aggregated, userDetailAccumulator } = finalizeMetricsAggregation(accumulator);
+  return { aggregated, userDetailAccumulator };
 }

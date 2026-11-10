@@ -110,10 +110,6 @@ interface UserAccState {
   cliCustomizations: CliCustomizationAccumulator;
   totalModelRequests: number;
   totalAiCreditsUsed: number;
-  featureMap: Map<string, FeatureAgg>;
-  ideMap: Map<string, IDEAgg>;
-  langFeatureMap: Map<string, LangFeatureAgg>;
-  modelFeatureMap: Map<string, ModelFeatureAgg>;
   pluginVersionMap: Map<string, PluginVersionEntry>;
   cliVersionMap: Map<string, CliVersionEntry>;
   days: UserDayData[];
@@ -141,10 +137,6 @@ function getOrCreateUserState(accumulator: UserDetailAccumulator, userId: number
       cliCustomizations: createCliCustomizationAccumulator(),
       totalModelRequests: 0,
       totalAiCreditsUsed: 0,
-      featureMap: new Map(),
-      ideMap: new Map(),
-      langFeatureMap: new Map(),
-      modelFeatureMap: new Map(),
       pluginVersionMap: new Map(),
       cliVersionMap: new Map(),
       days: [],
@@ -267,25 +259,6 @@ export function accumulateUserDetail(
   }
   state.totalAiCreditsUsed += metric.ai_credits_used;
 
-  for (const f of featureTotals) {
-    upsertAggMapEntry(state.featureMap, f.feature, f, accumulateInteractionAggMetricTotals);
-  }
-
-  for (const [index, ide] of ideTotals.entries()) {
-    const ideEntry: IDEAgg = {
-      ide: ide.ide,
-      user_initiated_interaction_count: ide.user_initiated_interaction_count,
-      assumed_user_initiated_interaction_count: ideAssumedInteractionCounts[index] ?? 0,
-      code_generation_activity_count: ide.code_generation_activity_count,
-      code_acceptance_activity_count: ide.code_acceptance_activity_count,
-      loc_added_sum: ide.loc_added_sum,
-      loc_deleted_sum: ide.loc_deleted_sum,
-      loc_suggested_to_add_sum: ide.loc_suggested_to_add_sum,
-      loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
-    };
-    upsertAggMapEntry(state.ideMap, ide.ide, ideEntry, accumulateInteractionAggMetricTotals);
-  }
-
   for (const ide of metric.totals_by_ide) {
     if (ide.last_known_plugin_version) {
       const pv = ide.last_known_plugin_version;
@@ -304,14 +277,6 @@ export function accumulateUserDetail(
     if (!existing || new Date(cv.sampled_at).getTime() > new Date(existing.sampled_at).getTime()) {
       state.cliVersionMap.set(key, { ...cv });
     }
-  }
-
-  for (const lf of metric.totals_by_language_feature) {
-    upsertAggMapEntry(state.langFeatureMap, `${lf.language}-${lf.feature}`, lf, accumulateAggMetricTotals);
-  }
-
-  for (const mf of modelFeatureTotals) {
-    upsertAggMapEntry(state.modelFeatureMap, `${mf.model}-${mf.feature}`, mf, accumulateInteractionAggMetricTotals);
   }
 
   state.days.push({
@@ -422,8 +387,34 @@ export function computeSingleUserDetailedMetrics(
   const modelUsageAccumulator = createModelUsageAccumulator();
   const vscodeAgentUsageAccumulator = createVSCodeAgentUsageAccumulator();
   const clientTrafficAccumulator = createClientTrafficAccumulator();
+  const featureMap = new Map<string, FeatureAgg>();
+  const ideMap = new Map<string, IDEAgg>();
+  const langFeatureMap = new Map<string, LangFeatureAgg>();
+  const modelFeatureMap = new Map<string, ModelFeatureAgg>();
 
   for (const day of state.days) {
+    for (const feature of day.totals_by_feature) {
+      upsertAggMapEntry(featureMap, feature.feature, withAssumedUserInitiatedInteractionCount(feature), accumulateInteractionAggMetricTotals);
+    }
+    for (const ide of day.totals_by_ide) {
+      upsertAggMapEntry(ideMap, ide.ide, {
+        ide: ide.ide,
+        user_initiated_interaction_count: ide.user_initiated_interaction_count,
+        assumed_user_initiated_interaction_count: ide.assumed_user_initiated_interaction_count ?? 0,
+        code_generation_activity_count: ide.code_generation_activity_count,
+        code_acceptance_activity_count: ide.code_acceptance_activity_count,
+        loc_added_sum: ide.loc_added_sum,
+        loc_deleted_sum: ide.loc_deleted_sum,
+        loc_suggested_to_add_sum: ide.loc_suggested_to_add_sum,
+        loc_suggested_to_delete_sum: ide.loc_suggested_to_delete_sum,
+      }, accumulateInteractionAggMetricTotals);
+    }
+    for (const language of day.totals_by_language_feature) {
+      upsertAggMapEntry(langFeatureMap, `${language.language}-${language.feature}`, language, accumulateAggMetricTotals);
+    }
+    for (const model of day.totals_by_model_feature) {
+      upsertAggMapEntry(modelFeatureMap, `${model.model}-${model.feature}`, withAssumedUserInitiatedInteractionCount(model), accumulateInteractionAggMetricTotals);
+    }
     accumulateClientTraffic(clientTrafficAccumulator, { ...day, user_id: userId });
     accumulateVSCodeAgentUsage(vscodeAgentUsageAccumulator, { ...day, user_id: userId });
     ensureImpactDates(impactAccumulator, day.day);
@@ -449,10 +440,10 @@ export function computeSingleUserDetailedMetrics(
     cliCustomizations: computeCliCustomizations(state.cliCustomizations),
     vscodeAgentUsage: computeVSCodeAgentUsage(vscodeAgentUsageAccumulator),
     total_ai_credits_used: state.totalAiCreditsUsed,
-    featureAggregates: Array.from(state.featureMap.values()),
-    ideAggregates: Array.from(state.ideMap.values()),
-    languageFeatureAggregates: Array.from(state.langFeatureMap.values()),
-    modelFeatureAggregates: Array.from(state.modelFeatureMap.values()),
+    featureAggregates: Array.from(featureMap.values()),
+    ideAggregates: Array.from(ideMap.values()),
+    languageFeatureAggregates: Array.from(langFeatureMap.values()),
+    modelFeatureAggregates: Array.from(modelFeatureMap.values()),
     pluginVersions,
     cliVersions,
     dailyCombinedImpact: computeJoinedImpactData(impactAccumulator),

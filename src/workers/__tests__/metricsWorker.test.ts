@@ -332,6 +332,47 @@ describe('metricsWorker protocol', () => {
   });
 
   describe('computeUserDetails', () => {
+    it('memoizes only the last user and invalidates the response on a new upload', async () => {
+      const { send, responses } = await loadWorker();
+      const calculators = await import('../../domain/calculators');
+      const compute = vi.spyOn(calculators, 'computeSingleUserDetailedMetrics');
+      await send({
+        type: 'parseAndAggregate',
+        id: 'initial',
+        files: [metricFile('initial.ndjson',
+          { user_id: 1, ai_credits_used: 3 },
+          { user_id: 2 },
+        )],
+      });
+      await send({ type: 'computeUserDetails', id: 'first', userId: 1 });
+      await send({ type: 'computeUserDetails', id: 'repeat', userId: 1 });
+      expect(compute).toHaveBeenCalledTimes(1);
+      await send({ type: 'computeUserDetails', id: 'other', userId: 2 });
+      await send({ type: 'computeUserDetails', id: 'return', userId: 1 });
+      expect(compute).toHaveBeenCalledTimes(3);
+
+      await send({
+        type: 'parseAndAggregate',
+        id: 'replacement',
+        files: [metricFile('replacement.ndjson', { user_id: 1, ai_credits_used: 7 })],
+      });
+      await send({ type: 'computeUserDetails', id: 'updated', userId: 1 });
+      expect(compute).toHaveBeenCalledTimes(4);
+      expect(responses.at(-1)).toMatchObject({
+        type: 'userDetailsResult',
+        id: 'updated',
+        result: { total_ai_credits_used: 7 },
+      });
+
+      await send({
+        type: 'parseAndAggregate',
+        id: 'failure',
+        files: [createFailingFile('failure.ndjson', new Error('unreadable'))],
+      });
+      await send({ type: 'computeUserDetails', id: 'after-failure', userId: 1 });
+      expect(responses.at(-1)).toMatchObject({ type: 'error', id: 'after-failure' });
+    });
+
     it('rejects requests until parse-and-aggregate has retained an accumulator', async () => {
       const { responses, send } = await loadWorker();
 

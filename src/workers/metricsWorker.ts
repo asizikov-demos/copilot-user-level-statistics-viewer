@@ -1,8 +1,11 @@
-import { parseMultipleMetricsStreams } from '../infra/metricsFileParser';
-import { aggregateMetrics } from '../domain/metricsAggregator';
+import { consumeMultipleMetricsStreams } from '../infra/metricsFileParser';
+import {
+  accumulateMetrics,
+  createMetricsAggregationAccumulator,
+  finalizeMetricsAggregation,
+} from '../domain/metricsAggregator';
 import { computeSingleUserDetailedMetrics } from '../domain/calculators';
-import { deriveEnterpriseName } from '../domain/enterpriseName';
-import type { CopilotMetrics } from '../types/metrics';
+import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import type { UserDetailAccumulator } from '../domain/calculators';
 import type { WorkerRequest, WorkerResponse } from './types';
 
@@ -14,13 +17,10 @@ interface WorkerContext {
 const ctx = globalThis as unknown as WorkerContext;
 
 let storedUserDetailAccumulator: UserDetailAccumulator | null = null;
+let lastUserDetails: { userId: number; result: UserDetailedMetrics | null } | null = null;
 
 function postResponse(response: WorkerResponse): void {
   ctx.postMessage(response);
-}
-
-function* userLogins(metrics: CopilotMetrics[]): Generator<string | undefined> {
-  for (const metric of metrics) yield metric.user_login;
 }
 
 ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
@@ -29,10 +29,14 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
     case 'parseAndAggregate': {
       try {
         storedUserDetailAccumulator = null;
-        const parseResult = await parseMultipleMetricsStreams(msg.files, (progress) => {
+        lastUserDetails = null;
+        const accumulator = createMetricsAggregationAccumulator();
+        const parseResult = await consumeMultipleMetricsStreams(msg.files, metric => {
+          accumulateMetrics(accumulator, metric);
+        }, (progress) => {
           postResponse({ type: 'parseProgress', id: msg.id, progress });
         });
-        if (parseResult.errors.length > 0 && parseResult.metrics.length === 0) {
+        if (parseResult.errors.length > 0 && parseResult.recordCount === 0) {
           postResponse({
             type: 'error',
             id: msg.id,
@@ -40,14 +44,15 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           });
           break;
         }
-        const { aggregated, userDetailAccumulator } = aggregateMetrics(parseResult.metrics);
+        const { aggregated, userDetailAccumulator, enterpriseName, recordCount } =
+          finalizeMetricsAggregation(accumulator);
         storedUserDetailAccumulator = userDetailAccumulator;
         postResponse({
           type: 'parseAndAggregateResult',
           id: msg.id,
           result: aggregated,
-          enterpriseName: deriveEnterpriseName(userLogins(parseResult.metrics)),
-          recordCount: parseResult.metrics.length,
+          enterpriseName,
+          recordCount,
           errors: parseResult.errors,
         });
       } catch (err) {
@@ -65,7 +70,13 @@ ctx.onmessage = async (event: MessageEvent<WorkerRequest>) => {
           postResponse({ type: 'error', id: msg.id, error: 'No aggregation data available. Aggregate metrics first.' });
           break;
         }
-        const result = computeSingleUserDetailedMetrics(storedUserDetailAccumulator, msg.userId);
+        if (lastUserDetails?.userId !== msg.userId) {
+          lastUserDetails = {
+            userId: msg.userId,
+            result: computeSingleUserDetailedMetrics(storedUserDetailAccumulator, msg.userId),
+          };
+        }
+        const result = lastUserDetails.result;
         postResponse({ type: 'userDetailsResult', id: msg.id, result });
       } catch (err) {
         postResponse({
