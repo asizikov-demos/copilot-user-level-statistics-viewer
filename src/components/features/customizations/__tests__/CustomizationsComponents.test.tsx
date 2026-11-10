@@ -136,6 +136,11 @@ describe('customizations components', () => {
       expect(screen.getByRole('option', { name: label }).querySelector('svg')).not.toBeNull();
     }
     expect(screen.getByRole('option', { name: 'MCP servers' }).querySelector('svg.octicon-mcp')).not.toBeNull();
+    const typeSearch = screen.getByRole('combobox', { name: 'Filter types...' });
+    fireEvent.change(typeSearch, { target: { value: 'mcp' } });
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['MCP servers']);
+    fireEvent.change(typeSearch, { target: { value: '' } });
+    expect(screen.getAllByRole('option')).toHaveLength(6);
     fireEvent.click(screen.getByRole('option', { name: 'MCP servers' }));
     expect(screen.getByRole('button', { name: 'Type MCP servers' })).toBeTruthy();
     expect(screen.getByText('No items match the filters')).toBeTruthy();

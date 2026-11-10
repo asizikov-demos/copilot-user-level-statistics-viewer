@@ -118,6 +118,9 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   const paged = useMemo(() => sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sortedItems, page]);
   const rowKey = (r: ExplorerRow) => `${r.category}:${r.name}`;
   const selectedType = TYPE_FILTER_OPTIONS.find(option => option.id === category);
+  const visibleTypeOptions = TYPE_FILTER_OPTIONS.filter(option =>
+    option.text?.toLowerCase().includes(typeFilterQuery.trim().toLowerCase())
+  );
 
   useEffect(() => { setPage(1); setExpanded(null); }, [query, category, includeUnnamed, sortField, sortDirection, model]);
   useEffect(() => { setPage(p => Math.min(p, totalPages)); }, [totalPages]);
@@ -188,7 +191,7 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
                 }}
                 filterValue={typeFilterQuery}
                 onFilterChange={setTypeFilterQuery}
-                items={TYPE_FILTER_OPTIONS}
+                items={visibleTypeOptions}
                 selected={selectedType}
                 onSelectedChange={(selection: SelectPanelItemInput | undefined) => {
                   if (isExplorerCategory(selection?.id)) setCategory(selection.id);
