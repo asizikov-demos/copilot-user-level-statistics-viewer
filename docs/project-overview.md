@@ -20,6 +20,7 @@ Engineering leaders and Copilot administrators upload GitHub Copilot user-level 
 - **User details are on demand.** The worker retains a compact user-detail accumulator, not raw records for the UI, and finalizes only the selected user's detail response.
 - **Each aggregate has one owner.** Metric-family accumulators own creation, record consumption, and finalization. The coordinator wires them together in one raw-record loop and assembles the grouped contract without duplicate aggregation.
 - **Read models are pure projections.** Selectors preserve nested references without copying, sorting, filtering, or mutation. Deterministic feature-specific scalar/date derivations are allowed; only the selected route computes its projection.
+- **Population summaries are worker-owned.** AI-credit statement totals, monthly totals, concentration, and top five users are finalized in `ai.creditsSummary`; views only format them. Release-metadata-dependent client health uses a memoized pure selector because that metadata loads on the main thread. Inactive profile routes skip population lookup/ranking, and selected-user feature totals, distributions, daily credits, CLI totals, and client table/interaction series arrive in `UserDetailedMetrics.presentationSummary`; labels and colors stay in presentation.
 
 ## Data Flow
 

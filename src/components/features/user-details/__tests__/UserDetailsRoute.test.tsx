@@ -176,6 +176,38 @@ afterEach(async () => {
 });
 
 describe('UserDetailsRoute', () => {
+  it('does not access population summaries while the route is inactive', async () => {
+    mocks.currentView = VIEW_MODES.USERS;
+    const dataset = makeDataset();
+    Object.defineProperty(dataset.users, 'userSummaries', {
+      get: () => { throw new Error('Inactive population scan'); },
+    });
+    mocks.aggregatedMetrics = dataset;
+
+    const route = await mount();
+
+    expect(route.toJSON()).toBeNull();
+    expect(mocks.computeUserDetails).not.toHaveBeenCalled();
+  });
+
+  it('reuses the rank lookup during detail loading and unrelated rerenders', async () => {
+    const request = deferred<UserDetailedMetrics | null>();
+    mocks.computeUserDetails.mockReturnValueOnce(request.promise);
+    const dataset = makeDataset();
+    const summaries = dataset.users.userSummaries;
+    const getSummaries = vi.fn(() => summaries);
+    Object.defineProperty(dataset.users, 'userSummaries', { get: getSummaries });
+    mocks.aggregatedMetrics = dataset;
+
+    await mount();
+    const reads = getSummaries.mock.calls.length;
+    request.resolve(details);
+    await settle();
+    await update();
+
+    expect(getSummaries).toHaveBeenCalledTimes(reads);
+  });
+
   it.each([
     { name: 'selection', selectedUser: null },
     { name: 'user summary', selectedUser: { id: 99, login: 'ghost' } },

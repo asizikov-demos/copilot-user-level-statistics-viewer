@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '@primer/react';
 import { selectUserDetailsRouteReadModel } from '../../../read-models/userDetails';
 import { useNavigation } from '../../../state/NavigationContext';
@@ -24,9 +24,12 @@ export default function UserDetailsRoute() {
   });
   const [retryKey, setRetryKey] = useState(0);
   const requestVersion = useRef(0);
-  const routeModel = selectUserDetailsRouteReadModel(
-    aggregatedMetrics,
-    selectedUser
+  const routeModel = useMemo(
+    () => selectUserDetailsRouteReadModel(
+      aggregatedMetrics,
+      currentView === VIEW_MODES.USER_DETAILS ? selectedUser : null,
+    ),
+    [aggregatedMetrics, selectedUser, currentView],
   );
   const routeState = resolveUserDetailsRouteState({
     currentView,
