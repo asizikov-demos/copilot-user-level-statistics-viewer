@@ -130,6 +130,14 @@ describe('shared IDE metadata registry', () => {
     expect(getIdeColor('intellij')).toBe(getIdeColor('jetbrains'));
   });
 
+  it('recognizes DataSpell with its display name and JetBrains icon', () => {
+    expect(formatIDEName('dataspell')).toBe('DataSpell');
+    expect(getIDEMetadata('dataspell')?.canonicalKey).toBe('dataspell');
+    expect(getIDEIcon('dataspell')).toBe(getIDEIcon('jetbrains'));
+    expect(hasIdeColor('dataspell')).toBe(true);
+    expect(getIdeColor('dataspell')).toBe('#7658C9');
+  });
+
   it('maps Copilot App as a named client with Copilot visuals', () => {
     expect(formatIDEName('copilot_app')).toBe('Copilot App');
     expect(getIDEIcon('copilot_app')).not.toBe(getIDEIcon('copilot_cli'));
@@ -185,8 +193,8 @@ describe('shared IDE metadata registry', () => {
       const color = getIdeColor(key);
       colors.set(color, [...colors.get(color) ?? [], key]);
     }
-    expect(canonicals.size).toBe(40);
-    expect(colors.size).toBe(39);
+    expect(canonicals.size).toBe(41);
+    expect(colors.size).toBe(40);
     expect([...colors.values()].filter(keys => keys.length > 1)).toEqual([['github_app', 'copilot_app']]);
     for (const [key, metadata] of Object.entries(IDE_METADATA_BY_KEY)) {
       expect(getIdeColor(` ${key.toUpperCase()} `)).toBe(getIdeColor(metadata.canonicalKey));

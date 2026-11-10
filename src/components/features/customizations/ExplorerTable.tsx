@@ -1,8 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, FormControl, Select, TextInput } from '@primer/react';
-import { FilterIcon, SearchIcon } from '@primer/octicons-react';
+import { Button, Checkbox, FormControl, SelectPanel, TextInput, type SelectPanelItemInput } from '@primer/react';
+import {
+  BookIcon,
+  ChevronDownIcon,
+  CommandPaletteIcon,
+  CopilotIcon,
+  FilterIcon,
+  ListUnorderedIcon,
+  McpIcon,
+  PlugIcon,
+  SearchIcon,
+} from '@primer/octicons-react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../charts/utils/chartSetup';
 import { createBaseChartOptions, yAxisFormatters } from '../../charts/utils/chartOptions';
@@ -21,6 +31,7 @@ import { Sparkline, formatNumber, formatPercent } from './shared';
 registerChartJS();
 
 const PAGE_SIZE = 20;
+type ExplorerCategory = CustomizationType | 'all';
 
 interface ExplorerRow extends CustomizationItemStats {
   category: CustomizationType;
@@ -29,6 +40,19 @@ interface ExplorerRow extends CustomizationItemStats {
 }
 
 type SortField = 'name' | 'categoryTitle' | 'totalEvents' | 'users' | 'activeDays' | 'perUser';
+
+const TYPE_FILTER_OPTIONS: SelectPanelItemInput[] = [
+  { id: 'all', text: 'All types', leadingVisual: ListUnorderedIcon },
+  { id: 'skill', text: CUSTOMIZATION_META.skill.title, leadingVisual: BookIcon },
+  { id: 'custom_agent', text: CUSTOMIZATION_META.custom_agent.title, leadingVisual: CopilotIcon },
+  { id: 'mcp', text: CUSTOMIZATION_META.mcp.title, leadingVisual: McpIcon },
+  { id: 'slash_cmd', text: CUSTOMIZATION_META.slash_cmd.title, leadingVisual: CommandPaletteIcon },
+  { id: 'plugin', text: CUSTOMIZATION_META.plugin.title, leadingVisual: PlugIcon },
+];
+
+function isExplorerCategory(value: unknown): value is ExplorerCategory {
+  return value === 'all' || (typeof value === 'string' && CUSTOMIZATION_TYPES.some(type => type === value));
+}
 
 function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
   const color = CUSTOMIZATION_META[row.category].color.solid;
@@ -65,7 +89,9 @@ function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
 /** Searchable, sortable, paginated table of every customization item; rows expand for details. */
 export default function ExplorerTable({ model }: { model: CustomizationsReadModel }) {
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<CustomizationType | 'all'>('all');
+  const [category, setCategory] = useState<ExplorerCategory>('all');
+  const [typeFilterOpen, setTypeFilterOpen] = useState(false);
+  const [typeFilterQuery, setTypeFilterQuery] = useState('');
   const [includeUnnamed, setIncludeUnnamed] = useState(false);
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -91,6 +117,10 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
   const paged = useMemo(() => sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sortedItems, page]);
   const rowKey = (r: ExplorerRow) => `${r.category}:${r.name}`;
+  const selectedType = TYPE_FILTER_OPTIONS.find(option => option.id === category);
+  const visibleTypeOptions = TYPE_FILTER_OPTIONS.filter(option =>
+    option.text?.toLowerCase().includes(typeFilterQuery.trim().toLowerCase())
+  );
 
   useEffect(() => { setPage(1); setExpanded(null); }, [query, category, includeUnnamed, sortField, sortDirection, model]);
   useEffect(() => { setPage(p => Math.min(p, totalPages)); }, [totalPages]);
@@ -150,10 +180,34 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
             </FormControl>
             <FormControl id="customizationType">
               <FormControl.Label>Type</FormControl.Label>
-              <Select block value={category} onChange={e => setCategory(e.target.value as CustomizationType | 'all')}>
-                <Select.Option value="all">All types</Select.Option>
-                {CUSTOMIZATION_TYPES.map(c => <Select.Option key={c} value={c}>{CUSTOMIZATION_META[c].title}</Select.Option>)}
-              </Select>
+              <SelectPanel
+                title="Type"
+                placeholder="All types"
+                placeholderText="Filter types..."
+                open={typeFilterOpen}
+                onOpenChange={open => {
+                  setTypeFilterOpen(open);
+                  if (!open) setTypeFilterQuery('');
+                }}
+                filterValue={typeFilterQuery}
+                onFilterChange={setTypeFilterQuery}
+                items={visibleTypeOptions}
+                selected={selectedType}
+                onSelectedChange={(selection: SelectPanelItemInput | undefined) => {
+                  if (isExplorerCategory(selection?.id)) setCategory(selection.id);
+                }}
+                renderAnchor={anchorProps => (
+                  <Button
+                    {...anchorProps}
+                    block
+                    aria-labelledby={undefined}
+                    aria-label={`Type ${selectedType?.text ?? 'All types'}`}
+                    trailingAction={ChevronDownIcon}
+                  >
+                    {selectedType?.text ?? 'All types'}
+                  </Button>
+                )}
+              />
             </FormControl>
             <FormControl id="includeUnnamed" className="pb-2">
               <Checkbox checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />

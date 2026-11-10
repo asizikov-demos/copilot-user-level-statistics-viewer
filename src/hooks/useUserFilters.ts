@@ -31,6 +31,7 @@ interface UseUserFiltersResult {
   selectedFeatures: UserFeatureFilter[];
   setSelectedFeatures: (value: UserFeatureFilter[]) => void;
   clientOptions: ClientFilterOption[];
+  featureOptions: typeof USER_FEATURE_FILTERS[number][];
   hasActiveFilters: boolean;
   clearFilters: () => void;
   filteredUsers: UserSummary[];
@@ -135,6 +136,18 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
         || a.value.localeCompare(b.value));
   }, [users]);
 
+  const featureOptions = useMemo(
+    () => USER_FEATURE_FILTERS.filter(option => users.some(user => matchesFeature(user, option.value))),
+    [users]
+  );
+
+  useEffect(() => {
+    setSelectedFeatures(current => {
+      const available = current.filter(feature => featureOptions.some(option => option.value === feature));
+      return available.length === current.length ? current : available;
+    });
+  }, [featureOptions]);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery.trim().toLowerCase());
@@ -189,6 +202,7 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
     selectedFeatures,
     setSelectedFeatures,
     clientOptions,
+    featureOptions,
     hasActiveFilters: Boolean(searchQuery || selectedClients.length || selectedFeatures.length),
     clearFilters,
     filteredUsers,

@@ -43,8 +43,8 @@ describe('ClientsView model traffic', () => {
     expect(within(traffic).getByText('Prompt Tokens')).toBeTruthy();
     expect(within(traffic).getByText('Output Tokens')).toBeTruthy();
     expect(within(traffic).getByText('Not available')).toBeTruthy();
-    expect(traffic.textContent).toContain('2 of 4 user-day records');
-    expect(traffic.textContent).toContain('2026-10-22 to 2026-10-22');
+    expect(traffic.textContent).toContain('Successful model calls');
+    expect(traffic.textContent).not.toContain('Coverage:');
     expect(within(traffic).queryByText('Acceptance Rate')).toBeNull();
     expect(screen.getByText('IDE distribution')).toBeTruthy();
     expect(screen.getByText('Daily IDE users')).toBeTruthy();

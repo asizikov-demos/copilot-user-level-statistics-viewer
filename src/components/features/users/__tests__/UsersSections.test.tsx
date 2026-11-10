@@ -207,7 +207,7 @@ describe('Users feature sections', () => {
     const users = Array.from({ length: 501 }, (_, index) => makeUser({
       user_login: `user-${index}`,
       user_id: index + 1,
-      used_chat: false,
+      used_chat: true,
       used_code_completion: false,
       used_agent: false,
       used_copilot_app: false,
@@ -224,6 +224,44 @@ describe('Users feature sections', () => {
     fireEvent.click(within(pagination).getByRole('link', { name: 'Next Page' }));
     toggleFilterOptions('Feature used', ['Chat']);
     expect(screen.getByText('Showing 1-200 of 501 users')).toBeTruthy();
+  });
+
+  it('only offers features used by the current users and clears unavailable selections', async () => {
+    const user = makeUser({
+      used_code_completion: false,
+      used_agent: false,
+      used_chat: true,
+      used_cli: false,
+      used_copilot_app: false,
+      used_copilot_coding_agent: false,
+      used_copilot_code_review_active: false,
+      used_copilot_code_review_passive: false,
+      used_auto_mode: false,
+      used_vscode_agent: false,
+      used_local_byok: false,
+    });
+    const { rerender } = renderTable([user]);
+    const featureFilter = screen.getByRole('button', { name: 'Feature used All features' });
+
+    fireEvent.click(featureFilter);
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Chat']);
+    fireEvent.click(screen.getByRole('option', { name: 'Chat' }));
+    fireEvent.click(featureFilter);
+    expect(screen.getByRole('button', { name: 'Feature used Chat' })).toBeTruthy();
+
+    rerender(
+      <UsersTableSection
+        sectionId="users-table"
+        users={[{ ...user, used_chat: false }]}
+        onUserClick={vi.fn()}
+      />
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Feature used All features' })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Feature used All features' }));
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
   });
 
   it('keeps controls and the single-page range inside the card without navigation', () => {
@@ -422,9 +460,18 @@ describe('Users feature sections', () => {
   });
 
   it('shows a filtered empty state when no users match', () => {
-    renderTable([makeUser()]);
+    renderTable([
+      makeUser({ user_login: 'vscode-chat', clients_used: ['vscode'], used_cli: false }),
+      makeUser({
+        user_login: 'cli-only',
+        user_id: 2,
+        clients_used: ['copilot_cli'],
+        used_chat: false,
+      }),
+    ]);
 
-    toggleFilterOptions('Feature used', ['VS Code Agents window']);
+    toggleFilterOptions('Clients used', ['VS Code']);
+    toggleFilterOptions('Feature used', ['CLI']);
 
     expect(screen.getByText('No users match the selected filters')).toBeTruthy();
   });

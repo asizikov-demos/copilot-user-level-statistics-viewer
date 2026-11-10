@@ -68,6 +68,7 @@ const IDE_METADATA_DEFINITIONS: readonly IDEMetadataDefinition[] = [
   { keys: ['jetbrains', 'intellij'], label: 'JetBrains', iconKey: 'jetbrains', color: '#B85C00' },
   { keys: ['visualstudio', 'visual_studio'], label: 'Visual Studio', iconKey: 'visualstudio', color: '#894CEB' },
   { keys: ['pycharm'], label: 'PyCharm', iconKey: 'pycharm', color: '#30A147' },
+  { keys: ['dataspell'], label: 'DataSpell', iconKey: 'jetbrains', color: '#7658C9' },
   { keys: ['webstorm'], label: 'WebStorm', iconKey: 'webstorm', color: '#179B9B' },
   { keys: ['rider'], label: 'Rider', iconKey: 'rider', color: '#DF0C24' },
   { keys: ['datagrip'], label: 'DataGrip', iconKey: 'datagrip', color: '#856D4C' },

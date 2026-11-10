@@ -114,7 +114,6 @@ export default function ClientsView({ model }: IDEViewProps) {
     })),
   ];
   const trafficSummary = model.traffic.summary;
-  const reportedDays = model.traffic.daily.filter(day => day.reportedRecords > 0);
 
   const renderIDEInfo = (ide: IDEStats) => {
     const IDEIcon = getIDEIcon(ide.ide);
@@ -235,18 +234,10 @@ export default function ClientsView({ model }: IDEViewProps) {
           title="Model traffic by client"
           headingAs="h3"
           description={
-            <>
-              <p>
-                Successful model calls, not prompts or editor interactions. Active users made at least one
-                model request; users can appear under multiple clients.
-              </p>
-              <p>
-                Coverage: {trafficSummary.reportedRecords.toLocaleString()} of {trafficSummary.recordCount.toLocaleString()} user-day
-                records report client traffic.
-                {reportedDays.length > 0 && ` Reported dates: ${reportedDays[0].day} to ${reportedDays[reportedDays.length - 1].day} (${reportedDays.length} observed days).`}
-                {' '}Missing records are not zero usage. Zero reported sessions do not imply no traffic.
-              </p>
-            </>
+            <p>
+              Successful model calls, not prompts or editor interactions. Active users made at least one
+              model request; users can appear under multiple clients.
+            </p>
           }
           footer={trafficSummary.reportedRecords > 0 && sortedTraffic.length > 0 ? (
             <TablePagination itemCount={sortedTraffic.length} currentPage={currentTrafficPage} itemLabel="clients" onPageChange={setTrafficPage} />
