@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { FormControl, Select } from '@primer/react';
+import { ActionList, ActionMenu, FormControl } from '@primer/react';
 import {
   getModelVendor,
   getModelDisplayName,
@@ -19,8 +19,11 @@ import { formatShortDate } from '../../utils/formatters';
 import { sortBySelector } from '../../utils/sorting';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
 import ChartContainer from '../ui/ChartContainer';
+import { getVendorIcon } from '../icons/ModelIcons';
 
 registerChartJS();
+
+const AllVendorsIcon = getVendorIcon('Unattributed');
 
 interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
@@ -142,16 +145,40 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       headerActions={!isAuto && !isClient ? (
         <FormControl id="models-usage-vendor-filter" className="min-w-44">
           <FormControl.Label>Model vendor</FormControl.Label>
-          <Select
-            block
-            value={activeVendor}
-            onChange={event => setSelectedVendor(event.target.value as ModelVendorGroup | '')}
-          >
-            <Select.Option value="">All Vendors</Select.Option>
-            {vendorOptions.map(vendor => (
-              <Select.Option key={vendor} value={vendor}>{vendor}</Select.Option>
-            ))}
-          </Select>
+          <ActionMenu>
+            <ActionMenu.Button
+              id="models-usage-vendor-filter"
+              block
+              aria-labelledby={undefined}
+              aria-label={`Model vendor: ${activeVendor || 'All Vendors'}`}
+              leadingVisual={getVendorIcon(activeVendor || 'Unattributed')}
+            >
+              {activeVendor || 'All Vendors'}
+            </ActionMenu.Button>
+            <ActionMenu.Overlay align="end">
+              <ActionList selectionVariant="single">
+                <ActionList.Item selected={!activeVendor} onSelect={() => setSelectedVendor('')}>
+                  <ActionList.LeadingVisual>
+                    <AllVendorsIcon />
+                  </ActionList.LeadingVisual>
+                  All Vendors
+                </ActionList.Item>
+                {vendorOptions.map(vendor => {
+                  const Icon = getVendorIcon(vendor);
+                  return (
+                    <ActionList.Item
+                      key={vendor}
+                      selected={activeVendor === vendor}
+                      onSelect={() => setSelectedVendor(vendor)}
+                    >
+                      <ActionList.LeadingVisual><Icon /></ActionList.LeadingVisual>
+                      {vendor}
+                    </ActionList.Item>
+                  );
+                })}
+              </ActionList>
+            </ActionMenu.Overlay>
+          </ActionMenu>
         </FormControl>
       ) : undefined}
       summaryStats={[

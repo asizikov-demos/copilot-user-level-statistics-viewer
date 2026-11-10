@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { getModelIcon, getVendorIcon } from '../ModelIcons';
+import { getCustomModelIcon, getModelIcon, getVendorIcon } from '../ModelIcons';
 
 const renderModelIcon = (modelName: string): string => {
   const Icon = getModelIcon(modelName);
@@ -22,6 +22,25 @@ describe('getModelIcon', () => {
     ['an unknown model', 'gpt-made-up', 'octicon-ai-model'],
   ])('resolves the icon for %s', (_case, modelName, expectedPath) => {
     expect(renderModelIcon(modelName)).toContain(expectedPath);
+  });
+
+  describe('getCustomModelIcon', () => {
+    it.each([
+      ['claude-opus-5-5', 'claude-opus-5.5'],
+      ['claude-sonnet-5-5', 'claude-sonnet-5.5'],
+      ['gpt-5.5', 'gpt-5.5'],
+      ['gpt-5-5', 'gpt-5.5'],
+      ['  GEMINI_3_8_FLASH  ', 'gemini-3.8-flash'],
+      ['mai-code-1-1-flash', 'mai-code-1.1-flash'],
+      ['kimi-k3', 'kimi-k3'],
+    ])('matches the vendor icon for reported spelling %s without changing catalog classification', (reported, canonical) => {
+      expect(getCustomModelIcon(reported)).toBe(getModelIcon(canonical));
+    });
+
+    it.each(['smart-router', 'claude-made-up', 'gpt-99-9', 'Foundry Anthropic/claude-opus-5-5'])(
+      'does not guess a vendor for %s',
+      model => expect(getCustomModelIcon(model)).toBe(getVendorIcon('Unattributed')),
+    );
   });
 
   it.each([16, 24] as const)('renders vendor marks and the unattributed fallback at %ipx', size => {

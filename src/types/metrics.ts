@@ -297,6 +297,19 @@ export interface ModelVendorUsageEntry {
   users: number;
 }
 
+export interface CustomModelUsageEntry {
+  model: string;
+  interactions: number;
+  users: number;
+}
+
+export interface CustomModelProviderUsage {
+  provider: string;
+  interactions: number;
+  users: number;
+  models: CustomModelUsageEntry[];
+}
+
 export interface ModelCategoryDetailRow {
   model: string;
   displayName: string;
@@ -331,6 +344,7 @@ export interface ModelBreakdownData {
   allModels: ModelDailyUsageEntry[];
   modelCategories: ModelCategoryUsageEntry[];
   modelVendors: ModelVendorUsageEntry[];
+  customModelProviders: CustomModelProviderUsage[];
   autoModels?: ModelDailyUsageEntry[];
   cliModels?: ModelDailyUsageEntry[];
   appModels?: ModelDailyUsageEntry[];

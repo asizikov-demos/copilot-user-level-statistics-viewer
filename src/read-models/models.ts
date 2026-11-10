@@ -44,6 +44,7 @@ export interface ModelDetailsReadModel {
   autoTotal: number;
   categoryTables: ModelCategoryTable[];
   vendorTables: ModelVendorTable[];
+  customModelProviders: AggregatedMetrics['models']['modelBreakdownData']['customModelProviders'];
   localByokUsage: AggregatedMetrics['models']['localByokUsage'];
   selectionModeRequests: AggregatedMetrics['models']['selectionModeRequests'];
   reportStartDay: string;
@@ -136,6 +137,7 @@ export function selectModelDetailsReadModel(
     allModels,
     modelCategories,
     modelVendors,
+    customModelProviders,
     autoModels = [],
     autoModeAdoptionTrend = [],
     dates,
@@ -153,6 +155,7 @@ export function selectModelDetailsReadModel(
     autoTotal: autoModels.reduce((sum, entry) => sum + entry.total, 0),
     categoryTables: buildCategoryTables(allModels, modelCategories, modelTotal),
     vendorTables: buildVendorTables(allModels, modelVendors, modelTotal),
+    customModelProviders,
     localByokUsage: metrics.models.localByokUsage,
     selectionModeRequests: metrics.models.selectionModeRequests,
     reportStartDay: metrics.overview.stats.reportStartDay,

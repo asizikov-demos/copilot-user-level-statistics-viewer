@@ -1,6 +1,6 @@
 import React from 'react';
 import { AiModelIcon, MarkGithubIcon } from '@primer/octicons-react';
-import { getModelVendor, ModelVendor, ModelVendorGroup } from '../../domain/modelConfig';
+import { getModelVendor, KNOWN_MODELS, normalizeModelName, ModelVendor, ModelVendorGroup } from '../../domain/modelConfig';
 import type { BrandIcon, BrandIconProps } from './iconTypes';
 
 // OpenAI — from Simple Icons (CC0). Matches GPT-* / o3* / o4* models.
@@ -84,3 +84,13 @@ export const getModelIcon = (modelName: string): BrandIcon => {
   const vendor = getModelVendor(modelName);
   return vendor ? getVendorIcon(vendor) : DefaultModelIcon;
 };
+
+const CUSTOM_MODEL_ICONS = new Map(
+  KNOWN_MODELS.map(model => [
+    normalizeModelName(model.name).replace(/\./g, '-'),
+    getVendorIcon(model.vendor),
+  ])
+);
+
+export const getCustomModelIcon = (modelName: string): BrandIcon =>
+  CUSTOM_MODEL_ICONS.get(normalizeModelName(modelName).replace(/\./g, '-')) ?? DefaultModelIcon;

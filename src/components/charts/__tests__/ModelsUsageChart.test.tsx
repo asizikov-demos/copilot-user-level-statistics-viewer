@@ -1,11 +1,10 @@
-import {
-  act,
-  create,
-  type ReactTestInstance,
-  type ReactTestRenderer,
-} from 'react-test-renderer';
+// @vitest-environment jsdom
+
+import type { ReactNode } from 'react';
+import { BaseStyles, ThemeProvider } from '@primer/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ChartData } from 'chart.js';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ModelsUsageChart from '../ModelsUsageChart';
 
 interface BarProps {
@@ -22,18 +21,28 @@ vi.mock('react-chartjs-2', () => ({
 
 const datasetLabels = () => bar.mock.lastCall![0].data.datasets.map(dataset => dataset.label);
 
-describe('ModelsUsageChart', () => {
-  let renderer: ReactTestRenderer | undefined;
+function Wrapper({ children }: { children: ReactNode }) {
+  return <ThemeProvider colorMode="day"><BaseStyles>{children}</BaseStyles></ThemeProvider>;
+}
 
-  afterEach(async () => {
-    await act(async () => { renderer?.unmount(); });
-    renderer = undefined;
-    bar.mockClear();
+describe('ModelsUsageChart', () => {
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })));
   });
 
-  it('lists vendors found in the data and filters the chart by vendor', async () => {
-    await act(async () => {
-      renderer = create(
+  afterEach(() => {
+    cleanup();
+    bar.mockClear();
+    vi.unstubAllGlobals();
+  });
+
+  it('lists present vendors with icons, filters the chart, and restores all vendors', () => {
+    render(
         <ModelsUsageChart
           modelEntries={[
             {
@@ -58,38 +67,45 @@ describe('ModelsUsageChart', () => {
           dates={['2026-01-15', '2026-01-16']}
           totalInteractions={14}
           variant="all"
-        />
-      );
-    });
+        />,
+      { wrapper: Wrapper },
+    );
 
-    const select = renderer!.root.findByType('select');
     expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'custom-model']);
-    expect(select.findAllByType('option').map(option => option.children.join(''))).toEqual([
+    fireEvent.click(screen.getByRole('button', { name: 'Model vendor: All Vendors' }));
+    expect(screen.getAllByRole('menuitemradio').map(item => item.textContent)).toEqual([
       'All Vendors',
       'OpenAI',
       'Anthropic',
       'Unattributed',
     ]);
+    expect(screen.getByRole('menuitemradio', { name: 'All Vendors' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('menuitemradio', { name: 'OpenAI' }).querySelector('path[d^="M22.2819"]')).toBeTruthy();
+    expect(screen.getByRole('menuitemradio', { name: 'Anthropic' }).querySelector('path[d^="M17.3041"]')).toBeTruthy();
+    expect(screen.getByRole('menuitemradio', { name: 'Unattributed' }).querySelector('.octicon-ai-model')).toBeTruthy();
 
-    await act(async () => {
-      select.props.onChange({ target: { value: 'Unattributed' } });
-    });
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Anthropic' }));
+    expect(datasetLabels()).toEqual(['Claude Sonnet 4.5']);
+    const anthropicButton = screen.getByRole('button', { name: 'Model vendor: Anthropic' });
+    expect(anthropicButton.querySelector('svg path')?.getAttribute('d')).toMatch(/^M17.3041/);
+    expect(screen.queryByRole('menu')).toBeNull();
+    fireEvent.click(anthropicButton);
+    expect(screen.getByRole('menuitemradio', { name: 'Anthropic' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Unattributed' }));
 
     expect(datasetLabels()).toEqual(['custom-model']);
     expect(bar.mock.lastCall![0].data.datasets[0].data).toEqual([0, 2]);
-    expect(renderer!.root.findByType('select').props.value).toBe('Unattributed');
-    const totalInteractionsLabel = renderer!.root.find(
-      node => node.type === 'div'
-        && node.children.length === 1
-        && node.children[0] === 'Total Interactions'
-    );
-    const totalInteractionsValue = totalInteractionsLabel.parent?.children[0] as ReactTestInstance;
-    expect(totalInteractionsValue.children).toEqual(['2']);
+    const total = screen.getByText('Total Interactions').parentElement!;
+    expect(within(total).getByText('2')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Model vendor: Unattributed' }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'All Vendors' }));
+    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'custom-model']);
+    expect(within(total).getByText('14')).toBeTruthy();
   });
 
-  it.each(['auto', 'cli', 'app'] as const)('uses canonical model labels in the %s variant without a vendor filter', async (variant) => {
-    await act(async () => {
-      renderer = create(
+  it.each(['auto', 'cli', 'app'] as const)('uses canonical model labels in the %s variant without a vendor filter', (variant) => {
+    render(
         <ModelsUsageChart
           modelEntries={[{
             model: 'gpt-4.1',
@@ -100,15 +116,15 @@ describe('ModelsUsageChart', () => {
           dates={['2026-01-15']}
           totalInteractions={1}
           variant={variant}
-        />
-      );
-    });
+        />,
+      { wrapper: Wrapper },
+    );
 
-    expect(renderer!.root.findAllByType('select')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: /^Model vendor:/ })).toBeNull();
     expect(datasetLabels()).toEqual(['GPT-4.1']);
   });
 
-  it('clears a vendor selection that is no longer present in refreshed data', async () => {
+  it('clears a vendor selection that is no longer present in refreshed data', () => {
     const dates = ['2026-01-15'];
     const openAiEntry = {
       model: 'gpt-4.1',
@@ -123,42 +139,37 @@ describe('ModelsUsageChart', () => {
       users: 1,
     };
 
-    await act(async () => {
-      renderer = create(
+    const { rerender } = render(
         <ModelsUsageChart
           modelEntries={[openAiEntry, anthropicEntry]}
           dates={dates}
           totalInteractions={3}
           variant="all"
-        />
-      );
-    });
+        />,
+      { wrapper: Wrapper },
+    );
 
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'OpenAI' } });
-    });
-    await act(async () => {
-      renderer!.update(
+    fireEvent.click(screen.getByRole('button', { name: 'Model vendor: All Vendors' }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'OpenAI' }));
+    rerender(
         <ModelsUsageChart
           modelEntries={[anthropicEntry]}
           dates={dates}
           totalInteractions={2}
           variant="all"
-        />
-      );
-    });
-    await act(async () => {
-      renderer!.update(
+        />,
+    );
+    expect(screen.getByRole('button', { name: 'Model vendor: All Vendors' })).toBeTruthy();
+    rerender(
         <ModelsUsageChart
           modelEntries={[openAiEntry, anthropicEntry]}
           dates={dates}
           totalInteractions={3}
           variant="all"
-        />
-      );
-    });
+        />,
+    );
 
-    expect(renderer!.root.findByType('select').props.value).toBe('');
+    expect(screen.getByRole('button', { name: 'Model vendor: All Vendors' })).toBeTruthy();
     expect(datasetLabels()).toEqual(['Claude Sonnet 4.5', 'GPT-4.1']);
   });
 });

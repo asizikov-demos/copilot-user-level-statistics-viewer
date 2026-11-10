@@ -77,19 +77,21 @@ export default function ChartContainer({
           </Heading>
           {description && <p className={styles.description}>{description}</p>}
         </div>
-        <div className={styles.aside}>
-          {stats && stats.length > 0 && (
-            <div className={styles.stats}>
-              {stats.map((stat, index) => (
-                <div key={index} className={styles.stat}>
-                  <span className={styles.statLabel}>{stat.label}:</span>{' '}
-                  <span className={stat.color}>{formatStatValue(stat.value)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {headerActions}
-        </div>
+        {((stats && stats.length > 0) || headerActions) && (
+          <div className={styles.aside}>
+            {stats && stats.length > 0 && (
+              <div className={styles.stats}>
+                {stats.map((stat, index) => (
+                  <div key={index} className={styles.stat}>
+                    <span className={styles.statLabel}>{stat.label}:</span>{' '}
+                    <span className={stat.color}>{formatStatValue(stat.value)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {headerActions}
+          </div>
+        )}
       </header>
 
       {summaryStats && summaryStats.length > 0 && (

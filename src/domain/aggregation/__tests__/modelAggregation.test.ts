@@ -25,6 +25,90 @@ function aggregateModels(metrics: Partial<CopilotMetrics>[]) {
 }
 
 describe('model aggregation', () => {
+  it('groups custom providers without losing labels and deduplicates users across models, days, and features', () => {
+    const { result } = aggregateModels([
+      {
+        user_id: 1,
+        day: '2026-11-01',
+        totals_by_model_feature: [
+          makeModelFeatureTotal('Foundry Anthropic/claude-opus-5-5', 'chat_panel', 5),
+          makeModelFeatureTotal('Foundry Anthropic/claude-sonnet-5-5', 'chat_panel', 3),
+          makeModelFeatureTotal('Local_LLM/smart-router', 'chat_panel', 6),
+          makeModelFeatureTotal('claude-opus-5.5', 'chat_panel', 10),
+          makeModelFeatureTotal('unknown', 'chat_panel', 10),
+          makeModelFeatureTotal('others', 'chat_panel', 10),
+          makeModelFeatureTotal('auto', 'chat_panel', 10),
+          makeModelFeatureTotal('unprefixed-custom', 'chat_panel', 10),
+        ],
+        totals_by_language_model: [{
+          language: 'typescript', model: 'Foundry Anthropic/claude-opus-5-5',
+          code_generation_activity_count: 100, code_acceptance_activity_count: 100,
+          loc_added_sum: 0, loc_deleted_sum: 0, loc_suggested_to_add_sum: 0, loc_suggested_to_delete_sum: 0,
+        }],
+      },
+      {
+        user_id: 1,
+        day: '2026-11-02',
+        totals_by_model_feature: [
+          makeModelFeatureTotal('Foundry Anthropic/claude-opus-5-5', 'chat_panel', 2),
+          makeModelFeatureTotal('Foundry Anthropic/claude-opus-5-5', 'copilot_cli', 4),
+        ],
+      },
+      {
+        user_id: 2,
+        day: '2026-11-02',
+        totals_by_model_feature: [
+          makeModelFeatureTotal(' Foundry Anthropic / claude-sonnet-5-5 ', 'chat_panel', 1),
+          makeModelFeatureTotal('Zero Provider/model', 'chat_panel', 0, { code_generation_activity_count: 5 }),
+        ],
+      },
+    ]);
+
+    expect(result.modelBreakdownData.customModelProviders).toEqual([
+      {
+        provider: 'Foundry Anthropic', interactions: 15, users: 2,
+        models: [
+          { model: 'claude-opus-5-5', interactions: 11, users: 1 },
+          { model: 'claude-sonnet-5-5', interactions: 4, users: 2 },
+        ],
+      },
+      {
+        provider: 'Local_LLM', interactions: 6, users: 1,
+        models: [{ model: 'smart-router', interactions: 6, users: 1 }],
+      },
+    ]);
+    expect(result.modelBreakdownData.modelVendors.find(entry => entry.vendor === 'Unattributed'))
+      .toMatchObject({ total: 51, users: 2 });
+  });
+
+  it('groups URL labels by origin and preserves nested model paths and assumed completion interactions', () => {
+    const { result } = aggregateModels([{
+      totals_by_model_feature: [
+        makeModelFeatureTotal('https://models.example.com/v1/smart-router', 'code_completion', 2, {
+          code_generation_activity_count: 3,
+        }),
+        makeModelFeatureTotal('https://Models.example.com:443/v1/other', 'chat_panel', 2),
+        makeModelFeatureTotal('Provider/org/model', 'chat_panel', 1),
+        ...['/model', 'Provider/', 'Provider/ ', 'https://models.example.com', 'https://models.example.com/', 'https://[invalid/model']
+          .map(model => makeModelFeatureTotal(model, 'chat_panel', 9)),
+      ],
+    }]);
+
+    expect(result.modelBreakdownData.customModelProviders).toEqual([
+      {
+        provider: 'https://models.example.com', interactions: 7, users: 1,
+        models: [
+          { model: 'v1/smart-router', interactions: 5, users: 1 },
+          { model: 'v1/other', interactions: 2, users: 1 },
+        ],
+      },
+      {
+        provider: 'Provider', interactions: 1, users: 1,
+        models: [{ model: 'org/model', interactions: 1, users: 1 }],
+      },
+    ]);
+  });
+
   it('sums category requests across clients and days separately for each selection mode', () => {
     const client = (name: string, rows: Array<[string, string, number]>): ClientUsageTotals => ({
       client: name,
