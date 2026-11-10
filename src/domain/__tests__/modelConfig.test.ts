@@ -24,7 +24,7 @@ describe('modelConfig', () => {
   });
 
   describe('known model catalog', () => {
-    // Pricing-table snapshot checked on 2026-10-27; context tiers share model identities.
+    // Pricing-table snapshot checked on 2026-11-10; context tiers share model identities.
     // https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
     it.each([
       ['GPT-5.3-Codex', 'Powerful', 'OpenAI'],
@@ -49,6 +49,7 @@ describe('modelConfig', () => {
       ['Claude Opus 4.8 (fast mode) (preview)', 'Powerful', 'Anthropic'],
       ['Claude Fable 5', 'Powerful', 'Anthropic'],
       ['Claude Fable 5.1', 'Powerful', 'Anthropic'],
+      ['Claude Fable 5.2', 'Powerful', 'Anthropic'],
       ['Gemini 3.8 Flash', 'Versatile', 'Google'],
       ['Gemini 4 Argon', 'Powerful', 'Google'],
       ['MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'],
@@ -123,6 +124,9 @@ describe('modelConfig', () => {
       ['Claude Fable 5.1', 'claude-fable-5.1', 'Powerful', 'Anthropic'],
       ['claude-fable-5-1', 'claude-fable-5-1', 'Powerful', 'Anthropic'],
       ['  CLAUDE_FABLE_5_1  ', 'claude-fable-5-1', 'Powerful', 'Anthropic'],
+      ['Claude Fable 5.2', 'claude-fable-5.2', 'Powerful', 'Anthropic'],
+      ['claude-fable-5-2', 'claude-fable-5-2', 'Powerful', 'Anthropic'],
+      ['  CLAUDE_FABLE_5_2  ', 'claude-fable-5-2', 'Powerful', 'Anthropic'],
       ['Claude 4.5 Haiku', 'claude-4.5-haiku', 'Versatile', 'Anthropic'],
       ['Gemini 3.1 Pro Preview', 'gemini-3.1-pro-preview', 'Powerful', 'Google'],
       ['gemini-4-argon', 'gemini-4-argon', 'Powerful', 'Google'],

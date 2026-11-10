@@ -97,6 +97,8 @@ export const KNOWN_MODELS: Model[] = [
   new Model('claude-fable-5', 'Claude Fable 5', 'Powerful', 'Anthropic'),
   new Model('claude-fable-5.1', 'Claude Fable 5.1', 'Powerful', 'Anthropic'),
   new Model('claude-fable-5-1', 'Claude Fable 5.1', 'Powerful', 'Anthropic'),
+  new Model('claude-fable-5.2', 'Claude Fable 5.2', 'Powerful', 'Anthropic'),
+  new Model('claude-fable-5-2', 'Claude Fable 5.2', 'Powerful', 'Anthropic'),
   new Model('claude-opus-4.6-fast-mode', 'Claude Opus 4.6 (fast mode)', 'Powerful', 'Anthropic'),
   new Model('claude-opus-4.6-fast-mode-preview', 'Claude Opus 4.6 (fast mode) (preview)', 'Powerful', 'Anthropic'),
   new Model('claude-4.5-haiku', 'Claude 4.5 Haiku', 'Versatile', 'Anthropic'),
