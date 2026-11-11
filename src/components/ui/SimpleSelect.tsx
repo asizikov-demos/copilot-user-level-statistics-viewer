@@ -1,6 +1,6 @@
 'use client';
 
-import { ActionList, ActionMenu } from '@primer/react';
+import { ActionList, ActionMenu, useFormControlForwardedProps } from '@primer/react';
 import { ChevronDownIcon } from '@primer/octicons-react';
 
 interface SimpleSelectOption<Value extends string> {
@@ -25,10 +25,12 @@ export default function SimpleSelect<Value extends string>({
   options,
   value,
   onChange,
-  id,
+  id: idProp,
   size,
   block,
 }: SimpleSelectProps<Value>) {
+  // Inherit the id FormControl generates so its label focuses the trigger.
+  const { id } = useFormControlForwardedProps(idProp === undefined ? {} : { id: idProp });
   const selectedLabel = options.find(option => option.value === value)?.label ?? '';
 
   return (

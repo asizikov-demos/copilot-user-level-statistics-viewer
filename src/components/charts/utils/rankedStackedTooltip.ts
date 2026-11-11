@@ -13,7 +13,12 @@ function value(chart: Chart, datasetIndex: number, dataIndex: number): number {
   return typeof raw === 'number' ? raw : 0;
 }
 
-function dayRanking(chart: Chart, dataIndex: number): { ranked: number[]; total: number } {
+interface DayRanking {
+  ranked: number[];
+  total: number;
+}
+
+function computeDayRanking(chart: Chart, dataIndex: number): DayRanking {
   const entries = chart.data.datasets
     .map((_, index) => ({ index, amount: value(chart, index, dataIndex) }))
     .filter(entry => chart.isDatasetVisible(entry.index));
@@ -38,14 +43,33 @@ export function truncateMiddle(label: string, maxLength: number): string {
  */
 export function createRankedStackedTooltip(options: RankedStackedTooltipOptions = {}) {
   const { maxItems = 8, maxLabelLength = 44, unit = 'interactions', itemNoun = 'series' } = options;
+  const rankingCaches = new WeakMap<Chart, Map<number, DayRanking>>();
+
+  function dayRanking(chart: Chart, dataIndex: number): DayRanking {
+    let days = rankingCaches.get(chart);
+    if (!days) {
+      days = new Map();
+      rankingCaches.set(chart, days);
+    }
+    let ranking = days.get(dataIndex);
+    if (!ranking) {
+      ranking = computeDayRanking(chart, dataIndex);
+      days.set(dataIndex, ranking);
+    }
+    return ranking;
+  }
 
   return {
     ...createPrimerTooltipStyle(),
     usePointStyle: true,
     itemSort: (a: TooltipItem<'bar'>, b: TooltipItem<'bar'>) =>
       (b.parsed.y ?? 0) - (a.parsed.y ?? 0) || a.datasetIndex - b.datasetIndex,
-    filter: (item: TooltipItem<'bar'>) =>
-      dayRanking(item.chart, item.dataIndex).ranked.slice(0, maxItems).includes(item.datasetIndex),
+    filter: (item: TooltipItem<'bar'>, index = 0) => {
+      // Chart.js filters every update before invoking label/footer callbacks.
+      // Reset on the first candidate, even if it is filtered out.
+      if (index === 0) rankingCaches.delete(item.chart);
+      return dayRanking(item.chart, item.dataIndex).ranked.slice(0, maxItems).includes(item.datasetIndex);
+    },
     callbacks: {
       labelColor: (item: TooltipItem<'bar'>) => {
         const color = item.dataset.backgroundColor;
