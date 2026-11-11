@@ -1,6 +1,8 @@
 import type { UsersMetricsSlice } from '../../types/aggregatedMetrics';
 import type { CopilotMetrics, UserSummary } from '../../types/metrics';
 import { isActiveAutoModeFeature } from '../autoMode';
+import { getCanonicalUserInitiatedInteractionCount } from '../assumedInteractions';
+import { isCustomProviderModel } from '../modelConfig';
 
 export interface UserSummaryAggregationAccumulator {
   userMap: Map<number, UserSummary>;
@@ -31,6 +33,14 @@ export function createUserSummaryAggregationAccumulator(
 
 function hasAutoModeActivity(metric: CopilotMetrics): boolean {
   return metric.totals_by_model_feature.some(isActiveAutoModeFeature);
+}
+
+function hasCustomModelProviderActivity(metric: CopilotMetrics): boolean {
+  return metric.totals_by_model_feature.some(
+    feature =>
+      isCustomProviderModel(feature.model)
+      && getCanonicalUserInitiatedInteractionCount(feature) > 0
+  );
 }
 
 function addClientCount(
@@ -72,6 +82,7 @@ function createUserSummary(metric: CopilotMetrics): UserSummary {
     used_copilot_code_review_active: false,
     used_copilot_code_review_passive: false,
     used_auto_mode: false,
+    used_custom_model_provider: false,
   };
 }
 
@@ -195,6 +206,9 @@ export function accumulateUserSummaryAggregation(
   }
   userSummary.used_auto_mode =
     userSummary.used_auto_mode || hasAutoModeActivity(metric);
+  userSummary.used_custom_model_provider =
+    (userSummary.used_custom_model_provider ?? false)
+    || hasCustomModelProviderActivity(metric);
 
   if (usedCopilotCloudAgent) {
     accumulator.userCloudAgentDays.get(userId)!.add(date);

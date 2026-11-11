@@ -63,21 +63,28 @@ describe('ModelsUsageChart', () => {
               dailyData: { '2026-01-16': 2 },
               users: 1,
             },
+            {
+              model: 'my-provider/some-model',
+              total: 3,
+              dailyData: { '2026-01-16': 3 },
+              users: 1,
+            },
           ]}
           dates={['2026-01-15', '2026-01-16']}
-          totalInteractions={14}
+          totalInteractions={17}
           variant="all"
         />,
       { wrapper: Wrapper },
     );
 
-    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'custom-model']);
+    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'my-provider/some-model', 'custom-model']);
     fireEvent.click(screen.getByRole('button', { name: 'Model vendor: All Vendors' }));
     expect(screen.getAllByRole('menuitemradio').map(item => item.textContent)).toEqual([
       'All Vendors',
       'OpenAI',
       'Anthropic',
       'Unattributed',
+      'Custom Provider',
     ]);
     expect(screen.getByRole('menuitemradio', { name: 'All Vendors' }).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByRole('menuitemradio', { name: 'OpenAI' }).querySelector('path[d^="M22.2819"]')).toBeTruthy();
@@ -99,9 +106,13 @@ describe('ModelsUsageChart', () => {
     expect(within(total).getByText('2')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Model vendor: Unattributed' }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Custom Provider' }));
+    expect(datasetLabels()).toEqual(['my-provider/some-model']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Model vendor: Custom Provider' }));
     fireEvent.click(screen.getByRole('menuitemradio', { name: 'All Vendors' }));
-    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'custom-model']);
-    expect(within(total).getByText('14')).toBeTruthy();
+    expect(datasetLabels()).toEqual(['GPT-4.1', 'Claude Sonnet 4.5', 'my-provider/some-model', 'custom-model']);
+    expect(within(total).getByText('17')).toBeTruthy();
   });
 
   it.each(['auto', 'cli', 'app'] as const)('uses canonical model labels in the %s variant without a vendor filter', (variant) => {

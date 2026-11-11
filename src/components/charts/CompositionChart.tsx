@@ -105,9 +105,11 @@ export default function CompositionChart({
         )}
       >
         <div className={cn('relative w-full', isDoughnut ? 'h-52' : 'h-40', isLegendRight && '@md:w-52 @md:shrink-0')}>
-          <Doughnut data={chartData} options={options} aria-hidden="true" />
+          <div className="relative z-10 h-full w-full">
+            <Doughnut data={chartData} options={options} aria-hidden="true" />
+          </div>
           {isDoughnut && showTotal && (
-            <p className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <p className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center">
               <span className="sr-only">Total: </span>
               <span className="text-xl font-semibold leading-none tabular-nums text-default">
                 {group.total.toLocaleString()}

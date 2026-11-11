@@ -6,6 +6,7 @@ import type { ClientTrafficMetrics, ClientTrafficSummary } from '../../../../../
 import type { UserDayData } from '../../../../../types/metrics';
 import ClientActivityChart from './helpers/PreparedClientActivityChart';
 import { makeMetric } from '../../../../../__tests__/factories/metrics';
+import { chooseOption, expectSelected, querySelect } from '../../../../../__tests__/helpers/simpleSelect';
 import { createDailyReportRangeChartConfig } from '../../../../charts/utils/dailyBarChart';
 
 vi.mock('../../../../charts/utils/dailyBarChart', async importOriginal => {
@@ -37,9 +38,12 @@ function chart(data: ClientTrafficMetrics) {
   return <ClientActivityChart traffic={data} ideAggregates={[]} days={[]} reportStartDay="2026-10-22" reportEndDay="2026-10-24" />;
 }
 
-function selectSessions() {
-  fireEvent.change(screen.getByRole('combobox', { name: 'Client activity measure' }), { target: { value: 'sessions' } });
-}
+const MEASURE = 'Client activity measure';
+const measureLabels = { interactions: 'Interactions', requests: 'Model requests', sessions: 'Reported sessions' };
+type Measure = keyof typeof measureLabels;
+const pick = (measure: Measure) => chooseOption(MEASURE, measureLabels[measure]);
+const expectMeasure = (measure: Measure) => expectSelected(MEASURE, measureLabels[measure]);
+const selectSessions = () => pick('sessions');
 
 describe('ClientActivityChart traffic', () => {
   it.each([
@@ -128,7 +132,7 @@ describe('ClientActivityChart traffic', () => {
         reportStartDay="2026-10-22" reportEndDay="2026-10-24"
       />,
     );
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    expectMeasure('interactions');
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([0, 7, 0]);
     expect(createDailyReportRangeChartConfig).not.toHaveBeenCalled();
     selectSessions();
@@ -139,7 +143,7 @@ describe('ClientActivityChart traffic', () => {
     const data = traffic([client('opencode', 0, 176), client('copilot_cli', 0, 0)]);
     data.daily.push({ day: '2026-10-24', clients: [], reportedRecords: 1, recordCount: 1, activeUsers: 0 });
     render(chart(data));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+    expectMeasure('requests');
     expect(screen.getByText('Daily Client Model Requests')).toBeTruthy();
     const props = bar.mock.lastCall?.[0];
     expect(props.data.datasets.map((row: { label: string; data: unknown[] }) => [row.label, row.data]))
@@ -152,16 +156,16 @@ describe('ClientActivityChart traffic', () => {
     })).toBe('OpenCode: 176 model requests');
     selectSessions();
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 0, 0]);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    pick('requests');
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 176, 0]);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'interactions' } });
+    pick('interactions');
     expect(screen.getByText('No client interactions were reported in the available records.')).toBeTruthy();
   });
 
   it('falls back to interactions for all-zero traffic and allows selecting empty request data', () => {
     const { rerender } = render(chart(traffic([client('opencode', 0, 0)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    expectMeasure('interactions');
+    pick('requests');
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 0, null]);
     rerender(chart(traffic([])));
     expect(screen.getByText('No client model requests were reported in the available records.')).toBeTruthy();
@@ -169,19 +173,19 @@ describe('ClientActivityChart traffic', () => {
 
   it('adapts the automatic default to new data but preserves a manual selection', () => {
     const { rerender } = render(chart(traffic([])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'interactions');
+    expectMeasure('interactions');
     rerender(chart(traffic([client('opencode', 0)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+    expectMeasure('requests');
     rerender(chart(traffic([client('opencode', 5)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'sessions');
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'requests' } });
+    expectMeasure('sessions');
+    pick('requests');
     rerender(chart(traffic([client('opencode', 10)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'requests');
+    expectMeasure('requests');
   });
 
   it('uses daily grouped bars and preserves missing days as null instead of zero', () => {
     render(chart(traffic([client('copilot_cli', 5), client('opencode', 0)])));
-    expect(screen.getByRole('combobox')).toHaveProperty('value', 'sessions');
+    expectMeasure('sessions');
     selectSessions();
     const props = bar.mock.lastCall?.[0];
     expect(props.data.labels).toHaveLength(3);
@@ -212,13 +216,13 @@ describe('ClientActivityChart traffic', () => {
     expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
     selectSessions();
     rerender(chart(traffic([], 0)));
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(querySelect(MEASURE)).toBeNull();
     expect(screen.queryByRole('columnheader', { name: 'Reported sessions' })).toBeNull();
   });
 
   it('hides the measure selector for unavailable traffic and preserves reported-empty and zero-session states', () => {
     const { rerender } = render(chart(traffic([], 0)));
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(querySelect(MEASURE)).toBeNull();
     rerender(chart(traffic([])));
     selectSessions();
     expect(screen.getByText('No client sessions were reported in the available records.')).toBeTruthy();
@@ -258,7 +262,7 @@ describe('ClientActivityChart traffic', () => {
     expect(screen.queryByRole('button', { name: /metric details/i })).toBeNull();
     selectSessions();
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([null, 5, null]);
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'interactions' } });
+    pick('interactions');
     expect(bar.mock.lastCall?.[0].data.datasets[0].data).toEqual([7, 0, 0]);
   });
 

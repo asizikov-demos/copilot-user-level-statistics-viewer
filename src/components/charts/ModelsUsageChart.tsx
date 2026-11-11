@@ -1,20 +1,21 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { ActionList, ActionMenu, FormControl } from '@primer/react';
 import {
   getModelVendor,
   getModelDisplayName,
   MODEL_VENDOR_ORDER,
+  CUSTOM_PROVIDER,
+  isCustomProviderModel,
   type ModelVendorGroup,
 } from '../../domain/modelConfig';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors, getSequentialColor } from './utils/chartColors';
-import { createStackedTotalFooter } from './utils/tooltipFooters';
+import { createRankedStackedTooltip } from './utils/rankedStackedTooltip';
 import { formatShortDate } from '../../utils/formatters';
 import { sortBySelector } from '../../utils/sorting';
 import type { ModelDailyUsageEntry } from '../../types/metrics';
@@ -23,7 +24,18 @@ import { getVendorIcon } from '../icons/ModelIcons';
 
 registerChartJS();
 
+type VendorFilter = ModelVendorGroup | typeof CUSTOM_PROVIDER;
+
 const AllVendorsIcon = getVendorIcon('Unattributed');
+
+const getVendorFilter = (model: string): VendorFilter => {
+  const vendor = getModelVendor(model);
+  if (vendor) return vendor;
+  return isCustomProviderModel(model) ? CUSTOM_PROVIDER : 'Unattributed';
+};
+
+const getFilterIcon = (filter: VendorFilter) =>
+  filter === CUSTOM_PROVIDER ? AllVendorsIcon : getVendorIcon(filter);
 
 interface ModelsUsageChartProps {
   modelEntries: ModelDailyUsageEntry[];
@@ -38,13 +50,11 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
   const isApp = variant === 'app';
   const client = isApp ? 'Copilot App' : 'CLI';
   const isClient = isCli || isApp;
-  const [selectedVendor, setSelectedVendor] = useState<ModelVendorGroup | ''>('');
+  const [selectedVendor, setSelectedVendor] = useState<VendorFilter | ''>('');
 
   const vendorOptions = useMemo(() => {
-    const vendors = new Set<ModelVendorGroup>(
-      modelEntries.map(entry => getModelVendor(entry.model) ?? 'Unattributed')
-    );
-    return MODEL_VENDOR_ORDER.filter(vendor => vendors.has(vendor));
+    const vendors = new Set<VendorFilter>(modelEntries.map(entry => getVendorFilter(entry.model)));
+    return [...MODEL_VENDOR_ORDER, CUSTOM_PROVIDER].filter(vendor => vendors.has(vendor));
   }, [modelEntries]);
 
   useEffect(() => {
@@ -58,7 +68,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
     : '';
   const filteredEntries = useMemo(
     () => activeVendor
-      ? modelEntries.filter(entry => (getModelVendor(entry.model) ?? 'Unattributed') === activeVendor)
+      ? modelEntries.filter(entry => getVendorFilter(entry.model) === activeVendor)
       : modelEntries,
     [activeVendor, modelEntries]
   );
@@ -126,15 +136,17 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
 
   const chartData = { labels, datasets };
 
-  const options = createStackedBarChartOptions({
+  const baseOptions = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
-    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
-      const value = context.parsed.y || 0;
-      return `${context.dataset.label}: ${value} interactions`;
-    },
-    tooltipFooterCallback: createStackedTotalFooter({ useLocaleFormatting: false }),
   });
+  const options = {
+    ...baseOptions,
+    plugins: {
+      ...baseOptions.plugins,
+      tooltip: createRankedStackedTooltip({ itemNoun: 'models' }),
+    },
+  };
 
   return (
     <ChartContainer
@@ -151,7 +163,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
               block
               aria-labelledby={undefined}
               aria-label={`Model vendor: ${activeVendor || 'All Vendors'}`}
-              leadingVisual={getVendorIcon(activeVendor || 'Unattributed')}
+              leadingVisual={activeVendor ? getFilterIcon(activeVendor) : AllVendorsIcon}
             >
               {activeVendor || 'All Vendors'}
             </ActionMenu.Button>
@@ -164,7 +176,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
                   All Vendors
                 </ActionList.Item>
                 {vendorOptions.map(vendor => {
-                  const Icon = getVendorIcon(vendor);
+                  const Icon = getFilterIcon(vendor);
                   return (
                     <ActionList.Item
                       key={vendor}

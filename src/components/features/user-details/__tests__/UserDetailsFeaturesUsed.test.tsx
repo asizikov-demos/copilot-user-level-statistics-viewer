@@ -45,4 +45,15 @@ describe('user details features used', () => {
     if (!usedCli) expect(summary).not.toContain('>CLI</span>');
     expect(summary).not.toContain('Completion Only');
   });
+
+  it('shows a Custom Model Provider pill before Local BYOK', () => {
+    const model = makeUserDetailsViewModel({
+      userSummary: makeUserSummary({ used_custom_model_provider: true, used_local_byok: true }),
+    });
+    const markup = renderToStaticMarkup(
+      <NavigationProvider><UserDetailsView model={model} /></NavigationProvider>,
+    );
+    expect(markup.indexOf('>Custom Model Provider</span>')).toBeGreaterThan(-1);
+    expect(markup.indexOf('>Custom Model Provider</span>')).toBeLessThan(markup.indexOf('>Local BYOK</span>'));
+  });
 });

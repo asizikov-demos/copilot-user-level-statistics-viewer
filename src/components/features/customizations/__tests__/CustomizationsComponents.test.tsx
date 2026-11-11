@@ -133,15 +133,12 @@ describe('customizations components', () => {
     const typeFilter = screen.getByRole('button', { name: 'Type All types' });
     fireEvent.click(typeFilter);
     for (const label of ['All types', 'Skills', 'Custom agents', 'MCP servers', 'Slash commands', 'Plugins']) {
-      expect(screen.getByRole('option', { name: label }).querySelector('svg')).not.toBeNull();
+      expect(screen.getByRole('menuitemradio', { name: label }).querySelector('svg')).not.toBeNull();
     }
-    expect(screen.getByRole('option', { name: 'MCP servers' }).querySelector('svg.octicon-mcp')).not.toBeNull();
-    const typeSearch = screen.getByRole('combobox', { name: 'Filter types...' });
-    fireEvent.change(typeSearch, { target: { value: 'mcp' } });
-    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['MCP servers']);
-    fireEvent.change(typeSearch, { target: { value: '' } });
-    expect(screen.getAllByRole('option')).toHaveLength(6);
-    fireEvent.click(screen.getByRole('option', { name: 'MCP servers' }));
+    expect(screen.getByRole('menuitemradio', { name: 'MCP servers' }).querySelector('svg.octicon-mcp')).not.toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Filter types...' })).toBeNull();
+    expect(screen.getAllByRole('menuitemradio')).toHaveLength(6);
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'MCP servers' }));
     expect(screen.getByRole('button', { name: 'Type MCP servers' })).toBeTruthy();
     expect(screen.getByText('No items match the filters')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));

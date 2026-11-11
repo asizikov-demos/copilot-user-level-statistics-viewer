@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import type { ChartData, ChartOptions } from 'chart.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../../__tests__/factories/metrics';
+import { chooseOption } from '../../../../__tests__/helpers/simpleSelect';
 import { aggregateMetrics } from '../../../../domain/metricsAggregator';
 import ReportingQualitySection from '../ReportingQualitySection';
 
@@ -92,18 +93,18 @@ describe('Client Versions reporting quality', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open profile for user-01' }));
     expect(onUserClick).toHaveBeenCalledWith('user-01', 1);
     fireEvent.click(screen.getByRole('link', { name: 'Page 2' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter affected users' }), { target: { value: 'missing' } });
+    chooseOption('Filter affected users', 'Missing telemetry');
     expect(screen.getByText('Showing 1-10 of 24 affected users')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open profile for user-01' })).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Page 2' }));
     expect(screen.getAllByRole('table')[1].querySelectorAll('tbody tr')).toHaveLength(10);
     expect(screen.queryByRole('button', { name: 'Open profile for user-32' })).toBeNull();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter affected users' }), { target: { value: 'below' } });
+    chooseOption('Filter affected users', 'Below minimum');
     expect(screen.getByText('Showing 1-10 of 24 affected users')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Open profile for user-01' })).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Page 3' }));
     expect(screen.getByRole('button', { name: 'Open profile for user-32' })).toBeTruthy();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter affected users' }), { target: { value: 'either' } });
+    chooseOption('Filter affected users', 'Either issue');
     expect(screen.getByText('Showing 1-10 of 32 affected users')).toBeTruthy();
     expect(screen.getAllByRole('table')[1].querySelectorAll('tbody tr')).toHaveLength(10);
   });

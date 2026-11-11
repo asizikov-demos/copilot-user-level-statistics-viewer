@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormControl, Label, Link, Select } from '@primer/react';
+import { Button, FormControl, Label, Link } from '@primer/react';
+import SimpleSelect from '../../ui/SimpleSelect';
 import { AlertIcon, QuestionIcon } from '@primer/octicons-react';
 import type { ReportingQualityComponent, ReportingQualityMetrics, ReportingQualityUser } from '../../../types/reportingQuality';
 import { useSortableTable } from '../../../hooks/useSortableTable';
@@ -167,18 +168,17 @@ function AffectedUsersTable({
           <div className="grid gap-4 md:max-w-sm">
             <FormControl id="affectedUsersFilter">
               <FormControl.Label>Filter affected users</FormControl.Label>
-              <Select
+              <SimpleSelect
                 block
+                label="Filter affected users"
                 value={filter}
-                onChange={event => {
-                  const value = event.target.value;
-                  if (value === 'either' || value === 'missing' || value === 'below') setFilter(value);
-                }}
-              >
-                <Select.Option value="either">Either issue</Select.Option>
-                <Select.Option value="missing">Missing telemetry</Select.Option>
-                <Select.Option value="below">Below minimum</Select.Option>
-              </Select>
+                onChange={setFilter}
+                options={[
+                  { value: 'either', label: 'Either issue' },
+                  { value: 'missing', label: 'Missing telemetry' },
+                  { value: 'below', label: 'Below minimum' },
+                ]}
+              />
             </FormControl>
           </div>
           <p className="m-0 text-sm text-muted">

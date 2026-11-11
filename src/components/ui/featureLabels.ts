@@ -17,6 +17,7 @@ export type FeatureLabelKey =
   | 'copilotApp'
   | 'cloudAgent'
   | 'codeReview'
+  | 'customModelProvider'
   | 'localByok';
 
 export const FEATURE_LABEL_VARIANT: Readonly<Record<FeatureLabelKey, LabelColorOptions>> = {
@@ -29,5 +30,6 @@ export const FEATURE_LABEL_VARIANT: Readonly<Record<FeatureLabelKey, LabelColorO
   copilotApp: 'sponsors',
   cloudAgent: 'sponsors',
   codeReview: 'sponsors',
+  customModelProvider: 'accent',
   localByok: 'accent',
 };

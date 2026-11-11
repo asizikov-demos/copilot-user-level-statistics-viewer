@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { FormControl, Select } from '@primer/react';
+import { FormControl } from '@primer/react';
+import SimpleSelect from '../ui/SimpleSelect';
 import { registerChartJS } from './utils/chartSetup';
 import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
@@ -111,13 +112,13 @@ export default function DailyIDEUsersChart({
       headerActions={
         <FormControl id="daily-ide-users-filter" className="min-w-44">
           <FormControl.Label>Client</FormControl.Label>
-          <Select block value={activeIde} onChange={event => setSelectedIde(event.target.value)}>
-            {data.map(entry => (
-              <Select.Option key={entry.ide} value={entry.ide}>
-                {formatIDEName(entry.ide)}
-              </Select.Option>
-            ))}
-          </Select>
+          <SimpleSelect
+            block
+            label="Client"
+            value={activeIde}
+            onChange={setSelectedIde}
+            options={data.map(entry => ({ value: entry.ide, label: formatIDEName(entry.ide) }))}
+          />
         </FormControl>
       }
       summaryStats={[

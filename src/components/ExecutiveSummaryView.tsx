@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, FormControl, Select } from '@primer/react';
+import { Button, FormControl } from '@primer/react';
+import SimpleSelect from './ui/SimpleSelect';
 import type { ExecutiveSummaryReadModel } from '../read-models/overview';
 import { formatDate, formatNumber, formatSignedNumber } from '../utils/formatters';
 import ParticipationChart from './features/executive-summary/ParticipationChart';
@@ -59,13 +60,15 @@ export default function ExecutiveSummaryView({ model, enterpriseName, dataWarnin
         <div className={styles.controls}>
           <FormControl id="summary-paper">
             <FormControl.Label>Paper</FormControl.Label>
-            <Select
+            <SimpleSelect
+              label="Paper"
               value={paper}
-              onChange={event => setPaper(event.target.value === 'letter' ? 'letter' : 'a4')}
-            >
-              <Select.Option value="a4">A4</Select.Option>
-              <Select.Option value="letter">Letter</Select.Option>
-            </Select>
+              onChange={setPaper}
+              options={[
+                { value: 'a4', label: 'A4' },
+                { value: 'letter', label: 'Letter' },
+              ]}
+            />
           </FormControl>
           <Button variant="primary" onClick={() => window.print()}>Print / Save PDF</Button>
         </div>

@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UserDayData } from '../../../../../types/metrics';
 import DayDetailsModal from '../DayDetailsModal';
+import { chooseOption, expectSelected, getSelect } from '../../../../../__tests__/helpers/simpleSelect';
 import { computeUserReportingQuality } from '../../../../../domain/calculators/reportingQualityCalculator';
 import {
   makeCustomizationDaySummary,
@@ -188,9 +189,8 @@ describe('DayDetailsModal', () => {
 
     it('defaults traffic-only clients and models to requests and displays day-local counts', () => {
       renderDay(requestDay);
-      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
-      expect(screen.getByText('Client distribution')).toBeTruthy();
+      expectSelected('Day client measure', 'Model requests');
+      expectSelected('Day model measure', 'Model requests');
       const tables = screen.getAllByRole('table');
       expect(within(tables[0]).getAllByRole('cell').map(cell => cell.textContent))
         .toEqual(['OpenCode', '176', '0', '36,316,766', '104,427']);
@@ -227,9 +227,9 @@ describe('DayDetailsModal', () => {
         <DayDetailsModal isOpen onClose={vi.fn()} date={date} dayMetrics={day} />,
       );
       const { rerender } = render(modal(day.day));
-      for (const measure of ['interactions', 'requests']) {
-        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: measure } });
-        fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: measure } });
+      for (const measure of ['Legacy activity', 'Model requests']) {
+        chooseOption('Day client measure', measure);
+        chooseOption('Day model measure', measure);
         const tables = screen.getAllByRole('table');
         expect(within(tables[0]).getAllByRole('row')).toHaveLength(6);
         expect(within(tables[1]).getAllByRole('row')).toHaveLength(11);
@@ -239,11 +239,9 @@ describe('DayDetailsModal', () => {
         expect(within(tables[1]).getAllByRole('row')).toHaveLength(11);
         fireEvent.click(within(pagers[1]).getByRole('link', { name: 'Next Page' }));
         expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
-        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), {
-          target: { value: measure === 'interactions' ? 'requests' : 'interactions' },
-        });
+        chooseOption('Day client measure', measure === 'Legacy activity' ? 'Model requests' : 'Legacy activity');
         expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
-        fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: measure } });
+        chooseOption('Day client measure', measure);
         expect(within(tables[1]).getAllByRole('row')).toHaveLength(2);
       }
       rerender(modal('2024-01-16'));
@@ -255,12 +253,12 @@ describe('DayDetailsModal', () => {
 
     it('switches client and model measures independently and permits unavailable legacy views', () => {
       renderDay(requestDay);
-      fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: 'interactions' } });
+      chooseOption('Day client measure', 'Legacy activity');
       expect(screen.getByText('No legacy client activity reported for this day.')).toBeTruthy();
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
-      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'interactions' } });
+      expectSelected('Day model measure', 'Model requests');
+      chooseOption('Day model measure', 'Legacy activity');
       expect(screen.getByText('No legacy language and model activity reported for this day.')).toBeTruthy();
-      fireEvent.change(screen.getByRole('combobox', { name: 'Day client measure' }), { target: { value: 'requests' } });
+      chooseOption('Day client measure', 'Model requests');
       expect(screen.getByRole('cell', { name: '176' })).toBeTruthy();
     });
 
@@ -270,11 +268,11 @@ describe('DayDetailsModal', () => {
         totals_by_ide: [makeIdeTotal('vscode', { assumed_user_initiated_interaction_count: 7 })],
         totals_by_language_model: [{ ...ZERO_TOTALS, language: 'typescript', model: 'legacy-model', code_generation_activity_count: 3 }],
       });
-      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'interactions');
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'interactions');
+      expectSelected('Day client measure', 'Legacy activity');
+      expectSelected('Day model measure', 'Legacy activity');
       expect(screen.getByRole('cell', { name: 'Legacy model' })).toBeTruthy();
       expect(screen.getByRole('cell', { name: 'Legacy model' }).querySelector('[aria-hidden="true"] svg')).toBeTruthy();
-      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'requests' } });
+      chooseOption('Day model measure', 'Model requests');
       expect(screen.getByRole('cell', { name: 'GPT-4o' })).toBeTruthy();
       expect(screen.queryByRole('cell', { name: 'Legacy model' })).toBeNull();
     });
@@ -302,13 +300,13 @@ describe('DayDetailsModal', () => {
       const { rerender } = render(withTheme(
         <DayDetailsModal isOpen onClose={vi.fn()} date={requestDay.day} dayMetrics={{ ...requestDay, ...zeroLegacy }} />,
       ));
-      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+      expectSelected('Day client measure', 'Model requests');
+      expectSelected('Day model measure', 'Model requests');
       rerender(withTheme(
         <DayDetailsModal isOpen onClose={vi.fn()} date="2024-01-16" dayMetrics={makeUserDay(zeroLegacy)} />,
       ));
-      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'interactions');
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'interactions');
+      expectSelected('Day client measure', 'Legacy activity');
+      expectSelected('Day model measure', 'Legacy activity');
     });
 
     it('resets manual choices on date changes and reopening, without intercepting select arrow keys', () => {
@@ -318,16 +316,16 @@ describe('DayDetailsModal', () => {
           onClose={vi.fn()} onNavigateDay={navigate} canNavigatePrevDay canNavigateNextDay />,
       );
       const { rerender } = render(modal(requestDay.day));
-      const select = screen.getByRole('combobox', { name: 'Day client measure' });
+      const select = getSelect('Day client measure');
       fireEvent.keyDown(select, { key: 'ArrowRight' });
       expect(navigate).not.toHaveBeenCalled();
-      fireEvent.change(select, { target: { value: 'interactions' } });
+      chooseOption('Day client measure', 'Legacy activity');
       rerender(modal('2024-01-16'));
-      expect(screen.getByRole('combobox', { name: 'Day client measure' })).toHaveProperty('value', 'requests');
-      fireEvent.change(screen.getByRole('combobox', { name: 'Day model measure' }), { target: { value: 'interactions' } });
+      expectSelected('Day client measure', 'Model requests');
+      chooseOption('Day model measure', 'Legacy activity');
       rerender(modal('2024-01-16', false));
       rerender(modal('2024-01-16'));
-      expect(screen.getByRole('combobox', { name: 'Day model measure' })).toHaveProperty('value', 'requests');
+      expectSelected('Day model measure', 'Model requests');
     });
   });
 

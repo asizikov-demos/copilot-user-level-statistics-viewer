@@ -223,6 +223,7 @@ export interface UserSummary {
   used_copilot_code_review_passive: boolean;
   used_local_byok?: boolean | null;
   used_auto_mode?: boolean;
+  used_custom_model_provider?: boolean;
   ai_adoption_phase?: AIAdoptionPhase;
 }
 

@@ -13,6 +13,16 @@ export type ModelVendorGroup = ModelVendor | 'Unattributed';
  * Display order: capability categories, image generation, then unmapped models.
  */
 export const MODEL_CATEGORY_ORDER = ['Lightweight', 'Versatile', 'Powerful', 'Image Generation', 'Uncategorized'] as const;
+export const CUSTOM_PROVIDER = 'Custom Provider' as const;
+
+/** Custom (BYOK) provider models are reported as `provider/model` or `https://host/model`. */
+export function isCustomProviderModel(modelName: string): boolean {
+  const name = modelName.trim();
+  const start = /^https?:\/\//i.test(name) ? name.indexOf('://') + 3 : 0;
+  const separator = name.indexOf('/', start);
+  return separator > start && separator < name.length - 1;
+}
+
 export const MODEL_VENDOR_ORDER: readonly ModelVendorGroup[] = [
   'OpenAI',
   'Anthropic',

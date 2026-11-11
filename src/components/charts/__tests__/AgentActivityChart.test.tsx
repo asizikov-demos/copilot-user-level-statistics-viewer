@@ -1,9 +1,11 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
-import { act, create, type ReactTestRenderer } from 'react-test-renderer';
+import { cleanup, render, screen } from '@testing-library/react';
 import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AgentActivity } from '../../../types/agentActivity';
 import AgentActivityChart from '../AgentActivityChart';
+import { chooseOption, expectSelected } from '../../../__tests__/helpers/simpleSelect';
 import { agentCounts, makeAgentActivity } from './helpers/chartFixtures';
 
 interface BarProps {
@@ -28,23 +30,18 @@ const allSurfaces = makeAgentActivity([
 const lastBar = () => bar.mock.lastCall![0];
 
 describe('AgentActivityChart', () => {
-  let renderer: ReactTestRenderer | undefined;
-
-  afterEach(async () => {
-    await act(async () => { renderer?.unmount(); });
-    renderer = undefined;
+  afterEach(() => {
+    cleanup();
     bar.mockClear();
   });
 
-  async function renderChart(data: AgentActivity) {
-    await act(async () => { renderer = create(<AgentActivityChart data={data} {...range} />); });
+  function renderChart(data: AgentActivity) {
+    render(<AgentActivityChart data={data} {...range} />);
   }
 
-  async function selectMeasure(value: 'sessions' | 'userInputs') {
-    await act(async () => { renderer!.root.findByType('select').props.onChange({ target: { value } }); });
-  }
+  const selectMeasure = (label: 'Sessions' | 'Prompts & messages') => chooseOption('Agent activity measure', label);
 
-  const heading = () => renderer!.root.findByType('h3').children.join('');
+  const heading = () => screen.getByRole('heading', { level: 3 }).textContent;
 
   it('defaults to the sessions view with every reported surface and a missing-data note', () => {
     const markup = renderToStaticMarkup(<AgentActivityChart data={allSurfaces} {...range} />);
@@ -84,11 +81,11 @@ describe('AgentActivityChart', () => {
     expect(bar).not.toHaveBeenCalled();
   });
 
-  it('switches to prompts and messages with matching heading and series labels', async () => {
-    await renderChart(allSurfaces);
-    await selectMeasure('userInputs');
+  it('switches to prompts and messages with matching heading and series labels', () => {
+    renderChart(allSurfaces);
+    selectMeasure('Prompts & messages');
 
-    expect(renderer!.root.findByType('select').props.value).toBe('userInputs');
+    expectSelected('Agent activity measure', 'Prompts & messages');
     expect(heading()).toBe('Daily agent prompts & messages');
     expect(lastBar().data.datasets.map(dataset => dataset.label)).toEqual([
       'Copilot CLI prompts',
@@ -97,22 +94,22 @@ describe('AgentActivityChart', () => {
     ]);
   });
 
-  it('restores the sessions view when switching back', async () => {
-    await renderChart(allSurfaces);
-    await selectMeasure('userInputs');
-    await selectMeasure('sessions');
+  it('restores the sessions view when switching back', () => {
+    renderChart(allSurfaces);
+    selectMeasure('Prompts & messages');
+    selectMeasure('Sessions');
 
     expect(heading()).toBe('Daily agent sessions');
     expect(lastBar().data.datasets.map(dataset => dataset.label)).toEqual(['Copilot CLI', 'Copilot App', 'VS Code Agents window']);
   });
 
-  it('keeps the selector usable for message-only data without inventing sessions', async () => {
-    await renderChart(makeAgentActivity([{ date: '2024-01-15', vscodeAgents: agentCounts(null, 0) }]));
+  it('keeps the selector usable for message-only data without inventing sessions', () => {
+    renderChart(makeAgentActivity([{ date: '2024-01-15', vscodeAgents: agentCounts(null, 0) }]));
 
     expect(bar).not.toHaveBeenCalled();
-    expect(JSON.stringify(renderer!.toJSON())).toContain('Session counts are not reported');
+    expect(screen.getByText(/Session counts are not reported/)).toBeTruthy();
 
-    await selectMeasure('userInputs');
+    selectMeasure('Prompts & messages');
 
     expect(lastBar()['aria-label']).toBe('Daily agent prompts & messages: VS Code Agents window.');
   });

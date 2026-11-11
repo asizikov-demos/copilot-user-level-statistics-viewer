@@ -20,6 +20,19 @@ if (typeof document !== 'undefined') {
     };
   }) as unknown as typeof ResizeObserver;
 
+  if (typeof window.matchMedia === 'undefined') {
+    window.matchMedia = vi.fn((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+  }
+
   globalThis.CSS = {
     ...globalThis.CSS,
     escape: vi.fn((value: string) => value),

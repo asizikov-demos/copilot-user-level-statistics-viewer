@@ -1,10 +1,17 @@
 // @vitest-environment jsdom
 
 import { renderToStaticMarkup } from 'react-dom/server';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionChartProps } from '../../../../charts/CompositionChart';
 import UserSummaryChart from '../UserSummaryChart';
+import { chooseOption, expectSelected } from '../../../../../__tests__/helpers/simpleSelect';
+
+const CLIENT = 'Client summary measure';
+const MODEL = 'Model summary measure';
+const measureLabels = { interactions: 'Interactions', requests: 'Model requests' } as const;
+const pick = (name: string, measure: keyof typeof measureLabels) => chooseOption(name, measureLabels[measure]);
+const expectMeasure = (name: string, measure: keyof typeof measureLabels) => expectSelected(name, measureLabels[measure]);
 
 const { compositionChart } = vi.hoisted(() => ({ compositionChart: vi.fn<(props: CompositionChartProps) => void>() }));
 vi.mock('../../../../charts/CompositionChart', () => ({
@@ -136,24 +143,22 @@ describe('UserSummaryChart', () => {
         clientRequestDistribution={requests} modelRequestDistribution={requests}
       />,
     );
-    const clientSelect = screen.getByRole('combobox', { name: 'Client summary measure' });
-    const modelSelect = screen.getByRole('combobox', { name: 'Model summary measure' });
-    expect(clientSelect).toHaveProperty('value', 'interactions');
-    expect(modelSelect).toHaveProperty('value', 'interactions');
-    fireEvent.change(clientSelect, { target: { value: 'requests' } });
+    expectMeasure(CLIENT, 'interactions');
+    expectMeasure(MODEL, 'interactions');
+    pick(CLIENT, 'requests');
     expect(screen.getByText('Clients')).toBeTruthy();
-    expect(modelSelect).toHaveProperty('value', 'interactions');
+    expectMeasure(MODEL, 'interactions');
     expect(compositionChart.mock.lastCall?.[0]).toMatchObject({
       label: 'Requests by client', entries: requests, unit: 'requests',
     });
-    fireEvent.change(modelSelect, { target: { value: 'requests' } });
+    pick(MODEL, 'requests');
     expect(screen.getByText('Models')).toBeTruthy();
     expect(compositionChart.mock.lastCall?.[0]).toMatchObject({
       label: 'Requests by model', entries: requests, unit: 'requests',
     });
-    fireEvent.change(clientSelect, { target: { value: 'interactions' } });
+    pick(CLIENT, 'interactions');
     expect(screen.getByText('Clients')).toBeTruthy();
-    expect(modelSelect).toHaveProperty('value', 'requests');
+    expectMeasure(MODEL, 'requests');
     expect(compositionChart.mock.lastCall?.[0]).toMatchObject({
       label: 'Interactions by client', entries: interactions, unit: 'interactions',
     });
@@ -164,30 +169,27 @@ describe('UserSummaryChart', () => {
     render(
       <UserSummaryChart {...features} clientRequestDistribution={entries} modelDistribution={entries} />,
     );
-    const clientSelect = screen.getByRole('combobox', { name: 'Client summary measure' });
-    const modelSelect = screen.getByRole('combobox', { name: 'Model summary measure' });
-    expect(clientSelect).toHaveProperty('value', 'requests');
-    expect(modelSelect).toHaveProperty('value', 'interactions');
-    fireEvent.change(clientSelect, { target: { value: 'interactions' } });
-    fireEvent.change(modelSelect, { target: { value: 'requests' } });
+    expectMeasure(CLIENT, 'requests');
+    expectMeasure(MODEL, 'interactions');
+    pick(CLIENT, 'interactions');
+    pick(MODEL, 'requests');
     expect(screen.getAllByText('No data available')).toHaveLength(3);
-    fireEvent.change(clientSelect, { target: { value: 'requests' } });
-    fireEvent.change(modelSelect, { target: { value: 'interactions' } });
+    pick(CLIENT, 'requests');
+    pick(MODEL, 'interactions');
     expect(screen.getAllByText('No data available')).toHaveLength(1);
   });
 
   it('updates automatic defaults as data arrives but preserves manual choices', () => {
     const entries = [{ label: 'Reported', value: 12, color: 'rgb(0, 0, 1)' }];
     const { rerender } = render(<UserSummaryChart {...features} />);
-    const clientSelect = screen.getByRole('combobox', { name: 'Client summary measure' });
-    expect(clientSelect).toHaveProperty('value', 'interactions');
+    expectMeasure(CLIENT, 'interactions');
     rerender(<UserSummaryChart {...features} clientRequestDistribution={entries} />);
-    expect(clientSelect).toHaveProperty('value', 'requests');
+    expectMeasure(CLIENT, 'requests');
     rerender(<UserSummaryChart {...features} clientRequestDistribution={entries} ideDistribution={entries} />);
-    expect(clientSelect).toHaveProperty('value', 'interactions');
-    fireEvent.change(clientSelect, { target: { value: 'requests' } });
+    expectMeasure(CLIENT, 'interactions');
+    pick(CLIENT, 'requests');
     rerender(<UserSummaryChart {...features} ideDistribution={entries} />);
-    expect(clientSelect).toHaveProperty('value', 'requests');
+    expectMeasure(CLIENT, 'requests');
     expect(screen.getAllByText('No data available')).toHaveLength(3);
   });
 
