@@ -2,6 +2,7 @@
 
 import type { TooltipItem } from 'chart.js';
 import { resolveChartTheme } from './chartTheme';
+import { createPrimerTooltipStyle } from './tooltipStyle';
 
 /**
  * Configuration for creating base chart options
@@ -92,6 +93,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
         display: false,
       },
       tooltip: {
+        ...createPrimerTooltipStyle(),
         callbacks: {
           ...(tooltipTitleCallback && { title: tooltipTitleCallback }),
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
@@ -185,6 +187,7 @@ export function createDualAxisChartOptions(config: DualAxisChartConfig = {}) {
         display: false,
       },
       tooltip: {
+        ...createPrimerTooltipStyle(),
         callbacks: {
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
           ...(tooltipAfterBodyCallback && { afterBody: tooltipAfterBodyCallback }),
@@ -351,6 +354,7 @@ export function createRadarChartOptions(config: RadarChartConfig = {}) {
     plugins: {
       legend: { display: showLegend },
       tooltip: {
+        ...createPrimerTooltipStyle(),
         callbacks: {
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
         },
@@ -408,6 +412,7 @@ export function createDoughnutChartOptions(config: DoughnutChartConfig = {}) {
         position: legendPosition,
       },
       tooltip: {
+        ...createPrimerTooltipStyle(),
         callbacks: {
           ...(tooltipTitleCallback && { title: tooltipTitleCallback }),
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),

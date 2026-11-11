@@ -530,6 +530,20 @@ describe('Users feature sections', () => {
     expect(getResultCount()).toBe('Showing 1 of 3 users');
   });
 
+  it('filters by Custom Model Provider without adding a table chip', () => {
+    renderTable([
+      makeUser({ user_login: 'provider-user', used_custom_model_provider: true }),
+      makeUser({ user_id: 2, user_login: 'plain-user' }),
+    ]);
+
+    toggleFilterOptions('Feature used', ['Custom Model Provider']);
+
+    const table = screen.getByRole('table');
+    expect(within(table).getByText('provider-user')).toBeTruthy();
+    expect(within(table).queryByText('plain-user')).toBeNull();
+    expect(within(table).queryByText('Custom Model Provider')).toBeNull();
+  });
+
   it('forwards row selection with the selected user login and id', () => {
     const onUserClick = vi.fn();
     renderTable([

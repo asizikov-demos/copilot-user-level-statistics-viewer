@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from 'react';
-import { FormControl, Select } from '@primer/react';
+import { FormControl } from '@primer/react';
+import SimpleSelect from '../../../ui/SimpleSelect';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { ClientChartLegend } from '../../../charts/ClientChartLegend';
@@ -244,16 +245,16 @@ export default function ClientActivityChart({
         <div className="mb-4">
           <FormControl>
             <FormControl.Label>Client activity measure</FormControl.Label>
-            <Select value={measure} onChange={event => {
-              const value = event.target.value;
-              if (value === 'interactions' || value === 'sessions' || value === 'requests') {
-                setSelectedMeasure(value);
-              }
-            }}>
-              <Select.Option value="interactions">Interactions</Select.Option>
-              <Select.Option value="sessions">Reported sessions</Select.Option>
-              <Select.Option value="requests">Model requests</Select.Option>
-            </Select>
+            <SimpleSelect
+              label="Client activity measure"
+              value={measure}
+              onChange={setSelectedMeasure}
+              options={[
+                { value: 'interactions', label: 'Interactions' },
+                { value: 'sessions', label: 'Reported sessions' },
+                { value: 'requests', label: 'Model requests' },
+              ]}
+            />
           </FormControl>
         </div>
       )}

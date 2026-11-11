@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Dialog, FormControl, IconButton, Select } from '@primer/react';
+import { Dialog, FormControl, IconButton } from '@primer/react';
+import SimpleSelect from '../../../ui/SimpleSelect';
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import type { UserDayData } from '../../../../types/metrics';
 import type { DayReportingQuality } from '../../../../types/reportingQuality';
@@ -47,13 +48,16 @@ function MeasureSelect({ label, value, onChange }: {
   return (
     <FormControl>
       <FormControl.Label visuallyHidden>{label}</FormControl.Label>
-      <Select size="small" value={value} onChange={event => {
-        const measure = event.target.value;
-        if (measure === 'interactions' || measure === 'requests') onChange(measure);
-      }}>
-        <Select.Option value="interactions">Legacy activity</Select.Option>
-        <Select.Option value="requests">Model requests</Select.Option>
-      </Select>
+      <SimpleSelect
+        size="small"
+        label={label}
+        value={value}
+        onChange={onChange}
+        options={[
+          { value: 'interactions', label: 'Legacy activity' },
+          { value: 'requests', label: 'Model requests' },
+        ]}
+      />
     </FormControl>
   );
 }
@@ -214,7 +218,7 @@ export default function DayDetailsModal({ isOpen, onClose, date, dayMetrics, rep
   React.useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLElement && event.target.closest('select')) return;
+      if (event.target instanceof HTMLElement && event.target.closest('select, [role="menu"], [aria-haspopup="true"]')) return;
       if (event.key === 'ArrowLeft' && onNavigateDay && canNavigatePrevDay) {
         event.preventDefault();
         onNavigateDay(-1);

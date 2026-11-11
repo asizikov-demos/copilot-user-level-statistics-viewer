@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import CompositionChartCard from '../../../charts/CompositionChartCard';
 import { hasCompositionData, type CompositionEntry } from '../../../charts/utils/compositionChart';
-import { FormControl, Select } from '@primer/react';
+import { FormControl } from '@primer/react';
+import SimpleSelect from '../../../ui/SimpleSelect';
 import FeaturesUsed, { type FeaturePill } from '../FeaturesUsed';
 
 interface UserSummaryChartProps {
@@ -14,6 +15,7 @@ interface UserSummaryChartProps {
   usedCodingAgent: boolean;
   usedCodeReview: boolean;
   usedAutoMode: boolean;
+  usedCustomModelProvider?: boolean;
   usedLocalByok: boolean;
   ideDistribution?: CompositionEntry[];
   clientRequestDistribution?: CompositionEntry[];
@@ -47,15 +49,16 @@ function SelectableCompositionTile({ kind, interactions, requests }: {
           <div className="print:hidden">
             <FormControl>
               <FormControl.Label visuallyHidden>{kind === 'client' ? 'Client summary measure' : 'Model summary measure'}</FormControl.Label>
-              <Select size="small" value={measure} onChange={event => {
-                const value = event.target.value;
-                if (value === 'interactions' || value === 'requests') {
-                  setSelectedMeasure(value);
-                }
-              }}>
-                <Select.Option value="interactions">Interactions</Select.Option>
-                <Select.Option value="requests">Model requests</Select.Option>
-              </Select>
+              <SimpleSelect
+                size="small"
+                label={kind === 'client' ? 'Client summary measure' : 'Model summary measure'}
+                value={measure}
+                onChange={setSelectedMeasure}
+                options={[
+                  { value: 'interactions', label: 'Interactions' },
+                  { value: 'requests', label: 'Model requests' },
+                ]}
+              />
             </FormControl>
           </div>
         </>
@@ -76,6 +79,7 @@ export default function UserSummaryChart({
   usedCodingAgent,
   usedCodeReview,
   usedAutoMode,
+  usedCustomModelProvider = false,
   usedLocalByok,
   ideDistribution,
   clientRequestDistribution,
@@ -91,6 +95,7 @@ export default function UserSummaryChart({
   if (usedCodingAgent) features.push({ label: 'Cloud Agent', feature: 'cloudAgent' });
   if (usedCodeReview) features.push({ label: 'Code Review', feature: 'codeReview' });
   if (usedAutoMode) features.push({ label: 'Auto Mode', feature: 'autoMode' });
+  if (usedCustomModelProvider) features.push({ label: 'Custom Model Provider', feature: 'customModelProvider' });
   if (usedLocalByok) features.push({ label: 'Local BYOK', feature: 'localByok' });
   if (features.length === 0) features.push({ label: 'Completion Only', feature: 'completions' });
 

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { FormControl, Select } from '@primer/react';
+import { FormControl } from '@primer/react';
+import SimpleSelect from '../ui/SimpleSelect';
 import type { AgentActivity, AgentSurface } from '../../types/agentActivity';
 import ChartContainer from '../ui/ChartContainer';
 import { registerChartJS } from './utils/chartSetup';
@@ -78,13 +79,15 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
       headerActions={(
         <FormControl>
           <FormControl.Label visuallyHidden>Agent activity measure</FormControl.Label>
-          <Select
+          <SimpleSelect
+            label="Agent activity measure"
             value={measure}
-            onChange={event => setMeasure(event.target.value === 'sessions' ? 'sessions' : 'userInputs')}
-          >
-            <Select.Option value="sessions">Sessions</Select.Option>
-            <Select.Option value="userInputs">Prompts &amp; messages</Select.Option>
-          </Select>
+            onChange={setMeasure}
+            options={[
+              { value: 'sessions', label: 'Sessions' },
+              { value: 'userInputs', label: 'Prompts & messages' },
+            ]}
+          />
         </FormControl>
       )}
       summaryStats={reportedSurfaces.map(surface => ({

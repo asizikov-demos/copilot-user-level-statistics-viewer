@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer';
+import { chooseOption, expectSelected } from '../../../../__tests__/helpers/simpleSelect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionChartProps } from '../../../charts/CompositionChart';
 import type { UserDetailsViewModel } from '../../../../read-models/userDetails';
@@ -8,8 +11,6 @@ import type { CliCustomizationSummary } from '../../../../types/cliCustomization
 import { NavigationProvider } from '../../../../state/NavigationContext';
 import TablePagination from '../../../ui/TablePagination';
 import UserDetailsCustomizationsSection from '../sections/UserDetailsCustomizationsSection';
-import UserDetailsAgentUsageSection from '../sections/UserDetailsAgentUsageSection';
-import UserSummaryChart from '../charts/UserSummaryChart';
 import UserDetailsView from '../UserDetailsView';
 import ActivityCalendar from '../day-details/ActivityCalendar';
 import DayDetailsModal from '../day-details/DayDetailsModal';
@@ -34,10 +35,15 @@ vi.mock('../../../charts/CompositionChart', () => ({
   },
 }));
 vi.mock('../day-details/DayDetailsModal', () => ({ default: () => null }));
+vi.mock('react-chartjs-2', () => {
+  const Stub = () => null;
+  return { Bar: Stub, Line: Stub, Radar: Stub, Chart: Stub, Doughnut: Stub, Pie: Stub };
+});
 
 let renderer: ReactTestRenderer | undefined;
 
 afterEach(async () => {
+  cleanup();
   await act(async () => { renderer?.unmount(); });
   renderer = undefined;
 });
@@ -76,7 +82,7 @@ describe('UserDetailsCustomizationsSection', () => {
     const markup = renderToStaticMarkup(renderProfile(model));
     expect(markup).toContain('id="user-details-client-activity"');
     expect(markup).not.toContain('id="user-details-client-sessions"');
-    expect(markup).toContain('Reported sessions');
+    expect(markup).toContain('aria-label="Client activity measure: Model requests"');
     expect(markup).toContain('OpenCode');
     expect(markup).not.toContain('data-testid="user-details-empty-state"');
     model.userDetails.clientTraffic.summary.reportedRecords = 0;
@@ -336,26 +342,29 @@ describe('UserDetailsCustomizationsSection', () => {
       const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
       const duplicateKeyErrors = () => errors.mock.calls.filter(args => args.join(' ').includes('same key'));
       try {
-        const root = (await mount(profile(1))).root;
-        expect(duplicateKeyErrors()).toEqual([]);
-        const customizationsButton = () => root.findByType(UserDetailsCustomizationsSection).findByType('button');
-        const agentMeasure = () => root.findByType(UserDetailsAgentUsageSection).findByType('select');
-        const summaryMeasures = () => root.findByType(UserSummaryChart).findAllByType('select');
-        await act(async () => {
-          customizationsButton().props.onClick();
-          agentMeasure().props.onChange({ target: { value: 'userInputs' } });
-          for (const select of summaryMeasures()) {
-            select.props.onChange({ target: { value: 'requests' } });
-          }
+        const view = render(profile(1));
+        const container = view.container;
+        const customizationsButton = () => within(screen.getByRole('heading', { name: 'Customizations' }).closest('section')!)
+          .getAllByRole('button')[0];
+        const sections = () => ({
+          agent: container.querySelector<HTMLElement>('#user-details-agent-activity')!,
+          summary: container.querySelector<HTMLElement>('[aria-label="User usage summary"]')!,
         });
-        expect(customizationsButton().props['aria-expanded']).toBe(true);
-        expect(agentMeasure().props.value).toBe('userInputs');
-        expect(summaryMeasures().map(select => select.props.value)).toEqual(['requests', 'requests']);
+        expect(duplicateKeyErrors()).toEqual([]);
+        fireEvent.click(customizationsButton());
+        expect(customizationsButton().getAttribute('aria-expanded')).toBe('true');
+        chooseOption('Agent activity measure', 'Prompts & messages', sections().agent);
+        chooseOption('Client summary measure', 'Model requests', sections().summary);
+        chooseOption('Model summary measure', 'Model requests', sections().summary);
+        expectSelected('Agent activity measure', 'Prompts & messages', sections().agent);
+        expectSelected('Client summary measure', 'Model requests', sections().summary);
+        expectSelected('Model summary measure', 'Model requests', sections().summary);
 
-        await act(async () => { renderer!.update(profile(2)); });
-        expect(customizationsButton().props['aria-expanded']).toBe(false);
-        expect(agentMeasure().props.value).toBe('sessions');
-        expect(summaryMeasures().map(select => select.props.value)).toEqual(['interactions', 'interactions']);
+        view.rerender(profile(2));
+        expect(customizationsButton().getAttribute('aria-expanded')).toBe('false');
+        expectSelected('Agent activity measure', 'Sessions', sections().agent);
+        expectSelected('Client summary measure', 'Interactions', sections().summary);
+        expectSelected('Model summary measure', 'Interactions', sections().summary);
         expect(duplicateKeyErrors()).toEqual([]);
       } finally {
         errors.mockRestore();
@@ -393,7 +402,7 @@ describe('UserDetailsCustomizationsSection', () => {
 
       expect(markup).toContain('id="user-details-agent-activity"');
       expect(markup).toContain('Daily agent sessions');
-      expect(markup).toContain('Prompts &amp; messages');
+      expect(markup).toContain('aria-label="Agent activity measure: Sessions"');
       expect(markup).not.toContain('id="user-details-vscode-agents"');
       expect(markup).not.toContain('Token Usage');
       expect(markup).not.toContain('Daily CLI Sessions');

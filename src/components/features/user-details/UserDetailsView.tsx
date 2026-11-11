@@ -300,6 +300,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
           usedCodingAgent={usedCodingAgent}
           usedCodeReview={usedCodeReview}
           usedAutoMode={usedAutoMode}
+          usedCustomModelProvider={userSummary.used_custom_model_provider === true}
           usedLocalByok={usedLocalByok}
           ideDistribution={ideDistribution}
           clientRequestDistribution={clientRequestDistribution}

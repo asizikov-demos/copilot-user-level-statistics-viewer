@@ -112,6 +112,16 @@ describe('user summary aggregation', () => {
     });
   });
 
+  it('flags custom model provider usage only for interacting provider-prefixed models', () => {
+    const feature = (model: string, count: number) => makeModelFeatureTotal(model, 'chat_panel_agent_mode', count);
+    expect(summarizeOne([{ metric: { totals_by_model_feature: [feature('my-provider/model-a', 2)] } }]))
+      .toMatchObject({ used_custom_model_provider: true });
+    expect(summarizeOne([{ metric: { totals_by_model_feature: [feature('my-provider/model-a', 0)] } }]))
+      .toMatchObject({ used_custom_model_provider: false });
+    expect(summarizeOne([{ metric: { totals_by_model_feature: [feature('gpt-4.1', 3)] } }]))
+      .toMatchObject({ used_custom_model_provider: false });
+  });
+
   it('leaves flags false when no record reports them', () => {
     expect(summarizeOne([{ metric: {} }])).toMatchObject({
       used_code_completion: false,

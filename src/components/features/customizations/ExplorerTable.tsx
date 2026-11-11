@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, FormControl, SelectPanel, TextInput, type SelectPanelItemInput } from '@primer/react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { ActionList, ActionMenu, Checkbox, Button, FormControl, TextInput } from '@primer/react';
 import {
   BookIcon,
   ChevronDownIcon,
@@ -41,7 +41,7 @@ interface ExplorerRow extends CustomizationItemStats {
 
 type SortField = 'name' | 'categoryTitle' | 'totalEvents' | 'users' | 'activeDays' | 'perUser';
 
-const TYPE_FILTER_OPTIONS: SelectPanelItemInput[] = [
+const TYPE_FILTER_OPTIONS: ReadonlyArray<{ id: ExplorerCategory; text: string; leadingVisual: ComponentType }> = [
   { id: 'all', text: 'All types', leadingVisual: ListUnorderedIcon },
   { id: 'skill', text: CUSTOMIZATION_META.skill.title, leadingVisual: BookIcon },
   { id: 'custom_agent', text: CUSTOMIZATION_META.custom_agent.title, leadingVisual: CopilotIcon },
@@ -49,10 +49,6 @@ const TYPE_FILTER_OPTIONS: SelectPanelItemInput[] = [
   { id: 'slash_cmd', text: CUSTOMIZATION_META.slash_cmd.title, leadingVisual: CommandPaletteIcon },
   { id: 'plugin', text: CUSTOMIZATION_META.plugin.title, leadingVisual: PlugIcon },
 ];
-
-function isExplorerCategory(value: unknown): value is ExplorerCategory {
-  return value === 'all' || (typeof value === 'string' && CUSTOMIZATION_TYPES.some(type => type === value));
-}
 
 function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
   const color = CUSTOMIZATION_META[row.category].color.solid;
@@ -90,8 +86,6 @@ function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
 export default function ExplorerTable({ model }: { model: CustomizationsReadModel }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ExplorerCategory>('all');
-  const [typeFilterOpen, setTypeFilterOpen] = useState(false);
-  const [typeFilterQuery, setTypeFilterQuery] = useState('');
   const [includeUnnamed, setIncludeUnnamed] = useState(false);
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -118,9 +112,6 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   const paged = useMemo(() => sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sortedItems, page]);
   const rowKey = (r: ExplorerRow) => `${r.category}:${r.name}`;
   const selectedType = TYPE_FILTER_OPTIONS.find(option => option.id === category);
-  const visibleTypeOptions = TYPE_FILTER_OPTIONS.filter(option =>
-    option.text?.toLowerCase().includes(typeFilterQuery.trim().toLowerCase())
-  );
 
   useEffect(() => { setPage(1); setExpanded(null); }, [query, category, includeUnnamed, sortField, sortDirection, model]);
   useEffect(() => { setPage(p => Math.min(p, totalPages)); }, [totalPages]);
@@ -180,34 +171,33 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
             </FormControl>
             <FormControl id="customizationType">
               <FormControl.Label>Type</FormControl.Label>
-              <SelectPanel
-                title="Type"
-                placeholder="All types"
-                placeholderText="Filter types..."
-                open={typeFilterOpen}
-                onOpenChange={open => {
-                  setTypeFilterOpen(open);
-                  if (!open) setTypeFilterQuery('');
-                }}
-                filterValue={typeFilterQuery}
-                onFilterChange={setTypeFilterQuery}
-                items={visibleTypeOptions}
-                selected={selectedType}
-                onSelectedChange={(selection: SelectPanelItemInput | undefined) => {
-                  if (isExplorerCategory(selection?.id)) setCategory(selection.id);
-                }}
-                renderAnchor={anchorProps => (
-                  <Button
-                    {...anchorProps}
-                    block
-                    aria-labelledby={undefined}
-                    aria-label={`Type ${selectedType?.text ?? 'All types'}`}
-                    trailingAction={ChevronDownIcon}
-                  >
-                    {selectedType?.text ?? 'All types'}
-                  </Button>
-                )}
-              />
+              <ActionMenu>
+                <ActionMenu.Button
+                  block
+                  aria-labelledby={undefined}
+                  aria-label={`Type ${selectedType?.text ?? 'All types'}`}
+                  trailingAction={ChevronDownIcon}
+                >
+                  {selectedType?.text ?? 'All types'}
+                </ActionMenu.Button>
+                <ActionMenu.Overlay>
+                  <ActionList selectionVariant="single">
+                    {TYPE_FILTER_OPTIONS.map(option => {
+                      const Icon = option.leadingVisual;
+                      return (
+                        <ActionList.Item
+                          key={option.id}
+                          selected={category === option.id}
+                          onSelect={() => setCategory(option.id)}
+                        >
+                          <ActionList.LeadingVisual><Icon /></ActionList.LeadingVisual>
+                          {option.text}
+                        </ActionList.Item>
+                      );
+                    })}
+                  </ActionList>
+                </ActionMenu.Overlay>
+              </ActionMenu>
             </FormControl>
             <FormControl id="includeUnnamed" className="pb-2">
               <Checkbox checked={includeUnnamed} onChange={e => setIncludeUnnamed(e.target.checked)} />

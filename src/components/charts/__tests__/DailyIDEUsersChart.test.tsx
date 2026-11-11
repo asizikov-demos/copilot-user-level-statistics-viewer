@@ -1,13 +1,10 @@
-import {
-  act,
-  create,
-  type ReactTestRenderer,
-} from 'react-test-renderer';
+// @vitest-environment jsdom
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DailyIDEUsersChart from '../DailyIDEUsersChart';
 import type { DailyIdeUsersData } from '../../../domain/calculators/dailyIdeUsersCalculator';
 import type { ClientTelemetryWarning } from '../../../domain/calculators/clientTelemetryCalculator';
-import ClientTelemetryNotice from '../../ClientTelemetryNotice';
+import { chooseOption, expectSelected, listOptions, querySelect } from '../../../__tests__/helpers/simpleSelect';
 
 const { bar } = vi.hoisted(() => ({ bar: vi.fn() }));
 vi.mock('react-chartjs-2', () => ({
@@ -34,93 +31,67 @@ const data: DailyIdeUsersData = [
 ];
 
 describe('DailyIDEUsersChart', () => {
-  let renderer: ReactTestRenderer | undefined;
+  const chartProps = {
+    reportStartDay: '2024-01-15',
+    reportEndDay: '2024-01-17',
+  };
+  let view: ReturnType<typeof render> | undefined;
 
-  afterEach(async () => {
-    await act(async () => { renderer?.unmount(); });
-    renderer = undefined;
+  afterEach(() => {
+    cleanup();
+    view = undefined;
     bar.mockClear();
   });
 
-  async function renderChart(
+  function renderChart(
     chartData: DailyIdeUsersData = data,
     telemetryWarnings: ClientTelemetryWarning[] = [],
   ) {
-    await act(async () => {
-      renderer = create(
-        <DailyIDEUsersChart
-          data={chartData}
-          reportStartDay="2024-01-15"
-          reportEndDay="2024-01-17"
-          telemetryWarnings={telemetryWarnings}
-        />
-      );
-    });
+    view = render(<DailyIDEUsersChart data={chartData} {...chartProps} telemetryWarnings={telemetryWarnings} />);
   }
 
-  it('lists clients from most to least popular and selects the most popular by default', async () => {
-    await renderChart();
+  it('lists clients from most to least popular and selects the most popular by default', () => {
+    renderChart();
 
-    const select = renderer!.root.findByType('select');
-    expect(select.findAllByType('option').map(option => option.children.join(''))).toEqual([
-      'VS Code',
-      'Copilot CLI',
-    ]);
-    expect(select.props.value).toBe('vscode');
+    expect(listOptions('Client')).toEqual(['VS Code', 'Copilot CLI']);
+    expectSelected('Client', 'VS Code');
     expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
       role: 'img',
       'aria-label': 'Daily IDE Users for VS Code: Jan 15, 2 users; Jan 16, 0 users; Jan 17, 3 users.',
     }));
   });
 
-  it('updates the chart and the legend when another client is selected', async () => {
-    await renderChart();
+  it('updates the chart and the legend when another client is selected', () => {
+    renderChart();
 
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'copilot_cli' } });
-    });
+    chooseOption('Client', 'Copilot CLI');
 
-    expect(renderer!.root.findByType('select').props.value).toBe('copilot_cli');
+    expectSelected('Client', 'Copilot CLI');
     expect(bar).toHaveBeenLastCalledWith(expect.objectContaining({
       role: 'img',
       'aria-label': 'Daily IDE Users for Copilot CLI: Jan 15, 0 users; Jan 16, 2 users; Jan 17, 0 users.',
     }));
-    expect(
-      renderer!.root.findAll(node => node.type === 'span' && node.children[0] === 'Copilot CLI')
-    ).toHaveLength(1);
+    expect(screen.getAllByText('Copilot CLI').filter(node => node.tagName === 'SPAN' && node.className.includes('font-medium')))
+      .toHaveLength(1);
   });
 
-  it('falls back to the most popular client when the selection disappears', async () => {
-    await renderChart();
+  it('falls back to the most popular client when the selection disappears', () => {
+    renderChart();
 
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'copilot_cli' } });
-    });
-    await act(async () => {
-      renderer!.update(
-        <DailyIDEUsersChart
-          data={[data[0]]}
-          reportStartDay="2024-01-15"
-          reportEndDay="2024-01-17"
-        />
-      );
-    });
+    chooseOption('Client', 'Copilot CLI');
+    view!.rerender(<DailyIDEUsersChart data={[data[0]]} {...chartProps} />);
 
-    expect(renderer!.root.findByType('select').props.value).toBe('vscode');
+    expectSelected('Client', 'VS Code');
   });
 
-  it('renders the empty state without any client data', async () => {
-    await renderChart([]);
+  it('renders the empty state without any client data', () => {
+    renderChart([]);
 
-    expect(renderer!.root.findAllByType('select')).toHaveLength(0);
-    expect(
-      renderer!.root.findAll(
-        node => node.type === 'h4' && node.children[0] === 'No client usage data available'
-      )
-    ).toHaveLength(1);
+    expect(querySelect('Client')).toBeNull();
+    expect(screen.getAllByText('No client usage data available')).toHaveLength(1);
   });
 
-  it('filters telemetry warnings to the active client and hides them for unaffected clients', async () => {
+  it('filters telemetry warnings to the active client and hides them for unaffected clients', () => {
     const warnings: ClientTelemetryWarning[] = [
       {
         ide: 'vscode',
@@ -152,46 +123,34 @@ describe('DailyIDEUsersChart', () => {
       { ...data[0], ide: 'visual_studio' },
       { ...data[0], ide: 'intellij' },
     ];
-    await renderChart(chartData, warnings);
+    renderChart(chartData, warnings);
 
-    const notice = () => renderer!.root.findByType(ClientTelemetryNotice);
-    expect(notice().props.warnings).toEqual([warnings[0]]);
-    expect(renderer!.root.findAllByType('li')).toHaveLength(1);
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'visual_studio' } });
-    });
-    expect(notice().props.warnings).toEqual([warnings[1]]);
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'intellij' } });
-    });
-    expect(notice().props.warnings).toEqual([warnings[2]]);
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'copilot_cli' } });
-    });
-    expect(notice().props.warnings).toEqual([]);
-    expect(renderer!.root.findAllByType('aside')).toHaveLength(0);
+    const shown = () => screen.queryAllByRole('listitem').map(item => item.textContent ?? '');
+    const expectOnly = (warning: ClientTelemetryWarning) => {
+      expect(shown()).toHaveLength(1);
+      expect(shown()[0]).toContain(warning.recommendation);
+    };
+    expectOnly(warnings[0]);
+    chooseOption('Client', 'Visual Studio');
+    expectOnly(warnings[1]);
+    chooseOption('Client', 'JetBrains');
+    expectOnly(warnings[2]);
+    chooseOption('Client', 'Copilot CLI');
+    expect(shown()).toEqual([]);
+    expect(screen.queryByLabelText('Copilot client telemetry warning')).toBeNull();
 
-    await act(async () => {
-      renderer!.root.findByType('select').props.onChange({ target: { value: 'vscode' } });
-    });
-    expect(notice().props.warnings).toEqual([warnings[0]]);
+    chooseOption('Client', 'VS Code');
+    expectOnly(warnings[0]);
 
-    await act(async () => {
-      renderer!.update(
-        <DailyIDEUsersChart
-          data={[chartData[2]]}
-          reportStartDay="2024-01-15"
-          reportEndDay="2024-01-17"
-          telemetryWarnings={warnings}
-        />,
-      );
-    });
-    expect(renderer!.root.findByType('select').props.value).toBe('visual_studio');
-    expect(notice().props.warnings).toEqual([warnings[1]]);
+    view!.rerender(
+      <DailyIDEUsersChart data={[chartData[2]]} {...chartProps} telemetryWarnings={warnings} />,
+    );
+    expectSelected('Client', 'Visual Studio');
+    expectOnly(warnings[1]);
   });
 
-  it('omits telemetry warnings when no client is selected in an empty chart', async () => {
-    await renderChart([], [{
+  it('omits telemetry warnings when no client is selected in an empty chart', () => {
+    renderChart([], [{
       ide: 'vscode',
       version: '1.138.0',
       versionKind: 'ide',
@@ -199,6 +158,6 @@ describe('DailyIDEUsersChart', () => {
       action: 'upgrade',
       recommendation: 'Update VS Code.',
     }]);
-    expect(renderer!.root.findAllByType('aside')).toHaveLength(0);
+    expect(screen.queryByLabelText('Copilot client telemetry warning')).toBeNull();
   });
 });
