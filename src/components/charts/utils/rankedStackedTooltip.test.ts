@@ -44,6 +44,50 @@ describe('createRankedStackedTooltip', () => {
     }
   });
 
+  it('computes the ranking once across filter, label and footer, and invalidates on change', () => {
+    const reads = { count: 0 };
+    const datasets = [
+      { label: 'a', data: [5] },
+      { label: 'c', data: [20] },
+    ];
+    const counting = {
+      isDatasetVisible: (index: number) => {
+        if (index === 0) reads.count++;
+        return !hiddenIndexes.has(index);
+      },
+      data: { datasets },
+    } as unknown as Chart;
+    const countItem = (datasetIndex: number) =>
+      ({
+        chart: counting,
+        dataIndex: 0,
+        datasetIndex,
+        dataset: datasets[datasetIndex],
+        parsed: { y: datasets[datasetIndex].data[0] },
+      }) as unknown as TooltipItem<'bar'>;
+    const tooltip = createRankedStackedTooltip();
+    const run = () => {
+      tooltip.filter(countItem(0));
+      tooltip.filter(countItem(1));
+      tooltip.callbacks.label(countItem(0));
+      return tooltip.callbacks.footer([countItem(0)]);
+    };
+
+    run();
+    // One signature check per call (4) plus a single ranking computation (1).
+    expect(reads.count).toBe(5);
+
+    hiddenIndexes.add(1);
+    try {
+      expect(run()).toEqual(['Total: 5 interactions']);
+    } finally {
+      hiddenIndexes.clear();
+    }
+
+    datasets[0] = { label: 'a', data: [7] };
+    expect(run()).toEqual(['Total: 27 interactions']);
+  });
+
   it('truncates long labels in the middle', () => {
     expect(truncateMiddle('abcdefghijklmnop', 8)).toBe('abcd…nop');
   });

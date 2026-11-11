@@ -13,7 +13,21 @@ function value(chart: Chart, datasetIndex: number, dataIndex: number): number {
   return typeof raw === 'number' ? raw : 0;
 }
 
-function dayRanking(chart: Chart, dataIndex: number): { ranked: number[]; total: number } {
+interface DayRanking {
+  ranked: number[];
+  total: number;
+}
+
+interface RankingCache {
+  datasets: unknown[];
+  dataRefs: unknown[];
+  visibility: boolean[];
+  days: Map<number, DayRanking>;
+}
+
+const rankingCaches = new WeakMap<Chart, RankingCache>();
+
+function computeDayRanking(chart: Chart, dataIndex: number): DayRanking {
   const entries = chart.data.datasets
     .map((_, index) => ({ index, amount: value(chart, index, dataIndex) }))
     .filter(entry => chart.isDatasetVisible(entry.index));
@@ -23,6 +37,36 @@ function dayRanking(chart: Chart, dataIndex: number): { ranked: number[]; total:
     .sort((a, b) => b.amount - a.amount || a.index - b.index)
     .map(entry => entry.index);
   return { ranked, total };
+}
+
+// filter/label/footer all need the same per-day ranking; reuse it until data or legend visibility changes.
+function dayRanking(chart: Chart, dataIndex: number): DayRanking {
+  const datasets = chart.data.datasets;
+  let cache = rankingCaches.get(chart);
+  const stale =
+    !cache ||
+    cache.datasets.length !== datasets.length ||
+    datasets.some(
+      (dataset, i) =>
+        cache!.datasets[i] !== dataset ||
+        cache!.dataRefs[i] !== dataset.data ||
+        cache!.visibility[i] !== chart.isDatasetVisible(i),
+    );
+  if (!cache || stale) {
+    cache = {
+      datasets: [...datasets],
+      dataRefs: datasets.map(dataset => dataset.data),
+      visibility: datasets.map((_, i) => chart.isDatasetVisible(i)),
+      days: new Map(),
+    };
+    rankingCaches.set(chart, cache);
+  }
+  let ranking = cache.days.get(dataIndex);
+  if (!ranking) {
+    ranking = computeDayRanking(chart, dataIndex);
+    cache.days.set(dataIndex, ranking);
+  }
+  return ranking;
 }
 
 export function truncateMiddle(label: string, maxLength: number): string {
