@@ -1,0 +1,63 @@
+.shell {
+  --side-nav-width: 16rem;
+}
+
+.collapsed {
+  --side-nav-width: 4rem;
+}
+
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 63.25rem) and (min-height: 42rem) {
+  .sidebar {
+    position: fixed;
+    inset: 6.25rem auto 0 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: var(--side-nav-width);
+    padding: 0.5rem;
+    border-right: 1px solid var(--borderColor-default);
+    background: var(--bgColor-default);
+  }
+
+  .content {
+    margin-left: var(--side-nav-width);
+  }
+
+  .mobileNavigation {
+    display: none;
+  }
+}
+
+.sidebar .navigation {
+  min-height: 0;
+}
+
+.sidebar .item {
+  min-height: 2rem;
+}
+
+.collapsed .sidebar [data-component='ActionList.LeadingVisual'] {
+  margin-right: 0;
+}
+
+.sidebar .toggle {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 1rem;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+@media print {
+  .sidebar {
+    display: none;
+  }
+
+  .content {
+    margin-left: 0;
+  }
+}

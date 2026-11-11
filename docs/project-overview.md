@@ -49,6 +49,8 @@ flowchart LR
 
 ## Code Map and Ownership
 
+The desktop navigation is a fixed sidebar below the app header and full-width report bar, flush with the left edge and extending to the bottom of the viewport. Its bottom control switches between labels and an icon rail with accessible names and tooltips; the content follows its width. Narrow viewports and windows shorter than 42rem use the header navigation menu so all destinations remain reachable without a scrolling sidebar. The right-hand section index remains independent.
+
 | Location | Responsibility |
 |---|---|
 | `src/app/` | App Router entry points and providers |

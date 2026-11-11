@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { BaseStyles, ThemeProvider } from '@primer/react';
+import { useState } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SideNav from '../SideNav';
@@ -15,10 +16,15 @@ vi.mock('../../../state/NavigationContext', () => ({
 }));
 
 function renderSideNav() {
+  function Sidebar() {
+    const [collapsed, setCollapsed] = useState(false);
+    return <SideNav collapsed={collapsed} onToggle={() => setCollapsed(value => !value)} />;
+  }
+
   return render(
     <ThemeProvider colorMode="day">
       <BaseStyles>
-        <SideNav />
+        <Sidebar />
       </BaseStyles>
     </ThemeProvider>,
   );
@@ -79,5 +85,33 @@ describe('SideNav', () => {
 
     expect(mocks.navigateTo).toHaveBeenCalledTimes(1);
     expect(mocks.navigateTo).toHaveBeenCalledWith('executiveSummary');
+  });
+
+  it('collapses to labeled icons and expands again without losing the active view', () => {
+    mocks.view = 'userDetails';
+    renderSideNav();
+    const toggle = screen.getByRole('button', { name: 'Collapse sidebar' });
+    toggle.focus();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBe(toggle);
+    expect(document.activeElement).toBe(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-controls')).toBe('main-navigation');
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    for (const { label } of NAV_ITEMS) {
+      const button = within(nav).getByRole('button', { name: label });
+      expect(button.querySelector('.sr-only')?.textContent).toBe(label);
+    }
+    expect(within(nav).getByRole('button', { name: 'Users' }).getAttribute('aria-current')).toBe('page');
+    fireEvent.click(within(nav).getByRole('button', { name: 'Model Usage' }));
+    expect(mocks.navigateTo).toHaveBeenCalledWith('modelDetails');
+
+    fireEvent.click(toggle);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(within(nav).getByRole('button', { name: 'Users' }).querySelector('.sr-only')).toBeNull();
   });
 });
