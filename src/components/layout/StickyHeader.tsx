@@ -8,6 +8,7 @@ import { useNavigation } from '../../state/NavigationContext';
 import { useResetAppState } from '../../hooks/useResetAppState';
 import { getActiveNavItem, NAV_ITEMS } from './navigationItems';
 import styles from './StickyHeader.module.css';
+import shellStyles from './AppShell.module.css';
 
 const StickyHeader: React.FC = () => {
   const { hasData } = useMetrics();
@@ -28,7 +29,7 @@ const StickyHeader: React.FC = () => {
 
           {hasData && (
             <div className={`${styles.actions} flex shrink-0 items-center gap-2 sm:gap-3`}>
-              <div className="lg:hidden">
+              <div className={shellStyles.mobileNavigation}>
                 <ActionMenu>
                   <ActionMenu.Button
                     className={styles.menuButton}
