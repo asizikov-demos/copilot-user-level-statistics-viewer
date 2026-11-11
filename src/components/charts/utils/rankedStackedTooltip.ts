@@ -18,15 +18,6 @@ interface DayRanking {
   total: number;
 }
 
-interface RankingCache {
-  datasets: unknown[];
-  dataRefs: unknown[];
-  visibility: boolean[];
-  days: Map<number, DayRanking>;
-}
-
-const rankingCaches = new WeakMap<Chart, RankingCache>();
-
 function computeDayRanking(chart: Chart, dataIndex: number): DayRanking {
   const entries = chart.data.datasets
     .map((_, index) => ({ index, amount: value(chart, index, dataIndex) }))
@@ -37,36 +28,6 @@ function computeDayRanking(chart: Chart, dataIndex: number): DayRanking {
     .sort((a, b) => b.amount - a.amount || a.index - b.index)
     .map(entry => entry.index);
   return { ranked, total };
-}
-
-// filter/label/footer all need the same per-day ranking; reuse it until data or legend visibility changes.
-function dayRanking(chart: Chart, dataIndex: number): DayRanking {
-  const datasets = chart.data.datasets;
-  let cache = rankingCaches.get(chart);
-  const stale =
-    !cache ||
-    cache.datasets.length !== datasets.length ||
-    datasets.some(
-      (dataset, i) =>
-        cache!.datasets[i] !== dataset ||
-        cache!.dataRefs[i] !== dataset.data ||
-        cache!.visibility[i] !== chart.isDatasetVisible(i),
-    );
-  if (!cache || stale) {
-    cache = {
-      datasets: [...datasets],
-      dataRefs: datasets.map(dataset => dataset.data),
-      visibility: datasets.map((_, i) => chart.isDatasetVisible(i)),
-      days: new Map(),
-    };
-    rankingCaches.set(chart, cache);
-  }
-  let ranking = cache.days.get(dataIndex);
-  if (!ranking) {
-    ranking = computeDayRanking(chart, dataIndex);
-    cache.days.set(dataIndex, ranking);
-  }
-  return ranking;
 }
 
 export function truncateMiddle(label: string, maxLength: number): string {
@@ -82,14 +43,33 @@ export function truncateMiddle(label: string, maxLength: number): string {
  */
 export function createRankedStackedTooltip(options: RankedStackedTooltipOptions = {}) {
   const { maxItems = 8, maxLabelLength = 44, unit = 'interactions', itemNoun = 'series' } = options;
+  const rankingCaches = new WeakMap<Chart, Map<number, DayRanking>>();
+
+  function dayRanking(chart: Chart, dataIndex: number): DayRanking {
+    let days = rankingCaches.get(chart);
+    if (!days) {
+      days = new Map();
+      rankingCaches.set(chart, days);
+    }
+    let ranking = days.get(dataIndex);
+    if (!ranking) {
+      ranking = computeDayRanking(chart, dataIndex);
+      days.set(dataIndex, ranking);
+    }
+    return ranking;
+  }
 
   return {
     ...createPrimerTooltipStyle(),
     usePointStyle: true,
     itemSort: (a: TooltipItem<'bar'>, b: TooltipItem<'bar'>) =>
       (b.parsed.y ?? 0) - (a.parsed.y ?? 0) || a.datasetIndex - b.datasetIndex,
-    filter: (item: TooltipItem<'bar'>) =>
-      dayRanking(item.chart, item.dataIndex).ranked.slice(0, maxItems).includes(item.datasetIndex),
+    filter: (item: TooltipItem<'bar'>, index = 0) => {
+      // Chart.js filters every update before invoking label/footer callbacks.
+      // Reset on the first candidate, even if it is filtered out.
+      if (index === 0) rankingCaches.delete(item.chart);
+      return dayRanking(item.chart, item.dataIndex).ranked.slice(0, maxItems).includes(item.datasetIndex);
+    },
     callbacks: {
       labelColor: (item: TooltipItem<'bar'>) => {
         const color = item.dataset.backgroundColor;
