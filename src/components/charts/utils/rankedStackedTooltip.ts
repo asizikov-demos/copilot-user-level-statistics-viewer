@@ -14,7 +14,9 @@ function value(chart: Chart, datasetIndex: number, dataIndex: number): number {
 }
 
 function dayRanking(chart: Chart, dataIndex: number): { ranked: number[]; total: number } {
-  const entries = chart.data.datasets.map((_, index) => ({ index, amount: value(chart, index, dataIndex) }));
+  const entries = chart.data.datasets
+    .map((_, index) => ({ index, amount: value(chart, index, dataIndex) }))
+    .filter(entry => chart.isDatasetVisible(entry.index));
   const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
   const ranked = entries
     .filter(entry => entry.amount > 0)

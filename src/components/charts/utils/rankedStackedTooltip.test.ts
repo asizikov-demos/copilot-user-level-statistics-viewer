@@ -2,7 +2,10 @@ import type { Chart, TooltipItem } from 'chart.js';
 import { describe, expect, it } from 'vitest';
 import { createRankedStackedTooltip, truncateMiddle } from './rankedStackedTooltip';
 
+const hiddenIndexes = new Set<number>();
+
 const chart = {
+  isDatasetVisible: (index: number) => !hiddenIndexes.has(index),
   data: {
     datasets: [
       { label: 'a', data: [5] },
@@ -27,6 +30,18 @@ describe('createRankedStackedTooltip', () => {
     expect([0, 1, 2, 3].filter(i => tooltip.filter(item(i)))).toEqual([0, 2]);
     expect(tooltip.callbacks.footer([item(2)])).toEqual(['+ 1 more models (1)', 'Total: 26 interactions']);
     expect(tooltip.callbacks.label(item(2))).toBe('c: 20 (77%)');
+  });
+
+  it('ignores legend-hidden series when ranking and totaling', () => {
+    hiddenIndexes.add(2);
+    try {
+      const tooltip = createRankedStackedTooltip({ maxItems: 1 });
+      expect([0, 1, 2, 3].filter(i => tooltip.filter(item(i)))).toEqual([0]);
+      expect(tooltip.callbacks.label(item(0))).toBe('a: 5 (83%)');
+      expect(tooltip.callbacks.footer([item(0)])).toEqual(['+ 1 more series (1)', 'Total: 6 interactions']);
+    } finally {
+      hiddenIndexes.clear();
+    }
   });
 
   it('truncates long labels in the middle', () => {

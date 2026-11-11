@@ -5,6 +5,7 @@ import {
   getModelDisplayName,
   getModelVendor,
   isActiveAutoModeFeature,
+  isCustomProviderModel,
   isKnownModelName,
   isUnknownModelName,
   KNOWN_MODELS,
@@ -208,5 +209,14 @@ describe('modelConfig', () => {
         code_acceptance_activity_count,
       })).toBe(expected);
     });
+  });
+});
+
+describe('isCustomProviderModel', () => {
+  it('accepts provider/model and valid URLs but rejects malformed URLs', () => {
+    expect(isCustomProviderModel('openrouter/llama')).toBe(true);
+    expect(isCustomProviderModel('https://host.example/model')).toBe(true);
+    expect(isCustomProviderModel('https://[invalid/model')).toBe(false);
+    expect(isCustomProviderModel('gpt-5')).toBe(false);
   });
 });

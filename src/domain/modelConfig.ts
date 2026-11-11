@@ -20,7 +20,14 @@ export function isCustomProviderModel(modelName: string): boolean {
   const name = modelName.trim();
   const start = /^https?:\/\//i.test(name) ? name.indexOf('://') + 3 : 0;
   const separator = name.indexOf('/', start);
-  return separator > start && separator < name.length - 1;
+  if (separator <= start || separator >= name.length - 1) return false;
+  if (start === 0) return true;
+  try {
+    new URL(name);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export const MODEL_VENDOR_ORDER: readonly ModelVendorGroup[] = [
