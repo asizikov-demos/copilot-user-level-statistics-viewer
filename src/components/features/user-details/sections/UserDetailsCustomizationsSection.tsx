@@ -17,7 +17,7 @@ import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 
 const CATEGORY_LABELS: Record<CliCustomizationCategory, {
   title: string;
-  icon: ComponentType;
+  icon: ComponentType<{ size?: number }>;
   measure: string;
   unit: string;
   breakdownLabel: string;
@@ -153,7 +153,7 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
           const label = (
             <span className="flex min-w-0 flex-1 items-center justify-between gap-4 pr-3">
               <span className="flex min-w-0 items-center gap-2">
-                <span className="flex-shrink-0" aria-hidden="true"><Icon /></span>
+                <span className="flex-shrink-0" aria-hidden="true"><Icon size={16} /></span>
                 <span className="truncate text-sm font-semibold text-default">{category.title}</span>
               </span>
               <span className="flex-shrink-0 text-xs tabular-nums text-muted">
