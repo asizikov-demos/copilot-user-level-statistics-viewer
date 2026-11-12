@@ -34,6 +34,7 @@ export interface MetricsTableProps<T> {
   tableContainerClassName?: string;
   theadClassName?: string;
   tbodyClassName?: string;
+  paginationContainerClassName?: string;
   onRowClick?: (item: T, index: number) => void;
   getRowKey?: (item: T, index: number) => Key;
   renderExpandedRow?: (item: T, index: number) => ReactNode;
@@ -54,6 +55,7 @@ export function MetricsTable<T>({
   tableContainerClassName,
   theadClassName,
   tbodyClassName,
+  paginationContainerClassName,
   onRowClick,
   getRowKey,
   renderExpandedRow,
@@ -186,7 +188,7 @@ export function MetricsTable<T>({
         </div>
       ) : table}
       {pageSize !== undefined && data.length > 0 && (
-        <div className="mt-4">
+        <div className={cn('mt-4', paginationContainerClassName)}>
           <TablePagination
             itemCount={data.length}
             currentPage={currentPage}

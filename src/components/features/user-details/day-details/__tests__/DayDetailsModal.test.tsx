@@ -405,10 +405,13 @@ describe('DayDetailsModal', () => {
     it('renders the given day with navigation controls', () => {
       const markup = renderDay(makeUserDay({
         day: '2024-01-16',
-        cliCustomizations: [makeCustomizationDaySummary('skill', 2)],
+        cliCustomizations: [{
+          ...makeCustomizationDaySummary('skill', 2),
+          observedInteractions: 2,
+        }],
       }));
 
-      expect(markup).toContain('>2</td>');
+      expect(markup).toContain('>2 reported invocations</span>');
       expect(markup).toContain('Previous day');
       expect(markup).toContain('Next day');
     });
@@ -451,23 +454,26 @@ describe('DayDetailsModal', () => {
     it('shows collapsed day-local distinct counts per category', () => {
       const markup = renderDay(makeUserDay({
         cliCustomizations: [
-          makeCustomizationDaySummary('skill', 65, [makeCustomizationItem('other', 19)]),
-          makeCustomizationDaySummary('custom_agent', 1, [makeCustomizationItem('daily-reviewer', 7)]),
-          makeCustomizationDaySummary('mcp', 1, [makeCustomizationItem('daily-server', 12)]),
-          makeCustomizationDaySummary('slash_cmd', 2, [makeCustomizationItem('custom', 3)]),
+          { ...makeCustomizationDaySummary('skill', 65, [makeCustomizationItem('other', 19)]), observedInteractions: 19 },
+          { ...makeCustomizationDaySummary('custom_agent', 1, [makeCustomizationItem('daily-reviewer', 7)]), observedInteractions: 7 },
+          { ...makeCustomizationDaySummary('mcp', 1, [makeCustomizationItem('daily-server', 12)]), observedInteractions: 12 },
+          { ...makeCustomizationDaySummary('slash_cmd', 2, [makeCustomizationItem('custom', 3)]), observedInteractions: 3 },
         ],
       }));
 
       expect(markup).toContain('id="day-details-cli-customizations"');
-      expect(markup).toContain('Distinct items used on this day.');
+      expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
       for (const title of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
         expect(markup).toContain(title);
       }
-      for (const count of [65, 1, 2]) {
-        expect(markup).toContain(`>${count}</td>`);
-      }
+      for (const countLabel of [
+        '19 reported invocations',
+        '7 reported starts',
+        '12 reported connection attempts',
+        '3 reported invocations',
+      ]) expect(markup).toContain(`>${countLabel}</span>`);
       expect(markup.match(/aria-expanded="false"/g)).toHaveLength(4);
-      expect(markup).not.toContain('daily-reviewer');
+      expect(markup).not.toContain('role="region" aria-label="Skills reported items"');
       expect(markup).not.toContain('CLI Customizations');
       expect(markup).not.toContain('Average distinct items');
     });
@@ -475,20 +481,23 @@ describe('DayDetailsModal', () => {
     it('renders reported zero counts and omits missing categories', () => {
       const markup = renderDay(makeUserDay({
         cliCustomizations: [
-          makeCustomizationDaySummary('custom_agent', 0),
-          makeCustomizationDaySummary('skill', 2),
+          { ...makeCustomizationDaySummary('custom_agent', 0), observedInteractions: 0 },
+          {
+            ...makeCustomizationDaySummary('skill', 2, [makeCustomizationItem('review', 2)]),
+            observedInteractions: 2,
+          },
           makeCustomizationDaySummary('mcp', null),
           makeCustomizationDaySummary('slash_cmd', null),
         ],
       }));
-      const tableMarkup = markup.slice(markup.indexOf('<table'), markup.indexOf('</table>') + '</table>'.length);
+      const reportedItemsMarkup = markup.slice(markup.indexOf('>Reported items</h3>'));
 
-      expect(markup).toContain('>0</td>');
-      expect(markup).toContain('>2</td>');
-      expect(tableMarkup).not.toContain('MCP servers');
-      expect(tableMarkup).not.toContain('Slash commands');
-      expect(tableMarkup).not.toContain('Not reported');
-      expect(markup).not.toContain('aria-expanded');
+      expect(reportedItemsMarkup).toContain('>0 reported starts</span>');
+      expect(reportedItemsMarkup).toContain('>2 reported invocations</span>');
+      expect(reportedItemsMarkup).not.toContain('MCP servers');
+      expect(reportedItemsMarkup).not.toContain('Slash commands');
+      expect(reportedItemsMarkup).not.toContain('Not reported');
+      expect(markup.match(/aria-expanded="false"/g)).toHaveLength(1);
     });
   });
 

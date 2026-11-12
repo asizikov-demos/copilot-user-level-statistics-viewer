@@ -1,7 +1,7 @@
 'use client';
 
-import { useId, useState } from 'react';
-import { ChevronRightIcon } from '@primer/octicons-react';
+import type { ComponentType } from 'react';
+import { BookIcon, CommandPaletteIcon, CopilotIcon, McpIcon } from '@primer/octicons-react';
 import CompositionChartCard from '../../../charts/CompositionChartCard';
 import { getSequentialColor } from '../../../charts/utils/chartColors';
 import type { CompositionEntry } from '../../../charts/utils/compositionChart';
@@ -12,10 +12,12 @@ import {
   type CliCustomizationItemSummary,
   type CliCustomizationSummary,
 } from '../../../../types/cliCustomizations';
+import DisclosureSection from '../../../ui/DisclosureSection';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
 
 const CATEGORY_LABELS: Record<CliCustomizationCategory, {
   title: string;
+  icon: ComponentType;
   measure: string;
   unit: string;
   breakdownLabel: string;
@@ -23,6 +25,7 @@ const CATEGORY_LABELS: Record<CliCustomizationCategory, {
 }> = {
   skill: {
     title: 'Skills',
+    icon: BookIcon,
     measure: 'Reported invocations',
     unit: 'invocations',
     breakdownLabel: 'Invocations by skill',
@@ -30,6 +33,7 @@ const CATEGORY_LABELS: Record<CliCustomizationCategory, {
   },
   custom_agent: {
     title: 'Custom agents',
+    icon: CopilotIcon,
     measure: 'Reported starts',
     unit: 'starts',
     breakdownLabel: 'Starts by custom agent',
@@ -37,6 +41,7 @@ const CATEGORY_LABELS: Record<CliCustomizationCategory, {
   },
   mcp: {
     title: 'MCP servers',
+    icon: McpIcon,
     measure: 'Connection attempts',
     unit: 'connection attempts',
     breakdownLabel: 'Connection attempts by MCP server',
@@ -44,6 +49,7 @@ const CATEGORY_LABELS: Record<CliCustomizationCategory, {
   },
   slash_cmd: {
     title: 'Slash commands',
+    icon: CommandPaletteIcon,
     measure: 'Reported invocations',
     unit: 'invocations',
     breakdownLabel: 'Invocations by slash command',
@@ -90,7 +96,7 @@ const numericColumnStyles = {
   className: 'px-6 py-4 text-right text-sm text-default tabular-nums',
 };
 
-function CustomizationItemDetails({ summary, id }: { summary: CustomizationSummary; id: string }) {
+function CustomizationItemDetails({ summary }: { summary: CustomizationSummary }) {
   const columns: TableColumn<CliCustomizationItemSummary>[] = [
     {
       id: 'name',
@@ -115,68 +121,73 @@ function CustomizationItemDetails({ summary, id }: { summary: CustomizationSumma
     },
   ];
   return (
-    <div id={id} role="region" aria-label={`${CATEGORY_LABELS[summary.category].title} reported items`} className="space-y-3">
-      <p className="text-xs text-muted">
-        {'distinctItems' in summary
-          ? 'Reported top items for this day.'
-          : 'Reported top items only. Averages use days with reported activity.'}
-        {summary.category === 'mcp' && ' Connections include failed attempts, not tool calls.'}
-        {summary.items.some(item => item.interactionCount === null) && ' Missing interaction counts and derived values are shown as a dash.'}
-      </p>
+    <div role="region" aria-label={`${CATEGORY_LABELS[summary.category].title} reported items`}>
       <MetricsTable
         data={summary.items}
         columns={columns}
         getRowKey={item => item.name}
-        pageSize={5}
+        pageSize={summary.items.length > 5 ? 5 : undefined}
         itemLabel={`${CATEGORY_LABELS[summary.category].title.toLowerCase()} items`}
+        paginationContainerClassName="px-6"
+        tableClassName="w-full"
         tableContainerClassName="overflow-x-auto"
+        theadClassName="border-b border-default bg-muted"
+        tbodyClassName="divide-y divide-muted"
+        rowClassName={() => 'hover:bg-muted'}
       />
     </div>
   );
 }
 
 function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] }) {
-  const [expandedCategories, setExpandedCategories] = useState<Set<CliCustomizationCategory>>(new Set());
-  const id = useId();
-  const columns: TableColumn<CustomizationSummary>[] = [
-    {
-      id: 'category',
-      header: 'Customization',
-      className: 'px-6 py-4 text-sm text-default',
-      renderCell: summary => summary.items.length === 0 ? CATEGORY_LABELS[summary.category].title : (
-        <button
-          type="button"
-          aria-expanded={expandedCategories.has(summary.category)}
-          aria-controls={`${id}-${summary.category}`}
-          onClick={() => setExpandedCategories(previous => {
-            const next = new Set(previous);
-            if (next.has(summary.category)) next.delete(summary.category);
-            else next.add(summary.category);
-            return next;
-          })}
-          className="flex w-full items-center gap-2 rounded-sm text-left hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-outlineColor)]"
-        >
-          <ChevronRightIcon
-            aria-hidden="true"
-            className={`shrink-0${expandedCategories.has(summary.category) ? ' rotate-90' : ''}`}
-          />
-          {CATEGORY_LABELS[summary.category].title}
-        </button>
-      ),
-    },
-    { id: 'distinctCount', header: 'Total', renderCell: summary => getDistinctCount(summary)?.toLocaleString(), ...numericColumnStyles },
-  ];
   return (
-    <MetricsTable
-      data={summaries}
-      columns={columns}
-      getRowKey={summary => summary.category}
-      renderExpandedRow={summary => expandedCategories.has(summary.category) && summary.items.length > 0
-        ? <CustomizationItemDetails summary={summary} id={`${id}-${summary.category}`} />
-        : null}
-      tableClassName="w-full table-fixed divide-y divide-default"
-      tableContainerClassName="mt-4 overflow-x-auto rounded-md border border-default"
-    />
+    <div className="mt-4 rounded-md border border-default bg-default">
+      <div className="border-b border-default px-6 py-4">
+        <h3 className="text-lg font-semibold text-default">Reported items</h3>
+        <p className="mt-1 text-sm text-muted">Expand a category to see its reported items.</p>
+      </div>
+      <div className="space-y-3 px-6 py-4">
+        {summaries.map(summary => {
+          const category = CATEGORY_LABELS[summary.category];
+          const Icon = category.icon;
+          const label = (
+            <span className="flex min-w-0 flex-1 items-center justify-between gap-4 pr-3">
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="flex-shrink-0" aria-hidden="true"><Icon /></span>
+                <span className="truncate text-sm font-semibold text-default">{category.title}</span>
+              </span>
+              <span className="flex-shrink-0 text-xs tabular-nums text-muted">
+                {summary.observedInteractions === null
+                  ? 'Counts unavailable'
+                  : `${summary.observedInteractions.toLocaleString()} reported ${category.unit}`}
+              </span>
+            </span>
+          );
+
+          if (summary.items.length === 0) {
+            return (
+              <div key={summary.category} className="flex items-center justify-between gap-4 rounded-md border border-default bg-muted px-4 py-3">
+                {label}
+              </div>
+            );
+          }
+
+          return (
+            <DisclosureSection
+              key={summary.category}
+              defaultExpanded={false}
+              containerClassName="overflow-hidden rounded-md border border-default"
+              buttonClassName="flex w-full items-center justify-between bg-muted px-4 py-3 transition-colors hover:bg-[var(--control-bgColor-hover)]"
+              contentClassName="border-t border-default"
+              labelClassName="flex min-w-0 flex-1"
+              label={label}
+            >
+              <CustomizationItemDetails summary={summary} />
+            </DisclosureSection>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -217,7 +228,6 @@ type UserDetailsCustomizationsSectionProps = {
 export default function UserDetailsCustomizationsSection(props: UserDetailsCustomizationsSectionProps) {
   const { sectionId } = props;
   const reportedSummaries = props.summaries.filter(summary => getDistinctCount(summary) != null);
-  const hasReportedDistinctCounts = reportedSummaries.length > 0;
   const hasCustomizationData = props.summaries.some(summary =>
     getDistinctCount(summary) !== null || summary.observedInteractions !== null,
   );
@@ -227,11 +237,7 @@ export default function UserDetailsCustomizationsSection(props: UserDetailsCusto
     <section id={sectionId} aria-labelledby={`${sectionId}-title`} className="scroll-mt-28">
       <h2 id={`${sectionId}-title`} className="text-xl font-semibold text-default">Customizations</h2>
       <p className="mt-1 text-sm text-muted">
-        {hasReportedDistinctCounts
-          ? props.mode === 'day'
-            ? 'Distinct items used on this day.'
-            : 'Sum of reported daily distinct counts, not unique items across the period.'
-          : 'Reported invocations, agent starts, and MCP connection attempts by item.'}
+        Reported invocations, agent starts, and MCP connection attempts by item.
       </p>
       <CustomizationInvocationCharts summaries={props.summaries} />
       {reportedSummaries.length > 0 && <CustomizationsTable summaries={reportedSummaries} />}

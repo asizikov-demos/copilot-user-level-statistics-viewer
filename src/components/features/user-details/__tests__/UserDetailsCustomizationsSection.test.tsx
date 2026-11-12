@@ -103,24 +103,30 @@ describe('UserDetailsCustomizationsSection', () => {
       expect(renderToStaticMarkup(renderPeriod(summaries))).toBe('');
     });
 
-    it('renders one table row per category with a reported distinct count', () => {
+    it('renders collapsed category disclosures with labeled interaction counts', () => {
       const markup = renderToStaticMarkup(renderPeriod([
-        makeCustomizationSummary('skill', 7),
-        makeCustomizationSummary('custom_agent', 7),
-        makeCustomizationSummary('mcp', 14),
-        makeCustomizationSummary('slash_cmd', 3),
+        { ...makeCustomizationSummary('skill', 7, [makeCustomizationItem('review', 1)]), observedInteractions: 11 },
+        { ...makeCustomizationSummary('custom_agent', 7, [makeCustomizationItem('reviewer', 1)]), observedInteractions: 7 },
+        { ...makeCustomizationSummary('mcp', 14, [makeCustomizationItem('server', 1)]), observedInteractions: 6 },
+        { ...makeCustomizationSummary('slash_cmd', 3, [makeCustomizationItem('custom', 1)]), observedInteractions: 3 },
       ]));
 
       expect(markup).toContain('>Customizations</h2>');
-      expect(markup).toContain('Sum of reported daily distinct counts, not unique items across the period.');
-      expect(markup.match(/<table/g)).toHaveLength(1);
+      expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
+      expect(markup).toContain('>Reported items</h3>');
+      expect(markup.match(/aria-expanded="false"/g) ?? []).toHaveLength(4);
+      expect(markup).not.toContain('<table');
+      expect(markup).not.toContain('>1 item</span>');
       for (const label of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
         expect(markup).toContain(label);
       }
-      expect(markup.match(/>7<\/td>/g)).toHaveLength(2);
-      expect(markup).toContain('>14</td>');
-      expect(markup).toContain('>3</td>');
-      expect(markup.match(/<h3/g)).toHaveLength(4);
+      expect(markup).toContain('>11 reported invocations</span>');
+      expect(markup).toContain('>7 reported starts</span>');
+      expect(markup).toContain('>6 reported connection attempts</span>');
+      expect(markup).toContain('>3 reported invocations</span>');
+      for (const icon of ['octicon-book', 'octicon-copilot', 'octicon-mcp', 'octicon-command-palette']) {
+        expect(markup).toContain(icon);
+      }
     });
 
     it('renders invocation doughnuts for all four customization categories', () => {
@@ -198,16 +204,17 @@ describe('UserDetailsCustomizationsSection', () => {
 
     it('renders reported zero counts and omits categories with missing counts', () => {
       const markup = renderToStaticMarkup(renderPeriod([
-        makeCustomizationSummary('skill', 0),
-        makeCustomizationSummary('custom_agent', 0),
+        { ...makeCustomizationSummary('skill', 0), observedInteractions: 0 },
+        { ...makeCustomizationSummary('custom_agent', 0), observedInteractions: 0 },
         makeCustomizationSummary('mcp', null),
         makeCustomizationSummary('slash_cmd', null),
       ]));
-      const tableMarkup = markup.slice(markup.indexOf('<table'), markup.indexOf('</table>') + '</table>'.length);
+      const reportedItemsMarkup = markup.slice(markup.indexOf('>Reported items</h3>'));
 
-      expect(markup.match(/>0<\/td>/g)).toHaveLength(2);
-      expect(tableMarkup).not.toContain('MCP servers');
-      expect(tableMarkup).not.toContain('Slash commands');
+      expect(reportedItemsMarkup).toContain('>0 reported invocations</span>');
+      expect(reportedItemsMarkup).toContain('>0 reported starts</span>');
+      expect(reportedItemsMarkup).not.toContain('MCP servers');
+      expect(reportedItemsMarkup).not.toContain('Slash commands');
       expect(markup).not.toContain('Not reported');
       expect(markup).not.toContain('aria-expanded');
     });
@@ -225,11 +232,12 @@ describe('UserDetailsCustomizationsSection', () => {
         : <UserDetailsCustomizationsSection sectionId="daily-customizations" mode="day"
             summaries={[makeCustomizationDaySummary('skill', 2, items)]} />,
       )).root;
-      expect(root.findAllByType('td')[1].children.join('')).toBe('2');
+      expect(root.findByType('button').findAllByType('span').some(span => span.children.join('') === 'Counts unavailable')).toBe(true);
       await act(async () => { root.findByType('button').props.onClick(); });
       const region = root.findByProps({ role: 'region' });
       expect(cellText(region.findByType('tbody').findByType('tr')).slice(1)).toEqual(['-', '-', '-']);
-      expect(region.findAllByType('p').map(p => p.children.join('')).join(' ')).toContain('Missing interaction counts');
+      expect(region.findAllByType(TablePagination)).toHaveLength(0);
+      expect(region.findAllByType('p')).toHaveLength(0);
     });
 
     it('expands category rows independently and labels each item region', async () => {
@@ -247,7 +255,7 @@ describe('UserDetailsCustomizationsSection', () => {
 
       await act(async () => { buttons[0].props.onClick(); });
       const skills = root.findByProps({ role: 'region' });
-      expect(skills.props.id).toBe(buttons[0].props['aria-controls']);
+      expect(root.findByProps({ id: buttons[0].props['aria-controls'] }).findByProps({ role: 'region' })).toBe(skills);
       expect(skills.props['aria-label']).toBe('Skills reported items');
       expect(cellText(skills.findByType('tbody').findAllByType('tr')[0]).slice(1)).toEqual(['11', '2', '5.5']);
       expect(skills.findAllByType('td')[0].findByType('span').children.join('')).toBe(' (custom)');
@@ -293,16 +301,19 @@ describe('UserDetailsCustomizationsSection', () => {
         <UserDetailsCustomizationsSection
           sectionId="daily-customizations"
           mode="day"
-          summaries={[makeCustomizationDaySummary('custom_agent', 6, [makeCustomizationItem('a', 2)])]}
+          summaries={[{
+            ...makeCustomizationDaySummary('custom_agent', 6, [makeCustomizationItem('a', 2)]),
+            observedInteractions: 2,
+          }]}
         />,
       )).root;
 
-      expect(root.findAllByType('p')[0].children.join('')).toBe('Distinct items used on this day.');
-      expect(root.findAllByType('td')[1].children.join('')).toBe('6');
+      expect(root.findAllByType('p')[0].children.join(''))
+        .toBe('Reported invocations, agent starts, and MCP connection attempts by item.');
+      expect(root.findByType('button').findAllByType('span').some(span => span.children.join('') === '2 reported starts')).toBe(true);
 
       await act(async () => { root.findByType('button').props.onClick(); });
-      expect(root.findByProps({ role: 'region' }).findAllByType('p').map(p => p.children.join('')).join(' '))
-        .toContain('Reported top items for this day.');
+      expect(root.findByProps({ role: 'region' }).findByType('table')).toBeDefined();
     });
   });
 
@@ -374,12 +385,15 @@ describe('UserDetailsCustomizationsSection', () => {
     it('renders customizations without unrelated activity sections', () => {
       const markup = renderToStaticMarkup(renderProfile(makeUserDetailsViewModel({
         userDetails: makeUserDetails({
-          cliCustomizations: [makeCustomizationSummary('skill', 2, [makeCustomizationItem('other', 7)])],
+          cliCustomizations: [{
+            ...makeCustomizationSummary('skill', 2, [makeCustomizationItem('other', 7)]),
+            observedInteractions: 7,
+          }],
         }),
       })));
 
       expect(markup).toContain('id="user-details-cli-customizations"');
-      expect(markup).toContain('>2</td>');
+      expect(markup).toContain('>7 reported invocations</span>');
       for (const id of [
         'user-details-client-activity',
         'user-details-feature-activity',
