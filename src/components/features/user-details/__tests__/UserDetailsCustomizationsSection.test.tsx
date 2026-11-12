@@ -112,10 +112,11 @@ describe('UserDetailsCustomizationsSection', () => {
       ]));
 
       expect(markup).toContain('>Customizations</h2>');
-      expect(markup).toContain('Sum of reported daily distinct counts, not unique items across the period.');
+      expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
       expect(markup).toContain('>Reported items</h3>');
       expect(markup.match(/aria-expanded="false"/g) ?? []).toHaveLength(4);
       expect(markup).not.toContain('<table');
+      expect(markup).not.toContain('>1 item</span>');
       for (const label of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
         expect(markup).toContain(label);
       }
@@ -307,7 +308,8 @@ describe('UserDetailsCustomizationsSection', () => {
         />,
       )).root;
 
-      expect(root.findAllByType('p')[0].children.join('')).toBe('Distinct items used on this day.');
+      expect(root.findAllByType('p')[0].children.join(''))
+        .toBe('Reported invocations, agent starts, and MCP connection attempts by item.');
       expect(root.findByType('button').findAllByType('span').some(span => span.children.join('') === '2 reported starts')).toBe(true);
 
       await act(async () => { root.findByType('button').props.onClick(); });

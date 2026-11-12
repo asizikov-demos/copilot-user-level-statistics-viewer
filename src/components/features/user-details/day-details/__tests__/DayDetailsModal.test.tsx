@@ -462,7 +462,7 @@ describe('DayDetailsModal', () => {
       }));
 
       expect(markup).toContain('id="day-details-cli-customizations"');
-      expect(markup).toContain('Distinct items used on this day.');
+      expect(markup).toContain('Reported invocations, agent starts, and MCP connection attempts by item.');
       for (const title of ['Skills', 'Custom agents', 'MCP servers', 'Slash commands']) {
         expect(markup).toContain(title);
       }

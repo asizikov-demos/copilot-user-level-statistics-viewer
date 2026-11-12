@@ -155,9 +155,6 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
               <span className="flex min-w-0 items-center gap-2">
                 <span className="flex-shrink-0" aria-hidden="true"><Icon /></span>
                 <span className="truncate text-sm font-semibold text-default">{category.title}</span>
-                <span className="flex-shrink-0 text-xs text-muted">
-                  {summary.items.length} {summary.items.length === 1 ? 'item' : 'items'}
-                </span>
               </span>
               <span className="flex-shrink-0 text-xs tabular-nums text-muted">
                 {summary.observedInteractions === null
@@ -231,7 +228,6 @@ type UserDetailsCustomizationsSectionProps = {
 export default function UserDetailsCustomizationsSection(props: UserDetailsCustomizationsSectionProps) {
   const { sectionId } = props;
   const reportedSummaries = props.summaries.filter(summary => getDistinctCount(summary) != null);
-  const hasReportedDistinctCounts = reportedSummaries.length > 0;
   const hasCustomizationData = props.summaries.some(summary =>
     getDistinctCount(summary) !== null || summary.observedInteractions !== null,
   );
@@ -241,11 +237,7 @@ export default function UserDetailsCustomizationsSection(props: UserDetailsCusto
     <section id={sectionId} aria-labelledby={`${sectionId}-title`} className="scroll-mt-28">
       <h2 id={`${sectionId}-title`} className="text-xl font-semibold text-default">Customizations</h2>
       <p className="mt-1 text-sm text-muted">
-        {hasReportedDistinctCounts
-          ? props.mode === 'day'
-            ? 'Distinct items used on this day.'
-            : 'Sum of reported daily distinct counts, not unique items across the period.'
-          : 'Reported invocations, agent starts, and MCP connection attempts by item.'}
+        Reported invocations, agent starts, and MCP connection attempts by item.
       </p>
       <CustomizationInvocationCharts summaries={props.summaries} />
       {reportedSummaries.length > 0 && <CustomizationsTable summaries={reportedSummaries} />}
