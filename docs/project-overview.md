@@ -11,6 +11,7 @@ Engineering leaders and Copilot administrators upload GitHub Copilot user-level 
 - Only the new LOC schema (`loc_added_sum`, `loc_deleted_sum`, `loc_suggested_*`) is supported. Records with deprecated `generated_loc_sum` / `accepted_loc_sum` fields or missing required fields are skipped.
 - Broader input validation is external to the viewer. Aggregate enterprise/organization reports are not supported input.
 - `public/data/vscode.json` and `public/data/jetbrains.json` provide contextual plugin metadata, not primary metrics.
+- VS Code metadata uses Copilot Chat versions bundled with stable VS Code builds and their update-service timestamps; the 20-version rolling window limits historical classification.
 
 ## Architecture Invariants
 

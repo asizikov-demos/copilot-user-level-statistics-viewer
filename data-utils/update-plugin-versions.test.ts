@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   parseMinorFromTag,
-  collectStableReleases,
+  fetchVsCodeData,
   hasVsCodeDataChanged,
   STABLE_RELEASES_WINDOW,
   type VsCodeData,
@@ -30,62 +30,61 @@ describe('parseMinorFromTag', () => {
   });
 });
 
-describe('collectStableReleases', () => {
-  const makeRelease = (
-    version: string,
-    lastUpdated = '2026-03-06T00:00:00.123Z',
-  ) => ({
-    version,
-    lastUpdated,
+describe('fetchVsCodeData', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const existing: VsCodeData = {
+    stableMinor: 48, previewMinor: 49, updatedAt: '', stableReleases: [],
+  };
+  const editorVersions = ['1.150.1', ...Array.from({ length: 25 }, (_, i) => `1.${150 - i}.0`)];
+
+  function mockFeed(invalidManifest = false) {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.endsWith('/api/releases/stable')) return Response.json(editorVersions);
+      if (url.includes('/api/versions/')) {
+        const editorVersion = url.split('/')[5];
+        const [, minor, patch] = editorVersion.split('.').map(Number);
+        const commit = String(minor * 10 + patch).padStart(40, '0');
+        return Response.json({
+          productVersion: editorVersion, version: commit,
+          timestamp: Date.UTC(2026, 0, minor - 120, patch),
+        });
+      }
+      const commit = url.split('/')[5];
+      const minor = Math.floor(Number(commit) / 10);
+      return Response.json({
+        name: 'copilot-chat', publisher: 'GitHub',
+        version: invalidManifest ? '0.80.2026111201' : `0.${minor - 70}.0`,
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  it('uses bundled stable versions, deduplicates patches, and retains the earliest release date', async () => {
+    mockFeed();
+    const data = await fetchVsCodeData(existing);
+    expect(data.stableMinor).toBe(80);
+    expect(data.previewMinor).toBe(81);
+    expect(data.stableReleases).toHaveLength(STABLE_RELEASES_WINDOW);
+    expect(data.stableReleases[0]).toEqual({
+      version: '0.80.0', releaseDate: new Date(Date.UTC(2026, 0, 30)).toISOString(),
+    });
+    expect(data.stableReleases.at(-1)?.version).toBe('0.61.0');
   });
 
-  it('filters out timestamp builds from Marketplace versions', () => {
-    const releases = [
-      makeRelease('0.39.2026030604'),
-      makeRelease('0.38.2'),
-      makeRelease('0.38.1'),
-    ];
-    const result = collectStableReleases(releases, 10);
-    expect(result).toHaveLength(2);
-    expect(result[0].version).toBe('0.38.2');
-    expect(result[1].version).toBe('0.38.1');
+  it('reuses release metadata from the previous update', async () => {
+    const fetchMock = mockFeed();
+    const first = await fetchVsCodeData(existing);
+    fetchMock.mockClear();
+    const second = await fetchVsCodeData(first);
+    expect(second).toEqual(first);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('respects the limit', () => {
-    const releases = Array.from({ length: 30 }, (_, i) =>
-      makeRelease(`0.${38 - i}.0`),
-    );
-    expect(collectStableReleases(releases, 5)).toHaveLength(5);
-  });
-
-  it('returns an empty array when all releases are timestamp builds', () => {
-    const releases = [makeRelease('0.39.2026030604')];
-    expect(collectStableReleases(releases, 10)).toHaveLength(0);
-  });
-
-  it('uses Marketplace lastUpdated for releaseDate without fractional seconds', () => {
-    const releases = [makeRelease('0.38.2', '2026-03-06T12:00:00.987Z')];
-    expect(collectStableReleases(releases, 10)[0].releaseDate).toBe('2026-03-06T12:00:00Z');
-  });
-
-  it('matches current Marketplace stable ordering', () => {
-    const releases = [
-      makeRelease('0.48.1', '2026-05-15T22:33:59.763Z'),
-      makeRelease('0.45.1', '2026-04-23T20:05:11.56Z'),
-      makeRelease('0.44.2', '2026-04-20T09:34:44.32Z'),
-      makeRelease('0.43.2026040705', '2026-04-07T11:18:40.72Z'),
-      makeRelease('0.43.0', '2026-04-07T11:38:19.68Z'),
-    ];
-    expect(collectStableReleases(releases, 10)).toEqual([
-      { version: '0.48.1', releaseDate: '2026-05-15T22:33:59Z' },
-      { version: '0.45.1', releaseDate: '2026-04-23T20:05:11Z' },
-      { version: '0.44.2', releaseDate: '2026-04-20T09:34:44Z' },
-      { version: '0.43.0', releaseDate: '2026-04-07T11:38:19Z' },
-    ]);
-  });
-
-  it('STABLE_RELEASES_WINDOW is exported and is a positive number', () => {
-    expect(STABLE_RELEASES_WINDOW).toBeGreaterThan(0);
+  it('fails instead of publishing prerelease or invalid bundled metadata', async () => {
+    mockFeed(true);
+    await expect(fetchVsCodeData(existing)).rejects.toThrow('Invalid bundled Copilot Chat version');
   });
 });
 
