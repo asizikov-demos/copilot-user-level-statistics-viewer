@@ -25,7 +25,7 @@ describe('modelConfig', () => {
   });
 
   describe('known model catalog', () => {
-    // Pricing-table snapshot checked on 2026-11-10; context tiers share model identities.
+    // Pricing-table snapshot checked on 2026-11-14; context tiers share model identities.
     // https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
     it.each([
       ['GPT-5.3-Codex', 'Powerful', 'OpenAI'],
@@ -54,6 +54,7 @@ describe('modelConfig', () => {
       ['Gemini 3.8 Flash', 'Versatile', 'Google'],
       ['Gemini 4 Argon', 'Powerful', 'Google'],
       ['Gemini 4 Carbon', 'Powerful', 'Google'],
+      ['Gemini 4 Hydrogen', 'Versatile', 'Google'],
       ['MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'],
       ['Grok 4.5', 'Versatile', 'xAI'],
       ['Grok 4.6', 'Versatile', 'xAI'],
@@ -137,6 +138,8 @@ describe('modelConfig', () => {
       ['gemini-4-carbon', 'gemini-4-carbon', 'Powerful', 'Google'],
       ['Gemini 4 Carbon', 'gemini-4-carbon', 'Powerful', 'Google'],
       ['  GEMINI_4_CARBON  ', 'gemini-4-carbon', 'Powerful', 'Google'],
+      ['gemini-4-hydrogen', 'gemini-4-hydrogen', 'Versatile', 'Google'],
+      ['  GEMINI_4_HYDROGEN  ', 'gemini-4-hydrogen', 'Versatile', 'Google'],
       ['gpt-image-2.5-flare', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
       ['GPT Image 2.5 Flare', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
       ['  GPT_IMAGE_2.5_FLARE  ', 'gpt-image-2.5-flare', 'Image Generation', 'OpenAI'],
