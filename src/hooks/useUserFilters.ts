@@ -31,6 +31,8 @@ interface UseUserFiltersResult {
   setSelectedClients: (value: string[]) => void;
   selectedFeatures: UserFeatureFilter[];
   setSelectedFeatures: (value: UserFeatureFilter[]) => void;
+  serverSideOnlyTelemetry: boolean;
+  setServerSideOnlyTelemetry: (value: boolean) => void;
   clientOptions: ClientFilterOption[];
   featureOptions: typeof USER_FEATURE_FILTERS[number][];
   hasActiveFilters: boolean;
@@ -88,6 +90,7 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedClients, setSelectedClients] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<UserFeatureFilter[]>([]);
+  const [serverSideOnlyTelemetry, setServerSideOnlyTelemetry] = useState(false);
 
   const trieRoot = useMemo(() => {
     const root: TrieNode = {
@@ -185,9 +188,11 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
         );
       const matchesSelectedFeature = selectedFeatures.length === 0
         || selectedFeatures.some(feature => matchesFeature(user, feature));
-      return matchesClient && matchesSelectedFeature;
+      const matchesTelemetry = !serverSideOnlyTelemetry
+        || user.has_server_side_only_telemetry === true;
+      return matchesClient && matchesSelectedFeature && matchesTelemetry;
     }),
-    [selectedClients, selectedFeatures, usernameMatches]
+    [selectedClients, selectedFeatures, serverSideOnlyTelemetry, usernameMatches]
   );
 
   const clearFilters = () => {
@@ -195,6 +200,7 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
     setDebouncedSearchQuery('');
     setSelectedClients([]);
     setSelectedFeatures([]);
+    setServerSideOnlyTelemetry(false);
   };
 
   return {
@@ -204,9 +210,11 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
     setSelectedClients,
     selectedFeatures,
     setSelectedFeatures,
+    serverSideOnlyTelemetry,
+    setServerSideOnlyTelemetry,
     clientOptions,
     featureOptions,
-    hasActiveFilters: Boolean(searchQuery || selectedClients.length || selectedFeatures.length),
+    hasActiveFilters: Boolean(searchQuery || selectedClients.length || selectedFeatures.length || serverSideOnlyTelemetry),
     clearFilters,
     filteredUsers,
   };

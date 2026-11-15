@@ -32,6 +32,20 @@ function summarizeOne(records: SummaryRecord[]): UserSummary {
 }
 
 describe('user summary aggregation', () => {
+  it.each<{ flags: (boolean | null | undefined)[]; expected: boolean }>([
+    { flags: [undefined, null, true], expected: false },
+    { flags: [true, false, null, true], expected: true },
+    { flags: [false, true], expected: true },
+  ])('flags server-side-only telemetry across records: $flags', ({ flags, expected }) => {
+    const records = flags.map((flag, index) => ({
+      metric: { day: `2024-01-${15 + index}`, client_telemetry_present: flag },
+    }));
+    expect(summarizeOne(records).has_server_side_only_telemetry).toBe(expected);
+    expect(summarizeOne(records.map(record => ({
+      metric: { ...record.metric, day: '2024-01-15' },
+    }))).has_server_side_only_telemetry).toBe(expected);
+  });
+
   it('sums signed counters and AI credits across a user\'s records', () => {
     const summary = summarizeOne([
       {

@@ -164,6 +164,47 @@ describe('Users feature sections', () => {
     ]);
   });
 
+  it('combines the server-side-only filter with other filters and clears it', async () => {
+    renderTable([
+      makeUser({ user_login: 'alice', has_server_side_only_telemetry: true }),
+      makeUser({ user_id: 2, user_login: 'alex', has_server_side_only_telemetry: true, clients_used: ['jetbrains'] }),
+      makeUser({ user_id: 3, user_login: 'anna', has_server_side_only_telemetry: true, used_cli: false }),
+      makeUser({ user_id: 4, user_login: 'bob', has_server_side_only_telemetry: true }),
+      makeUser({ user_id: 5, user_login: 'amy', has_server_side_only_telemetry: false }),
+      makeUser({ user_id: 6, user_login: 'ava' }),
+    ]);
+
+    const checkbox = screen.getByRole('checkbox', { name: 'Server Side Only Telemetry' });
+    const clear = screen.getByRole('button', { name: 'Clear' });
+    expect(clear.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(checkbox);
+    expect(getResultCount()).toBe('Showing 4 of 6 users');
+    expect(clear.hasAttribute('disabled')).toBe(false);
+    toggleFilterOptions('Clients used', ['VS Code']);
+    toggleFilterOptions('Feature used', ['CLI']);
+    fireEvent.change(screen.getByLabelText('Search by user login'), { target: { value: 'a' } });
+    await waitFor(() => expect(getResultCount()).toBe('Showing 1 of 6 users'));
+    expect(within(screen.getByRole('table')).getByText('alice')).toBeTruthy();
+
+    fireEvent.click(clear);
+    expect((checkbox as HTMLInputElement).checked).toBe(false);
+    expect(getResultCount()).toBe('Showing 6 of 6 users');
+    expect(clear.hasAttribute('disabled')).toBe(true);
+  });
+
+  it('resets pagination when the server-side-only filter changes', () => {
+    renderTable(Array.from({ length: 201 }, (_, index) => makeUser({
+      user_id: index + 1,
+      user_login: `user-${index}`,
+      has_server_side_only_telemetry: true,
+    })));
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Pagination' }))
+      .getByRole('link', { name: 'Next Page' }));
+    expect(screen.getByText('Showing 201-201 of 201 users')).toBeTruthy();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Server Side Only Telemetry' }));
+    expect(screen.getByText('Showing 1-200 of 201 users')).toBeTruthy();
+  });
+
   it('pages the users table, renders feature chips, and shows the empty state', () => {
     const users = Array.from({ length: 501 }, (_, index) => makeUser({
       user_login: `user-${String(index).padStart(3, '0')}`,
