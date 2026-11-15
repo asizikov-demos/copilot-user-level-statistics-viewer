@@ -224,6 +224,7 @@ export interface UserSummary {
   used_local_byok?: boolean | null;
   used_auto_mode?: boolean;
   used_custom_model_provider?: boolean;
+  has_server_side_only_telemetry?: boolean;
   ai_adoption_phase?: AIAdoptionPhase;
 }
 

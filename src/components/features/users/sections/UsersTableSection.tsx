@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, FormControl, Label, TextInput } from '@primer/react';
+import { Button, Checkbox, FormControl, Label, TextInput } from '@primer/react';
 import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
 import { useUserFilters } from '../../../../hooks/useUserFilters';
@@ -71,6 +71,8 @@ export default function UsersTableSection({
     setSelectedClients,
     selectedFeatures,
     setSelectedFeatures,
+    serverSideOnlyTelemetry,
+    setServerSideOnlyTelemetry,
     clientOptions,
     featureOptions,
     hasActiveFilters,
@@ -104,6 +106,7 @@ export default function UsersTableSection({
     searchQuery,
     selectedClients,
     selectedFeatures,
+    serverSideOnlyTelemetry,
     sortField,
     sortDirection,
     users,
@@ -259,6 +262,16 @@ export default function UsersTableSection({
               Clear
             </Button>
           </div>
+          <FormControl id="serverSideOnlyTelemetry">
+            <Checkbox
+              checked={serverSideOnlyTelemetry}
+              onChange={event => setServerSideOnlyTelemetry(event.target.checked)}
+            />
+            <FormControl.Label>Server Side Only Telemetry</FormControl.Label>
+            <FormControl.Caption>
+              Users with at least one day explicitly reporting missing client telemetry.
+            </FormControl.Caption>
+          </FormControl>
           <p className="m-0 text-sm text-muted">
             Showing {sortedUsers.length.toLocaleString()} of {users.length.toLocaleString()} users
           </p>

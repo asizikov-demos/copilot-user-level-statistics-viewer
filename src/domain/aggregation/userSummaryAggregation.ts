@@ -83,6 +83,7 @@ function createUserSummary(metric: CopilotMetrics): UserSummary {
     used_copilot_code_review_passive: false,
     used_auto_mode: false,
     used_custom_model_provider: false,
+    has_server_side_only_telemetry: false,
   };
 }
 
@@ -209,6 +210,9 @@ export function accumulateUserSummaryAggregation(
   userSummary.used_custom_model_provider =
     (userSummary.used_custom_model_provider ?? false)
     || hasCustomModelProviderActivity(metric);
+  userSummary.has_server_side_only_telemetry =
+    userSummary.has_server_side_only_telemetry
+    || metric.client_telemetry_present === false;
 
   if (usedCopilotCloudAgent) {
     accumulator.userCloudAgentDays.get(userId)!.add(date);
