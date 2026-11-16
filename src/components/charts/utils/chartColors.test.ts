@@ -1,13 +1,16 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   categoricalColors,
   chartColors,
   getIdeColor,
   getSequentialColor,
   hasIdeColor,
+  ideColors,
   rgbToRgba,
 } from './chartColors';
-import { resetChartThemeCache } from './chartTheme';
+import { resetChartThemeCache, toRgbColor } from './chartTheme';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -55,6 +58,38 @@ describe('getSequentialColor', () => {
 });
 
 describe('getIdeColor', () => {
+  it.each(['light', 'dark-dimmed'])('keeps both Copilot App identities readable on %s chart surfaces', theme => {
+    const css = readFileSync(join(
+      process.cwd(), 'node_modules/@primer/primitives/dist/css/functional/themes', `${theme}.css`,
+    ), 'utf8');
+    const tokens = new Map(Array.from(css.matchAll(/--([\w-]+):\s*([^;]+);/g), match => [match[1], match[2].trim()]));
+    vi.stubGlobal('document', { documentElement: {} });
+    vi.stubGlobal('getComputedStyle', () => ({
+      getPropertyValue: (name: string) => tokens.get(name.slice(2)) ?? '',
+    }));
+
+    const luminance = (color: string) => {
+      const channels = toRgbColor(color).match(/\d+/g)!.slice(0, 3).map(Number).map(value => {
+        const channel = value / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    };
+    for (const key of ['github_app', 'copilot_app', ' GITHUB_APP ', ' COPILOT_APP ']) {
+      const color = getIdeColor(key);
+      expect(color).toBe(toRgbColor(tokens.get('fgColor-default')!));
+      expect(ideColors[key.trim().toLowerCase()]).toBe(color);
+      for (const surface of ['bgColor-default', 'bgColor-muted']) {
+        const foreground = luminance(color);
+        const background = luminance(tokens.get(surface)!);
+        const contrast = (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+        expect(contrast, `${key} on ${surface}`).toBeGreaterThanOrEqual(3);
+      }
+    }
+    expect(getIdeColor('vscode')).toBe('#006EDB');
+    expect(getIdeColor('copilot_cli')).toBe('#CE2C85');
+  });
+
   it.each([
     ['VSCode', 'vscode'],
     ['  JetBrains  ', 'jetbrains'],

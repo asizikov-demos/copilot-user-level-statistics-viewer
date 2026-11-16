@@ -141,7 +141,7 @@ describe('shared IDE metadata registry', () => {
   it('maps Copilot App as a named client with Copilot visuals', () => {
     expect(formatIDEName('copilot_app')).toBe('Copilot App');
     expect(getIDEIcon('copilot_app')).not.toBe(getIDEIcon('copilot_cli'));
-    expect(getIdeColor('copilot_app')).toBe('#1F2328');
+    expect(getIdeColor('copilot_app')).toBe('rgb(31, 35, 40)');
     expect(getIdeColor('github_app')).toBe(getIdeColor('copilot_app'));
     expect(getIDEMetadata('github_app')?.canonicalKey).not.toBe(getIDEMetadata('copilot_app')?.canonicalKey);
   });
