@@ -106,7 +106,7 @@ describe('working-pattern reach', () => {
     }]);
     const aggregated = aggregateMetrics(parsed).aggregated;
 
-    expect(aggregated.overview.clientReachData).toEqual([{ client: 'github_app', users: 1 }]);
+    expect(aggregated.overview.clientReachData).toEqual([{ client: 'copilot_app', users: 1 }]);
     expect(aggregated.overview.workingPatterns).toMatchObject({
       localAgentUsers: 1,
       multipleLocalSurfaceUsers: 0,
