@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
@@ -20,6 +21,7 @@ interface ChatRequestsChartProps {
 }
 
 export default function ChatRequestsChart({ data }: ChatRequestsChartProps) {
+  useTheme();
   const modeSummaries = createChatModeMetricSummaries(data, (day, mode) => mode.getRequestsValue(day));
   const grandTotal = modeSummaries.reduce((sum, summary) => sum + summary.total, 0);
 

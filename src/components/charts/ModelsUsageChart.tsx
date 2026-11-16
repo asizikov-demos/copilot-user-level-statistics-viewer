@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { ActionList, ActionMenu, FormControl } from '@primer/react';
+import { useTheme, ActionList, ActionMenu, FormControl } from '@primer/react';
 import {
   getModelVendor,
   getModelDisplayName,
@@ -45,6 +45,7 @@ interface ModelsUsageChartProps {
 }
 
 export default function ModelsUsageChart({ modelEntries, dates, totalInteractions, variant }: ModelsUsageChartProps) {
+  const { colorScheme } = useTheme();
   const isAuto = variant === 'auto';
   const isCli = variant === 'cli';
   const isApp = variant === 'app';
@@ -105,7 +106,7 @@ export default function ModelsUsageChart({ modelEntries, dates, totalInteraction
       labels: dates.map(d => formatShortDate(d)),
       datasets
     };
-  }, [filteredEntries, dates, isAuto, isClient, variant]);
+  }, [filteredEntries, dates, isAuto, isClient, variant, colorScheme]);
 
   const displayedTotalInteractions = activeVendor
     ? filteredEntries.reduce((sum, entry) => sum + entry.total, 0)

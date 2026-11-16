@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import type { TooltipItem } from 'chart.js';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
@@ -26,16 +27,6 @@ type PaddedDay = {
   day: string;
   totals_by_model_feature: UserDayData['totals_by_model_feature'];
 };
-
-const modelBarChartOptions = createStackedBarChartOptions({
-  xAxisLabel: 'Date',
-  yAxisLabel: 'Interactions',
-  tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
-    const label = context.dataset.label ?? '';
-    const value = context.parsed.y ?? 0;
-    return `${label}: ${value.toLocaleString()} interactions`;
-  },
-});
 
 const modelChartConfig = {
   title: 'Activity by Model and Feature',
@@ -97,9 +88,19 @@ export default function UserActivityByModelAndFeatureChart({
   reportStartDay,
   reportEndDay,
 }: UserActivityByModelAndFeatureChartProps) {
+  const { colorScheme } = useTheme();
+  const modelBarChartOptions = createStackedBarChartOptions({
+    xAxisLabel: 'Date',
+    yAxisLabel: 'Interactions',
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
+      const label = context.dataset.label ?? '';
+      const value = context.parsed.y ?? 0;
+      return `${label}: ${value.toLocaleString()} interactions`;
+    },
+  });
   const barChartData = useMemo(
     () => buildModelBarChartData(days, reportStartDay, reportEndDay),
-    [days, reportStartDay, reportEndDay],
+    [days, reportStartDay, reportEndDay, colorScheme],
   );
 
   return (

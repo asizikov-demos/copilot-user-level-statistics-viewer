@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import type { SurfaceProductivityReadModel } from '../../../read-models/surfaceProductivity';
@@ -33,6 +34,7 @@ const TOGGLE_OPTIONS = [
 export default function SurfaceProductivityTrendChart({
   model,
 }: SurfaceProductivityTrendChartProps) {
+  const { colorScheme } = useTheme();
   const [metric, setMetric] = useState<TrendMetric>('activeUsers');
   const isActiveUsers = metric === 'activeUsers';
   const { chartData, options } = useMemo(
@@ -64,7 +66,7 @@ export default function SurfaceProductivityTrendChart({
         },
       },
     }),
-    [isActiveUsers, metric, model.dailyProductivity, model.reportEndDay, model.reportStartDay]
+    [isActiveUsers, metric, model.dailyProductivity, model.reportEndDay, model.reportStartDay, colorScheme]
   );
   const hasActivity = model.dailyProductivity.some(entry =>
     SURFACE_ORDER.some(surface =>

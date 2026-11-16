@@ -36,3 +36,13 @@ header.header {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+@media (max-width: 33.999rem) {
+  .actions .themeButton [data-component='text'] {
+    display: none;
+  }
+
+  .actions .themeButton [data-component='buttonContent'] {
+    column-gap: 0;
+  }
+}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { Link } from '@primer/react';
+import { useTheme, Link } from '@primer/react';
 import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
@@ -26,6 +26,7 @@ const VIEW_TYPE_OPTIONS = [
 ];
 
 export default function FeatureAdoptionChart({ data }: FeatureAdoptionChartProps) {
+  useTheme();
   const [viewType, setViewType] = useState<'absolute' | 'percentage'>('absolute');
 
   const colorsByKey = {

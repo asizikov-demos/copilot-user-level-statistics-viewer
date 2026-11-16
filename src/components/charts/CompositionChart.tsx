@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useId, useMemo, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { ChevronDownIcon, ChevronRightIcon } from '@primer/octicons-react';
@@ -77,9 +78,10 @@ export default function CompositionChart({
   showTotal = true,
   className,
 }: CompositionChartProps) {
+  const { colorScheme } = useTheme();
   const [isOtherExpanded, setIsOtherExpanded] = useState(false);
   const otherListId = useId();
-  const group = useMemo(() => groupCompositionEntries(entries), [entries]);
+  const group = useMemo(() => groupCompositionEntries(entries), [entries, colorScheme]);
   const { chartData, options } = useMemo(
     () => createCompositionChartConfig({
       group,
@@ -87,7 +89,7 @@ export default function CompositionChart({
       cutout: variant === 'pie' ? 0 : DOUGHNUT_CUTOUT,
       borderColor: toRgbColor(readChartToken(surface === 'muted' ? 'bgColor-muted' : 'bgColor-default')),
     }),
-    [group, unit, variant, surface],
+    [group, unit, variant, surface, colorScheme],
   );
   if (group.slices.length === 0) return null;
 

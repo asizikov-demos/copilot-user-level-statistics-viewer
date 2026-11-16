@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     // The focus-visible polyfill used by Primer adds attributes to <html> on the client.
-    <html lang="en" data-color-mode="light" data-light-theme="light" suppressHydrationWarning>
+    <html lang="en" data-color-mode="light" data-light-theme="light" data-dark-theme="dark_dimmed" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
       </body>

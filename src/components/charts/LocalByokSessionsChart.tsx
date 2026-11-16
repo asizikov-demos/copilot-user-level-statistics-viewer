@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
@@ -26,6 +27,7 @@ export default function LocalByokSessionsChart({
   reportStartDay,
   reportEndDay,
 }: LocalByokSessionsChartProps) {
+  const { colorScheme } = useTheme();
   const { surfaces, daily, totalSessions, totalRequests, totalUsers } = data;
 
   const chartData = useMemo(() => {
@@ -46,7 +48,7 @@ export default function LocalByokSessionsChart({
         )
       ),
     };
-  }, [daily, surfaces, reportStartDay, reportEndDay]);
+  }, [daily, surfaces, reportStartDay, reportEndDay, colorScheme]);
 
   const options = createStackedBarChartOptions({
     xAxisLabel: 'Date',

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
@@ -18,6 +19,7 @@ interface EngagementChartProps {
 }
 
 export default function EngagementChart({ data }: EngagementChartProps) {
+  useTheme();
   const avgEngagement = calculateAverage(data, d => d.engagementPercentage);
   const { min: minEngagement, max: maxEngagement } = findMinMaxValues(data, d => d.engagementPercentage);
 

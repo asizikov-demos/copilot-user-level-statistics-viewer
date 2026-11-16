@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import type { ThirdPartyAgentActivity } from '../../types/agentActivity';
 import ChartContainer from '../ui/ChartContainer';
@@ -22,6 +23,7 @@ export default function ThirdPartyAgentActivityChart({
   reportStartDay,
   reportEndDay,
 }: ThirdPartyAgentActivityChartProps) {
+  useTheme();
   if (!data?.agents.length) return null;
 
   const nameCounts = new Map<string, number>();

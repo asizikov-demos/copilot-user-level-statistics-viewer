@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import { useMemo } from 'react';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
@@ -35,6 +36,7 @@ export default function CloudAgentAdoptionChart({
   reportStartDay,
   reportEndDay,
 }: CloudAgentAdoptionChartProps) {
+  useTheme();
   const paddedData = useMemo(
     () => padCloudAgentAdoptionData(data, reportStartDay, reportEndDay),
     [data, reportStartDay, reportEndDay]

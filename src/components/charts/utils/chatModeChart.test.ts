@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetChartThemeCache } from './chartTheme';
 import type { DailyChatRequestsData, DailyChatUsersData } from '../../../domain/calculators/metricCalculators';
 import { formatShortDate } from '../../../utils/formatters';
 import {
@@ -51,6 +52,27 @@ const requestsData: DailyChatRequestsData[] = [
 ];
 
 describe('chatModeChart', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetChartThemeCache();
+  });
+
+  it('resolves chat colors again after the document theme changes', () => {
+    let foreground = '#1f2328';
+    vi.stubGlobal('document', { documentElement: {} });
+    vi.stubGlobal('getComputedStyle', () => ({
+      getPropertyValue: (token: string) => token === '--fgColor-default' ? foreground : '',
+    }));
+    const build = () => createChatModeLineChartData(
+      usersData, (day, mode) => mode.getUsersValue(day), mode => mode.userDatasetLabel,
+    );
+    expect(build().datasets[2].borderColor).toBe('rgb(31, 35, 40)');
+
+    foreground = '#d1d7e0';
+    resetChartThemeCache();
+    expect(build().datasets[2].borderColor).toBe('rgb(209, 215, 224)');
+  });
+
   it('builds shared summaries, stats, and datasets from chat mode metadata', () => {
     const summaries = createChatModeMetricSummaries(usersData, (day, mode) => mode.getUsersValue(day));
 

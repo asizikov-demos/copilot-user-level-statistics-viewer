@@ -1,25 +1,22 @@
 "use client";
 
 import React from 'react';
-import { BaseStyles, ThemeProvider } from '@primer/react';
+import { AppThemeProvider } from '../state/AppThemeProvider';
 import { MetricsContextProvider } from '../components/MetricsContext';
 import { NavigationProvider } from '../state/NavigationContext';
 import { MetricsWorkerProvider } from '../state/MetricsWorkerContext';
 
 const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    // colorMode is pinned to day so the statically exported HTML is deterministic.
-    <ThemeProvider colorMode="day">
-      <BaseStyles>
-        <MetricsWorkerProvider>
-          <NavigationProvider>
-            <MetricsContextProvider>
-              {children}
-            </MetricsContextProvider>
-          </NavigationProvider>
-        </MetricsWorkerProvider>
-      </BaseStyles>
-    </ThemeProvider>
+    <AppThemeProvider>
+      <MetricsWorkerProvider>
+        <NavigationProvider>
+          <MetricsContextProvider>
+            {children}
+          </MetricsContextProvider>
+        </NavigationProvider>
+      </MetricsWorkerProvider>
+    </AppThemeProvider>
   );
 };
 

@@ -1,7 +1,7 @@
 import { readChartToken, toRgbColor } from './chartTheme';
 
 /**
- * Primer-style tooltip surface: light background, muted border, default text.
+ * Primer-style tooltip surface using the active theme's background, border and text.
  */
 export function createPrimerTooltipStyle() {
   return {

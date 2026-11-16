@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import React from 'react';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
@@ -28,6 +29,7 @@ export function getCliOverlapIdeRows(ideStats: IDEStatsData[]): IDEStatsData[] {
 }
 
 export default function CLIOverlapChart({ ideStats }: CLIOverlapChartProps) {
+  useTheme();
   const sorted = getCliOverlapIdeRows(ideStats);
 
   const labels = sorted.map(ide => formatIDEName(ide.ide));

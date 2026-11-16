@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { FormControl } from '@primer/react';
+import { useTheme, FormControl } from '@primer/react';
 import SimpleSelect from '../ui/SimpleSelect';
 import { registerChartJS } from './utils/chartSetup';
 import { yAxisFormatters } from './utils/chartOptions';
@@ -32,6 +32,7 @@ export default function DailyIDEUsersChart({
   reportEndDay,
   telemetryWarnings = [],
 }: DailyIDEUsersChartProps) {
+  const { colorScheme } = useTheme();
   const [selectedIde, setSelectedIde] = useState<string>('');
 
   const defaultIde = data.length > 0 ? data[0].ide : '';
@@ -93,7 +94,7 @@ export default function DailyIDEUsersChart({
         },
       }),
     }),
-    [activeEntry, color, ideLabel, reportEndDay, reportStartDay]
+    [activeEntry, color, ideLabel, reportEndDay, reportStartDay, colorScheme]
   );
   const chartAriaLabel = `Daily IDE Users for ${ideLabel}: ${displayData
     .map(day => {

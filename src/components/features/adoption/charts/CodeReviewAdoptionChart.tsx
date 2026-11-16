@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import { useMemo } from 'react';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
@@ -48,6 +49,7 @@ export default function CodeReviewAdoptionChart({
   reportStartDay,
   reportEndDay,
 }: CodeReviewAdoptionChartProps) {
+  useTheme();
   const paddedData = useMemo(
     () => padCodeReviewAdoptionData(data, reportStartDay, reportEndDay),
     [data, reportStartDay, reportEndDay]

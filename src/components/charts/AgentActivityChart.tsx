@@ -2,23 +2,23 @@
 
 import { useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { FormControl } from '@primer/react';
+import { useTheme, FormControl } from '@primer/react';
 import SimpleSelect from '../ui/SimpleSelect';
 import type { AgentActivity, AgentSurface } from '../../types/agentActivity';
 import ChartContainer from '../ui/ChartContainer';
 import { registerChartJS } from './utils/chartSetup';
 import { yAxisFormatters } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
-import { chartColors } from './utils/chartColors';
+import { chartColors, type ChartColor } from './utils/chartColors';
 import { createDailyReportRangeChartConfig } from './utils/dailyBarChart';
 
 registerChartJS();
 
 const surfaces = [
-  { key: 'cli', label: 'Copilot CLI', inputLabel: 'Prompts', color: chartColors.blue.solid },
-  { key: 'app', label: 'Copilot App', inputLabel: 'Prompts', color: chartColors.black.solid },
-  { key: 'vscodeAgents', label: 'VS Code Agents window', inputLabel: 'User messages', color: chartColors.green.solid },
-] as const satisfies ReadonlyArray<{ key: AgentSurface; label: string; inputLabel: string; color: string }>;
+  { key: 'cli', label: 'Copilot CLI', inputLabel: 'Prompts', color: chartColors.blue },
+  { key: 'app', label: 'Copilot App', inputLabel: 'Prompts', color: chartColors.black },
+  { key: 'vscodeAgents', label: 'VS Code Agents window', inputLabel: 'User messages', color: chartColors.green },
+] as const satisfies ReadonlyArray<{ key: AgentSurface; label: string; inputLabel: string; color: ChartColor }>;
 
 function formatCount(value: number | null | undefined): string {
   return value == null ? 'Not reported' : value.toLocaleString();
@@ -31,6 +31,7 @@ interface AgentActivityChartProps {
 }
 
 export default function AgentActivityChart({ data, reportStartDay, reportEndDay }: AgentActivityChartProps) {
+  useTheme();
   const [measure, setMeasure] = useState<'sessions' | 'userInputs'>('sessions');
   const reportedSurfaces = surfaces.filter(surface =>
     data.summary[surface.key].sessions !== null || data.summary[surface.key].userInputs !== null,
@@ -49,7 +50,7 @@ export default function AgentActivityChart({ data, reportStartDay, reportEndDay 
     reportEndDay,
     type: 'bar',
     series: visibleSurfaces.map(surface => ({
-      color: surface.color,
+      color: surface.color.solid,
       label: isSessions ? surface.label : `${surface.label} ${surface.inputLabel.toLowerCase()}`,
       getValue: entry => entry?.[surface.key][measure] ?? null,
     })),
