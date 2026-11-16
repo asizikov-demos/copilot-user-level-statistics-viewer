@@ -33,7 +33,7 @@ const StickyHeader: React.FC = () => {
             <Button
               className={styles.themeButton}
               leadingVisual={theme === 'dimmed' ? MoonIcon : SunIcon}
-              aria-label="Dimmed theme"
+              aria-label="Light / Dimmed theme"
               aria-pressed={theme === 'dimmed'}
               onClick={() => setTheme(theme === 'dimmed' ? 'light' : 'dimmed')}
             >

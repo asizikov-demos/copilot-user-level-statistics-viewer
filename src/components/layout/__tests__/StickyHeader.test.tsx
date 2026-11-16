@@ -56,21 +56,25 @@ describe('StickyHeader', () => {
     renderHeader();
 
     expect(screen.getByRole('banner').textContent).toContain('Copilot Usage Metrics');
-    expect(screen.getByRole('button', { name: 'Dimmed theme' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.queryByRole('button', { name: /upload new file/i })).toBeNull();
   });
 
   it('switches between light and dimmed and remembers the selection', () => {
     renderHeader();
-    const toggle = screen.getByRole('button', { name: 'Dimmed theme' });
+    const toggle = screen.getByRole('button', { name: 'Light / Dimmed theme' });
+    expect(screen.getByRole('button', { name: /Light/, pressed: false })).toBe(toggle);
+    expect(toggle.textContent).toBe('Light');
     fireEvent.click(toggle);
 
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme', pressed: true })).toBe(toggle);
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
     expect(toggle.textContent).toBe('Dimmed');
     expect(document.documentElement.dataset.colorMode).toBe('dark');
     expect(localStorage.getItem('copilot-metrics-theme')).toBe('dimmed');
 
     fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme', pressed: false })).toBe(toggle);
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     expect(toggle.textContent).toBe('Light');
     expect(document.documentElement.dataset.colorMode).toBe('light');
