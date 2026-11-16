@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import { DailyAiCreditsData } from '../../domain/calculators/metricCalculators';
@@ -46,6 +47,7 @@ export default function AiCreditsChart({
   showUsers = true,
   usageCountLabel = 'User-days',
 }: AiCreditsChartProps) {
+  useTheme();
   const displayData = createDisplayData(data, reportStartDay, reportEndDay);
   const activeData = data.filter(entry => entry.aiCreditsUsed > 0);
   const stats = calculateStats(activeData, entry => entry.aiCreditsUsed);

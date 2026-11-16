@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgressBar } from '@primer/react';
+import { useTheme, ProgressBar } from '@primer/react';
 import type { CSSProperties } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from '../../charts/utils/chartSetup';
@@ -16,6 +16,7 @@ registerChartJS();
 const TOP_N = 10;
 
 export function CustomizationsSummaryCards({ model }: { model: CustomizationsReadModel }) {
+  useTheme();
   const { totalUsers } = model;
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -53,6 +54,7 @@ export function CustomizationsSummaryCards({ model }: { model: CustomizationsRea
 }
 
 export function CustomizationsTopCharts({ model }: { model: CustomizationsReadModel }) {
+  useTheme();
   const options = createHorizontalBarChartOptions({ showLegend: false });
   return (
     <div className="grid gap-6 lg:grid-cols-2">

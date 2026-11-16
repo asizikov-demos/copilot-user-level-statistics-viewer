@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar, Line } from 'react-chartjs-2';
 import type { ChartDataset, TooltipItem } from 'chart.js';
 import type { DailyVSCodeAgentUsage, VSCodeAgentUsage } from '../../types/vscodeAgent';
@@ -29,9 +30,9 @@ function coverage(reported: number, total: number): string {
 }
 
 const measures = [
-  { key: 'activeUsers', label: 'Active users', coverageKey: 'usageReportedRecords', color: chartColors.blue.solid },
-  { key: 'sessionCount', label: 'Sessions', coverageKey: 'sessionsReportedRecords', color: chartColors.green.solid },
-  { key: 'userMessages', label: 'User messages', coverageKey: 'messagesReportedRecords', color: chartColors.purple.solid },
+  { key: 'activeUsers', label: 'Active users', coverageKey: 'usageReportedRecords', color: chartColors.blue },
+  { key: 'sessionCount', label: 'Sessions', coverageKey: 'sessionsReportedRecords', color: chartColors.green },
+  { key: 'userMessages', label: 'User messages', coverageKey: 'messagesReportedRecords', color: chartColors.purple },
 ] as const;
 
 export default function VSCodeAgentUsageChart({
@@ -40,6 +41,7 @@ export default function VSCodeAgentUsageChart({
   reportEndDay,
   scope = 'aggregate',
 }: VSCodeAgentUsageChartProps) {
+  useTheme();
   const { summary } = data;
   const isUser = scope === 'user';
   const visibleMeasures = isUser
@@ -58,7 +60,7 @@ export default function VSCodeAgentUsageChart({
     label: string;
     getValue: (entry: DailyVSCodeAgentUsage | undefined) => number | null;
   }> = visibleMeasures.map(measure => ({
-    color: measure.color,
+    color: measure.color.solid,
     label: measure.label,
     getValue: (entry: DailyVSCodeAgentUsage | undefined) => entry?.[measure.key] ?? null,
   }));

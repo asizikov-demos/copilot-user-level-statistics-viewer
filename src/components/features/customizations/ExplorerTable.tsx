@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
-import { ActionList, ActionMenu, Checkbox, Button, FormControl, TextInput } from '@primer/react';
+import { useTheme, ActionList, ActionMenu, Checkbox, Button, FormControl, TextInput } from '@primer/react';
 import {
   BookIcon,
   ChevronDownIcon,
@@ -51,6 +51,7 @@ const TYPE_FILTER_OPTIONS: ReadonlyArray<{ id: ExplorerCategory; text: string; l
 ];
 
 function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
+  useTheme();
   const color = CUSTOMIZATION_META[row.category].color.solid;
   const data = {
     labels: days.map(formatShortDate),
@@ -84,6 +85,7 @@ function ItemDetails({ row, days }: { row: ExplorerRow; days: string[] }) {
 
 /** Searchable, sortable, paginated table of every customization item; rows expand for details. */
 export default function ExplorerTable({ model }: { model: CustomizationsReadModel }) {
+  useTheme();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ExplorerCategory>('all');
   const [includeUnnamed, setIncludeUnnamed] = useState(false);

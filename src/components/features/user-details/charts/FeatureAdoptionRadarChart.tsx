@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Radar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
@@ -28,6 +29,7 @@ export default function FeatureAdoptionRadarChart({
   editModeInteractions,
   completionInteractions,
 }: FeatureAdoptionRadarChartProps) {
+  useTheme();
   const radarValues = {
     agentInteractions,
     planInteractions,

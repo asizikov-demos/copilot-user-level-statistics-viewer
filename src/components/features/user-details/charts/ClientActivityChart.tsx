@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from 'react';
-import { FormControl } from '@primer/react';
+import { useTheme, FormControl } from '@primer/react';
 import SimpleSelect from '../../../ui/SimpleSelect';
 import { Bar } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
@@ -98,6 +98,7 @@ export default function ClientActivityChart({
   pluginVersions,
   cliVersions,
 }: ClientActivityChartProps) {
+  const { colorScheme } = useTheme();
   const [selectedMeasure, setSelectedMeasure] = useState<ClientActivityMeasure | null>(null);
   const [hiddenClients, setHiddenClients] = useState<ReadonlySet<string>>(new Set());
   const hasTraffic = (traffic?.summary.reportedRecords ?? 0) > 0;
@@ -107,7 +108,7 @@ export default function ClientActivityChart({
       ...createBarDataset(getIdeColor(client), formatIDEName(client), values),
       clientKey: client,
     })),
-  }), [activity]);
+  }), [activity, colorScheme]);
 
   const barChartOptions = useMemo(() => createBaseChartOptions({
     showLegend: false,
@@ -118,7 +119,7 @@ export default function ClientActivityChart({
       const value = context.parsed.y || 0;
       return `${label}: ${value.toLocaleString()} interactions`;
     },
-  }), []);
+  }), [colorScheme]);
 
   const hasInteractions = barChartData.datasets.some(dataset => dataset.data.some(value => value > 0));
   const defaultMeasure: ClientActivityMeasure = hasInteractions
@@ -156,7 +157,7 @@ export default function ClientActivityChart({
       xAutoSkip: true,
       tooltipLabelCallback: context => `${context.dataset.label}: ${context.parsed.y?.toLocaleString()} ${measureLabel.toLowerCase()}`,
     },
-  }), [measure, measureLabel, traffic, hasTraffic, reportStartDay, reportEndDay]);
+  }), [measure, measureLabel, traffic, hasTraffic, reportStartDay, reportEndDay, colorScheme]);
   const chartData = trafficChart?.chartData ?? barChartData;
   const clientKeys = measure === 'interactions'
     ? barChartData.datasets.map(dataset => dataset.clientKey)

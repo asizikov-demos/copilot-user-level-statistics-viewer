@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import CompositionChartCard from '../../../charts/CompositionChartCard';
 import type { CompositionEntry } from '../../../charts/utils/compositionChart';
@@ -16,6 +17,7 @@ interface DayClientDistributionChartProps {
 }
 
 export default function DayClientDistributionChart({ dayMetrics, cliInteractionCount, measure = 'interactions' }: DayClientDistributionChartProps) {
+  const { colorScheme } = useTheme();
   const entries = useMemo<CompositionEntry[]>(() => {
     if (measure === 'requests') {
       const totals = new Map<string, number>();
@@ -39,7 +41,7 @@ export default function DayClientDistributionChart({ dayMetrics, cliInteractionC
       clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliInteractionCount, color: getIdeColor('copilot_cli') });
     }
     return clients;
-  }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure]);
+  }, [dayMetrics.totals_by_ide, dayMetrics.totals_by_client, cliInteractionCount, measure, colorScheme]);
 
   return (
     <CompositionChartCard

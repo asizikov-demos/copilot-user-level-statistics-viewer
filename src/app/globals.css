@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@primer/primitives/dist/css/primitives.css";
 @import "@primer/primitives/dist/css/functional/themes/light.css";
+@import "@primer/primitives/dist/css/functional/themes/dark-dimmed.css";
 
 /*
  * Primer semantic color utilities (text-default, bg-muted, border-default, ...) from

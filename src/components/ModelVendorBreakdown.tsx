@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import type { ModelCategoryDetailRow } from '../types/metrics';
 import type { ModelVendorTable } from '../read-models/models';
 import { formatNumber } from '../utils/formatters';
@@ -64,6 +65,7 @@ const columns: TableColumn<ModelCategoryDetailRow>[] = [
 ];
 
 export default function ModelVendorBreakdown({ vendorTables }: ModelVendorBreakdownProps) {
+  useTheme();
   if (vendorTables.length === 0) return null;
 
   return (

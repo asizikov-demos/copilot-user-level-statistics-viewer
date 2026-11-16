@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import type { ModelSelectionMode, ModelSelectionRequests } from '../../types/metrics';
 import CompositionChartCard from './CompositionChartCard';
 import { chartColors, modelCategoryColors } from './utils/chartColors';
@@ -11,6 +12,7 @@ const MODE_LABELS: Record<ModelSelectionMode, string> = {
 };
 
 export default function ModelSelectionModeCharts({ data }: { data: ModelSelectionRequests }) {
+  useTheme();
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted">

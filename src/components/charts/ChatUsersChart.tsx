@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
@@ -20,6 +21,7 @@ interface ChatUsersChartProps {
 }
 
 export default function ChatUsersChart({ data }: ChatUsersChartProps) {
+  useTheme();
   const modeSummaries = createChatModeMetricSummaries(data, (day, mode) => mode.getUsersValue(day));
 
   const chartData = createChatModeLineChartData(

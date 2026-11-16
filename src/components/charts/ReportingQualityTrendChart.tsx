@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Line } from 'react-chartjs-2';
 import type { ReportingQualityMetrics } from '../../types/reportingQuality';
 import ChartContainer from '../ui/ChartContainer';
@@ -12,6 +13,7 @@ import { formatShortDate } from '../../utils/formatters';
 registerChartJS();
 
 export default function ReportingQualityTrendChart({ daily }: { daily: ReportingQualityMetrics['daily'] }) {
+  useTheme();
   const data = {
     labels: daily.map(day => formatShortDate(day.day)),
     datasets: [

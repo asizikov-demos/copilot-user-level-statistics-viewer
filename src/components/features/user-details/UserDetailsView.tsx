@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import React, { useState, useMemo, useCallback } from 'react';
 import type { UserDayData } from '../../../types/metrics';
 import {
@@ -62,6 +63,7 @@ function fillDateRange(data: ModeImpactData[], startDay: string, endDay: string)
 }
 
 export default function UserDetailsView({ model }: UserDetailsViewProps) {
+  const { colorScheme } = useTheme();
   const { userDetails, userSummary, userLogin, userId } = model;
   const { navigateTo } = useNavigation();
   const filledCombinedImpact = useMemo(() => fillDateRange(userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay), [userDetails.dailyCombinedImpact, userDetails.reportStartDay, userDetails.reportEndDay]);
@@ -196,7 +198,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       ideDistribution: toDistribution(presentationSummary.clientInteractions),
       clientRequestDistribution: toDistribution(presentationSummary.clientRequests),
     };
-  }, [presentationSummary]);
+  }, [presentationSummary, colorScheme]);
 
   const languageDistribution = useMemo<CompositionEntry[]>(() => {
     return presentationSummary.languageGenerations.map(({ key: language, value }, rank) => ({
@@ -204,7 +206,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       value,
       color: getLanguageColor(language, rank),
     }));
-  }, [presentationSummary]);
+  }, [presentationSummary, colorScheme]);
 
   const { modelDistribution, modelRequestDistribution } = useMemo(() => {
     const toDistribution = (totals: typeof presentationSummary.modelInteractions): CompositionEntry[] =>
@@ -217,7 +219,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
       modelDistribution: toDistribution(presentationSummary.modelInteractions),
       modelRequestDistribution: toDistribution(presentationSummary.modelRequests),
     };
-  }, [presentationSummary]);
+  }, [presentationSummary, colorScheme]);
 
   const cloudAgentsUsageData = useMemo(() => {
     return mapReportRangeData(

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { ReactNode } from 'react';
@@ -37,6 +38,7 @@ export default function ModeImpactChart({
   emptyStateMessage = 'No impact data available for this mode',
   footer,
 }: ModeImpactChartProps) {
+  useTheme();
   const totalAdded = calculateTotal(data, d => d.locAdded);
   const totalDeleted = calculateTotal(data, d => d.locDeleted);
   const netChange = totalAdded - totalDeleted;

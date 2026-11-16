@@ -102,12 +102,16 @@ export const modelVendorColors = {
 /**
  * Canonical IDE/client chart colors, optimized for comparison rather than exact branding.
  * Keys are lowercase identifiers matching the values returned by the API (e.g. 'vscode', 'jetbrains').
+ * Colors resolve on access so the Copilot App neutral follows the active foreground.
  * Both 'visualstudio' and 'visual_studio' are supported as aliases.
  */
 export const ideColors: Record<string, string> = Object.entries(IDE_METADATA_BY_KEY).reduce<Record<string, string>>(
   (colors, [key, metadata]) => {
     if (metadata.color) {
-      colors[key] = metadata.color;
+      Object.defineProperty(colors, key, {
+        enumerable: true,
+        get: () => getIdeColor(key),
+      });
     }
     return colors;
   },
@@ -123,11 +127,16 @@ export function hasIdeColor(ideKey: string): boolean {
 }
 
 /**
- * Get a stable chart color. Unknown clients use neutral gray, never a rank-dependent hue.
+ * Get a stable client hue, with a theme-aware foreground for Copilot App.
+ * Unknown clients use neutral gray, never a rank-dependent hue.
  * @param ideKey - IDE identifier (e.g. 'vscode', 'jetbrains')
  */
 export function getIdeColor(ideKey: string): string {
-  return getIDEMetadata(ideKey)?.color ?? chartColors.gray.solid;
+  const metadata = getIDEMetadata(ideKey);
+  if (metadata?.canonicalKey === 'github_app' || metadata?.canonicalKey === 'copilot_app') {
+    return chartColors.black.solid;
+  }
+  return metadata?.color ?? chartColors.gray.solid;
 }
 
 /**

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import type { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
@@ -25,6 +26,7 @@ export default function ModelVendorDistributionChart({
   dates,
   totalInteractions,
 }: ModelVendorDistributionChartProps) {
+  const { colorScheme } = useTheme();
   const { labels, datasets } = useMemo(() => ({
     labels: dates.map(formatShortDate),
     datasets: entries.map(entry => createBarDataset(
@@ -33,7 +35,7 @@ export default function ModelVendorDistributionChart({
       dates.map(date => entry.dailyData[date] ?? 0),
       { stack: 'model-vendors' }
     )),
-  }), [dates, entries]);
+  }), [dates, entries, colorScheme]);
 
   const attributedInteractions = entries
     .filter(entry => entry.vendor !== 'Unattributed')

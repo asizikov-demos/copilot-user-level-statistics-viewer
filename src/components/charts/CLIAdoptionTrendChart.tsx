@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Chart } from 'react-chartjs-2';
 import { useMemo } from 'react';
 import { registerChartJS } from './utils/chartSetup';
@@ -20,6 +21,7 @@ interface CLIAdoptionTrendChartProps {
 }
 
 export default function CLIAdoptionTrendChart({ data, stats, client = 'CLI', clientUsers = stats.cliUsers }: CLIAdoptionTrendChartProps) {
+  useTheme();
   const metrics = getAdoptionTrendMetrics(data);
   const insights = computeCliInsights(stats, data, { client, clientUsers });
   const paddedData = useMemo(

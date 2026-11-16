@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import type { ComponentType } from 'react';
 import { BookIcon, CommandPaletteIcon, CopilotIcon, McpIcon } from '@primer/octicons-react';
 import CompositionChartCard from '../../../charts/CompositionChartCard';
@@ -192,6 +193,7 @@ function CustomizationsTable({ summaries }: { summaries: CustomizationSummary[] 
 }
 
 function CustomizationInvocationCharts({ summaries }: { summaries: CustomizationSummary[] }) {
+  useTheme();
   return (
     <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-4">
       {CLI_CUSTOMIZATION_CATEGORIES.map(category => {

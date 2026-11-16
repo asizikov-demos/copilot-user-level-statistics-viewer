@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
@@ -21,6 +22,7 @@ interface LanguageDailyChartProps {
 }
 
 export default function LanguageDailyChart({ chartData, variant }: LanguageDailyChartProps) {
+  const { colorScheme } = useTheme();
   const isGenerations = variant === 'generations';
 
   const { labels, datasets, total } = useMemo(() => {
@@ -42,7 +44,7 @@ export default function LanguageDailyChart({ chartData, variant }: LanguageDaily
       datasets,
       total,
     };
-  }, [chartData]);
+  }, [chartData, colorScheme]);
 
   const barData = { labels, datasets };
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import type { TooltipItem } from 'chart.js';
 import type { CopilotMetrics, UserDayData } from '../../../../types/metrics';
@@ -43,16 +44,6 @@ type PaddedDay = {
   totals_by_language_feature: UserDayData['totals_by_language_feature'];
 };
 
-const languageBarChartOptions = createStackedBarChartOptions({
-  xAxisLabel: 'Date',
-  yAxisLabel: 'Generations',
-  tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
-    const label = context.dataset.label ?? '';
-    const value = context.parsed.y ?? 0;
-    return `${label}: ${value.toLocaleString()} generations`;
-  },
-});
-
 export function buildLanguageBarChartData(
   days: UserDayData[],
   reportStartDay: string,
@@ -91,9 +82,19 @@ export default function UserActivityByLanguageAndFeatureChart({
   reportStartDay,
   reportEndDay,
 }: UserActivityByLanguageAndFeatureChartProps) {
+  const { colorScheme } = useTheme();
+  const languageBarChartOptions = createStackedBarChartOptions({
+    xAxisLabel: 'Date',
+    yAxisLabel: 'Generations',
+    tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
+      const label = context.dataset.label ?? '';
+      const value = context.parsed.y ?? 0;
+      return `${label}: ${value.toLocaleString()} generations`;
+    },
+  });
   const barChartData = useMemo(
     () => buildLanguageBarChartData(days, reportStartDay, reportEndDay),
-    [days, reportStartDay, reportEndDay],
+    [days, reportStartDay, reportEndDay, colorScheme],
   );
 
   return (

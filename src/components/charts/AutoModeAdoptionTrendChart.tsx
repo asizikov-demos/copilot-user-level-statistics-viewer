@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Chart } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { chartColors } from './utils/chartColors';
@@ -19,6 +20,7 @@ interface AutoModeAdoptionTrendChartProps {
 }
 
 export default function AutoModeAdoptionTrendChart({ data }: AutoModeAdoptionTrendChartProps) {
+  useTheme();
   const metrics = getAdoptionTrendMetrics(data, { useActiveDaysForAverages: true });
   const { chartData, options } = createAdoptionTrendChartConfig({
     data,

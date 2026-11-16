@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { BaseStyles, ThemeProvider } from '@primer/react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import StickyHeader from '../StickyHeader';
+import { AppThemeProvider } from '../../../state/AppThemeProvider';
 
 const mocks = vi.hoisted(() => ({
   hasData: true,
@@ -25,16 +25,15 @@ vi.mock('../../../hooks/useResetAppState', () => ({
 
 function renderHeader() {
   return render(
-    <ThemeProvider colorMode="day">
-      <BaseStyles>
-        <StickyHeader />
-      </BaseStyles>
-    </ThemeProvider>,
+    <AppThemeProvider>
+      <StickyHeader />
+    </AppThemeProvider>,
   );
 }
 
 describe('StickyHeader', () => {
   beforeEach(() => {
+    localStorage.clear();
     mocks.hasData = true;
     mocks.view = 'userDetails';
     mocks.navigateTo.mockClear();
@@ -52,12 +51,33 @@ describe('StickyHeader', () => {
     vi.unstubAllGlobals();
   });
 
-  it('shows only the brand before data is loaded', () => {
+  it('keeps the theme toggle available before data is loaded', () => {
     mocks.hasData = false;
     renderHeader();
 
     expect(screen.getByRole('banner').textContent).toContain('Copilot Usage Metrics');
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.queryByRole('button', { name: /upload new file/i })).toBeNull();
+  });
+
+  it('switches between light and dimmed and remembers the selection', () => {
+    renderHeader();
+    const toggle = screen.getByRole('button', { name: 'Light / Dimmed theme' });
+    expect(screen.getByRole('button', { name: /Light/, pressed: false })).toBe(toggle);
+    expect(toggle.textContent).toBe('Light');
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme', pressed: true })).toBe(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(toggle.textContent).toBe('Dimmed');
+    expect(document.documentElement.dataset.colorMode).toBe('dark');
+    expect(localStorage.getItem('copilot-metrics-theme')).toBe('dimmed');
+
+    fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: 'Light / Dimmed theme', pressed: false })).toBe(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    expect(toggle.textContent).toBe('Light');
+    expect(document.documentElement.dataset.colorMode).toBe('light');
   });
 
   it('opens the section menu with the current view selected and navigates on selection', () => {

@@ -2,7 +2,7 @@
   --brief-ink: var(--fgColor-default);
   --brief-muted: var(--fgColor-muted);
   --brief-line: var(--borderColor-muted);
-  --brief-accent: #146c70;
+  --brief-accent: var(--fgColor-accent);
   color: var(--brief-ink);
   max-width: 900px;
   margin-inline: auto;
@@ -36,12 +36,12 @@
 .chart text { font-size: 12px; fill: var(--brief-muted); }
 .gridLine { stroke: var(--brief-line); }
 .weekdayBar { fill: var(--brief-accent); }
-.weekendBar { fill: #92a5af; }
+.weekendBar { fill: var(--data-gray-color-emphasis); }
 .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 10px; color: var(--brief-muted); margin-top: 5px; }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
 .legend i { display: inline-block; width: 9px; height: 9px; }
 .weekdaySwatch { background: var(--brief-accent); }
-.weekendSwatch { background: #92a5af; }
+.weekendSwatch { background: var(--data-gray-color-emphasis); }
 .columns { display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; }
 .features { list-style: none; padding: 0; margin: 13px 0 0; }
 .features li { display: grid; grid-template-columns: 100px minmax(25px, 1fr) auto; gap: 8px; align-items: center; margin-block: 12px; font-size: 11px; }
@@ -59,11 +59,11 @@
 .code dt { font-size: 11px; color: var(--brief-muted); }
 .code dd { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
 .code .caption { margin-bottom: 0; }
-.discussion { background: #edf5f4; border: 1px solid #cde0dd; padding: 13px 16px; margin-bottom: 19px; font-size: 12px; line-height: 1.65; }
-.discussion h3 { color: #164f52; }
+.discussion { background: var(--bgColor-accent-muted); border: 1px solid var(--borderColor-accent-muted); padding: 13px 16px; margin-bottom: 19px; font-size: 12px; line-height: 1.65; }
+.discussion h3 { color: var(--fgColor-accent); }
 .footer { border-top: 1px solid var(--brief-line); padding-top: 12px; color: var(--brief-muted); font-size: 10px; line-height: 1.55; }
 .footer p + p { margin-top: 4px; }
-.dataWarning { color: #744714; margin-bottom: 8px; overflow-wrap: anywhere; }
+.dataWarning { color: var(--fgColor-attention); margin-bottom: 8px; overflow-wrap: anywhere; }
 .footer > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; font-weight: 600; }
 .empty { padding-block: 40px; color: var(--brief-muted); }
 

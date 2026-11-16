@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Chart } from 'react-chartjs-2';
 import type { TooltipItem } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
@@ -26,6 +27,7 @@ function formatTokenCount(count: number): string {
 }
 
 export default function CLITokensChart({ data, appData, client = 'CLI' }: CLITokensChartProps) {
+  useTheme();
   const combinedData = [...data, ...(appData ?? [])];
   const totalOutput = calculateTotal(combinedData, d => d.outputTokens);
   const totalPrompt = calculateTotal(combinedData, d => d.promptTokens);

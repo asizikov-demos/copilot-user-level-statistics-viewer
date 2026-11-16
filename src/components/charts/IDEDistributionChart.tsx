@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { useMemo } from 'react';
 import CompositionChartCard from './CompositionChartCard';
 import type { CompositionEntry } from './utils/compositionChart';
@@ -14,6 +15,7 @@ interface IDEDistributionChartProps {
 }
 
 export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistributionChartProps) {
+  const { colorScheme } = useTheme();
   const entries = useMemo<CompositionEntry[]>(() => {
     const clients = sortBySelector(ideStats, ide => ide.uniqueUsers, 'desc').map((ide) => {
       return { clientKey: ide.ide, label: formatIDEName(ide.ide), value: ide.uniqueUsers, color: getIdeColor(ide.ide) };
@@ -22,7 +24,7 @@ export default function IDEDistributionChart({ ideStats, cliUsers }: IDEDistribu
       clients.push({ clientKey: 'copilot_cli', label: 'Copilot CLI', value: cliUsers, color: getIdeColor('copilot_cli') });
     }
     return clients;
-  }, [ideStats, cliUsers]);
+  }, [ideStats, cliUsers, colorScheme]);
 
   return (
     <CompositionChartCard

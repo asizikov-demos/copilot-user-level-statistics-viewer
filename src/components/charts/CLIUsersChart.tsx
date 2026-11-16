@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
@@ -17,6 +18,7 @@ interface CLIUsersChartProps {
 }
 
 export default function CLIUsersChart({ data, client = 'CLI' }: CLIUsersChartProps) {
+  useTheme();
   const labels: string[] = [];
   const values: number[] = [];
   let sum = 0;

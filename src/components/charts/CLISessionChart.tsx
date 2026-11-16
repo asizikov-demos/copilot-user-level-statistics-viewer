@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Bar } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions } from './utils/chartOptions';
@@ -19,6 +20,7 @@ interface CLISessionChartProps {
 }
 
 export default function CLISessionChart({ data, appData, client = 'CLI' }: CLISessionChartProps) {
+  useTheme();
   const combinedData = [...data, ...(appData ?? [])];
   const totalSessions = calculateTotal(combinedData, d => d.sessionCount);
   const totalRequests = calculateTotal(combinedData, d => d.requestCount);

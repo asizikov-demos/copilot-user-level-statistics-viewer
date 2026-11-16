@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import { Chart } from 'react-chartjs-2';
 import { useMemo } from 'react';
 import { registerChartJS } from '../../../charts/utils/chartSetup';
@@ -21,6 +22,7 @@ interface AdoptionTrendChartProps {
 }
 
 export default function AdoptionTrendChart({ data, reportStartDay, reportEndDay }: AdoptionTrendChartProps) {
+  useTheme();
   const metrics = getAdoptionTrendMetrics(data);
   const paddedData = useMemo(
     () => padAdoptionTrendData(data, reportStartDay, reportEndDay),

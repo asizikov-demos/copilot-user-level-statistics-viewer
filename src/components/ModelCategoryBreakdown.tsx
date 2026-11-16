@@ -1,5 +1,6 @@
 'use client';
 
+import { useTheme } from '@primer/react';
 import type { ModelCategoryDetailRow } from '../types/metrics';
 import type { ModelCategoryTable } from '../read-models/models';
 import { formatNumber } from '../utils/formatters';
@@ -65,6 +66,7 @@ const columns: TableColumn<ModelCategoryDetailRow>[] = [
 ];
 
 export default function ModelCategoryBreakdown({ categoryTables }: ModelCategoryBreakdownProps) {
+  useTheme();
   if (categoryTables.length === 0) return null;
 
   return (
