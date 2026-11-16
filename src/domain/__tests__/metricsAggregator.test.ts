@@ -15,15 +15,16 @@ const vscodeAt = (version: string) => makeIdeTotal('vscode', 0, {
   last_known_ide_version: { ide_version: version, sampled_at: '2026-10-07T00:00:00Z' },
 });
 
+const traffic = (client: string, requests: number) => ({
+  client,
+  request_count: requests,
+  session_count: 0,
+  token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+  totals_by_model: [],
+});
+
 describe('metricsAggregator cross-family consistency', () => {
   it('ranks client reach by distinct users across historical and traffic evidence without mixing counters', () => {
-    const traffic = (client: string, requests: number) => ({
-      client,
-      request_count: requests,
-      session_count: 0,
-      token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
-      totals_by_model: [],
-    });
     const records = [
       makeMetric({
         user_id: 1,
@@ -55,7 +56,7 @@ describe('metricsAggregator cross-family consistency', () => {
     expect(records).toEqual(original);
   });
 
-  it('keeps distinct client IDs even when their display names match, and excludes zero-only IDE rows', () => {
+  it('unifies App reach without changing stored client IDs, and excludes zero-only IDE rows', () => {
     const result = aggregateMetrics([
       makeMetric({
         totals_by_ide: [
@@ -67,9 +68,38 @@ describe('metricsAggregator cross-family consistency', () => {
     ]).aggregated;
     expect(result.overview.clientReachData).toEqual([
       { client: 'copilot_app', users: 1 },
-      { client: 'github_app', users: 1 },
     ]);
+    expect(result.users.userSummaries[0].clients_used).toEqual(['copilot_app', 'github_app']);
     expect(aggregateMetrics([]).aggregated.overview.clientReachData).toEqual([]);
+  });
+
+  it('deduplicates App reach across server-side traffic, client-side signals, and days', () => {
+    const records = [
+      makeMetric({
+        user_id: 1, used_copilot_app: true,
+        totals_by_client: [traffic('github_app', 2)],
+      }),
+      makeMetric({
+        user_id: 1, day: '2024-01-16',
+        totals_by_client: [traffic('copilot_app', 3)],
+      }),
+      makeMetric({ user_id: 2, totals_by_client: [traffic('github_app', 4)] }),
+      makeMetric({ user_id: 3, used_copilot_app: true }),
+      makeMetric({
+        user_id: 4, totals_by_client: [traffic('github_app', 0)],
+        totals_by_ide: [makeIdeTotal('copilot_app', 0)],
+      }),
+    ];
+    const parsed = parseMetricsLines(records.map(metric => ({ line: JSON.stringify(metric) })));
+    const result = aggregateMetrics(parsed).aggregated;
+
+    expect(result.overview.clientReachData).toEqual([{ client: 'copilot_app', users: 3 }]);
+    expect(result.clients.traffic.summary.clients).toMatchObject([
+      { client: 'github_app', requestCount: 6 },
+      { client: 'copilot_app', requestCount: 3 },
+    ]);
+    expect(aggregateMetrics(parsed.toReversed()).aggregated.overview.clientReachData)
+      .toEqual(result.overview.clientReachData);
   });
 
   it('excludes parser-inferred App presence without positive activity from client reach', () => {

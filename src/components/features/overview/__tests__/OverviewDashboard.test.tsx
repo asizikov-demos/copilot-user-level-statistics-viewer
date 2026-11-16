@@ -81,6 +81,28 @@ describe('Overview two lenses', () => {
     expect(screen.queryByRole('button', { name: /show all/i })).toBeNull();
   });
 
+  it('shows one Copilot App row with deduplicated server-side and client-side reach', () => {
+    const appTraffic = {
+      client: 'github_app', request_count: 1, session_count: 0,
+      token_usage: { prompt_tokens_sum: 0, output_tokens_sum: 0, avg_tokens_per_request: 0 },
+      totals_by_model: [],
+    };
+    const metrics = aggregateMetrics(parseMetricsLines([
+      makeMetric({ user_id: 1, used_copilot_app: true, totals_by_client: [appTraffic] }),
+      makeMetric({ user_id: 2, totals_by_client: [appTraffic] }),
+      makeMetric({ user_id: 3, used_copilot_app: true }),
+      makeMetric({ user_id: 4 }),
+    ].map(metric => ({ line: JSON.stringify(metric) })))).aggregated;
+    renderOverview(selectOverviewReadModel(metrics));
+
+    const clients = screen.getByRole('list', { name: 'Observed users by client' });
+    expect(within(clients).getAllByText('Copilot App')).toHaveLength(1);
+    expect(within(clients).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(clients).getByText('3')).toBeTruthy();
+    expect(within(clients).getByText('75.0%')).toBeTruthy();
+    expect(screen.getByText('1 clients observed')).toBeTruthy();
+  });
+
   it('keeps drill-throughs available without observed client or workflow usage', () => {
     renderOverview(selectOverviewReadModel(makeAggregatedMetrics()));
     expect(screen.getByRole('heading', { name: 'No client usage observed' })).toBeTruthy();

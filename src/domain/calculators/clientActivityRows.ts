@@ -38,6 +38,10 @@ export interface ClientActivityMetricsRow {
   loc_suggested_to_delete_sum: number;
 }
 
+export function getClientActivityKey(client: string): string {
+  return client === 'github_app' ? 'copilot_app' : client;
+}
+
 export function mapIdeClientActivityRows(ideRows: IdeClientActivityLike[]): ClientActivityMetricsRow[] {
   return ideRows.map((ide) => ({
     ide: ide.ide,

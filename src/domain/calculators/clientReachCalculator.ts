@@ -1,4 +1,5 @@
 import type { UserSummary } from '../../types/metrics';
+import { getClientActivityKey } from './clientActivityRows';
 
 export interface ClientReach {
   client: string;
@@ -10,7 +11,7 @@ export function computeClientReach(
 ): ClientReach[] {
   const counts = new Map<string, number>();
   for (const user of users) {
-    for (const client of new Set(user.clients_used)) {
+    for (const client of new Set(user.clients_used.map(getClientActivityKey))) {
       counts.set(client, (counts.get(client) ?? 0) + 1);
     }
   }

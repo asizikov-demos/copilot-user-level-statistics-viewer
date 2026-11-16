@@ -7,6 +7,7 @@ import { padReportRangeWithDefaults } from '../../utils/timeSeries';
 import { computeCliDayTotals } from './cliUsageCalculator';
 import {
   createCliClientActivityRow,
+  getClientActivityKey,
   mapIdeClientActivityRows,
   type ClientActivityMetricsRow,
 } from './clientActivityRows';
@@ -40,7 +41,6 @@ export interface UserPresentationSummary {
   clientActivity: UserClientActivitySummary;
 }
 
-const clientKey = (client: string) => client === 'github_app' ? 'copilot_app' : client;
 const ranked = (totals: Map<string, number>) =>
   Array.from(totals, ([key, value]) => ({ key, value })).sort((a, b) => b.value - a.value);
 
@@ -82,7 +82,7 @@ export function computeUserClientActivity(
   const rows = new Map<string, UserClientRow>();
   const cliRow = createCliClientActivityRow(totals, hasCli);
   for (const activity of [...mapIdeClientActivityRows(ideAggregates), ...(cliRow ? [cliRow] : [])]) {
-    const key = clientKey(activity.ide);
+    const key = getClientActivityKey(activity.ide);
     const existing = rows.get(key)?.activity;
     rows.set(key, { ide: key, activity: existing && key === 'copilot_app' ? {
       ide: key,
@@ -97,7 +97,7 @@ export function computeUserClientActivity(
   }
   if (clientTraffic.summary.reportedRecords > 0) {
     for (const client of clientTraffic.summary.clients) {
-      const key = clientKey(client.client);
+      const key = getClientActivityKey(client.client);
       const existing = rows.get(key);
       rows.set(key, { ...existing, ide: key, traffic: {
         reportedSessionCount: (existing?.traffic?.reportedSessionCount ?? 0) + client.reportedSessionCount,
