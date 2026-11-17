@@ -88,6 +88,8 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gpt-6-sol', 'GPT-6 Sol', 'Powerful', 'OpenAI'),
   new Model('gpt-6.1-sol', 'GPT-6.1 Sol', 'Powerful', 'OpenAI'),
   new Model('gpt-6.1-terra', 'GPT-6.1 Terra', 'Versatile', 'OpenAI'),
+  new Model('gpt-6.2-astra', 'GPT-6.2 Astra', 'Powerful', 'OpenAI'),
+  new Model('gpt-6.2-sol', 'GPT-6.2 Sol', 'Powerful', 'OpenAI'),
   new Model('gpt-image-2.5-flare', 'GPT Image 2.5 Flare', 'Image Generation', 'OpenAI'),
   new Model('grok-code-fast-1', 'Grok Code Fast 1', 'Lightweight', 'xAI'),
   new Model('grok-4', 'Grok 4', 'Versatile', 'xAI'),
@@ -144,6 +146,8 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gemini-4-hydrogen', 'Gemini 4 Hydrogen', 'Versatile', 'Google'),
   new Model('mai-code-1-flash', 'MAI-Code-1-Flash', 'Lightweight', 'Microsoft'),
   new Model('mai-code-1.1-flash', 'MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'),
+  new Model('mai-code-2', 'MAI Code 2', 'Powerful', 'Microsoft'),
+  new Model('mai-code-2-flash', 'MAI Code 2 Flash', 'Lightweight', 'Microsoft'),
   new Model('kimi-k2.7-code', 'Kimi K2.7 Code', 'Versatile', 'Moonshot AI'),
   new Model('kimi-k3', 'Kimi K3', 'Powerful', 'Moonshot AI'),
 ];
