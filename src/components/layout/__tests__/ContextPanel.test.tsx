@@ -97,7 +97,8 @@ describe('ContextPanel', () => {
     const { rerender, unmount } = renderPanel();
 
     mocks.view = 'cliAdoption';
-    addSection('app-daily-users');
+    ['app-adoption-trend', 'app-daily-users', 'app-daily-sessions', 'app-daily-tokens', 'app-models-usage']
+      .forEach(addSection);
     rerender(
       <ThemeProvider colorMode="day">
         <BaseStyles>
@@ -105,7 +106,9 @@ describe('ContextPanel', () => {
         </BaseStyles>
       </ThemeProvider>,
     );
-    expect(linkLabels()).toEqual(['Daily Copilot App Users']);
+    expect(linkLabels()).toEqual([
+      'Adoption Trend', 'Daily Users', 'Daily Sessions', 'Daily Token Usage', 'Daily Model Usage',
+    ]);
     expect(disconnect).toHaveBeenCalledTimes(1);
 
     unmount();

@@ -19,11 +19,11 @@ export const COPILOT_IMPACT_SECTIONS: ContextSection[] = [
 ];
 
 export const COPILOT_APP_ADOPTION_SECTIONS: ContextSection[] = [
-  { id: 'app-adoption-trend', label: 'Copilot App Adoption Trend' },
-  { id: 'app-daily-users', label: 'Daily Copilot App Users' },
-  { id: 'app-daily-sessions', label: 'Daily Copilot App Sessions' },
-  { id: 'app-daily-tokens', label: 'Daily Copilot App Token Usage' },
-  { id: 'app-models-usage', label: 'Copilot App Models Daily Usage' },
+  { id: 'app-adoption-trend', label: 'Adoption Trend' },
+  { id: 'app-daily-users', label: 'Daily Users' },
+  { id: 'app-daily-sessions', label: 'Daily Sessions' },
+  { id: 'app-daily-tokens', label: 'Daily Token Usage' },
+  { id: 'app-models-usage', label: 'Daily Model Usage' },
 ];
 
 export const SURFACE_PRODUCTIVITY_SECTIONS: ContextSection[] = [

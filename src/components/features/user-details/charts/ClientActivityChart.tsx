@@ -64,6 +64,16 @@ function ClientName({ ide }: { ide: string }) {
 const activityValue = (row: ClientRow, key: Exclude<keyof ClientActivityMetricsRow, 'ide'>) =>
   row.activity?.[key].toLocaleString() ?? 'Not reported';
 
+const locValue = (row: ClientRow) => row.activity ? (
+  <>
+    <span className="text-success">
+      {row.activity.loc_added_sum >= 0 ? '+' : ''}{row.activity.loc_added_sum.toLocaleString()}
+    </span>
+    {' / '}
+    <span className="text-danger">-{Math.abs(row.activity.loc_deleted_sum).toLocaleString()}</span>
+  </>
+) : 'Not reported';
+
 const clientColumns: TableColumn<ClientRow>[] = [
   { id: 'ide', header: 'Client', headerClassName: headerLeftClass, className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-default', renderCell: (client) => <ClientName ide={client.ide} /> },
   { id: 'interactions', header: 'Interactions', headerClassName: headerRightClass, className: valueCellClass, renderCell: client => activityValue(client, 'user_initiated_interaction_count') },
@@ -77,10 +87,7 @@ const sessionColumn: TableColumn<ClientRow> = {
 };
 
 const detailColumns: TableColumn<ClientRow>[] = [
-  { id: 'locAdded', header: 'LOC Added', headerClassName: headerRightClass, className: valueCellClass, renderCell: client => activityValue(client, 'loc_added_sum') },
-  { id: 'locDeleted', header: 'LOC Deleted', headerClassName: headerRightClass, className: valueCellClass, renderCell: client => activityValue(client, 'loc_deleted_sum') },
-  { id: 'suggestedAdd', header: 'Suggested Add', headerClassName: headerRightClass, className: valueCellClass, renderCell: client => activityValue(client, 'loc_suggested_to_add_sum') },
-  { id: 'suggestedDelete', header: 'Suggested Delete', headerClassName: headerRightClass, className: valueCellClass, renderCell: client => activityValue(client, 'loc_suggested_to_delete_sum') },
+  { id: 'loc', header: 'LOC', headerClassName: headerRightClass, className: valueCellClass, renderCell: locValue },
 ];
 
 const trafficDetailColumns: TableColumn<ClientRow>[] = [
