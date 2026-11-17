@@ -76,12 +76,12 @@ describe('ClientActivityChart traffic', () => {
     expect(data.summary.clients[0].client).toBe(trafficKey);
   });
 
-  it('preserves both App identities when they coexist in activity and traffic', () => {
+  it('preserves both App identities and signed LOC when they coexist in activity and traffic', () => {
     const activity = {
       ide: 'copilot_app', user_initiated_interaction_count: 7,
       assumed_user_initiated_interaction_count: 2,
       code_generation_activity_count: 20, code_acceptance_activity_count: 10,
-      loc_added_sum: 100, loc_deleted_sum: -3,
+      loc_added_sum: -100, loc_deleted_sum: -3,
       loc_suggested_to_add_sum: 200, loc_suggested_to_delete_sum: 5,
     };
     render(
@@ -95,7 +95,7 @@ describe('ClientActivityChart traffic', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
     expect(rows).toHaveLength(1);
     expect(within(rows[0]).getAllByRole('cell').map(cell => cell.textContent)).toEqual([
-      'Copilot App', '18', '40', '20', '4', '+200 / -6', '19', '40', '20',
+      'Copilot App', '18', '40', '20', '4', '-200 / -6', '19', '40', '20',
     ]);
   });
 

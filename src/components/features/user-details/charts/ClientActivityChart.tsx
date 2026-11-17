@@ -66,7 +66,9 @@ const activityValue = (row: ClientRow, key: Exclude<keyof ClientActivityMetricsR
 
 const locValue = (row: ClientRow) => row.activity ? (
   <>
-    <span className="text-success">+{Math.abs(row.activity.loc_added_sum).toLocaleString()}</span>
+    <span className="text-success">
+      {row.activity.loc_added_sum >= 0 ? '+' : ''}{row.activity.loc_added_sum.toLocaleString()}
+    </span>
     {' / '}
     <span className="text-danger">-{Math.abs(row.activity.loc_deleted_sum).toLocaleString()}</span>
   </>
