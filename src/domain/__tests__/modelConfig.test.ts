@@ -25,25 +25,25 @@ describe('modelConfig', () => {
   });
 
   describe('known model catalog', () => {
-    // Pricing-table snapshot checked on 2026-11-14; context tiers share model identities.
+    // Pricing-table snapshot checked on 2026-11-18; context tiers share model identities.
     // https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing
     it.each([
       ['GPT-5.3-Codex', 'Powerful', 'OpenAI'],
       ['GPT-5.4 nano', 'Lightweight', 'OpenAI'],
       ['GPT-5.6 Luna', 'Lightweight', 'OpenAI'],
       ['GPT-5.6 Sol', 'Powerful', 'OpenAI'],
-      ['GPT-5.6 Terra', 'Versatile', 'OpenAI'],
       ['GPT-6 Astra', 'Powerful', 'OpenAI'],
       ['GPT-6 Luna', 'Lightweight', 'OpenAI'],
       ['GPT-6 Sol', 'Powerful', 'OpenAI'],
       ['GPT-6.1 Sol', 'Powerful', 'OpenAI'],
       ['GPT-6.1 Terra', 'Versatile', 'OpenAI'],
+      ['GPT-6.2 Astra', 'Powerful', 'OpenAI'],
+      ['GPT-6.2 Sol', 'Powerful', 'OpenAI'],
       ['Claude Haiku 4.5', 'Versatile', 'Anthropic'],
       ['Claude Haiku 5.5', 'Lightweight', 'Anthropic'],
       ['Claude Sonnet 4', 'Versatile', 'Anthropic'],
       ['Claude Sonnet 4.6', 'Versatile', 'Anthropic'],
       ['Claude Opus 4.8', 'Powerful', 'Anthropic'],
-      ['Claude Opus 5', 'Powerful', 'Anthropic'],
       ['Claude Opus 5.5', 'Powerful', 'Anthropic'],
       ['Claude Sonnet 5', 'Versatile', 'Anthropic'],
       ['Claude Sonnet 5.5', 'Versatile', 'Anthropic'],
@@ -56,11 +56,23 @@ describe('modelConfig', () => {
       ['Gemini 4 Carbon', 'Powerful', 'Google'],
       ['Gemini 4 Hydrogen', 'Versatile', 'Google'],
       ['MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'],
+      ['MAI Code 2', 'Powerful', 'Microsoft'],
+      ['MAI Code 2 Flash', 'Lightweight', 'Microsoft'],
       ['Grok 4.5', 'Versatile', 'xAI'],
       ['Grok 4.6', 'Versatile', 'xAI'],
       ['Grok 4.7', 'Versatile', 'xAI'],
       ['Kimi K3', 'Powerful', 'Moonshot AI'],
     ])('matches the documented category and vendor for %s', (name, category, vendor) => {
+      expect(isKnownModelName(name)).toBe(true);
+      expect(getModelCategory(name)).toBe(category);
+      expect(getModelVendor(name)).toBe(vendor);
+      expect(getModelDisplayName(name)).toBe(name);
+    });
+
+    it.each([
+      ['GPT-5.6 Terra', 'Versatile', 'OpenAI'],
+      ['Claude Opus 5', 'Powerful', 'Anthropic'],
+    ])('retains the historical model %s', (name, category, vendor) => {
       expect(isKnownModelName(name)).toBe(true);
       expect(getModelCategory(name)).toBe(category);
       expect(getModelVendor(name)).toBe(vendor);
@@ -123,6 +135,8 @@ describe('modelConfig', () => {
       ['GPT-6.1 Sol', 'gpt-6.1-sol', 'Powerful', 'OpenAI'],
       ['gpt-6.1-terra', 'gpt-6.1-terra', 'Versatile', 'OpenAI'],
       ['  GPT_6.1_TERRA  ', 'gpt-6.1-terra', 'Versatile', 'OpenAI'],
+      ['  GPT_6.2_ASTRA  ', 'gpt-6.2-astra', 'Powerful', 'OpenAI'],
+      ['  GPT_6.2_SOL  ', 'gpt-6.2-sol', 'Powerful', 'OpenAI'],
       ['Claude Sonnet 5.5', 'claude-sonnet-5.5', 'Versatile', 'Anthropic'],
       ['Claude Fable 5.1', 'claude-fable-5.1', 'Powerful', 'Anthropic'],
       ['claude-fable-5-1', 'claude-fable-5-1', 'Powerful', 'Anthropic'],
@@ -147,6 +161,8 @@ describe('modelConfig', () => {
       ['grok-4', 'grok-4', 'Versatile', 'xAI'],
       ['  GROK_4  ', 'grok-4', 'Versatile', 'xAI'],
       ['MAI-Code-1.1-Flash', 'mai-code-1.1-flash', 'Lightweight', 'Microsoft'],
+      ['  MAI_CODE_2  ', 'mai-code-2', 'Powerful', 'Microsoft'],
+      ['  MAI_CODE_2_FLASH  ', 'mai-code-2-flash', 'Lightweight', 'Microsoft'],
       ['Raptor mini', 'raptor-mini', 'Versatile', 'GitHub'],
     ])('resolves the display name or alias %j to %s', (alias, canonical, category, vendor) => {
       expect(classifyModelRequest(alias)).toEqual({ normalizedModel: canonical, isUnknown: false, isKnownModel: true });
