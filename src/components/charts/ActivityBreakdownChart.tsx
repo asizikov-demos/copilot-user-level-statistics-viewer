@@ -142,11 +142,9 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
     <ChartContainer title={config.title} footer={footer}>
       {hasBarChart && (
         <div className="mb-6">
-          <div className="bg-muted rounded-lg p-4">
-            <h4 className="text-sm font-medium text-default mb-4 text-center">{config.chartSubtitle}</h4>
-            <div className="h-64">
-              <Bar data={barChartData} options={barChartOptions} />
-            </div>
+          <h4 className="text-sm font-medium text-default mb-4 text-center">{config.chartSubtitle}</h4>
+          <div className="h-64">
+            <Bar data={barChartData} options={barChartOptions} />
           </div>
         </div>
       )}
