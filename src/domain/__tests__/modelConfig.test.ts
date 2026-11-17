@@ -69,6 +69,16 @@ describe('modelConfig', () => {
       expect(getModelDisplayName(name)).toBe(name);
     });
 
+    it.each([
+      ['GPT-5.6 Terra', 'Versatile', 'OpenAI'],
+      ['Claude Opus 5', 'Powerful', 'Anthropic'],
+    ])('retains the historical model %s', (name, category, vendor) => {
+      expect(isKnownModelName(name)).toBe(true);
+      expect(getModelCategory(name)).toBe(category);
+      expect(getModelVendor(name)).toBe(vendor);
+      expect(getModelDisplayName(name)).toBe(name);
+    });
+
     it('gives every catalog entry a display name for its own identity', () => {
       for (const model of KNOWN_MODELS) {
         expect(model.displayName.trim()).not.toBe('');
