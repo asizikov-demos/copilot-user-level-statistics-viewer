@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, FormControl, Label, Link } from '@primer/react';
 import SimpleSelect from '../../ui/SimpleSelect';
 import { AlertIcon, QuestionIcon } from '@primer/octicons-react';
 import type { ReportingQualityComponent, ReportingQualityMetrics, ReportingQualityUser } from '../../../types/reportingQuality';
 import { useSortableTable } from '../../../hooks/useSortableTable';
+import { usePagedList } from '../../../hooks/usePagedList';
 import { MetricTile } from '../../ui/MetricTile';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
 import EmptyState from '../../ui/EmptyState';
@@ -32,13 +33,8 @@ const numericColumn = {
 };
 
 function RequirementsTable({ quality, sectionId }: { quality: ReportingQualityMetrics; sectionId: string }) {
-  const [page, setPage] = useState(1);
   const { sortField, sortDirection, sortedItems, handleSort } = useSortableTable<ReportingQualityComponent, keyof ReportingQualityComponent>(quality.components, 'unmetUsers');
-  const pageCount = Math.max(1, Math.ceil(sortedItems.length / TABLE_PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pageStart = (currentPage - 1) * TABLE_PAGE_SIZE;
-  const pagedComponents = sortedItems.slice(pageStart, pageStart + TABLE_PAGE_SIZE);
-  useEffect(() => { setPage(1); }, [sortField, sortDirection, quality.components]);
+  const { currentPage, pagedItems: pagedComponents, setPage } = usePagedList(sortedItems, TABLE_PAGE_SIZE);
   const columns: TableColumn<ReportingQualityComponent>[] = [
     { id: 'component', header: 'Component identifier', sortable: true, ...textColumn, className: 'px-6 py-4 text-sm text-default whitespace-pre-wrap break-words', renderCell: row => <RequirementComponent component={row.component} /> },
     { id: 'unmetUsers', header: 'Users observed unmet', accessor: 'unmetUsers', sortable: true, ...numericColumn },
@@ -96,7 +92,6 @@ function AffectedUsersTable({
   sectionId: string;
 }) {
   const [filter, setFilter] = useState<IssueFilter>('either');
-  const [page, setPage] = useState(1);
   const rows = useMemo<UserRow[]>(() => quality.affectedUsers
     .filter(user => filter === 'either' || (filter === 'missing' ? user.missingTelemetryDays > 0 : user.belowMinimumDays > 0))
     .map(user => ({
@@ -108,11 +103,7 @@ function AffectedUsersTable({
       components: user.affectedComponents.join(', '),
     })), [quality.affectedUsers, filter]);
   const { sortField, sortDirection, sortedItems, handleSort } = useSortableTable<UserRow, keyof UserRow>(rows, 'lastIssueDay');
-  const pageCount = Math.max(1, Math.ceil(sortedItems.length / TABLE_PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pageStart = (currentPage - 1) * TABLE_PAGE_SIZE;
-  const pagedUsers = sortedItems.slice(pageStart, pageStart + TABLE_PAGE_SIZE);
-  useEffect(() => { setPage(1); }, [filter, sortField, sortDirection, quality.affectedUsers]);
+  const { currentPage, pagedItems: pagedUsers, setPage } = usePagedList(sortedItems, TABLE_PAGE_SIZE);
   const columns: TableColumn<UserRow>[] = [
     {
       id: 'userLogin', header: 'User', sortable: true, ...textColumn,

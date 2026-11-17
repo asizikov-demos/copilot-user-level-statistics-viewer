@@ -1,6 +1,7 @@
 'use client';
 
-import { Fragment, Key, ReactNode, useState } from 'react';
+import { Fragment, Key, ReactNode } from 'react';
+import { usePagedList } from '../../hooks/usePagedList';
 import type { SortDirection } from '../../types/sort';
 import { SortIndicator, getSortIndicatorAriaSort } from './SortIndicator';
 import TablePagination from './TablePagination';
@@ -66,20 +67,9 @@ export function MetricsTable<T>({
   const headerBaseClass = 'px-6 py-3 text-left';
   const cellBaseClass = cn(styles.defaultCell, 'px-6 py-4 whitespace-nowrap');
 
-  const [pagination, setPagination] = useState({ data, pageSize, page: 1 });
-  if (pageSize !== undefined && (!Number.isSafeInteger(pageSize) || pageSize < 1)) {
-    throw new Error('Table page size must be a positive safe integer.');
-  }
-  const dataChanged = pagination.data !== data || pagination.pageSize !== pageSize;
-  if (dataChanged) {
-    setPagination({ data, pageSize, page: 1 });
-  }
-  const pageCount = pageSize === undefined ? 1 : Math.max(1, Math.ceil(data.length / pageSize));
-  const currentPage = dataChanged ? 1 : Math.min(pagination.page, pageCount);
+  const { currentPage, pagedItems, setPage } = usePagedList(data, pageSize ?? Math.max(1, data.length));
   const pageStart = pageSize === undefined ? 0 : (currentPage - 1) * pageSize;
-  const visibleItems = pageSize === undefined
-    ? data
-    : data.slice(pageStart, pageStart + pageSize);
+  const visibleItems = pageSize === undefined ? data : pagedItems;
 
   if (data.length === 0 && emptyState) {
     return <>{emptyState}</>;
@@ -194,7 +184,7 @@ export function MetricsTable<T>({
             currentPage={currentPage}
             itemLabel={itemLabel}
             pageSize={pageSize}
-            onPageChange={page => setPagination({ data, pageSize, page })}
+            onPageChange={setPage}
           />
         </div>
       )}

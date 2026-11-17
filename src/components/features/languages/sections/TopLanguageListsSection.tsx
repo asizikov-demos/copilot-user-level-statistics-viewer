@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePagedList } from '../../../../hooks/usePagedList';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { rankBySelector, sortBySelector } from '../../../../utils/sorting';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
@@ -43,22 +44,10 @@ export default function TopLanguageListsSection({
     [languages],
   );
 
-  const [generationsPage, setGenerationsPage] = useState(1);
-  const [usersPage, setUsersPage] = useState(1);
-  useEffect(() => { setGenerationsPage(1); }, [languagesByGenerations]);
-  useEffect(() => { setUsersPage(1); }, [languagesByUsers]);
-  const generationsPageCount = Math.max(1, Math.ceil(languagesByGenerations.length / LANGUAGES_PER_PAGE));
-  const usersPageCount = Math.max(1, Math.ceil(languagesByUsers.length / LANGUAGES_PER_PAGE));
-  const currentGenerationsPage = Math.min(generationsPage, generationsPageCount);
-  const currentUsersPage = Math.min(usersPage, usersPageCount);
-  const pagedLanguagesByGenerations = languagesByGenerations.slice(
-    (currentGenerationsPage - 1) * LANGUAGES_PER_PAGE,
-    currentGenerationsPage * LANGUAGES_PER_PAGE,
-  );
-  const pagedLanguagesByUsers = languagesByUsers.slice(
-    (currentUsersPage - 1) * LANGUAGES_PER_PAGE,
-    currentUsersPage * LANGUAGES_PER_PAGE,
-  );
+  const { currentPage: currentGenerationsPage, pagedItems: pagedLanguagesByGenerations, setPage: setGenerationsPage } =
+    usePagedList(languagesByGenerations, LANGUAGES_PER_PAGE);
+  const { currentPage: currentUsersPage, pagedItems: pagedLanguagesByUsers, setPage: setUsersPage } =
+    usePagedList(languagesByUsers, LANGUAGES_PER_PAGE);
 
   const languagesByGenerationsColumns: TableColumn<LanguageStats>[] = [
     {

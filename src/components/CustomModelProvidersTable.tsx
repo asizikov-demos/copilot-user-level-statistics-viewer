@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { usePagedList } from '../hooks/usePagedList';
 import type { CustomModelProviderUsage, CustomModelUsageEntry } from '../types/metrics';
 import { formatNumber } from '../utils/formatters';
 import { getCustomModelIcon } from './icons/ModelIcons';
@@ -30,11 +30,7 @@ export default function CustomModelProvidersTable({
   providers: CustomModelProviderUsage[];
   totalInteractions: number;
 }) {
-  const [pagination, setPagination] = useState({ providers, page: 1 });
-  const dataChanged = pagination.providers !== providers;
-  if (dataChanged) setPagination({ providers, page: 1 });
-  const page = dataChanged ? 1 : Math.min(pagination.page, Math.max(1, Math.ceil(providers.length / PAGE_SIZE)));
-  const visibleProviders = providers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { currentPage: page, pagedItems: visibleProviders, setPage } = usePagedList(providers, PAGE_SIZE);
   const columns: TableColumn<CustomModelUsageEntry>[] = [
     {
       id: 'model',
@@ -67,7 +63,7 @@ export default function CustomModelProvidersTable({
           currentPage={page}
           itemLabel="providers"
           pageSize={PAGE_SIZE}
-          onPageChange={nextPage => setPagination({ providers, page: nextPage })}
+          onPageChange={setPage}
         />
       )}
     >
