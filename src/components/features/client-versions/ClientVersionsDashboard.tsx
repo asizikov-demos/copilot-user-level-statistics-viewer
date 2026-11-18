@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Banner, Details, Label, Link } from '@primer/react';
 import { AlertIcon, CheckIcon, ChevronRightIcon, InfoIcon } from '@primer/octicons-react';
 import type { PluginVersion } from '../../../hooks/usePluginVersions';
+import { usePagedList } from '../../../hooks/usePagedList';
 import { getIDEIcon } from '../../icons/IDEIcons';
 import EmptyState from '../../ui/EmptyState';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
@@ -218,15 +219,10 @@ function VersionDriftTable({
   platforms: ClientPlatformHealth[];
   sectionId: string;
 }) {
-  const [page, setPage] = useState(1);
   const rows = useMemo(() => platforms
     .flatMap(({ outdatedVersions }) => outdatedVersions)
     .sort((left, right) => right.userCount - left.userCount), [platforms]);
-  const pageCount = Math.max(1, Math.ceil(rows.length / TABLE_PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pageStart = (currentPage - 1) * TABLE_PAGE_SIZE;
-  const pagedRows = rows.slice(pageStart, pageStart + TABLE_PAGE_SIZE);
-  useEffect(() => { setPage(1); }, [rows]);
+  const { currentPage, pagedItems: pagedRows, setPage } = usePagedList(rows, TABLE_PAGE_SIZE);
   const unclassifiedPlatforms = platforms.filter(
     ({ metadataState, totalUsers, unclassifiedUsers }) =>
       totalUsers > 0 && (metadataState !== 'ready' || (unclassifiedUsers ?? 0) > 0),

@@ -113,7 +113,7 @@ describe('customizations components', () => {
       dailyEvents: [index + 1],
       topUsers: [],
     }));
-    render(<ExplorerTable model={model} />);
+    const { rerender } = render(<ExplorerTable model={model} />);
 
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(21);
     expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
@@ -143,5 +143,20 @@ describe('customizations components', () => {
     expect(screen.getByText('No items match the filters')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Next Page' }));
+    fireEvent.click(screen.getByText('skill-20'));
+    rerender(<ExplorerTable model={model} />);
+    expect(screen.getByText('Showing 21-21 of 21 items')).toBeTruthy();
+    expect(screen.getByTestId('daily-activity-chart')).toBeTruthy();
+
+    rerender(<ExplorerTable model={{ ...model }} />);
+    expect(screen.getByText('Showing 1-20 of 21 items')).toBeTruthy();
+    expect(screen.queryByTestId('daily-activity-chart')).toBeNull();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Next Page' }));
+    fireEvent.change(screen.getByLabelText('Search by name'), { target: { value: 'skill-20' } });
+    expect(screen.getByText('Showing 1-1 of 1 items')).toBeTruthy();
+    expect(screen.getByText('skill-20')).toBeTruthy();
   });
 });

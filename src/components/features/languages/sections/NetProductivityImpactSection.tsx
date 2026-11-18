@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { usePagedList } from '../../../../hooks/usePagedList';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
 import { rankBySelector, sortBySelector } from '../../../../utils/sorting';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
@@ -33,14 +34,7 @@ export default function NetProductivityImpactSection({
     [languages],
   );
 
-  const [page, setPage] = useState(1);
-  useEffect(() => { setPage(1); }, [languagesByNetLocImpact]);
-  const pageCount = Math.max(1, Math.ceil(languagesByNetLocImpact.length / LANGUAGES_PER_PAGE));
-  const currentPage = Math.min(page, pageCount);
-  const pagedLanguages = languagesByNetLocImpact.slice(
-    (currentPage - 1) * LANGUAGES_PER_PAGE,
-    currentPage * LANGUAGES_PER_PAGE,
-  );
+  const { currentPage, pagedItems: pagedLanguages, setPage } = usePagedList(languagesByNetLocImpact, LANGUAGES_PER_PAGE);
 
   const languagesByNetImpactColumns: TableColumn<LanguageStats>[] = [
     {

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { usePagedList } from '../../../../hooks/usePagedList';
 import { SegmentedControl } from '@primer/react';
 import { CodeIcon } from '@primer/octicons-react';
 import type { LanguageStats } from '../../../../domain/calculators/metricCalculators';
@@ -43,14 +44,7 @@ export default function CompleteLanguagesBreakdownSection({
   const sortedLanguages = useMemo(() => {
     return sortByField(languages, tableSortState.field as SortField, tableSortState.direction);
   }, [languages, tableSortState]);
-  const [page, setPage] = useState(1);
-  useEffect(() => { setPage(1); }, [sortedLanguages]);
-  const pageCount = Math.max(1, Math.ceil(sortedLanguages.length / LANGUAGES_PER_PAGE));
-  const currentPage = Math.min(page, pageCount);
-  const pagedLanguages = sortedLanguages.slice(
-    (currentPage - 1) * LANGUAGES_PER_PAGE,
-    currentPage * LANGUAGES_PER_PAGE,
-  );
+  const { currentPage, pagedItems: pagedLanguages, setPage } = usePagedList(sortedLanguages, LANGUAGES_PER_PAGE);
 
   const handleTableSortChange = (next: TableSortState) => {
     if (mode === 'totals') {

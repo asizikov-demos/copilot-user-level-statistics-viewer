@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Button, Checkbox, FormControl, Label, TextInput } from '@primer/react';
 import { FilterIcon, PeopleIcon, SearchIcon } from '@primer/octicons-react';
 import type { UserSummary } from '../../../../types/metrics';
 import { useUserFilters } from '../../../../hooks/useUserFilters';
 import { useSortableTable } from '../../../../hooks/useSortableTable';
+import { usePagedList } from '../../../../hooks/usePagedList';
 import { formatAiCreditCost } from '../../../../utils/formatters';
 import { formatIDEName } from '../../../../utils/ideNames';
 import { getIDEIcon } from '../../../icons/IDEIcons';
@@ -88,33 +89,11 @@ export default function UsersTableSection({
     'days_active',
     'desc'
   );
-  const [currentPage, setCurrentPage] = useState(1);
+  const { currentPage, pagedItems: pagedUsers, setPage: setCurrentPage } = usePagedList(sortedUsers, USERS_PER_PAGE);
 
   const handleUserClick = (user: UserSummary) => {
     onUserClick(user.user_login, user.user_id);
   };
-
-  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / USERS_PER_PAGE));
-  const pagedUsers = useMemo(() => {
-    const start = (currentPage - 1) * USERS_PER_PAGE;
-    return sortedUsers.slice(start, start + USERS_PER_PAGE);
-  }, [currentPage, sortedUsers]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    searchQuery,
-    selectedClients,
-    selectedFeatures,
-    serverSideOnlyTelemetry,
-    sortField,
-    sortDirection,
-    users,
-  ]);
-
-  useEffect(() => {
-    setCurrentPage((page) => Math.min(page, totalPages));
-  }, [totalPages]);
 
   const tableSortState = { field: sortField as string, direction: sortDirection };
 

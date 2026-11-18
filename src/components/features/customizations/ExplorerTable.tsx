@@ -19,6 +19,7 @@ import { createBaseChartOptions, yAxisFormatters } from '../../charts/utils/char
 import { createBarDataset } from '../../charts/utils/chartStyles';
 import { formatShortDate } from '../../../utils/formatters';
 import { useSortableTable } from '../../../hooks/useSortableTable';
+import { usePagedList } from '../../../hooks/usePagedList';
 import MetricsTable, { type TableColumn } from '../../ui/MetricsTable';
 import TableCard from '../../ui/TableCard';
 import TablePagination from '../../ui/TablePagination';
@@ -89,7 +90,6 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ExplorerCategory>('all');
   const [includeUnnamed, setIncludeUnnamed] = useState(false);
-  const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const all = useMemo<ExplorerRow[]>(
@@ -110,13 +110,11 @@ export default function ExplorerTable({ model }: { model: CustomizationsReadMode
   }, [all, query, category, includeUnnamed]);
 
   const { sortField, sortDirection, sortedItems, handleSort } = useSortableTable<ExplorerRow, SortField>(filtered, 'totalEvents', 'desc');
-  const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
-  const paged = useMemo(() => sortedItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sortedItems, page]);
+  const { currentPage: page, pagedItems: paged, setPage } = usePagedList(sortedItems, PAGE_SIZE);
   const rowKey = (r: ExplorerRow) => `${r.category}:${r.name}`;
   const selectedType = TYPE_FILTER_OPTIONS.find(option => option.id === category);
 
-  useEffect(() => { setPage(1); setExpanded(null); }, [query, category, includeUnnamed, sortField, sortDirection, model]);
-  useEffect(() => { setPage(p => Math.min(p, totalPages)); }, [totalPages]);
+  useEffect(() => { setExpanded(null); }, [sortedItems]);
 
   const hasFilters = query !== '' || category !== 'all' || includeUnnamed;
   const numeric = { headerClassName: 'px-6 py-3 text-right', className: 'px-6 py-3 text-right text-sm tabular-nums text-default whitespace-nowrap' };

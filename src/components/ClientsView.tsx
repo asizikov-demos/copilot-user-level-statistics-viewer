@@ -9,6 +9,7 @@ import TableCard from './ui/TableCard';
 import TablePagination, { TABLE_PAGE_SIZE } from './ui/TablePagination';
 import { ViewPanel } from './ui';
 import { useSortableTable } from '../hooks/useSortableTable';
+import { usePagedList } from '../hooks/usePagedList';
 import IDEDistributionChart from './charts/IDEDistributionChart';
 import CLIOverlapChart from './charts/CLIOverlapChart';
 import DailyIDEUsersChart from './charts/DailyIDEUsersChart';
@@ -70,14 +71,10 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleEngagementsSort,
   } = useSortableTable<IDEStats, keyof IDEStats>(allClients, 'totalEngagements', 'desc');
 
-  const [usersPage, setUsersPage] = React.useState(1);
-  const [engagementsPage, setEngagementsPage] = React.useState(1);
-  React.useEffect(() => { setUsersPage(1); }, [sortedIdesByUsers]);
-  React.useEffect(() => { setEngagementsPage(1); }, [sortedIdesByEngagements]);
-  const currentUsersPage = Math.min(usersPage, Math.max(1, Math.ceil(sortedIdesByUsers.length / TABLE_PAGE_SIZE)));
-  const currentEngagementsPage = Math.min(engagementsPage, Math.max(1, Math.ceil(sortedIdesByEngagements.length / TABLE_PAGE_SIZE)));
-  const pagedIdesByUsers = sortedIdesByUsers.slice((currentUsersPage - 1) * TABLE_PAGE_SIZE, currentUsersPage * TABLE_PAGE_SIZE);
-  const pagedIdesByEngagements = sortedIdesByEngagements.slice((currentEngagementsPage - 1) * TABLE_PAGE_SIZE, currentEngagementsPage * TABLE_PAGE_SIZE);
+  const { currentPage: currentUsersPage, pagedItems: pagedIdesByUsers, setPage: setUsersPage } =
+    usePagedList(sortedIdesByUsers, TABLE_PAGE_SIZE);
+  const { currentPage: currentEngagementsPage, pagedItems: pagedIdesByEngagements, setPage: setEngagementsPage } =
+    usePagedList(sortedIdesByEngagements, TABLE_PAGE_SIZE);
 
   const headerClass = 'px-6 py-3 text-left';
   const headerRightClass = 'px-6 py-3 text-right';
@@ -87,10 +84,8 @@ export default function ClientsView({ model }: IDEViewProps) {
     handleSort: handleTrafficSort } = useSortableTable<ClientTrafficSummary, TrafficSortField>(
       model.traffic.summary.clients, 'requestCount', 'desc'
     );
-  const [trafficPage, setTrafficPage] = React.useState(1);
-  React.useEffect(() => { setTrafficPage(1); }, [sortedTraffic]);
-  const currentTrafficPage = Math.min(trafficPage, Math.max(1, Math.ceil(sortedTraffic.length / TABLE_PAGE_SIZE)));
-  const pagedTraffic = sortedTraffic.slice((currentTrafficPage - 1) * TABLE_PAGE_SIZE, currentTrafficPage * TABLE_PAGE_SIZE);
+  const { currentPage: currentTrafficPage, pagedItems: pagedTraffic, setPage: setTrafficPage } =
+    usePagedList(sortedTraffic, TABLE_PAGE_SIZE);
   const trafficColumns: TableColumn<ClientTrafficSummary>[] = [
     {
       id: 'client', header: 'Client', sortable: true,
