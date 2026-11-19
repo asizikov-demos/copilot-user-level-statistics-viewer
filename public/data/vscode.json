@@ -1,8 +1,12 @@
 {
-  "stableMinor": 74,
-  "previewMinor": 75,
-  "updatedAt": "2026-11-10T19:37:29.048Z",
+  "stableMinor": 75,
+  "previewMinor": 76,
+  "updatedAt": "2026-11-17T07:31:39.945Z",
   "stableReleases": [
+    {
+      "version": "0.75.0",
+      "releaseDate": "2026-11-17T07:31:39.945Z"
+    },
     {
       "version": "0.74.0",
       "releaseDate": "2026-11-10T19:37:29.048Z"
@@ -78,13 +82,14 @@
     {
       "version": "0.57.0",
       "releaseDate": "2026-07-15T00:29:06.558Z"
-    },
-    {
-      "version": "0.56.0",
-      "releaseDate": "2026-07-07T22:56:33.287Z"
     }
   ],
   "vscodeReleases": [
+    {
+      "editorVersion": "1.147.0",
+      "version": "0.75.0",
+      "releaseDate": "2026-11-17T07:31:39.945Z"
+    },
     {
       "editorVersion": "1.146.0",
       "version": "0.74.0",
@@ -239,21 +244,6 @@
       "editorVersion": "1.128.1",
       "version": "0.56.0",
       "releaseDate": "2026-07-14T14:28:45.939Z"
-    },
-    {
-      "editorVersion": "1.128.0",
-      "version": "0.56.0",
-      "releaseDate": "2026-07-07T22:56:33.287Z"
-    },
-    {
-      "editorVersion": "1.127.0",
-      "version": "0.55.0",
-      "releaseDate": "2026-06-30T09:14:00.009Z"
-    },
-    {
-      "editorVersion": "1.126.0",
-      "version": "0.54.0",
-      "releaseDate": "2026-06-23T09:40:09.516Z"
     }
   ]
 }
