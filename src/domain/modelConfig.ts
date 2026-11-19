@@ -144,6 +144,7 @@ export const KNOWN_MODELS: Model[] = [
   new Model('gemini-4-argon', 'Gemini 4 Argon', 'Powerful', 'Google'),
   new Model('gemini-4-carbon', 'Gemini 4 Carbon', 'Powerful', 'Google'),
   new Model('gemini-4-hydrogen', 'Gemini 4 Hydrogen', 'Versatile', 'Google'),
+  new Model('gemini-4-neon', 'Gemini 4 Neon', 'Versatile', 'Google'),
   new Model('mai-code-1-flash', 'MAI-Code-1-Flash', 'Lightweight', 'Microsoft'),
   new Model('mai-code-1.1-flash', 'MAI-Code-1.1-Flash', 'Lightweight', 'Microsoft'),
   new Model('mai-code-2', 'MAI Code 2', 'Powerful', 'Microsoft'),
