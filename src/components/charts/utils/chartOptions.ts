@@ -21,6 +21,7 @@ export interface BaseChartConfig<TType extends 'line' | 'bar' = 'bar'> {
   tooltipAfterBodyCallback?: (tooltipItems: TooltipItem<TType>[]) => string[];
   tooltipTitleCallback?: (context: TooltipItem<TType>[]) => string;
   tooltipFooterCallback?: (items: TooltipItem<TType>[]) => string;
+  tooltipFilter?: (item: TooltipItem<TType>) => boolean;
   stacked?: boolean;
   indexAxis?: 'x' | 'y';
   yStepSize?: number;
@@ -72,6 +73,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
     tooltipAfterBodyCallback,
     tooltipTitleCallback,
     tooltipFooterCallback,
+    tooltipFilter,
     stacked = false,
     indexAxis = 'x',
     yStepSize,
@@ -94,6 +96,7 @@ export function createBaseChartOptions<TType extends 'line' | 'bar' = 'bar'>(
       },
       tooltip: {
         ...createPrimerTooltipStyle(),
+        ...(tooltipFilter && { filter: tooltipFilter }),
         callbacks: {
           ...(tooltipTitleCallback && { title: tooltipTitleCallback }),
           ...(tooltipLabelCallback && { label: tooltipLabelCallback }),
@@ -288,6 +291,10 @@ export function createStackedBarChartOptions(
     ...config,
     stacked: true,
   });
+}
+
+export function hasNonZeroBarValue(item: TooltipItem<'bar'>): boolean {
+  return item.parsed.y != null && item.parsed.y !== 0;
 }
 
 /**

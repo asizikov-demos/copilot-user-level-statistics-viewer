@@ -2,14 +2,19 @@
 
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, it, expect, vi } from 'vitest';
+import type { ChartOptions, TooltipItem } from 'chart.js';
 import UserActivityByModelAndFeatureChart, { buildModelBarChartData } from '../UserActivityByModelAndFeatureChart';
 import { getSequentialColor } from '../../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../../domain/assumedInteractions';
 import type { UserDayData } from '../../../../../types/metrics';
 
+const captureOptions = vi.hoisted(() => vi.fn());
 vi.mock('react-chartjs-2', () => ({
-  Bar: () => <div data-testid="model-bars" />,
+  Bar: ({ options }: { options: ChartOptions<'bar'> }) => {
+    captureOptions(options);
+    return <div data-testid="model-bars" />;
+  },
 }));
 
 afterEach(cleanup);
@@ -55,6 +60,27 @@ function makeModelEntry(
 }
 
 describe('UserActivityByModelAndFeatureChart data construction', () => {
+  it('excludes zero values from the tooltip while retaining nonzero values', () => {
+    const entry = makeModelEntry('gpt-4o', 5);
+    render(
+      <UserActivityByModelAndFeatureChart
+        modelFeatureAggregates={[]}
+        days={[makeUserDayData({ totals_by_model_feature: [entry] })]}
+        reportStartDay="2024-01-15"
+        reportEndDay="2024-01-15"
+      />,
+    );
+
+    const options: ChartOptions<'bar'> = captureOptions.mock.lastCall![0];
+    const filter = options.plugins?.tooltip?.filter;
+    expect(filter).toBeDefined();
+    const item = (value: number) => ({ parsed: { x: 0, y: value } }) as TooltipItem<'bar'>;
+    const data = { labels: [], datasets: [] };
+    expect(filter!(item(0), 0, [], data)).toBe(false);
+    expect(filter!(item(5), 0, [], data)).toBe(true);
+    expect(filter!(item(-1), 0, [], data)).toBe(true);
+  });
+
   it('pads the full report range with zero-interaction days for missing dates', () => {
     const days = [
       makeUserDayData({ day: '2024-01-01', totals_by_model_feature: [makeModelEntry('gpt-4o', 7)] }),

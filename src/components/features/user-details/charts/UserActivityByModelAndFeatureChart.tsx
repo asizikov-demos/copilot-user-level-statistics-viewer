@@ -11,7 +11,7 @@ import { getModelIcon } from '../../../icons/ModelIcons';
 import { padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { getSequentialColor } from '../../../charts/utils/chartColors';
-import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
+import { createStackedBarChartOptions, hasNonZeroBarValue } from '../../../charts/utils/chartOptions';
 import { formatShortDate, formatModelDisplayName } from '../../../../utils/formatters';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
@@ -92,6 +92,7 @@ export default function UserActivityByModelAndFeatureChart({
   const modelBarChartOptions = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Interactions',
+    tooltipFilter: hasNonZeroBarValue,
     tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const label = context.dataset.label ?? '';
       const value = context.parsed.y ?? 0;

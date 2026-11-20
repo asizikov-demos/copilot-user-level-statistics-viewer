@@ -1,8 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { buildLanguageBarChartData } from '../UserActivityByLanguageAndFeatureChart';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, it, expect, vi } from 'vitest';
+import type { ChartOptions, TooltipItem } from 'chart.js';
+import UserActivityByLanguageAndFeatureChart, { buildLanguageBarChartData } from '../UserActivityByLanguageAndFeatureChart';
 import { getLanguageColor } from '../../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../../utils/formatters';
 import type { UserDayData } from '../../../../../types/metrics';
+
+const captureOptions = vi.hoisted(() => vi.fn());
+vi.mock('../../../../charts/ActivityBreakdownChart', () => ({
+  default: ({ barChartOptions }: { barChartOptions: ChartOptions<'bar'> }) => {
+    captureOptions(barChartOptions);
+    return null;
+  },
+}));
 
 function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
   return {
@@ -44,6 +55,24 @@ function makeLanguageEntry(
 }
 
 describe('UserActivityByLanguageAndFeatureChart data construction', () => {
+  it('filters zero values from the tooltip without hiding nonzero values', () => {
+    renderToStaticMarkup(createElement(UserActivityByLanguageAndFeatureChart, {
+      languageFeatureAggregates: [],
+      days: [],
+      reportStartDay: '2024-01-01',
+      reportEndDay: '2024-01-03',
+    }));
+
+    const options: ChartOptions<'bar'> = captureOptions.mock.lastCall![0];
+    const filter = options.plugins?.tooltip?.filter;
+    expect(filter).toBeDefined();
+    const item = (value: number) => ({ parsed: { x: 0, y: value } }) as TooltipItem<'bar'>;
+    const data = { labels: [], datasets: [] };
+    expect(filter!(item(0), 0, [], data)).toBe(false);
+    expect(filter!(item(4), 0, [], data)).toBe(true);
+    expect(filter!(item(-1), 0, [], data)).toBe(true);
+  });
+
   it('pads the full report range with zero-generation days for missing dates', () => {
     const days = [
       makeUserDayData({ day: '2024-01-01', totals_by_language_feature: [makeLanguageEntry('typescript', 5)] }),

@@ -8,7 +8,7 @@ import ActivityBreakdownChart from '../../../charts/ActivityBreakdownChart';
 import { padDailyReportRangeData } from '../../../charts/utils/dailyBarChart';
 import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { getLanguageColor } from '../../../charts/utils/chartColors';
-import { createStackedBarChartOptions } from '../../../charts/utils/chartOptions';
+import { createStackedBarChartOptions, hasNonZeroBarValue } from '../../../charts/utils/chartOptions';
 import { formatShortDate } from '../../../../utils/formatters';
 
 export type LanguageFeatureAggregate = CopilotMetrics['totals_by_language_feature'][number];
@@ -86,6 +86,7 @@ export default function UserActivityByLanguageAndFeatureChart({
   const languageBarChartOptions = createStackedBarChartOptions({
     xAxisLabel: 'Date',
     yAxisLabel: 'Generations',
+    tooltipFilter: hasNonZeroBarValue,
     tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const label = context.dataset.label ?? '';
       const value = context.parsed.y ?? 0;
