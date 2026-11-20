@@ -5,6 +5,8 @@
 header.header {
   height: 4rem;
   padding: 0;
+  background-color: var(--bgColor-inset);
+  background-image: linear-gradient(var(--header-bgColor), var(--header-bgColor));
 }
 
 /* Header buttons on the dark `--header-bgColor` surface. */
