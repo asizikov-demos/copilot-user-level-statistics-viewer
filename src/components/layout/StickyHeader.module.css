@@ -37,12 +37,24 @@ header.header {
   text-overflow: ellipsis;
 }
 
-@media (max-width: 33.999rem) {
+@media (max-width: 47.999rem) {
+  .actions .menuButton {
+    max-width: 16vw;
+  }
+
   .actions .themeButton [data-component='text'] {
     display: none;
   }
 
   .actions .themeButton [data-component='buttonContent'] {
     column-gap: 0;
+  }
+
+  .actions .contextMenuButton [data-component='text'] {
+    display: none;
+  }
+
+  .actions .contextMenuButton [data-component='trailingAction'] {
+    display: none;
   }
 }

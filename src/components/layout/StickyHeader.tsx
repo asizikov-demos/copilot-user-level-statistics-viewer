@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ActionList, ActionMenu, Button, Header } from '@primer/react';
-import { MarkGithubIcon, MoonIcon, SunIcon } from '@primer/octicons-react';
+import { ListUnorderedIcon, MarkGithubIcon, MoonIcon, SunIcon } from '@primer/octicons-react';
 import { useMetrics } from '../MetricsContext';
 import { useNavigation } from '../../state/NavigationContext';
 import { useResetAppState } from '../../hooks/useResetAppState';
@@ -10,8 +10,15 @@ import { useAppTheme } from '../../state/AppThemeProvider';
 import { getActiveNavItem, NAV_ITEMS } from './navigationItems';
 import styles from './StickyHeader.module.css';
 import shellStyles from './AppShell.module.css';
+import type { ContextSection } from './contextSections';
+import { navigateToSection } from './useContextSections';
 
-const StickyHeader: React.FC = () => {
+interface StickyHeaderProps {
+  sections: ContextSection[];
+  activeSectionId: string | null;
+}
+
+const StickyHeader: React.FC<StickyHeaderProps> = ({ sections, activeSectionId }) => {
   const { hasData } = useMetrics();
   const { currentView, navigateTo } = useNavigation();
   const resetAppState = useResetAppState();
@@ -67,6 +74,33 @@ const StickyHeader: React.FC = () => {
                     </ActionMenu.Overlay>
                   </ActionMenu>
                 </div>
+
+                {sections.length > 0 && (
+                  <div className={shellStyles.compactContextNavigation}>
+                    <ActionMenu>
+                      <ActionMenu.Button
+                        className={styles.contextMenuButton}
+                        leadingVisual={ListUnorderedIcon}
+                        aria-label="On this page"
+                      >
+                        On this page
+                      </ActionMenu.Button>
+                      <ActionMenu.Overlay align="end">
+                        <ActionList selectionVariant="single">
+                          {sections.map(({ id, label }) => (
+                            <ActionList.Item
+                              key={id}
+                              selected={activeSectionId === id}
+                              onSelect={() => navigateToSection(id)}
+                            >
+                              {label}
+                            </ActionList.Item>
+                          ))}
+                        </ActionList>
+                      </ActionMenu.Overlay>
+                    </ActionMenu>
+                  </div>
+                )}
 
                 <Button onClick={resetAppState}>
                   <span className="hidden sm:inline">Upload new file</span>

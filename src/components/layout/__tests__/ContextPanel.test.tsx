@@ -3,6 +3,7 @@ import { BaseStyles, ThemeProvider } from '@primer/react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ContextPanel from '../ContextPanel';
+import { useContextSections } from '../useContextSections';
 
 const mocks = vi.hoisted(() => ({
   view: 'userDetails',
@@ -29,11 +30,16 @@ function stubMatchMedia(prefersReducedMotion: boolean) {
   })));
 }
 
+function PanelWithSections() {
+  const { sections, activeId } = useContextSections();
+  return <ContextPanel sections={sections} activeId={activeId} />;
+}
+
 function renderPanel() {
   return render(
     <ThemeProvider colorMode="day">
       <BaseStyles>
-        <ContextPanel />
+        <PanelWithSections />
       </BaseStyles>
     </ThemeProvider>,
   );
@@ -102,7 +108,7 @@ describe('ContextPanel', () => {
     rerender(
       <ThemeProvider colorMode="day">
         <BaseStyles>
-          <ContextPanel />
+          <PanelWithSections />
         </BaseStyles>
       </ThemeProvider>,
     );
