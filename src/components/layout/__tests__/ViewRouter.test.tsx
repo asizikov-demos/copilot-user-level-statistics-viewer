@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createContext, useContext } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeMetric } from '../../../__tests__/factories/metrics';
@@ -17,6 +18,8 @@ interface StandardRouteOutletProps {
   dataWarning?: string | null;
   onUserSelect: (userLogin: string, userId: number) => void;
 }
+
+const ContextRevision = createContext(0);
 
 const mocks = vi.hoisted(() => ({
   currentView: 'userDetails' as ViewMode,
@@ -41,23 +44,29 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../../MetricsContext', () => ({
-  useMetrics: () => ({
-    hasData: mocks.hasData,
-    enterpriseName: mocks.enterpriseName,
-    aggregatedMetrics: mocks.aggregatedMetrics,
-    isLoading: mocks.isLoading,
-    error: mocks.error,
-    warning: mocks.warning,
-  }),
+  useMetrics: function useMetrics() {
+    useContext(ContextRevision);
+    return {
+      hasData: mocks.hasData,
+      enterpriseName: mocks.enterpriseName,
+      aggregatedMetrics: mocks.aggregatedMetrics,
+      isLoading: mocks.isLoading,
+      error: mocks.error,
+      warning: mocks.warning,
+    };
+  },
 }));
 
 vi.mock('../../../state/NavigationContext', () => ({
-  useNavigation: () => ({
-    currentView: mocks.currentView,
-    selectedUser: mocks.selectedUser,
-    navigateTo: mocks.navigateTo,
-    selectUser: mocks.selectUser,
-  }),
+  useNavigation: function useNavigation() {
+    useContext(ContextRevision);
+    return {
+      currentView: mocks.currentView,
+      selectedUser: mocks.selectedUser,
+      navigateTo: mocks.navigateTo,
+      selectUser: mocks.selectUser,
+    };
+  },
 }));
 
 vi.mock('../../../hooks/useFileUpload', () => ({
@@ -182,6 +191,15 @@ describe('ViewRouter', () => {
     });
   });
 
+  it('does not rerender the route when only its parent changes', () => {
+    mocks.currentView = VIEW_MODES.CUSTOMIZATIONS;
+    const { rerender } = render(<><span>First section</span><ViewRouter /></>);
+    expect(mocks.standardRouteOutlet).toHaveBeenCalledOnce();
+
+    rerender(<><span>Second section</span><ViewRouter /></>);
+    expect(mocks.standardRouteOutlet).toHaveBeenCalledOnce();
+  });
+
   it('passes the upload limitation to the executive summary route', () => {
     mocks.currentView = VIEW_MODES.EXECUTIVE_SUMMARY;
     mocks.warning = 'One file failed to load.';
@@ -264,11 +282,11 @@ describe('ViewRouter', () => {
     'resets a failed view when the %s changes',
     (change) => {
       throwInStandardView();
-      const { rerender } = render(<ViewRouter />);
+      const { rerender } = render(<ContextRevision.Provider value={0}><ViewRouter /></ContextRevision.Provider>);
       mocks.standardRouteOutlet.mockReset();
 
       // An unrelated render must not retry a failing dashboard.
-      rerender(<ViewRouter />);
+      rerender(<ContextRevision.Provider value={0}><ViewRouter /></ContextRevision.Provider>);
       expect(screen.getByText('Unable to display this view')).toBeTruthy();
       expect(mocks.standardRouteOutlet).not.toHaveBeenCalled();
 
@@ -278,7 +296,7 @@ describe('ViewRouter', () => {
       if (change === 'dataset') {
         mocks.aggregatedMetrics = aggregateMetrics([makeMetric()]).aggregated;
       }
-      rerender(<ViewRouter />);
+      rerender(<ContextRevision.Provider value={1}><ViewRouter /></ContextRevision.Provider>);
 
       expect(screen.queryByText('Unable to display this view')).toBeNull();
       expect(screen.getByText('Standard dashboard')).toBeTruthy();

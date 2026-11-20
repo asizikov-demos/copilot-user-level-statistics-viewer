@@ -74,4 +74,4 @@ const ViewRouter: React.FC = () => {
   );
 };
 
-export default ViewRouter;
+export default React.memo(ViewRouter);
