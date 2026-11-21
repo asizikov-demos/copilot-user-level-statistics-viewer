@@ -5,6 +5,8 @@
 header.header {
   height: 4rem;
   padding: 0;
+  background-color: var(--bgColor-inset);
+  background-image: linear-gradient(var(--header-bgColor), var(--header-bgColor));
 }
 
 /* Header buttons on the dark `--header-bgColor` surface. */
@@ -37,12 +39,24 @@ header.header {
   text-overflow: ellipsis;
 }
 
-@media (max-width: 33.999rem) {
+@media (max-width: 47.999rem) {
+  .actions .menuButton {
+    max-width: 16vw;
+  }
+
   .actions .themeButton [data-component='text'] {
     display: none;
   }
 
   .actions .themeButton [data-component='buttonContent'] {
     column-gap: 0;
+  }
+
+  .actions .contextMenuButton [data-component='text'] {
+    display: none;
+  }
+
+  .actions .contextMenuButton [data-component='trailingAction'] {
+    display: none;
   }
 }

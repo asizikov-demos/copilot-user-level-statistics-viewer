@@ -10,6 +10,25 @@
   display: none;
 }
 
+.contextPanel {
+  display: none;
+}
+
+/* Preserve at least 76rem of content beside both expanded navigation rails. */
+@media (min-width: 112rem) {
+  .contextPanel {
+    display: block;
+  }
+
+  .content.withContextPanel {
+    margin-right: 16rem;
+  }
+
+  .compactContextNavigation {
+    display: none;
+  }
+}
+
 @media (min-width: 63.25rem) and (min-height: 42rem) {
   .sidebar {
     position: fixed;
@@ -57,7 +76,13 @@
     display: none;
   }
 
+  .contextPanel {
+    display: none;
+  }
+
+  .content.withContextPanel,
   .content {
     margin-left: 0;
+    margin-right: 0;
   }
 }

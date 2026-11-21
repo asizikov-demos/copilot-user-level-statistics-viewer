@@ -5,18 +5,20 @@ import { Link } from '@primer/react';
 import { useMetrics } from '../components/MetricsContext';
 import { useState } from 'react';
 import styles from '../components/layout/AppShell.module.css';
+import { useContextSections } from '../components/layout/useContextSections';
 
 export default function Home() {
   const { hasData } = useMetrics();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { sections, activeId } = useContextSections();
 
   return (
     <div className={`${styles.shell} ${sidebarCollapsed ? styles.collapsed : ''} min-h-screen bg-muted print:bg-default print:min-h-0`}>
-      <StickyHeader />
+      <StickyHeader sections={hasData ? sections : []} activeSectionId={activeId} />
       {hasData && <SideNav collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(value => !value)} />}
-      {hasData && <ContextPanel />}
+      {hasData && <ContextPanel sections={sections} activeId={activeId} />}
       {hasData && <DataInfoBar />}
-      <div className={`pt-16 print:pt-0 print:ml-0 print:mr-0 ${hasData ? `${styles.content} xl:mr-64` : ''}`}>
+      <div className={`pt-16 print:pt-0 print:ml-0 print:mr-0 ${hasData ? `${styles.content} ${sections.length > 0 ? styles.withContextPanel : ''}` : ''}`}>
         <div className={`px-4 sm:px-6 lg:px-8 pb-6 print:px-0 print:py-0 print:mx-0 ${hasData ? 'py-6 lg:pt-12' : 'py-6'}`}>
           <AppHeader />
           <ViewRouter />

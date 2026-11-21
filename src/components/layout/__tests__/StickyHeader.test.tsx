@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import StickyHeader from '../StickyHeader';
 import { AppThemeProvider } from '../../../state/AppThemeProvider';
@@ -23,10 +23,10 @@ vi.mock('../../../hooks/useResetAppState', () => ({
   useResetAppState: () => mocks.resetAppState,
 }));
 
-function renderHeader() {
+function renderHeader(sections: { id: string; label: string }[] = [], activeSectionId: string | null = null) {
   return render(
     <AppThemeProvider>
-      <StickyHeader />
+      <StickyHeader sections={sections} activeSectionId={activeSectionId} />
     </AppThemeProvider>,
   );
 }
@@ -101,5 +101,30 @@ describe('StickyHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: /upload new file/i }));
 
     expect(mocks.resetAppState).toHaveBeenCalledTimes(1);
+  });
+
+  it('only offers page sections that exist and focuses the selected section', async () => {
+    const section = document.createElement('section');
+    section.id = 'usage-trend';
+    section.scrollIntoView = vi.fn();
+    document.body.appendChild(section);
+
+    const { rerender } = renderHeader([{ id: 'usage-trend', label: 'Usage trend' }], 'usage-trend');
+    fireEvent.click(screen.getByRole('button', { name: 'On this page' }));
+    const item = screen.getByRole('menuitemradio', { name: 'Usage trend' });
+    expect(item.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(item);
+    expect(section.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(window.location.hash).toBe('#usage-trend');
+    await waitFor(() => expect(document.activeElement).toBe(section));
+
+    rerender(
+      <AppThemeProvider>
+        <StickyHeader sections={[]} activeSectionId={null} />
+      </AppThemeProvider>,
+    );
+    expect(screen.queryByRole('button', { name: 'On this page' })).toBeNull();
+    section.remove();
+    window.history.replaceState(null, '', '/');
   });
 });
