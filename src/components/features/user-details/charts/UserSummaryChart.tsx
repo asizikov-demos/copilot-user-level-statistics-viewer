@@ -40,6 +40,7 @@ function SelectableCompositionTile({ kind, interactions, requests }: {
   return (
     <CompositionChartCard
       title={title}
+      compactHeader
       entries={(isRequests ? requests : interactions) ?? []}
       unit={measure}
       label={`${isRequests ? 'Requests' : 'Interactions'} by ${kind}`}
@@ -111,6 +112,7 @@ export default function UserSummaryChart({
         />
         <CompositionChartCard
           title="Languages"
+          compactHeader
           entries={languageDistribution ?? []}
           unit="generations"
           label="Generations by language"

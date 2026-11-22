@@ -25,6 +25,10 @@
   min-width: min(100%, 16rem);
 }
 
+.compactHeader .headerText {
+  min-width: max-content;
+}
+
 .title {
   margin-bottom: var(--base-size-8);
   font: var(--text-title-shorthand-small);
@@ -124,6 +128,10 @@
 
   .headerText {
     flex: 1;
+    min-width: 0;
+  }
+
+  .compactHeader .headerText {
     min-width: 0;
   }
 

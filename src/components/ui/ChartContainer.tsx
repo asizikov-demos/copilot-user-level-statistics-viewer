@@ -26,6 +26,7 @@ export interface ChartContainerProps {
   stats?: ChartStat[];
   summaryStats?: SummaryStatItem[];
   headerActions?: React.ReactNode;
+  compactHeader?: boolean;
   footer?: React.ReactNode;
   emptyState?: string;
   isEmpty?: boolean;
@@ -44,6 +45,7 @@ export default function ChartContainer({
   stats,
   summaryStats,
   headerActions,
+  compactHeader = false,
   footer,
   emptyState = 'No data available',
   isEmpty = false,
@@ -69,7 +71,7 @@ export default function ChartContainer({
   }
 
   return (
-    <div className={cn(styles.root, className)} data-component="ChartContainer">
+    <div className={cn(styles.root, compactHeader && styles.compactHeader, className)} data-component="ChartContainer">
       <header className={styles.header} role="presentation">
         <div className={styles.headerText}>
           <Heading as="h3" variant="small" className={styles.title}>
