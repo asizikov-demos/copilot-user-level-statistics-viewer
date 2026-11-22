@@ -93,6 +93,8 @@ Copilot App Adoption replaces the former CLI Adoption page, retaining the adopti
 
 Copilot Impact and user-details views omit a standalone Edit Mode Impact chart. Edit Mode data remains included in combined impact totals.
 
+The user Feature Adoption radar shows Agent Mode, Plan Mode, CLI, Cloud Agent, Copilot App, and Completions. Copilot App uses worker-aggregated `copilot_app` feature interactions; Cloud Agent uses distinct active days from `userSummary.cloud_agent_days`. Cloud Agent's day count is labeled separately in the footer and tooltip because it is not comparable to interaction counts.
+
 ## Metric Interpretation
 
 These contracts prevent plausible-looking but misleading analysis. Detailed calculations and edge cases belong with the linked implementations and tests.

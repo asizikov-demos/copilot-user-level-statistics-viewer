@@ -16,8 +16,8 @@ interface FeatureAdoptionRadarChartProps {
   agentInteractions: number;
   planInteractions: number;
   cliInteractions: number;
-  askModeInteractions: number;
-  editModeInteractions: number;
+  cloudAgentDays: number;
+  copilotAppInteractions: number;
   completionInteractions: number;
 }
 
@@ -25,8 +25,8 @@ export default function FeatureAdoptionRadarChart({
   agentInteractions,
   planInteractions,
   cliInteractions,
-  askModeInteractions,
-  editModeInteractions,
+  cloudAgentDays,
+  copilotAppInteractions,
   completionInteractions,
 }: FeatureAdoptionRadarChartProps) {
   useTheme();
@@ -34,8 +34,8 @@ export default function FeatureAdoptionRadarChart({
     agentInteractions,
     planInteractions,
     cliInteractions,
-    askModeInteractions,
-    editModeInteractions,
+    cloudAgentDays,
+    copilotAppInteractions,
     completionInteractions,
   } as const;
 
@@ -49,7 +49,7 @@ export default function FeatureAdoptionRadarChart({
     datasets: [
       createRadarDataset(
         chartColors.indigo.solid,
-        'Interactions',
+        'Feature usage',
         radarItems.map((item) => item.value)
       ),
     ],

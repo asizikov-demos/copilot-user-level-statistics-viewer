@@ -1,19 +1,89 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+import type { ChartProps } from 'react-chartjs-2';
+import type { TooltipItem, TooltipModel } from 'chart.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makeUserSummary } from '../../../../__tests__/factories/aggregatedMetrics';
 import { NavigationProvider } from '../../../../state/NavigationContext';
 import UserDetailsView from '../UserDetailsView';
-import { makeUserDetailsViewModel } from './helpers/userDetailsFixtures';
+import { makeUserDetails, makeUserDetailsViewModel } from './helpers/userDetailsFixtures';
+
+const radar = vi.hoisted(() => vi.fn<(props: ChartProps<'radar'>) => null>(() => null));
 
 vi.mock('react-chartjs-2', () => ({
   Bar: () => null,
   Line: () => null,
   Pie: () => null,
   Doughnut: () => null,
-  Radar: () => null,
+  Radar: radar,
 }));
 
+afterEach(() => radar.mockClear());
+
 describe('user details features used', () => {
+  it('replaces Ask and Edit radar values with Cloud Agent days and Copilot App interactions', () => {
+    const details = makeUserDetails();
+    const model = makeUserDetailsViewModel({
+      userSummary: makeUserSummary({ cloud_agent_days: 3 }),
+      userDetails: makeUserDetails({
+        presentationSummary: {
+          ...details.presentationSummary,
+          totalCliPrompts: 1057,
+          featureInteractions: {
+            chat_panel_agent_mode: 11,
+            chat_panel_plan_mode: 12,
+            chat_panel_ask_mode: 90,
+            chat_panel_edit_mode: 80,
+            copilot_app: 25,
+            code_completion: 14,
+          },
+        },
+      }),
+    });
+    const markup = renderToStaticMarkup(
+      <NavigationProvider><UserDetailsView model={model} /></NavigationProvider>,
+    );
+    const props = radar.mock.lastCall?.[0];
+    expect(props?.data.labels).toEqual([
+      'Agent Mode', 'Plan Mode', 'CLI', 'Cloud Agent', 'Copilot App', 'Completions',
+    ]);
+    expect(props?.data.datasets[0].data).toEqual([11, 12, 1057, 3, 25, 14]);
+    expect(markup).toContain('Cloud Agent (days): <strong>3</strong>');
+    expect(markup).toContain('Copilot App: <strong>25</strong>');
+    expect(markup).not.toContain('Ask: <strong>');
+    expect(markup).not.toContain('Edit: <strong>');
+    const tooltip = props?.options?.plugins?.tooltip?.callbacks?.label;
+    const context = { label: 'Cloud Agent', dataIndex: 3, parsed: { r: 3 } } as TooltipItem<'radar'>;
+    expect(tooltip?.call({} as TooltipModel<'radar'>, context)).toBe('Cloud Agent: 3 active days');
+    expect(tooltip?.call({} as TooltipModel<'radar'>, {
+      ...context, label: 'Copilot App', dataIndex: 4, parsed: { r: 25 },
+    })).toBe('Copilot App: 25 interactions');
+  });
+
+  it.each([
+    { cloudAgentDays: 2, appInteractions: 0, visible: true },
+    { cloudAgentDays: 0, appInteractions: 7, visible: true },
+    { cloudAgentDays: 0, appInteractions: 0, visible: false },
+  ])('keeps the radar visible for either replacement feature: %j', ({ cloudAgentDays, appInteractions, visible }) => {
+    const details = makeUserDetails();
+    const model = makeUserDetailsViewModel({
+      userSummary: makeUserSummary({ cloud_agent_days: cloudAgentDays }),
+      userDetails: makeUserDetails({
+        presentationSummary: {
+          ...details.presentationSummary,
+          featureInteractions: {
+            chat_panel_ask_mode: 90,
+            chat_panel_edit_mode: 80,
+            copilot_app: appInteractions,
+          },
+        },
+      }),
+    });
+    renderToStaticMarkup(
+      <NavigationProvider><UserDetailsView model={model} /></NavigationProvider>,
+    );
+    expect(radar.mock.calls.length > 0).toBe(visible);
+  });
+
   it.each([
     { usedCli: true, usedCopilotApp: true, expected: ['CLI', 'Copilot App'] },
     { usedCli: false, usedCopilotApp: true, expected: ['Copilot App'] },
