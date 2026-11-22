@@ -170,6 +170,8 @@ describe('user profile empty state', () => {
       expect(markup).toContain('<span class="wrap-break-word">GPT-4o</span>');
       expect(markup).toContain('<span class="wrap-break-word">Unknown Model</span>');
       expect(markup).not.toContain('<span class="wrap-break-word">Claude 3.7 Sonnet</span>');
+      expect(markup).toContain('Activity by Model and Feature');
+      expect(markup).toContain('Model activity data source: Server-side model requests');
       expect(markup.indexOf('<span class="wrap-break-word">GPT-4o</span>'))
         .toBeLessThan(markup.indexOf('<span class="wrap-break-word">Unknown Model</span>'));
     });

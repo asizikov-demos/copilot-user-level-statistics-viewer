@@ -1,6 +1,6 @@
 import type { UserDetailedMetrics } from '../../types/aggregatedMetrics';
 import type { UserDayData } from '../../types/metrics';
-import type { ClientTrafficSummary } from '../../types/clientTraffic';
+import type { ClientModelTraffic, ClientTrafficSummary } from '../../types/clientTraffic';
 import { getTotalUserInitiatedInteractionCount } from '../assumedInteractions';
 import { isCliFeature } from '../featureCategories';
 import { padReportRangeWithDefaults } from '../../utils/timeSeries';
@@ -29,6 +29,12 @@ export interface UserClientActivitySummary {
   interactions: Array<{ client: string; values: number[] }>;
 }
 
+export interface UserModelActivitySummary {
+  rows: Array<ClientModelTraffic & { client: string }>;
+  dates: string[];
+  requests: Array<{ model: string; values: Array<number | null> }>;
+}
+
 export interface UserPresentationSummary {
   totalCliPrompts: number;
   featureInteractions: Record<string, number>;
@@ -39,10 +45,45 @@ export interface UserPresentationSummary {
   modelRequests: Array<{ key: string; value: number }>;
   dailyAiCredits: DailyAiCreditsData[];
   clientActivity: UserClientActivitySummary;
+  modelActivity: UserModelActivitySummary;
 }
 
 const ranked = (totals: Map<string, number>) =>
   Array.from(totals, ([key, value]) => ({ key, value })).sort((a, b) => b.value - a.value);
+
+export function computeUserModelActivity(
+  details: Pick<DetailsInput, 'clientTraffic' | 'reportStartDay' | 'reportEndDay'>,
+): UserModelActivitySummary {
+  const { clientTraffic, reportStartDay, reportEndDay } = details;
+  const rows = clientTraffic.summary.clients.flatMap(client =>
+    client.models.map(model => ({ ...model, client: client.client })),
+  ).sort((a, b) => b.requestCount - a.requestCount
+    || a.model.localeCompare(b.model)
+    || a.client.localeCompare(b.client)
+    || a.modelSelectionMode.localeCompare(b.modelSelectionMode));
+  const models = [...new Set(rows.map(row => row.model))].sort();
+  const daily = clientTraffic.daily.map(day => {
+    const totals = new Map<string, number>();
+    for (const client of day.clients) {
+      for (const model of client.models) {
+        totals.set(model.model, (totals.get(model.model) ?? 0) + model.requestCount);
+      }
+    }
+    return { day: day.day, reported: day.reportedRecords > 0, totals };
+  });
+  const padded = padReportRangeWithDefaults(
+    daily, reportStartDay, reportEndDay, day => day.day,
+    day => ({ day, reported: false, totals: new Map<string, number>() }),
+  );
+  return {
+    rows,
+    dates: padded.map(day => day.day),
+    requests: models.map(model => ({
+      model,
+      values: padded.map(day => day.reported ? day.totals.get(model) ?? 0 : null),
+    })).filter(series => series.values.some(value => value !== null && value > 0)),
+  };
+}
 
 export function computeUserClientActivity(
   details: Pick<DetailsInput, 'days' | 'clientTraffic' | 'reportStartDay' | 'reportEndDay'> & {
@@ -165,5 +206,6 @@ export function computeUserPresentationSummary(details: DetailsInput): UserPrese
       date, aiCreditsUsed, users: aiCreditsUsed > 0 ? 1 : 0,
     })).sort((a, b) => a.date.localeCompare(b.date)),
     clientActivity: computeUserClientActivity(details),
+    modelActivity: computeUserModelActivity(details),
   };
 }

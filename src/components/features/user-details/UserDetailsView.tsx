@@ -242,7 +242,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
   const hasDetailedActivity = hasClientActivity
     || featureAggregates.length > 0
     || languageFeatureAggregates.length > 0
-    || modelFeatureAggregates.length > 0;
+    || modelFeatureAggregates.length > 0
+    || presentationSummary.modelActivity.rows.length > 0;
   const showCloudAgentsUsage = usedCodingAgent || usedCodeReview;
   const dailyAiCreditsData = presentationSummary.dailyAiCredits;
   const [
@@ -423,10 +424,12 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         </div>
       )}
 
-      {modelFeatureAggregates.length > 0 && (
+      {(modelFeatureAggregates.length > 0 || presentationSummary.modelActivity.rows.length > 0) && (
         <div id={modelActivitySection.id} className="scroll-mt-28">
           <UserActivityByModelAndFeatureChart
+            key={userId}
             modelFeatureAggregates={modelFeatureAggregates}
+            modelActivity={presentationSummary.modelActivity}
             days={userDetails.days}
             reportStartDay={userDetails.reportStartDay}
             reportEndDay={userDetails.reportEndDay}

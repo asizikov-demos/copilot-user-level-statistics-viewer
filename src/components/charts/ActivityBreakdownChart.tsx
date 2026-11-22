@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { ChartData, ChartOptions } from 'chart.js';
 import { registerChartJS } from './utils/chartSetup';
@@ -45,13 +45,19 @@ interface ActivityBreakdownChartProps<T extends BaseAggregate> {
   barChartData: ChartData<'bar'>;
   barChartOptions: ChartOptions<'bar'>;
   config: ActivityBreakdownChartConfig<T>;
+  headerActions?: ReactNode;
+  footerOverride?: ReactNode;
+  emptyState?: ReactNode;
 }
 
 export default function ActivityBreakdownChart<T extends BaseAggregate>({
   aggregates,
   barChartData,
   barChartOptions,
-  config
+  config,
+  headerActions,
+  footerOverride,
+  emptyState,
 }: ActivityBreakdownChartProps<T>) {
   const groupedAndSorted = useMemo(() => {
     const grouped = aggregates.reduce<Record<string, T[]>>((acc, item) => {
@@ -139,15 +145,15 @@ export default function ActivityBreakdownChart<T extends BaseAggregate>({
   );
 
   return (
-    <ChartContainer title={config.title} footer={footer}>
-      {hasBarChart && (
+    <ChartContainer title={config.title} headerActions={headerActions} footer={footerOverride ?? footer}>
+      {hasBarChart ? (
         <div className="mb-6">
           <h4 className="text-sm font-medium text-default mb-4 text-center">{config.chartSubtitle}</h4>
           <div className="h-64">
             <Bar data={barChartData} options={barChartOptions} />
           </div>
         </div>
-      )}
+      ) : emptyState}
     </ChartContainer>
   );
 }

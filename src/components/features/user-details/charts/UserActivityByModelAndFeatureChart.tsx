@@ -1,7 +1,7 @@
 'use client';
 
 import { useTheme } from '@primer/react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { TooltipItem } from 'chart.js';
 import type { UserDetailedMetrics } from '../../../../types/aggregatedMetrics';
 import type { UserDayData } from '../../../../types/metrics';
@@ -13,6 +13,14 @@ import { createBarDataset } from '../../../charts/utils/chartStyles';
 import { getSequentialColor } from '../../../charts/utils/chartColors';
 import { createStackedBarChartOptions, hasNonZeroBarValue } from '../../../charts/utils/chartOptions';
 import { formatShortDate, formatModelDisplayName } from '../../../../utils/formatters';
+import type { UserModelActivitySummary } from '../../../../domain/calculators/userPresentationCalculator';
+import SimpleSelect from '../../../ui/SimpleSelect';
+import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';
+import DisclosureSection from '../../../ui/DisclosureSection';
+import EmptyState from '../../../ui/EmptyState';
+import { GraphIcon } from '@primer/octicons-react';
+import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
+import type { ComponentType } from 'react';
 
 export type ModelFeatureAggregate = UserDetailedMetrics['modelFeatureAggregates'][number];
 
@@ -21,8 +29,33 @@ interface UserActivityByModelAndFeatureChartProps {
   days: UserDayData[];
   reportStartDay: string;
   reportEndDay: string;
+  modelActivity?: UserModelActivitySummary;
 }
 
+type ModelRequestRow = UserModelActivitySummary['rows'][number];
+function NameWithIcon({ icon: Icon, name }: { icon: ComponentType; name: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex-shrink-0" aria-hidden="true"><Icon /></span>
+      <span>{name}</span>
+    </div>
+  );
+}
+
+const numericColumn = (id: 'requestCount' | 'promptTokens' | 'outputTokens', header: string): TableColumn<ModelRequestRow> => ({
+  id, header,
+  headerClassName: 'px-6 py-3 text-right',
+  className: 'px-6 py-4 whitespace-nowrap text-right tabular-nums',
+  renderCell: row => row[id].toLocaleString(),
+});
+const requestColumns: TableColumn<ModelRequestRow>[] = [
+  { id: 'model', header: 'Model', renderCell: row => <NameWithIcon icon={getModelIcon(row.model)} name={formatModelDisplayName(row.model)} /> },
+  { id: 'client', header: 'Client', renderCell: row => <NameWithIcon icon={getIDEIcon(row.client)} name={formatIDEName(row.client)} /> },
+  { id: 'mode', header: 'Selection mode', renderCell: row => row.modelSelectionMode },
+  numericColumn('requestCount', 'Model requests'),
+  numericColumn('promptTokens', 'Prompt tokens'),
+  numericColumn('outputTokens', 'Output tokens'),
+];
 type PaddedDay = {
   day: string;
   totals_by_model_feature: UserDayData['totals_by_model_feature'];
@@ -87,29 +120,79 @@ export default function UserActivityByModelAndFeatureChart({
   days,
   reportStartDay,
   reportEndDay,
+  modelActivity,
 }: UserActivityByModelAndFeatureChartProps) {
   const { colorScheme } = useTheme();
+  const [selectedSource, setSelectedSource] = useState<'interactions' | 'requests' | null>(null);
+  const barChartData = useMemo(
+    () => buildModelBarChartData(days, reportStartDay, reportEndDay),
+    [days, reportStartDay, reportEndDay, colorScheme],
+  );
+  const hasClientInteractions = modelFeatureAggregates.some(item => getTotalUserInitiatedInteractionCount(item) > 0)
+    || days.some(day => day.totals_by_model_feature.some(item => getTotalUserInitiatedInteractionCount(item) > 0));
+  const source = selectedSource ?? (hasClientInteractions ? 'interactions'
+    : modelActivity?.rows.some(row => row.requestCount > 0) ? 'requests' : 'interactions');
+  const isRequests = source === 'requests';
+  const unit = isRequests ? 'requests' : 'interactions';
   const modelBarChartOptions = createStackedBarChartOptions({
     xAxisLabel: 'Date',
-    yAxisLabel: 'Interactions',
+    yAxisLabel: isRequests ? 'Model requests' : 'Interactions',
     tooltipFilter: hasNonZeroBarValue,
     tooltipLabelCallback: (context: TooltipItem<'bar'>) => {
       const label = context.dataset.label ?? '';
       const value = context.parsed.y ?? 0;
-      return `${label}: ${value.toLocaleString()} interactions`;
+      return `${label}: ${value.toLocaleString()} ${unit}`;
     },
   });
-  const barChartData = useMemo(
-    () => buildModelBarChartData(days, reportStartDay, reportEndDay),
-    [days, reportStartDay, reportEndDay, colorScheme],
+  const requestChartData = useMemo(
+    () => ({
+      labels: modelActivity?.dates.map(formatShortDate) ?? [],
+      datasets: modelActivity?.requests.map(({ model, values }, index) =>
+        createBarDataset(getSequentialColor(index), formatModelDisplayName(model), values)) ?? [],
+    }),
+    [modelActivity, colorScheme],
+  );
+  const requestFooter = (
+    <DisclosureSection label="Detailed Model Request Breakdown">
+      <MetricsTable
+        data={modelActivity?.rows ?? []}
+        columns={requestColumns}
+        tableContainerClassName="overflow-x-auto"
+        getRowKey={row => JSON.stringify([row.client, row.model, row.modelSelectionMode])}
+        pageSize={10}
+        itemLabel="model rows"
+        emptyState={<p className="text-muted">No model request breakdown reported.</p>}
+      />
+      <p className="mt-4 text-xs text-muted">
+        Missing server-side records are gaps, not zero usage.
+      </p>
+    </DisclosureSection>
   );
 
   return (
     <ActivityBreakdownChart
       aggregates={modelFeatureAggregates}
-      barChartData={barChartData}
+      barChartData={isRequests ? requestChartData : barChartData}
       barChartOptions={modelBarChartOptions}
-      config={modelChartConfig}
+      config={isRequests ? { ...modelChartConfig, chartSubtitle: 'Daily Model Requests' } : modelChartConfig}
+      headerActions={(
+        <SimpleSelect
+          label="Model activity data source"
+          value={source}
+          onChange={setSelectedSource}
+          options={[
+            { value: 'interactions', label: 'Client-side telemetry' },
+            { value: 'requests', label: 'Server-side model requests' },
+          ]}
+        />
+      )}
+      footerOverride={isRequests ? requestFooter : undefined}
+      emptyState={(
+        <EmptyState
+          icon={GraphIcon}
+          heading={isRequests ? 'No model requests available' : 'No client-side model chart data available'}
+        />
+      )}
     />
   );
 }
