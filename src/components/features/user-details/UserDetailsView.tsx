@@ -183,8 +183,7 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
 
   const agentInteractions = presentationSummary.featureInteractions.chat_panel_agent_mode ?? 0;
   const planInteractions = presentationSummary.featureInteractions.chat_panel_plan_mode ?? 0;
-  const askModeInteractions = presentationSummary.featureInteractions.chat_panel_ask_mode ?? 0;
-  const editModeInteractions = presentationSummary.featureInteractions.chat_panel_edit_mode ?? 0;
+  const copilotAppInteractions = presentationSummary.featureInteractions.copilot_app ?? 0;
   const completionInteractions = presentationSummary.featureInteractions.code_completion ?? 0;
   const cliInteractions = presentationSummary.totalCliPrompts;
 
@@ -287,8 +286,8 @@ export default function UserDetailsView({ model }: UserDetailsViewProps) {
         agentInteractions={agentInteractions}
         planInteractions={planInteractions}
         cliInteractions={cliInteractions}
-        askModeInteractions={askModeInteractions}
-        editModeInteractions={editModeInteractions}
+        cloudAgentDays={userSummary.cloud_agent_days}
+        copilotAppInteractions={copilotAppInteractions}
         completionInteractions={completionInteractions}
       />
 

@@ -113,8 +113,8 @@ export const FEATURE_ADOPTION_RADAR_METADATA = [
   { key: 'agentInteractions', label: 'Agent Mode', summaryLabel: 'Agent', unit: 'interactions' },
   { key: 'planInteractions', label: 'Plan Mode', summaryLabel: 'Plan', unit: 'interactions' },
   { key: 'cliInteractions', label: 'CLI', summaryLabel: 'CLI', unit: 'interactions' },
-  { key: 'askModeInteractions', label: 'Ask Mode', summaryLabel: 'Ask', unit: 'interactions' },
-  { key: 'editModeInteractions', label: 'Edit Mode', summaryLabel: 'Edit', unit: 'interactions' },
+  { key: 'cloudAgentDays', label: 'Cloud Agent', summaryLabel: 'Cloud Agent (days)', unit: 'active days' },
+  { key: 'copilotAppInteractions', label: 'Copilot App', summaryLabel: 'Copilot App', unit: 'interactions' },
   { key: 'completionInteractions', label: 'Completions', summaryLabel: 'Completions', unit: 'interactions' },
 ] as const;
 

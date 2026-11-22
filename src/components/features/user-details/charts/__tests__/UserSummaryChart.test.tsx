@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionChartProps } from '../../../../charts/CompositionChart';
 import UserSummaryChart from '../UserSummaryChart';
 import { chooseOption, expectSelected } from '../../../../../__tests__/helpers/simpleSelect';
+import chartStyles from '../../../../ui/ChartContainer.module.css';
 
 const CLIENT = 'Client summary measure';
 const MODEL = 'Model summary measure';
@@ -104,7 +105,9 @@ describe('UserSummaryChart', () => {
 
     expect(summary).toBeTruthy();
     expect(summary?.className).not.toContain('bg-default');
-    expect(summary?.querySelectorAll('[data-component="ChartContainer"]')).toHaveLength(3);
+    const cards = summary?.querySelectorAll('[data-component="ChartContainer"]');
+    expect(cards).toHaveLength(3);
+    expect(Array.from(cards ?? []).every(card => card.classList.contains(chartStyles.compactHeader))).toBe(true);
     expect(screen.queryByRole('heading', { name: 'Summary' })).toBeNull();
   });
 

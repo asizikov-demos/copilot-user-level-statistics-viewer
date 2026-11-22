@@ -17,8 +17,8 @@ interface UserDetailsOverviewSectionProps {
   agentInteractions: number;
   planInteractions: number;
   cliInteractions: number;
-  askModeInteractions: number;
-  editModeInteractions: number;
+  cloudAgentDays: number;
+  copilotAppInteractions: number;
   completionInteractions: number;
 }
 
@@ -33,8 +33,8 @@ export default function UserDetailsOverviewSection({
   agentInteractions,
   planInteractions,
   cliInteractions,
-  askModeInteractions,
-  editModeInteractions,
+  cloudAgentDays,
+  copilotAppInteractions,
   completionInteractions,
 }: UserDetailsOverviewSectionProps) {
   return (
@@ -55,8 +55,8 @@ export default function UserDetailsOverviewSection({
           agentInteractions={agentInteractions}
           planInteractions={planInteractions}
           cliInteractions={cliInteractions}
-          askModeInteractions={askModeInteractions}
-          editModeInteractions={editModeInteractions}
+          cloudAgentDays={cloudAgentDays}
+          copilotAppInteractions={copilotAppInteractions}
           completionInteractions={completionInteractions}
         />
       </div>

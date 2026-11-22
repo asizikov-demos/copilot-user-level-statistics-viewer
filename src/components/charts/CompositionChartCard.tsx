@@ -11,6 +11,7 @@ export interface CompositionChartCardProps extends Omit<CompositionChartProps, '
   title: string;
   description?: string;
   headerActions?: ReactNode;
+  compactHeader?: boolean;
   emptyState?: string;
   className?: string;
   chartClassName?: string;
@@ -20,6 +21,7 @@ export default function CompositionChartCard({
   title,
   description,
   headerActions,
+  compactHeader,
   emptyState = 'No data available',
   className,
   chartClassName,
@@ -30,6 +32,7 @@ export default function CompositionChartCard({
       title={title}
       description={description}
       headerActions={headerActions && <div className="flex min-h-8 items-center">{headerActions}</div>}
+      compactHeader={compactHeader}
       className={className}
       chartHeight="h-auto"
     >
