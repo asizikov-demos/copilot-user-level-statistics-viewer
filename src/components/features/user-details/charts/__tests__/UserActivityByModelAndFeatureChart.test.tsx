@@ -2,22 +2,27 @@
 
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import type { ChartOptions, TooltipItem } from 'chart.js';
+import type { ChartData, ChartOptions, TooltipItem } from 'chart.js';
 import UserActivityByModelAndFeatureChart, { buildModelBarChartData } from '../UserActivityByModelAndFeatureChart';
 import { getSequentialColor } from '../../../../charts/utils/chartColors';
 import { formatShortDate } from '../../../../../utils/formatters';
 import { getTotalUserInitiatedInteractionCount } from '../../../../../domain/assumedInteractions';
 import type { UserDayData } from '../../../../../types/metrics';
+import type { ClientTrafficMetrics } from '../../../../../types/clientTraffic';
+import { computeUserModelActivity } from '../../../../../domain/calculators/userPresentationCalculator';
+import { chooseOption, expectSelected } from '../../../../../__tests__/helpers/simpleSelect';
 
 const captureOptions = vi.hoisted(() => vi.fn());
+const captureData = vi.hoisted(() => vi.fn());
 vi.mock('react-chartjs-2', () => ({
-  Bar: ({ options }: { options: ChartOptions<'bar'> }) => {
+  Bar: ({ options, data }: { options: ChartOptions<'bar'>; data: ChartData<'bar'> }) => {
     captureOptions(options);
+    captureData(data);
     return <div data-testid="model-bars" />;
   },
 }));
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); captureOptions.mockClear(); captureData.mockClear(); });
 
 function makeUserDayData(overrides: Partial<UserDayData> = {}): UserDayData {
   return {
@@ -58,6 +63,111 @@ function makeModelEntry(
     loc_suggested_to_delete_sum: 0,
   };
 }
+
+function makeTraffic(): ClientTrafficMetrics {
+  const counts = { requestCount: 3, promptTokens: 100, outputTokens: 20, avgTokensPerRequest: 40, activeUsers: 1 };
+  const clients = ['vscode', 'copilot_cli'].map(client => ({
+    ...counts, client, reportedSessionCount: 2,
+    models: [
+      { ...counts, model: 'gpt-4o', modelSelectionMode: 'user_selected' },
+      { ...counts, model: 'gpt-4o', modelSelectionMode: 'auto' },
+      { ...counts, model: 'unknown', modelSelectionMode: 'product_selected' },
+    ],
+  }));
+  return {
+    summary: { recordCount: 2, reportedRecords: 2, activeUsers: 1, clients },
+    daily: [
+      { day: '2024-01-15', recordCount: 1, reportedRecords: 1, activeUsers: 1, clients },
+      { day: '2024-01-17', recordCount: 1, reportedRecords: 1, activeUsers: 0, clients: [] },
+    ],
+  };
+}
+
+describe('model activity sources', () => {
+  const label = 'Model activity data source';
+  function preparedChart(interactions = 0, traffic = makeTraffic(), userId = 1, hasTelemetry = true) {
+    const entry = makeModelEntry('gpt-4o', interactions);
+    return (
+      <UserActivityByModelAndFeatureChart
+        key={userId}
+        modelFeatureAggregates={hasTelemetry ? [{ ...entry, assumed_user_initiated_interaction_count: 0 }] : []}
+        days={hasTelemetry ? [makeUserDayData({ totals_by_model_feature: [entry] })] : []}
+        modelActivity={computeUserModelActivity({
+          clientTraffic: traffic, reportStartDay: '2024-01-15', reportEndDay: '2024-01-17',
+        })}
+        reportStartDay="2024-01-15" reportEndDay="2024-01-17"
+      />
+    );
+  }
+
+  it('sums requests across clients and modes, retains unknown models, and distinguishes gaps from reported zeros', () => {
+    const activity = computeUserModelActivity({
+      clientTraffic: makeTraffic(), reportStartDay: '2024-01-14', reportEndDay: '2024-01-18',
+    });
+    expect(activity.dates).toHaveLength(5);
+    expect(activity.requests).toEqual([
+      { model: 'gpt-4o', values: [null, 12, null, 0, null] },
+      { model: 'unknown', values: [null, 6, null, 0, null] },
+    ]);
+    expect(activity.rows).toHaveLength(6);
+    expect(activity.rows.every(row => row.promptTokens === 100 && row.outputTokens === 20)).toBe(true);
+  });
+
+  it.each([false, true])('defaults to requests with absent or zero-only telemetry: %s', zeroOnly => {
+    render(preparedChart(0, makeTraffic(), 1, zeroOnly));
+    expectSelected(label, 'Server-side model requests');
+    expect(screen.getByText('Daily Model Requests')).toBeTruthy();
+    expect(captureData.mock.lastCall![0].datasets.map((dataset: { data: unknown }) => dataset.data))
+      .toEqual([[12, null, 0], [6, null, 0]]);
+    expect(captureOptions.mock.lastCall![0].scales.y.title.text).toBe('Model requests');
+  });
+
+  it('prefers telemetry, switches units and breakdown, and preserves manual choices until changing users', async () => {
+    const view = render(preparedChart(5));
+    expectSelected(label, 'Client-side telemetry');
+    expect(screen.getByText('Daily Model Interactions')).toBeTruthy();
+    await chooseOption(label, 'Server-side model requests');
+    fireEvent.click(screen.getByRole('button', { name: 'Detailed Model Request Breakdown' }));
+    const tables = screen.getAllByRole('table');
+    expect(within(tables[0]).getAllByRole('row')).toHaveLength(7);
+    expect(within(tables[0]).getByRole('columnheader', { name: 'Prompt tokens' })).toBeTruthy();
+    expect(within(tables[0]).queryByRole('columnheader', { name: 'Reported sessions' })).toBeNull();
+    expect(tables).toHaveLength(1);
+    expect(within(tables[0]).getByRole('columnheader', { name: 'Model' })).toBeTruthy();
+    expect(within(tables[0]).getByRole('columnheader', { name: 'Client' })).toBeTruthy();
+    expect(tables[0].querySelectorAll('tbody svg')).toHaveLength(12);
+    expect(tables[0].parentElement?.classList.contains('overflow-x-auto')).toBe(true);
+    view.rerender(preparedChart(6));
+    expectSelected(label, 'Server-side model requests');
+    await chooseOption(label, 'Client-side telemetry');
+    expect(screen.getByRole('button', { name: 'Detailed Model and Feature Breakdown' })).toBeTruthy();
+    await chooseOption(label, 'Server-side model requests');
+    view.rerender(preparedChart(6, makeTraffic(), 2));
+    expectSelected(label, 'Client-side telemetry');
+  });
+
+  it.each(['unknown', ''])('prefers positive client telemetry even when model %j is not charted', model => {
+    const entry = makeModelEntry(model, 5);
+    const chart = preparedChart();
+    render(
+      <UserActivityByModelAndFeatureChart
+        {...chart.props}
+        modelFeatureAggregates={[{ ...entry, assumed_user_initiated_interaction_count: 0 }]}
+        days={[makeUserDayData({ totals_by_model_feature: [entry] })]}
+      />,
+    );
+    expectSelected(label, 'Client-side telemetry');
+    fireEvent.click(screen.getByRole('button', { name: 'Detailed Model and Feature Breakdown' }));
+    expect(screen.getByText('5 total interactions')).toBeTruthy();
+  });
+
+  it('keeps the selector and shows an empty state for an explicitly selected empty source', async () => {
+    render(preparedChart());
+    await chooseOption(label, 'Client-side telemetry');
+    expect(screen.getByText('No client-side model chart data available')).toBeTruthy();
+    expectSelected(label, 'Client-side telemetry');
+  });
+});
 
 describe('UserActivityByModelAndFeatureChart data construction', () => {
   it('excludes zero values from the tooltip while retaining nonzero values', () => {
