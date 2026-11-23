@@ -7,7 +7,7 @@ import { useTheme, Link } from '@primer/react';
 import { registerChartJS } from './utils/chartSetup';
 import { createHorizontalBarChartOptions } from './utils/chartOptions';
 import { chartColors } from './utils/chartColors';
-import { FeatureAdoptionData } from '../../domain/calculators/metricCalculators';
+import type { FeatureAdoptionData } from '../../domain/calculators/metricCalculators';
 import { computeFeatureAdoptionInsights } from '../../domain/featureAdoptionInsights';
 import { FEATURE_ADOPTION_CHART_METADATA } from '../../domain/featureCategories';
 import ChartContainer from '../ui/ChartContainer';

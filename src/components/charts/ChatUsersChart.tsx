@@ -5,7 +5,7 @@ import { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { registerChartJS } from './utils/chartSetup';
 import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
-import { DailyChatUsersData } from '../../domain/calculators/metricCalculators';
+import type { DailyChatUsersData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 import {
   chatModeChartModes,

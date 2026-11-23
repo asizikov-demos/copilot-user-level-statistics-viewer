@@ -7,8 +7,8 @@ import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@primer/octicon
 import type { UserDayData } from '../../../../types/metrics';
 import type { DayReportingQuality } from '../../../../types/reportingQuality';
 import DayReportingQualitySection from './DayReportingQualitySection';
-import { computeCliDayTotals } from '../../../../domain/calculators/cliUsageCalculator';
-import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/calculators/clientActivityRows';
+import { computeCliDayTotals } from '../../../../domain/cliDayTotals';
+import { createCliClientActivityRow, mapIdeClientActivityRows } from '../../../../domain/clientActivityRows';
 import { formatIDEName, getIDEIcon } from '../../../icons/IDEIcons';
 import { getModelIcon } from '../../../icons/ModelIcons';
 import MetricsTable, { type TableColumn } from '../../../ui/MetricsTable';

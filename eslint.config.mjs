@@ -43,159 +43,221 @@ export default tseslint.config(
       'primer-react/new-color-css-vars': 'error',
     },
   },
-  {
-    files: ['src/app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}'],
-    ignores: productionSourceIgnores,
-    rules: {
-      'no-restricted-syntax': ['error', ...tokenOnlyColorSelectors],
-    },
-  },
-  {
-    files: [
-      'src/components/**/*.{ts,tsx}',
-      'src/read-models/**/*.{ts,tsx}',
-    ],
-    ignores: productionSourceIgnores,
-    rules: {
-      'no-restricted-imports': ['error', {
-        patterns: [
-          {
-            group: [
-              '@/domain/aggregation',
-              '@/domain/aggregation/*',
-              '@/domain/metricsAggregator',
-              '../domain/aggregation',
-              '../domain/aggregation/*',
-              '../domain/metricsAggregator',
-              '../../domain/aggregation',
-              '../../domain/aggregation/*',
-              '../../domain/metricsAggregator',
-              '../../../domain/aggregation',
-              '../../../domain/aggregation/*',
-              '../../../domain/metricsAggregator',
-              '../../../../domain/aggregation',
-              '../../../../domain/aggregation/*',
-              '../../../../domain/metricsAggregator',
-            ],
-            message: 'UI and read-model layers must consume aggregate contracts/read models, not aggregation implementation modules.',
-          },
+  ...(() => {
+    const moduleEnd = String.raw`(?:/|\.[cm]?[jt]sx?$|$)`
+    const domainPrefix = String.raw`^(?:@/domain/|#domain/|(?:\.\.?/)+domain/)`
+
+    const noJsxSelectors = [
+      {
+        selector: 'JSXElement',
+        message: 'Domain, infra, utility, and worker modules must stay framework-free.',
+      },
+      {
+        selector: 'JSXFragment',
+        message: 'Domain, infra, utility, and worker modules must stay framework-free.',
+      },
+    ]
+
+    const nonStaticDynamicImportSelectors = [
+      {
+        selector: 'ImportExpression[source.type!="Literal"][source.type!="TemplateLiteral"]',
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+      {
+        selector: "ImportExpression > Literal:not([raw=/^['\"]/])",
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+      {
+        selector: 'ImportExpression > TemplateLiteral[expressions.length>0]',
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+    ]
+
+    function restrictedDynamicImportSelectors(patterns) {
+      return [
+        ...nonStaticDynamicImportSelectors,
+        ...patterns.flatMap(({ regex, message }) => {
+          const source = new RegExp(regex).source
+          return [
+            { selector: `ImportExpression > Literal[value=/${source}/]`, message },
+            { selector: `ImportExpression > TemplateLiteral[expressions.length=0][quasis.0.value.cooked=/${source}/]`, message },
+          ]
+        }),
+      ]
+    }
+
+    function boundaryRules(patterns, extraSyntaxSelectors = []) {
+      return {
+        'no-restricted-imports': ['error', { patterns }],
+        'no-restricted-syntax': [
+          'error',
+          ...extraSyntaxSelectors,
+          ...restrictedDynamicImportSelectors(patterns),
         ],
-      }],
-    },
-  },
-  {
-    files: [
-      'src/domain/**/*.{ts,tsx}',
-      'src/workers/**/*.{ts,tsx}',
-    ],
-    ignores: productionSourceIgnores,
-    rules: {
-      'no-restricted-imports': ['error', {
-        paths: [
-          {
-            name: 'react',
-            message: 'Domain and worker modules must stay framework-free.',
-          },
-          {
-            name: 'react-dom',
-            message: 'Domain and worker modules must stay framework-free.',
-          },
-          {
-            name: 'react-dom/server',
-            message: 'Domain and worker modules must stay framework-free.',
-          },
-          {
-            name: 'react/jsx-runtime',
-            message: 'Domain and worker modules must stay framework-free.',
-          },
-          {
-            name: 'react/jsx-dev-runtime',
-            message: 'Domain and worker modules must stay framework-free.',
-          },
+      }
+    }
+
+    const mainThreadDomainAndWorkerPatterns = [
+      {
+        regex: `${domainPrefix}(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
+        message: 'Main-thread UI, hooks, state, and read-model layers must consume aggregate contracts/read models, not parsing or aggregation implementation modules.',
+      },
+      {
+        regex: `${domainPrefix}calculators${moduleEnd}`,
+        allowTypeImports: true,
+        message: 'Main-thread UI, hooks, state, and read-model layers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
+      },
+      {
+        regex: String.raw`^(?:@/workers/|#workers/|(?:\.\.?/)+workers/)metricsWorker${moduleEnd}`,
+        message: 'Main-thread layers must communicate with the worker via metricsWorkerClient, not import the worker entrypoint directly.',
+      },
+    ]
+
+    const mainThreadRestrictedImportPatterns = [
+      ...mainThreadDomainAndWorkerPatterns,
+      {
+        regex: String.raw`^(?:@/infra|#infra|(?:\.\.?/)+infra)${moduleEnd}`,
+        message: 'Main-thread UI, hooks, state, and read-model layers must access file parsing through the worker client, not infra modules directly.',
+      },
+    ]
+
+    const sharedUiRestrictedImportPatterns = [
+      ...mainThreadRestrictedImportPatterns,
+      {
+        regex: String.raw`^(?:@/components/(?:layout|features)|@/app|(?:\./)*(?:\.\./)+(?:components/)?(?:layout|features)|(?:\./)*(?:\.\./)+app)${moduleEnd}`,
+        message: 'Shared UI primitives and charts must not depend on feature or layout route modules.',
+      },
+    ]
+
+    const workerPipelineBaseImportPatterns = [
+      {
+        regex: String.raw`^(?:react(?:-dom)?|next)(?:/|$)`,
+        message: 'Domain, infra, utility, and worker modules must stay framework-free.',
+      },
+      {
+        regex: String.raw`^(?:@/|#|(?:\./)*(?:\.\./)+)(?:app|components|hooks|state|read-models)${moduleEnd}`,
+        message: 'Domain, infra, utility, and worker modules may depend on contracts and lower-level helpers only, not UI/state layers.',
+      },
+    ]
+
+    const workerClientRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      ...mainThreadDomainAndWorkerPatterns,
+      {
+        regex: String.raw`^(?:\.\.?/)+metricsWorker${moduleEnd}`,
+        message: 'Main-thread worker client and contract modules must not import the worker entrypoint.',
+      },
+      {
+        regex: String.raw`^(?:@/infra|#infra|(?:\.\.?/)+infra)${moduleEnd}`,
+        allowTypeImports: true,
+        message: 'Main-thread worker client and contract modules may import infra types only; runtime file parsing belongs in the worker entrypoint.',
+      },
+    ]
+
+    const infraRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      {
+        regex: String.raw`^(?:@/workers|#workers|(?:\./)*(?:\.\./)+workers)${moduleEnd}`,
+        message: 'Infra modules must not depend on worker entrypoints or clients.',
+      },
+    ]
+
+    const noInfraOrWorkersPattern = {
+      regex: String.raw`^(?:@/(?:infra|workers)|#(?:infra|workers)|(?:\./)*(?:\.\./)+(?:infra|workers))${moduleEnd}`,
+      message: 'Domain and utility modules must remain pure and must not depend on infra or worker layers.',
+    }
+
+    const domainRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      noInfraOrWorkersPattern,
+    ]
+
+    const utilsRestrictedImportPatterns = [
+      ...domainRestrictedImportPatterns,
+      ...mainThreadRestrictedImportPatterns,
+    ]
+
+    const sharedDomainRestrictedImportPatterns = [
+      ...domainRestrictedImportPatterns,
+      ...mainThreadRestrictedImportPatterns,
+      {
+        regex: String.raw`^(?:\.\.?/)+(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
+        message: 'Shared domain helpers must remain usable on the main thread and must not import parsing or aggregation implementation modules.',
+      },
+      {
+        regex: String.raw`^(?:\.\.?/)+calculators${moduleEnd}`,
+        allowTypeImports: true,
+        message: 'Shared domain helpers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
+      },
+    ]
+
+    return [
+      {
+        files: [
+          'src/*.{ts,tsx}',
+          'src/hooks/**/*.{ts,tsx}',
+          'src/state/**/*.{ts,tsx}',
+          'src/read-models/**/*.{ts,tsx}',
+          'src/types/**/*.{ts,tsx}',
         ],
-        patterns: [
-          {
-            group: [
-              '@/components',
-              '@/components/*',
-              '../components',
-              '../components/*',
-              '../../components',
-              '../../components/*',
-              '@/state',
-              '@/state/*',
-              '../state',
-              '../state/*',
-              '../../state',
-              '../../state/*',
-              'next',
-              'next/*',
-            ],
-            message: 'Domain and worker modules may depend on contracts and domain helpers only, not UI/state layers.',
-          },
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(mainThreadRestrictedImportPatterns),
+      },
+      {
+        files: [
+          'src/app/**/*.{ts,tsx}',
+          'src/components/**/*.{ts,tsx}',
         ],
-      }],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'JSXElement',
-          message: 'Domain and worker modules must stay framework-free.',
-        },
-        {
-          selector: 'JSXFragment',
-          message: 'Domain and worker modules must stay framework-free.',
-        },
-      ],
-    },
-  },
-  {
-    files: [
-      'src/components/ui/**/*.{ts,tsx}',
-      'src/components/charts/**/*.{ts,tsx}',
-    ],
-    ignores: productionSourceIgnores,
-    rules: {
-      'no-restricted-imports': ['error', {
-        patterns: [
-          {
-            group: [
-              '@/domain/aggregation',
-              '@/domain/aggregation/*',
-              '@/domain/metricsAggregator',
-              '../domain/aggregation',
-              '../domain/aggregation/*',
-              '../domain/metricsAggregator',
-              '../../domain/aggregation',
-              '../../domain/aggregation/*',
-              '../../domain/metricsAggregator',
-              '../../../domain/aggregation',
-              '../../../domain/aggregation/*',
-              '../../../domain/metricsAggregator',
-              '../../../../domain/aggregation',
-              '../../../../domain/aggregation/*',
-              '../../../../domain/metricsAggregator',
-            ],
-            message: 'UI and read-model layers must consume aggregate contracts/read models, not aggregation implementation modules.',
-          },
-          {
-            group: [
-              '@/components/layout',
-              '@/components/layout/*',
-              '@/components/features',
-              '@/components/features/*',
-              '../layout',
-              '../layout/*',
-              '../features',
-              '../features/*',
-              '../../layout',
-              '../../layout/*',
-              '../../features',
-              '../../features/*',
-            ],
-            message: 'Shared UI primitives and charts must not depend on feature or layout route modules.',
-          },
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(mainThreadRestrictedImportPatterns, tokenOnlyColorSelectors),
+      },
+      {
+        files: [
+          'src/components/ui/**/*.{ts,tsx}',
+          'src/components/charts/**/*.{ts,tsx}',
         ],
-      }],
-    },
-  },
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(sharedUiRestrictedImportPatterns, tokenOnlyColorSelectors),
+      },
+      {
+        files: ['src/workers/**/*.{ts,tsx}'],
+        ignores: [
+          ...productionSourceIgnores,
+          'src/workers/metricsWorker.ts',
+        ],
+        rules: boundaryRules(workerClientRestrictedImportPatterns, noJsxSelectors),
+      },
+      {
+        files: ['src/workers/metricsWorker.ts'],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(workerPipelineBaseImportPatterns, noJsxSelectors),
+      },
+      {
+        files: ['src/infra/**/*.{ts,tsx}'],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(infraRestrictedImportPatterns, noJsxSelectors),
+      },
+      {
+        files: ['src/domain/**/*.{ts,tsx}'],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(domainRestrictedImportPatterns, noJsxSelectors),
+      },
+      {
+        files: ['src/utils/**/*.{ts,tsx}'],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(utilsRestrictedImportPatterns, noJsxSelectors),
+      },
+      {
+        files: ['src/domain/**/*.{ts,tsx}'],
+        ignores: [
+          ...productionSourceIgnores,
+          'src/domain/aggregation/**',
+          'src/domain/calculators/**',
+          'src/domain/metricsAggregator.ts',
+          'src/domain/metricsParser.ts',
+        ],
+        rules: boundaryRules(sharedDomainRestrictedImportPatterns, noJsxSelectors),
+      },
+    ]
+  })(),
 )

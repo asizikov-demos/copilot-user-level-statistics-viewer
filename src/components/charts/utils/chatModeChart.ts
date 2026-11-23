@@ -1,4 +1,4 @@
-import { calculateAverage, calculateTotal, findMaxValue } from '../../../domain/calculators/statsCalculators';
+import { calculateAverage, calculateTotal, findMaxValue } from '../../../utils/seriesStats';
 import type { DailyChatRequestsData, DailyChatUsersData } from '../../../domain/calculators/metricCalculators';
 import { formatShortDate } from '../../../utils/formatters';
 import { chatModeColors } from './chartColors';

@@ -1,17 +1,11 @@
 import type { CopilotMetrics } from '../../types/metrics';
 import { getIDEMetadata } from '../../utils/ideMetadata';
+import {
+  CLIENT_TELEMETRY_ANNOUNCEMENT_URL,
+  type ClientTelemetryWarning,
+} from '../clientTelemetry';
 
-export const CLIENT_TELEMETRY_ANNOUNCEMENT_URL =
-  'https://github.blog/changelog/2026-10-06-update-your-ide-to-restore-agent-activity-in-copilot-usage-metrics/';
-
-export interface ClientTelemetryWarning {
-  ide: string;
-  version: string;
-  versionKind: 'ide' | 'plugin';
-  userCount: number;
-  action: 'upgrade' | 'verify';
-  recommendation: string;
-}
+export { CLIENT_TELEMETRY_ANNOUNCEMENT_URL, type ClientTelemetryWarning };
 
 interface TelemetryPolicy {
   fixedVersion?: readonly [number, number, number];

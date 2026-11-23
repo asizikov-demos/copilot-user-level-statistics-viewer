@@ -151,13 +151,13 @@ These contracts prevent plausible-looking but misleading analysis. Detailed calc
 
 ### Dependency boundaries
 
-[ESLint restrictions](../eslint.config.mjs) enforce:
+[ESLint restrictions](../eslint.config.mjs) enforce (for static imports and static-specifier dynamic `import()` across `@/*`, `#domain/*`, and relative paths; computed dynamic `import()` specifiers are rejected in production modules):
 
-- UI, layout routes, and read models cannot import aggregation implementations.
-- Production domain and worker modules cannot import React, Next.js, components, or state contexts.
-- Shared UI and charts cannot import feature modules or layout routes.
+- Main-thread and shared contract layers (`app`, `components`, `hooks`, `state`, `read-models`, `types`, `utils`, shared `domain/**` helpers outside `aggregation/**`/`calculators/**`, and non-entrypoint `workers/**` modules) cannot import parsing/aggregation implementations (`domain/aggregation/*`, `domain/metricsAggregator`, `domain/metricsParser`) or the `workers/metricsWorker` entrypoint, may only `import type` from `domain/calculators/*`, and cannot import `infra/*` at runtime (only non-entrypoint `workers/**` client/contract modules may `import type` from `infra/*`).
+- Production `domain`, `infra`, `utils`, and `workers` modules stay framework-free (no React, Next.js, or JSX) and cannot import upward UI, hook, state, or read-model layers (`domain` and `utils` also cannot import `infra`/`workers`, and `infra` cannot import `workers`).
+- Shared UI and charts cannot import feature modules, layout routes, or `app`.
 
-Read models depend on the grouped contract and pure domain helpers; workers depend on the parser, domain aggregation, and message contracts. Tests may import lower-level helpers for fixtures and characterization.
+Read models depend on the grouped contract and pure domain helpers; workers depend on `infra` file parsing, domain aggregation/calculators, and message contracts. Tests may import lower-level helpers for fixtures and characterization.
 
 ### Advisory UI review workflow
 

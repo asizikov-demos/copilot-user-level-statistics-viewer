@@ -5,7 +5,7 @@ import { Banner, Button, Link } from '@primer/react';
 import {
   CLIENT_TELEMETRY_ANNOUNCEMENT_URL,
   type ClientTelemetryWarning,
-} from '../domain/calculators/clientTelemetryCalculator';
+} from '../domain/clientTelemetry';
 import { formatIDEName } from './icons/IDEIcons';
 import { useExpandableList } from '../hooks/useExpandableList';
 

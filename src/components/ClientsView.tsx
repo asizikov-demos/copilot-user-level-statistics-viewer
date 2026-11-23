@@ -15,7 +15,7 @@ import CLIOverlapChart from './charts/CLIOverlapChart';
 import DailyIDEUsersChart from './charts/DailyIDEUsersChart';
 import IDEInsights from './IDEInsights';
 import { CLIENT_ANALYSIS_SECTIONS } from './layout/contextSections';
-import { appendCliClientStatsRow } from '../domain/calculators/clientActivityRows';
+import { appendCliClientStatsRow } from '../domain/clientActivityRows';
 import type { ClientsReadModel } from '../read-models/clients';
 
 type IDEStats = IDEStatsData;

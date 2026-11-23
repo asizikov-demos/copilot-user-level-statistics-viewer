@@ -3,8 +3,8 @@
 import { useTheme } from '@primer/react';
 import { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { DailyAiCreditsData } from '../../domain/calculators/metricCalculators';
-import { calculateStats } from '../../domain/calculators/statsCalculators';
+import type { DailyAiCreditsData } from '../../domain/calculators/metricCalculators';
+import { calculateStats } from '../../utils/seriesStats';
 import { formatAiCreditCost, formatNumber } from '../../utils/formatters';
 import ChartContainer from '../ui/ChartContainer';
 import { chartColors } from './utils/chartColors';

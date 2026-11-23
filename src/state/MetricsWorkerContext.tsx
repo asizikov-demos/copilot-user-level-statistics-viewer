@@ -7,10 +7,10 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import type { MultiFileProgress } from '../infra/metricsFileParser';
 import type { UserDetailedMetrics } from '../types/aggregatedMetrics';
 import {
   MetricsWorkerClient,
+  type MultiFileProgress,
   type ParseAndAggregateResult,
 } from '../workers/metricsWorkerClient';
 
