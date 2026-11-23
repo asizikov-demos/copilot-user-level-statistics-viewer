@@ -151,9 +151,9 @@ These contracts prevent plausible-looking but misleading analysis. Detailed calc
 
 ### Dependency boundaries
 
-[ESLint restrictions](../eslint.config.mjs) enforce (across `@/*`, `#domain/*`, and relative paths):
+[ESLint restrictions](../eslint.config.mjs) enforce (for static and dynamic imports across `@/*`, `#domain/*`, and relative paths):
 
-- Main-thread and shared contract layers (`app`, `components`, `hooks`, `state`, `read-models`, `types`, `utils`, and shared top-level `domain/*` helpers) cannot import parsing/aggregation implementations (`domain/aggregation/*`, `domain/metricsAggregator`, `domain/metricsParser`), `infra/*`, or the `workers/metricsWorker` entrypoint, and may only `import type` from `domain/calculators/*`.
+- Main-thread and shared contract layers (`app`, `components`, `hooks`, `state`, `read-models`, `types`, `utils`, shared top-level `domain/*` helpers, and `workers/metricsWorkerClient` + `workers/types`) cannot import parsing/aggregation implementations (`domain/aggregation/*`, `domain/metricsAggregator`, `domain/metricsParser`) or the `workers/metricsWorker` entrypoint, may only `import type` from `domain/calculators/*`, and cannot import `infra/*` at runtime (only `metricsWorkerClient` and `workers/types` may `import type` from `infra/*`).
 - Production `domain`, `infra`, `utils`, and `workers` modules stay framework-free (no React, Next.js, or JSX) and cannot import upward UI, hook, state, or read-model layers (`domain` and `utils` also cannot import `infra`/`workers`, and `infra` cannot import `workers`).
 - Shared UI and charts cannot import feature modules, layout routes, or `app`.
 

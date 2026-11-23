@@ -43,18 +43,43 @@ export default tseslint.config(
       'primer-react/new-color-css-vars': 'error',
     },
   },
-  {
-    files: ['src/app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}'],
-    ignores: productionSourceIgnores,
-    rules: {
-      'no-restricted-syntax': ['error', ...tokenOnlyColorSelectors],
-    },
-  },
   ...(() => {
     const moduleEnd = String.raw`(?:/|\.[cm]?[jt]sx?$|$)`
     const domainPrefix = String.raw`^(?:@/domain/|#domain/|(?:\.\.?/)+domain/)`
 
-    const mainThreadRestrictedImportPatterns = [
+    const noJsxSelectors = [
+      {
+        selector: 'JSXElement',
+        message: 'Domain, infra, utility, and worker modules must stay framework-free.',
+      },
+      {
+        selector: 'JSXFragment',
+        message: 'Domain, infra, utility, and worker modules must stay framework-free.',
+      },
+    ]
+
+    function restrictedDynamicImportSelectors(patterns) {
+      return patterns.flatMap(({ regex, message }) => {
+        const source = new RegExp(regex).source
+        return [
+          { selector: `ImportExpression > Literal[value=/${source}/]`, message },
+          { selector: `ImportExpression > TemplateLiteral[quasis.0.value.cooked=/${source}/]`, message },
+        ]
+      })
+    }
+
+    function boundaryRules(patterns, extraSyntaxSelectors = []) {
+      return {
+        'no-restricted-imports': ['error', { patterns }],
+        'no-restricted-syntax': [
+          'error',
+          ...extraSyntaxSelectors,
+          ...restrictedDynamicImportSelectors(patterns),
+        ],
+      }
+    }
+
+    const mainThreadDomainAndWorkerPatterns = [
       {
         regex: `${domainPrefix}(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
         message: 'Main-thread UI, hooks, state, and read-model layers must consume aggregate contracts/read models, not parsing or aggregation implementation modules.',
@@ -65,12 +90,24 @@ export default tseslint.config(
         message: 'Main-thread UI, hooks, state, and read-model layers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
       },
       {
+        regex: String.raw`^(?:@/workers/|#workers/|(?:\.\.?/)+workers/)metricsWorker${moduleEnd}`,
+        message: 'Main-thread layers must communicate with the worker via metricsWorkerClient, not import the worker entrypoint directly.',
+      },
+    ]
+
+    const mainThreadRestrictedImportPatterns = [
+      ...mainThreadDomainAndWorkerPatterns,
+      {
         regex: String.raw`^(?:@/infra|#infra|(?:\.\.?/)+infra)${moduleEnd}`,
         message: 'Main-thread UI, hooks, state, and read-model layers must access file parsing through the worker client, not infra modules directly.',
       },
+    ]
+
+    const sharedUiRestrictedImportPatterns = [
+      ...mainThreadRestrictedImportPatterns,
       {
-        regex: String.raw`^(?:@/workers/|#workers/|(?:\.\.?/)+workers/)metricsWorker${moduleEnd}`,
-        message: 'Main-thread layers must communicate with the worker via metricsWorkerClient, not import the worker entrypoint directly.',
+        regex: String.raw`^(?:@/components/(?:layout|features)|@/app|(?:\./)*(?:\.\./)+(?:components/)?(?:layout|features)|(?:\./)*(?:\.\./)+app)${moduleEnd}`,
+        message: 'Shared UI primitives and charts must not depend on feature or layout route modules.',
       },
     ]
 
@@ -85,27 +122,75 @@ export default tseslint.config(
       },
     ]
 
+    const workerClientRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      ...mainThreadDomainAndWorkerPatterns,
+      {
+        regex: String.raw`^(?:\./)+metricsWorker${moduleEnd}`,
+        message: 'Main-thread worker client and contract modules must not import the worker entrypoint.',
+      },
+      {
+        regex: String.raw`^(?:@/infra|#infra|(?:\.\.?/)+infra)${moduleEnd}`,
+        allowTypeImports: true,
+        message: 'Main-thread worker client and contract modules may import infra types only; runtime file parsing belongs in the worker entrypoint.',
+      },
+    ]
+
+    const infraRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      {
+        regex: String.raw`^(?:@/workers|#workers|(?:\./)*(?:\.\./)+workers)${moduleEnd}`,
+        message: 'Infra modules must not depend on worker entrypoints or clients.',
+      },
+    ]
+
     const noInfraOrWorkersPattern = {
       regex: String.raw`^(?:@/(?:infra|workers)|#(?:infra|workers)|(?:\./)*(?:\.\./)+(?:infra|workers))${moduleEnd}`,
       message: 'Domain and utility modules must remain pure and must not depend on infra or worker layers.',
     }
 
+    const domainRestrictedImportPatterns = [
+      ...workerPipelineBaseImportPatterns,
+      noInfraOrWorkersPattern,
+    ]
+
+    const utilsRestrictedImportPatterns = [
+      ...domainRestrictedImportPatterns,
+      ...mainThreadRestrictedImportPatterns,
+    ]
+
+    const sharedDomainRestrictedImportPatterns = [
+      ...domainRestrictedImportPatterns,
+      ...mainThreadRestrictedImportPatterns,
+      {
+        regex: String.raw`^(?:\./)+(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
+        message: 'Shared domain helpers must remain usable on the main thread and must not import parsing or aggregation implementation modules.',
+      },
+      {
+        regex: String.raw`^(?:\./)+calculators${moduleEnd}`,
+        allowTypeImports: true,
+        message: 'Shared domain helpers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
+      },
+    ]
+
     return [
       {
         files: [
-          'src/app/**/*.{ts,tsx}',
-          'src/components/**/*.{ts,tsx}',
           'src/hooks/**/*.{ts,tsx}',
           'src/state/**/*.{ts,tsx}',
           'src/read-models/**/*.{ts,tsx}',
           'src/types/**/*.{ts,tsx}',
         ],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: mainThreadRestrictedImportPatterns,
-          }],
-        },
+        rules: boundaryRules(mainThreadRestrictedImportPatterns),
+      },
+      {
+        files: [
+          'src/app/**/*.{ts,tsx}',
+          'src/components/**/*.{ts,tsx}',
+        ],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(mainThreadRestrictedImportPatterns, tokenOnlyColorSelectors),
       },
       {
         files: [
@@ -113,88 +198,35 @@ export default tseslint.config(
           'src/components/charts/**/*.{ts,tsx}',
         ],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: [
-              ...mainThreadRestrictedImportPatterns,
-              {
-                regex: String.raw`^(?:@/components/(?:layout|features)|@/app|(?:\./)*(?:\.\./)+(?:components/)?(?:layout|features)|(?:\./)*(?:\.\./)+app)${moduleEnd}`,
-                message: 'Shared UI primitives and charts must not depend on feature or layout route modules.',
-              },
-            ],
-          }],
-        },
-      },
-      {
-        files: [
-          'src/domain/**/*.{ts,tsx}',
-          'src/infra/**/*.{ts,tsx}',
-          'src/utils/**/*.{ts,tsx}',
-          'src/workers/**/*.{ts,tsx}',
-        ],
-        ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-syntax': [
-            'error',
-            {
-              selector: 'JSXElement',
-              message: 'Domain, infra, utility, and worker modules must stay framework-free.',
-            },
-            {
-              selector: 'JSXFragment',
-              message: 'Domain, infra, utility, and worker modules must stay framework-free.',
-            },
-          ],
-        },
+        rules: boundaryRules(sharedUiRestrictedImportPatterns, tokenOnlyColorSelectors),
       },
       {
         files: ['src/workers/**/*.{ts,tsx}'],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: workerPipelineBaseImportPatterns,
-          }],
-        },
+        rules: boundaryRules(workerPipelineBaseImportPatterns, noJsxSelectors),
+      },
+      {
+        files: [
+          'src/workers/metricsWorkerClient.ts',
+          'src/workers/types.ts',
+        ],
+        ignores: productionSourceIgnores,
+        rules: boundaryRules(workerClientRestrictedImportPatterns, noJsxSelectors),
       },
       {
         files: ['src/infra/**/*.{ts,tsx}'],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: [
-              ...workerPipelineBaseImportPatterns,
-              {
-                regex: String.raw`^(?:@/workers|#workers|(?:\./)*(?:\.\./)+workers)${moduleEnd}`,
-                message: 'Infra modules must not depend on worker entrypoints or clients.',
-              },
-            ],
-          }],
-        },
+        rules: boundaryRules(infraRestrictedImportPatterns, noJsxSelectors),
       },
       {
         files: ['src/domain/**/*.{ts,tsx}'],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: [
-              ...workerPipelineBaseImportPatterns,
-              noInfraOrWorkersPattern,
-            ],
-          }],
-        },
+        rules: boundaryRules(domainRestrictedImportPatterns, noJsxSelectors),
       },
       {
         files: ['src/utils/**/*.{ts,tsx}'],
         ignores: productionSourceIgnores,
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: [
-              ...workerPipelineBaseImportPatterns,
-              noInfraOrWorkersPattern,
-              ...mainThreadRestrictedImportPatterns,
-            ],
-          }],
-        },
+        rules: boundaryRules(utilsRestrictedImportPatterns, noJsxSelectors),
       },
       {
         files: ['src/domain/*.{ts,tsx}'],
@@ -203,24 +235,7 @@ export default tseslint.config(
           'src/domain/metricsAggregator.ts',
           'src/domain/metricsParser.ts',
         ],
-        rules: {
-          'no-restricted-imports': ['error', {
-            patterns: [
-              ...workerPipelineBaseImportPatterns,
-              noInfraOrWorkersPattern,
-              ...mainThreadRestrictedImportPatterns,
-              {
-                regex: String.raw`^(?:\./)+(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
-                message: 'Shared domain helpers must remain usable on the main thread and must not import parsing or aggregation implementation modules.',
-              },
-              {
-                regex: String.raw`^(?:\./)+calculators${moduleEnd}`,
-                allowTypeImports: true,
-                message: 'Shared domain helpers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
-              },
-            ],
-          }],
-        },
+        rules: boundaryRules(sharedDomainRestrictedImportPatterns, noJsxSelectors),
       },
     ]
   })(),

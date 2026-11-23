@@ -315,4 +315,122 @@ describe('architecture import boundaries', () => {
     );
     expect(allowedMessages).toEqual([]);
   });
+
+  describe('dynamic import() boundaries', () => {
+    it.each([
+      ['src/components/Example.tsx', '../infra/metricsFileParser', 'not infra modules directly'],
+      ['src/components/Example.tsx', '#domain/metricsAggregator', 'aggregation implementation modules'],
+      ['src/hooks/useExample.ts', '../domain/calculators/cliUsageCalculator', 'calculator types only'],
+      ['src/state/ExampleContext.tsx', '../workers/metricsWorker', 'metricsWorkerClient'],
+      ['src/components/charts/ExampleChart.tsx', '../layout/ViewRouter', 'Shared UI primitives and charts'],
+      ['src/domain/exampleHelper.ts', './calculators/cliUsageCalculator', 'calculator types only'],
+      ['src/infra/example.ts', 'react', 'framework-free'],
+    ])('prevents dynamic import() in %s from loading %s', async (filePath, specifier, expectedMessage) => {
+      const literalMessages = await lintSource(
+        filePath,
+        `export const load = () => import('${specifier}');\n`
+      );
+      expect(literalMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-syntax',
+        message: expect.stringContaining(expectedMessage),
+      }));
+
+      const templateMessages = await lintSource(
+        filePath,
+        `export const load = () => import(\`${specifier}\`);\n`
+      );
+      expect(templateMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-syntax',
+        message: expect.stringContaining(expectedMessage),
+      }));
+    });
+
+    it('prevents interpolated template dynamic imports targeting restricted prefixes while preserving allowed dynamic imports and color checks', async () => {
+      const interpolatedMessages = await lintSource(
+        'src/components/Example.tsx',
+        "export const load = (name: string) => import(`../infra/${name}`);\n"
+      );
+      expect(interpolatedMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-syntax',
+        message: expect.stringContaining('not infra modules directly'),
+      }));
+
+      const allowedDynamicMessages = await lintSource(
+        'src/components/Example.tsx',
+        "export const load = () => import('#domain/featureCategories');\n"
+      );
+      expect(allowedDynamicMessages).toEqual([]);
+
+      const chartPaletteMessages = await lintSource(
+        'src/components/charts/ExampleChart.tsx',
+        'export const className = "bg-blue-500";\n'
+      );
+      expect(chartPaletteMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-syntax',
+        message: expect.stringContaining('Tailwind palette color utilities'),
+      }));
+    });
+  });
+
+  describe('worker client and shared worker contract boundaries', () => {
+    it.each([
+      ['src/workers/metricsWorkerClient.ts', '../infra/metricsFileParser', 'infra types only'],
+      ['src/workers/metricsWorkerClient.ts', '../domain/metricsAggregator', 'aggregation implementation modules'],
+      ['src/workers/metricsWorkerClient.ts', '#domain/aggregation/cliAggregation', 'aggregation implementation modules'],
+      ['src/workers/metricsWorkerClient.ts', '../domain/calculators/userDetailCalculator', 'calculator types only'],
+      ['src/workers/metricsWorkerClient.ts', './metricsWorker', 'worker entrypoint'],
+      ['src/workers/types.ts', '../infra/metricsFileParser', 'infra types only'],
+      ['src/workers/types.ts', '../domain/metricsParser', 'aggregation implementation modules'],
+      ['src/workers/types.ts', './metricsWorker', 'worker entrypoint'],
+    ])('prevents %s from importing runtime worker dependencies (%s)', async (filePath, specifier, expectedMessage) => {
+      const staticMessages = await lintSource(
+        filePath,
+        `import * as mod from '${specifier}';\nexport const value = mod;\n`
+      );
+      expect(staticMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-imports',
+        message: expect.stringContaining(expectedMessage),
+      }));
+
+      const dynamicMessages = await lintSource(
+        filePath,
+        `export const load = () => import('${specifier}');\n`
+      );
+      expect(dynamicMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-syntax',
+        message: expect.stringContaining(expectedMessage),
+      }));
+    });
+
+    it('preserves infra type imports in metricsWorkerClient and workers/types while keeping runtime access in metricsWorker', async () => {
+      const clientTypeMessages = await lintSource(
+        'src/workers/metricsWorkerClient.ts',
+        [
+          "import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFileParser';",
+          "export type { MultiFileProgress, MultiFileResult };",
+        ].join('\n')
+      );
+      expect(clientTypeMessages).toEqual([]);
+
+      const typesMessages = await lintSource(
+        'src/workers/types.ts',
+        [
+          "import type { MultiFileProgress } from '../infra/metricsFileParser';",
+          'export type Progress = MultiFileProgress;',
+        ].join('\n')
+      );
+      expect(typesMessages).toEqual([]);
+
+      const workerEntrypointMessages = await lintSource(
+        'src/workers/metricsWorker.ts',
+        [
+          "import { consumeMultipleMetricsStreams } from '../infra/metricsFileParser';",
+          "import { createMetricsAggregationAccumulator } from '../domain/metricsAggregator';",
+          "import { computeSingleUserDetailedMetrics } from '../domain/calculators';",
+          'export const value = [consumeMultipleMetricsStreams, createMetricsAggregationAccumulator, computeSingleUserDetailedMetrics];',
+        ].join('\n')
+      );
+      expect(workerEntrypointMessages).toEqual([]);
+    });
+  });
 });
