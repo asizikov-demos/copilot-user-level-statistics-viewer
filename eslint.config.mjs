@@ -58,14 +58,32 @@ export default tseslint.config(
       },
     ]
 
+    const nonStaticDynamicImportSelectors = [
+      {
+        selector: 'ImportExpression[source.type!="Literal"][source.type!="TemplateLiteral"]',
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+      {
+        selector: "ImportExpression > Literal:not([raw=/^['\"]/])",
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+      {
+        selector: 'ImportExpression > TemplateLiteral[expressions.length>0]',
+        message: 'Dynamic import() specifiers must be static string literals so architectural layer boundaries can be verified.',
+      },
+    ]
+
     function restrictedDynamicImportSelectors(patterns) {
-      return patterns.flatMap(({ regex, message }) => {
-        const source = new RegExp(regex).source
-        return [
-          { selector: `ImportExpression > Literal[value=/${source}/]`, message },
-          { selector: `ImportExpression > TemplateLiteral[quasis.0.value.cooked=/${source}/]`, message },
-        ]
-      })
+      return [
+        ...nonStaticDynamicImportSelectors,
+        ...patterns.flatMap(({ regex, message }) => {
+          const source = new RegExp(regex).source
+          return [
+            { selector: `ImportExpression > Literal[value=/${source}/]`, message },
+            { selector: `ImportExpression > TemplateLiteral[expressions.length=0][quasis.0.value.cooked=/${source}/]`, message },
+          ]
+        }),
+      ]
     }
 
     function boundaryRules(patterns, extraSyntaxSelectors = []) {
@@ -126,7 +144,7 @@ export default tseslint.config(
       ...workerPipelineBaseImportPatterns,
       ...mainThreadDomainAndWorkerPatterns,
       {
-        regex: String.raw`^(?:\./)+metricsWorker${moduleEnd}`,
+        regex: String.raw`^(?:\.\.?/)+metricsWorker${moduleEnd}`,
         message: 'Main-thread worker client and contract modules must not import the worker entrypoint.',
       },
       {
@@ -163,11 +181,11 @@ export default tseslint.config(
       ...domainRestrictedImportPatterns,
       ...mainThreadRestrictedImportPatterns,
       {
-        regex: String.raw`^(?:\./)+(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
+        regex: String.raw`^(?:\.\.?/)+(?:aggregation|metricsAggregator|metricsParser)${moduleEnd}`,
         message: 'Shared domain helpers must remain usable on the main thread and must not import parsing or aggregation implementation modules.',
       },
       {
-        regex: String.raw`^(?:\./)+calculators${moduleEnd}`,
+        regex: String.raw`^(?:\.\.?/)+calculators${moduleEnd}`,
         allowTypeImports: true,
         message: 'Shared domain helpers may import calculator types only; runtime calculator and accumulator execution belongs in the worker/domain pipeline.',
       },
@@ -176,6 +194,7 @@ export default tseslint.config(
     return [
       {
         files: [
+          'src/*.{ts,tsx}',
           'src/hooks/**/*.{ts,tsx}',
           'src/state/**/*.{ts,tsx}',
           'src/read-models/**/*.{ts,tsx}',
@@ -202,16 +221,16 @@ export default tseslint.config(
       },
       {
         files: ['src/workers/**/*.{ts,tsx}'],
-        ignores: productionSourceIgnores,
-        rules: boundaryRules(workerPipelineBaseImportPatterns, noJsxSelectors),
+        ignores: [
+          ...productionSourceIgnores,
+          'src/workers/metricsWorker.ts',
+        ],
+        rules: boundaryRules(workerClientRestrictedImportPatterns, noJsxSelectors),
       },
       {
-        files: [
-          'src/workers/metricsWorkerClient.ts',
-          'src/workers/types.ts',
-        ],
+        files: ['src/workers/metricsWorker.ts'],
         ignores: productionSourceIgnores,
-        rules: boundaryRules(workerClientRestrictedImportPatterns, noJsxSelectors),
+        rules: boundaryRules(workerPipelineBaseImportPatterns, noJsxSelectors),
       },
       {
         files: ['src/infra/**/*.{ts,tsx}'],
@@ -229,9 +248,11 @@ export default tseslint.config(
         rules: boundaryRules(utilsRestrictedImportPatterns, noJsxSelectors),
       },
       {
-        files: ['src/domain/*.{ts,tsx}'],
+        files: ['src/domain/**/*.{ts,tsx}'],
         ignores: [
           ...productionSourceIgnores,
+          'src/domain/aggregation/**',
+          'src/domain/calculators/**',
           'src/domain/metricsAggregator.ts',
           'src/domain/metricsParser.ts',
         ],

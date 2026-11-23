@@ -249,9 +249,9 @@ describe('architecture import boundaries', () => {
       expect(typeOnlyMessages).toEqual([]);
     });
 
-    it('allows worker and domain modules (and tests) to execute calculators at runtime', async () => {
+    it('allows the worker entrypoint and domain pipeline modules (and tests) to execute calculators at runtime', async () => {
       const workerMessages = await lintSource(
-        'src/workers/example.ts',
+        'src/workers/metricsWorker.ts',
         "import { computeUserDetailedMetrics } from '../domain/calculators/userDetailCalculator';\nexport const value = computeUserDetailedMetrics;\n"
       );
       expect(workerMessages).toEqual([]);
@@ -277,6 +277,23 @@ describe('architecture import boundaries', () => {
       expect(sharedDomainMessages).toContainEqual(expect.objectContaining({
         ruleId: 'no-restricted-imports',
         message: expect.stringContaining('calculator types only'),
+      }));
+
+      const nestedSharedDomainMessages = await lintSource(
+        'src/domain/helpers/cliHelper.ts',
+        [
+          "import { createCliUsageAccumulator } from '../calculators/cliUsageCalculator';",
+          "import { aggregateCliMetrics } from '../aggregation/cliAggregation';",
+          'export const value = [createCliUsageAccumulator, aggregateCliMetrics];',
+        ].join('\n')
+      );
+      expect(nestedSharedDomainMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-imports',
+        message: expect.stringContaining('calculator types only'),
+      }));
+      expect(nestedSharedDomainMessages).toContainEqual(expect.objectContaining({
+        ruleId: 'no-restricted-imports',
+        message: expect.stringContaining('aggregation implementation modules'),
       }));
 
       const utilsMessages = await lintSource(
@@ -345,21 +362,34 @@ describe('architecture import boundaries', () => {
       }));
     });
 
-    it('prevents interpolated template dynamic imports targeting restricted prefixes while preserving allowed dynamic imports and color checks', async () => {
-      const interpolatedMessages = await lintSource(
-        'src/components/Example.tsx',
-        "export const load = (name: string) => import(`../infra/${name}`);\n"
-      );
-      expect(interpolatedMessages).toContainEqual(expect.objectContaining({
-        ruleId: 'no-restricted-syntax',
-        message: expect.stringContaining('not infra modules directly'),
-      }));
+    it('rejects computed or interpolated dynamic imports while preserving static allowed dynamic imports and color checks', async () => {
+      for (const expression of [
+        'import(`../infra/${name}`)',
+        "import(`../${'infra'}/metricsFileParser`)",
+        "import('../infra/' + name)",
+        'import(name)',
+      ]) {
+        const computedMessages = await lintSource(
+          'src/components/Example.tsx',
+          `export const load = (name: string) => ${expression};\n`
+        );
+        expect(computedMessages).toContainEqual(expect.objectContaining({
+          ruleId: 'no-restricted-syntax',
+          message: expect.stringContaining('must be static string literals'),
+        }));
+      }
 
-      const allowedDynamicMessages = await lintSource(
+      const allowedLiteralMessages = await lintSource(
         'src/components/Example.tsx',
         "export const load = () => import('#domain/featureCategories');\n"
       );
-      expect(allowedDynamicMessages).toEqual([]);
+      expect(allowedLiteralMessages).toEqual([]);
+
+      const allowedTemplateMessages = await lintSource(
+        'src/components/Example.tsx',
+        'export const load = () => import(`#domain/featureCategories`);\n'
+      );
+      expect(allowedTemplateMessages).toEqual([]);
 
       const chartPaletteMessages = await lintSource(
         'src/components/charts/ExampleChart.tsx',
@@ -382,6 +412,9 @@ describe('architecture import boundaries', () => {
       ['src/workers/types.ts', '../infra/metricsFileParser', 'infra types only'],
       ['src/workers/types.ts', '../domain/metricsParser', 'aggregation implementation modules'],
       ['src/workers/types.ts', './metricsWorker', 'worker entrypoint'],
+      ['src/workers/helper.ts', '../infra/metricsFileParser', 'infra types only'],
+      ['src/workers/helper.ts', '../domain/calculators/cliUsageCalculator', 'calculator types only'],
+      ['src/workers/nested/helper.ts', '../metricsWorker', 'worker entrypoint'],
     ])('prevents %s from importing runtime worker dependencies (%s)', async (filePath, specifier, expectedMessage) => {
       const staticMessages = await lintSource(
         filePath,
