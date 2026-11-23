@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MultiFileProgress } from '../infra/metricsFileParser';
+import type { MultiFileProgress } from '../workers/metricsWorkerClient';
 import { useMetricsWorker } from '../state/MetricsWorkerContext';
 import { useMetrics } from '../components/MetricsContext';
 import { getBasePath } from '../utils/basePath';

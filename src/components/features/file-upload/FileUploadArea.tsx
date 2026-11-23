@@ -5,7 +5,7 @@ import { Banner, Button, ProgressBar, Spinner } from '@primer/react';
 import { FileIcon, UploadIcon } from '@primer/octicons-react';
 import PrivacyNotice from './PrivacyNotice';
 import HowToGetData from './HowToGetData';
-import { MultiFileProgress } from '../../../infra/metricsFileParser';
+import type { MultiFileProgress } from '../../../workers/metricsWorkerClient';
 
 interface FileUploadAreaProps {
   onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;

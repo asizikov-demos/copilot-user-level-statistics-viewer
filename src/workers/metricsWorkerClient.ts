@@ -3,6 +3,8 @@ import type { MultiFileProgress, MultiFileResult } from '../infra/metricsFilePar
 import type { WorkerRequest, WorkerResponse } from './types';
 import { getBasePath } from '../utils/basePath';
 
+export type { MultiFileProgress };
+
 export interface ParseAndAggregateResult {
   result: AggregatedMetrics;
   enterpriseName: string | null;

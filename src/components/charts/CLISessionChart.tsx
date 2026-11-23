@@ -7,7 +7,7 @@ import { createBaseChartOptions } from './utils/chartOptions';
 import { createBarDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateTotal } from '../../domain/calculators/statsCalculators';
+import { calculateTotal } from '../../utils/seriesStats';
 import type { DailyCliSessionData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 

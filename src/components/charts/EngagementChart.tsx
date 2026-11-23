@@ -8,8 +8,8 @@ import { createBaseChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { createFilledLineDataset } from './utils/chartStyles';
 import { chartColors } from './utils/chartColors';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateAverage, findMinMaxValues } from '../../domain/calculators/statsCalculators';
-import { DailyEngagementData } from '../../domain/calculators/metricCalculators';
+import { calculateAverage, findMinMaxValues } from '../../utils/seriesStats';
+import type { DailyEngagementData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 
 registerChartJS();

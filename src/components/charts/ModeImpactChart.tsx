@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import { registerChartJS } from './utils/chartSetup';
 import { createStackedBarChartOptions, yAxisFormatters } from './utils/chartOptions';
 import { formatShortDate } from '../../utils/formatters';
-import { calculateTotal, calculateAverage } from '../../domain/calculators/statsCalculators';
+import { calculateTotal, calculateAverage } from '../../utils/seriesStats';
 import type { ModeImpactData } from '../../domain/calculators/metricCalculators';
 import ChartContainer from '../ui/ChartContainer';
 import { chartColors } from './utils/chartColors';
