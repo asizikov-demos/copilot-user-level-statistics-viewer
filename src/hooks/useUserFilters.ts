@@ -40,11 +40,6 @@ interface UseUserFiltersResult {
   filteredUsers: UserSummary[];
 }
 
-type TrieNode = {
-  children: Record<string, TrieNode>;
-  users: UserSummary[];
-};
-
 function getClientFilterKey(client: string): string {
   const key = getIDEMetadata(client)?.canonicalKey ?? normalizeIDEKey(client);
   return key === 'github_app' ? 'copilot_app' : key;
@@ -92,38 +87,6 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
   const [selectedFeatures, setSelectedFeatures] = useState<UserFeatureFilter[]>([]);
   const [serverSideOnlyTelemetry, setServerSideOnlyTelemetry] = useState(false);
 
-  const trieRoot = useMemo(() => {
-    const root: TrieNode = {
-      children: {},
-      users: [],
-    };
-
-    const insert = (key: string, user: UserSummary) => {
-      let node = root;
-      node.users.push(user);
-
-      for (const char of key) {
-        if (!node.children[char]) {
-          node.children[char] = {
-            children: {},
-            users: [],
-          };
-        }
-        node = node.children[char];
-        node.users.push(user);
-      }
-    };
-
-    users.forEach((user) => {
-      const key = user.user_login.toLowerCase();
-      if (key) {
-        insert(key, user);
-      }
-    });
-
-    return root;
-  }, [users]);
-
   const clientOptions = useMemo(() => {
     const options = new Map<string, string>();
 
@@ -169,16 +132,8 @@ export function useUserFilters(users: UserSummary[]): UseUserFiltersResult {
       return users;
     }
 
-    let node: TrieNode | undefined = trieRoot;
-    for (const char of debouncedSearchQuery) {
-      node = node.children[char];
-      if (!node) {
-        return [];
-      }
-    }
-
-    return node.users;
-  }, [debouncedSearchQuery, trieRoot, users]);
+    return users.filter(user => user.user_login.toLowerCase().includes(debouncedSearchQuery));
+  }, [debouncedSearchQuery, users]);
 
   const filteredUsers = useMemo(
     () => usernameMatches.filter(user => {
