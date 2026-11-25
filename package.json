@@ -21,7 +21,7 @@
   "dependencies": {
     "@primer/octicons-react": "19.40.0",
     "@primer/primitives": "^11.10.0",
-    "@primer/react": "38.44.0",
+    "@primer/react": "38.46.0",
     "chart.js": "^4.5.1",
     "next": "16.4.5",
     "react": "^19.3.0",
